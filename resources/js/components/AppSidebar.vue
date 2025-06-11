@@ -14,11 +14,6 @@ const mainNavItems: NavItem[] = [
         href: '/dashboard',
         icon: LayoutGrid,
     },
-    {
-        title: 'Tests',
-        href: '/tests', // The new route for the Tests page
-        icon: LayoutGrid, // Placeholder icon, can be changed later
-    },
 ];
 
 const footerNavItems: NavItem[] = [
