@@ -3,63 +3,74 @@
 namespace App\Http\Controllers;
 
 use App\Models\Question;
+use App\Models\Test;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class QuestionController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $questions = Question::query()
+            ->when($request->input('search'), function ($query, $search) {
+                $query->where('text', 'like', "%{$search}%")
+                      ->orWhere('type', 'like', "%{$search}%");
+            })
+            ->with('test')
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        $tests = Test::orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('settings/QuestionsPage', [
+            'questions' => $questions,
+            'filters' => $request->only(['search']),
+            'tests' => $tests,
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
+    // store method from previous step
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'text' => 'required|string|max:255',
+            'type' => 'required|string|in:multiple_choice,true_false,short_answer',
+            'options' => 'nullable|array',
+            'options.*' => 'nullable|string',
+            'answer' => 'required|string',
+            'test_id' => 'nullable|exists:tests,id',
+        ]);
+
+        Question::create($validated);
+
+        return redirect()->route('einstellungen.fragen')->with('success', 'Question created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Question $question)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Question $question)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
+    // update method from previous step
     public function update(Request $request, Question $question)
     {
-        //
+        $validated = $request->validate([
+            'text' => 'required|string|max:255',
+            'type' => 'required|string|in:multiple_choice,true_false,short_answer',
+            'options' => 'nullable|array',
+            'options.*' => 'nullable|string',
+            'answer' => 'required|string',
+            'test_id' => 'nullable|exists:tests,id',
+        ]);
+
+        $question->update($validated);
+
+        return redirect()->route('einstellungen.fragen')->with('success', 'Question updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    // destroy method from previous step
     public function destroy(Question $question)
     {
-        //
+        $question->delete();
+        return redirect()->route('einstellungen.fragen')->with('success', 'Question deleted successfully.');
     }
+
+    // Other methods like create, edit, show if they were fully implemented.
+    // For this scope, index, store, update, destroy are key for the CRUD page.
 }

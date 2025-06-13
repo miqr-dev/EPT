@@ -10,14 +10,15 @@ class Question extends Model
     use HasFactory;
 
     protected $fillable = [
-        'test_id',
-        'order',
-        'type',
         'text',
-        'image_path',
+        'type',
         'options',
-        'correct_answer',
-        'points',
+        'answer',
+        'test_id',
+    ];
+
+    protected $casts = [
+        'options' => 'array',
     ];
 
     public function test()

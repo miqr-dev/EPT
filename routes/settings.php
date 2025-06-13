@@ -2,11 +2,16 @@
 
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Settings\SettingsController;
+use App\Http\Controllers\QuestionController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::middleware('auth')->group(function () {
-    Route::redirect('settings', '/settings/profile');
+    // Route::redirect('settings', '/settings/profile'); // Removed this redirect
+
+    // General Settings Page
+    Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
 
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -18,4 +23,19 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/appearance', function () {
         return Inertia::render('settings/Appearance');
     })->name('appearance');
+
+    // Settings page for Questions (renders the Vue page)
+    Route::get('settings/questions', [SettingsController::class, 'questions'])->name('settings.questions');
+
+    // CRUD operations for Questions
+    Route::resource('settings/questions', QuestionController::class)->except(['show'])->names([
+        'index' => 'questions.index',
+        'create' => 'questions.create',
+        'store' => 'questions.store',
+        'edit' => 'questions.edit',
+        'update' => 'questions.update',
+        'destroy' => 'questions.destroy',
+    ]);
+    // If a separate show route is needed later:
+    // Route::get('settings/questions/{question}', [QuestionController::class, 'show'])->name('questions.show');
 });

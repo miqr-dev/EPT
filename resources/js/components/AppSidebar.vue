@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Settings } from 'lucide-vue-next'; // Added Settings
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -18,10 +18,15 @@ const mainNavItems: NavItem[] = [
     title: 'Tests',
     href: '/tests', // The new route for the Tests page
     icon: LayoutGrid, // Placeholder icon, can be changed later
-  },
+  }
 ];
 
 const footerNavItems: NavItem[] = [
+  {
+    title: 'Einstellungen',
+    href: '/einstellungen', // New route
+    icon: Settings, // Using the Settings icon
+  },
   {
     title: 'Github Repo',
     href: 'https://github.com/laravel/vue-starter-kit',
