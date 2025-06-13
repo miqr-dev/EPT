@@ -47,12 +47,12 @@ const questions = ref<Question[]>([
   {
     text: "Berechne die Grundstücksgröße in m².",
     answer: "60",
-    image: "/images/Mathe1.png"
+    image: "/images/Math/Mathe1.png"
   },
   {
     text: "Das Rad hat einen Durchmesser von 0,6 m. Welche Strecke legt es zurück, wenn es sich 100 mal dreht?",
     answer: "188.5",
-    image: "/images/Mathe2.png"
+    image: "/images/Math/Mathe2.png"
   },
   { text: "√81 = ?", answer: "9" },
   { text: "10³ = ?", answer: "1000" },
