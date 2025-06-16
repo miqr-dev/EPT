@@ -4,8 +4,8 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
+// -------------- Utility Functions ---------------
 function formatTime(sec: number | null): string {
   if (sec === null || isNaN(sec)) return "–";
   if (sec < 60) return `${sec} Sekunden`;
@@ -13,91 +13,51 @@ function formatTime(sec: number | null): string {
   return `${min} Minuten`;
 }
 
-
-interface Question {
-  text: string;
-  answer: string;
-  image?: string;
+// -------------- DATA ---------------
+interface MRTQuestion {
+  number: number;
+  options: string[];   // ["A", "B", "C", "D"]
+  correct: string[];   // ["C"] or ["C", "D"]
 }
+
+// Map of number->question/options, fill as shown below.
+const mrtQuestions = ref<MRTQuestion[]>([
+  { number: 1, options: ["Drehorghel", "Dreohregel", "Dreorgel", "Drehorgel"], correct: ["D"] },
+  { number: 2, options: ["Spülmaschine", "Spülmaschiene", "Spülmaschiene", "Spühlmaschine"], correct: ["A"] },
+  // ... continue for all 60 questions, each with correct as ["A"], or ["C", "D"] etc.
+  // See your answers key for corrects!
+  // ...
+]);
+
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Tests', href: '/tests' },
+  { title: 'MRT-A', href: '/tests/mrt-a' },
 ];
-const questions = ref<Question[]>([
-  { text: "619020 – 541600 = ?", answer: "77420" },
-  { text: "619020 = 174309 + ?", answer: "444711" },
-  { text: "4 : 80 = ?", answer: "0,05" },
-  { text: "0,2 · ____ = 0,1", answer: "0,5" },
-  { text: "1/3 : 1/2 = ?", answer: "2/3" },
-  { text: "Verwandle 0,4 in einen gewöhnlichen Bruch.", answer: "2/5" },
-  { text: "Ein Mechaniker hat aus 3 Teilen ein Gerät hergestellt. Die Einzelteile wiegen: 50 g, 9,4 kg, 1050 g. Wie viel wiegt das gesamte Gerät?", answer: "10500" },
-  { text: "Rechne um: Wie viel g sind 9 kg und 1 g?", answer: "9001" },
-  { text: "Wie viel Zinsen erbringen 1000 € zu 4 % in einem Jahr?", answer: "40" },
-  { text: "Rudi kauft sich ein neues Mofa. Es kostet 1390 €. Bei Barzahlung bekommt er 2 % Rabatt. Wie viel muss er bezahlen?", answer: "1362,2" },
-  { text: "Im Sägewerk können aus einem Baumstamm 20 Bretter von 3 cm Dicke geschnitten werden. Wie viele Bretter erhält man, wenn sie 2 cm dick sind?", answer: "30" },
-  { text: "Im Sägewerk können aus einem Baumstamm 20 Bretter von 3 cm Dicke geschnitten werden. Wie dick wird ein Brett, wenn man 15 Bretter aus dem Stamm schneidet?", answer: "4" },
-  { text: "Berechne die Grundstücksgröße in m².", answer: "60", image: "/images/Math/Mathe1.png" },
-  { text: "Das Rad hat einen Durchmesser von 0,6 m. Welche Strecke legt es zurück, wenn es sich 100 mal dreht?", answer: "188,5", image: "/images/Math/Mathe2.png" },
-  { text: "√81 = ?", answer: "9" },
-  { text: "10³ = ?", answer: "1000" },
-]);
 
 const showTest = ref(false);
 const currentQuestionIndex = ref(0);
 const nextButtonClickCount = ref(0);
-const userAnswers = ref<string[]>(Array(questions.value.length).fill(''));
-const answerInput = ref<InstanceType<typeof Input> | null>(null);
-const questionTimes = ref<number[]>(Array(questions.value.length).fill(0));
-const questionStartTimestamps = ref<(number | null)[]>(Array(questions.value.length).fill(null));
+const userAnswers = ref<(string | null)[]>(Array(mrtQuestions.value.length).fill(null));
+const questionTimes = ref<number[]>(Array(mrtQuestions.value.length).fill(0));
+const questionStartTimestamps = ref<(number | null)[]>(Array(mrtQuestions.value.length).fill(null));
 const startTime = ref<number | null>(null);
 
-function formatQuestionMark(text: string): string {
-  if (text.endsWith('?')) {
-    return (
-      text.slice(0, -1) +
-      '<span class="font-bold text-red-600 text-lg">?</span>'
-    );
-  }
-  return text;
-}
-
-// Normtables
-const rohwertToPR: Record<number, number> = {
-  1: 0, 2: 0, 3: 2.5, 4: 2.5, 5: 5, 6: 8.5, 7: 16,
-  8: 27, 9: 34, 10: 53, 11: 62, 12: 75, 13: 85, 14: 95, 15: 99, 16: 100,
-};
-const prToTwert = [
-  { pr: 0, t: 30 }, { pr: 2, t: 30 }, { pr: 5, t: 34 }, { pr: 7, t: 35 }, { pr: 8, t: 36 },
-  { pr: 16, t: 40 }, { pr: 27, t: 44 }, { pr: 34, t: 46 }, { pr: 53, t: 50 },
-  { pr: 62, t: 53 }, { pr: 75, t: 56 }, { pr: 85, t: 60 }, { pr: 95, t: 66 },
-  { pr: 99, t: 73 }, { pr: 100, t: 80 },
-];
-function getPRFromRohwert(rohwert: number): number {
-  return rohwertToPR[rohwert] ?? 0;
-}
-function getTwertFromPR(pr: number): number {
-  let best = prToTwert[0];
-  for (const entry of prToTwert) {
-    if (pr >= entry.pr) best = entry;
-  }
-  return best.t;
-}
-
-const isTestComplete = computed(() => currentQuestionIndex.value >= questions.value.length);
+// -------------- Computeds and Logic ---------------
+const isTestComplete = computed(() => currentQuestionIndex.value >= mrtQuestions.value.length);
 
 const finalScore = computed(() => {
   let correct = 0;
-  questions.value.forEach((q, i) => {
+  mrtQuestions.value.forEach((q, i) => {
     if (
-      (userAnswers.value[i] ?? "").trim().replace(",", ".") ===
-      q.answer.trim().replace(",", ".")
+      userAnswers.value[i] &&
+      q.correct.map(a => a.toUpperCase()).includes(userAnswers.value[i]!.toUpperCase())
     ) {
       correct++;
     }
   });
   return correct;
 });
-const userPR = computed(() => getPRFromRohwert(finalScore.value));
-const userTwert = computed(() => getTwertFromPR(userPR.value));
+
 const totalTimeTaken = computed(() =>
   isTestComplete.value
     ? questionTimes.value.reduce((a, b) => a + b, 0)
@@ -105,8 +65,8 @@ const totalTimeTaken = computed(() =>
 );
 
 const currentQuestion = computed(() =>
-  currentQuestionIndex.value < questions.value.length
-    ? questions.value[currentQuestionIndex.value]
+  currentQuestionIndex.value < mrtQuestions.value.length
+    ? mrtQuestions.value[currentQuestionIndex.value]
     : null
 );
 
@@ -118,7 +78,7 @@ const jumpToQuestion = (index: number) => {
   const now = Date.now();
   if (
     currentQuestionIndex.value >= 0 &&
-    currentQuestionIndex.value < questions.value.length &&
+    currentQuestionIndex.value < mrtQuestions.value.length &&
     questionStartTimestamps.value[currentQuestionIndex.value]
   ) {
     questionTimes.value[currentQuestionIndex.value] += Math.round(
@@ -136,7 +96,7 @@ const handleNextClick = () => {
     const now = Date.now();
     if (
       currentQuestionIndex.value >= 0 &&
-      currentQuestionIndex.value < questions.value.length &&
+      currentQuestionIndex.value < mrtQuestions.value.length &&
       questionStartTimestamps.value[currentQuestionIndex.value]
     ) {
       questionTimes.value[currentQuestionIndex.value] += Math.round(
@@ -144,12 +104,12 @@ const handleNextClick = () => {
       );
       questionStartTimestamps.value[currentQuestionIndex.value] = null;
     }
-    if (currentQuestionIndex.value < questions.value.length - 1) {
+    if (currentQuestionIndex.value < mrtQuestions.value.length - 1) {
       currentQuestionIndex.value++;
       nextButtonClickCount.value = 0;
     } else {
       // Complete test: move index past last question
-      currentQuestionIndex.value = questions.value.length;
+      currentQuestionIndex.value = mrtQuestions.value.length;
       nextButtonClickCount.value = 0;
     }
   }
@@ -159,7 +119,7 @@ const handlePrevClick = () => {
   const now = Date.now();
   if (
     currentQuestionIndex.value >= 0 &&
-    currentQuestionIndex.value < questions.value.length &&
+    currentQuestionIndex.value < mrtQuestions.value.length &&
     questionStartTimestamps.value[currentQuestionIndex.value]
   ) {
     questionTimes.value[currentQuestionIndex.value] += Math.round(
@@ -179,7 +139,7 @@ watch(currentQuestionIndex, async (newIndex, oldIndex) => {
   if (
     typeof newIndex === 'number' &&
     newIndex >= 0 &&
-    newIndex < questions.value.length
+    newIndex < mrtQuestions.value.length
   ) {
     if (!questionStartTimestamps.value[newIndex]) {
       questionStartTimestamps.value[newIndex] = now;
@@ -188,55 +148,46 @@ watch(currentQuestionIndex, async (newIndex, oldIndex) => {
   if (newIndex === 0 && startTime.value === null) {
     startTime.value = now;
   }
-  if (newIndex !== oldIndex && newIndex < questions.value.length) {
-    await nextTick();
-    if (answerInput.value) {
-      if (typeof (answerInput.value as any)?.focus === 'function') {
-        (answerInput.value as any).focus();
-      } else if ((answerInput.value as any)?.$el && typeof (answerInput.value as any)?.$el.focus === 'function') {
-        (answerInput.value as any).$el.focus();
-      }
-    }
-  }
 }, { immediate: true });
 
 const startTest = () => {
   showTest.value = true;
   currentQuestionIndex.value = 0;
   nextButtonClickCount.value = 0;
-  userAnswers.value = Array(questions.value.length).fill('');
-  questionTimes.value = Array(questions.value.length).fill(0);
-  questionStartTimestamps.value = Array(questions.value.length).fill(null);
+  userAnswers.value = Array(mrtQuestions.value.length).fill(null);
+  questionTimes.value = Array(mrtQuestions.value.length).fill(0);
+  questionStartTimestamps.value = Array(mrtQuestions.value.length).fill(null);
   startTime.value = null;
 };
 </script>
 
 <template>
-
-  <Head title="Tests" />
+  <Head title="MRT-A Test" />
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20">
-      <!-- Sidebar Navigation: Only visible during the test -->
+      <!-- Sidebar Navigation -->
       <aside v-if="showTest" class="w-64 flex-shrink-0 flex flex-col items-start space-y-2  py-4 h-fit sticky top-8">
         <h3 class="font-bold mb-2 text-sm text-muted-foreground pl-4">Fragen</h3>
         <div class="flex flex-col space-y-1 w-full items-start">
-          <template v-for="(q, idx) in questions" :key="idx">
+          <template v-for="(q, idx) in mrtQuestions" :key="idx">
             <button class="w-full flex items-center space-x-2 py-1 px-2 rounded-lg font-medium border transition
                hover:bg-blue-50 focus:outline-none text-base" :class="{
                 'bg-blue-600 text-white border-blue-600': idx === currentQuestionIndex,
                 'hover:bg-blue-500': idx === currentQuestionIndex,
-                'bg-green-200 border-green-400 text-green-900': userAnswers[idx] && idx !== currentQuestionIndex,
+                'bg-green-200 border-green-400 text-green-900': userAnswers[idx] && idx !== currentQuestionIndex && q.correct.map(a => a.toUpperCase()).includes(userAnswers[idx]?.toUpperCase()),
+                'bg-red-200 border-red-400 text-red-900': userAnswers[idx] && idx !== currentQuestionIndex && !q.correct.map(a => a.toUpperCase()).includes(userAnswers[idx]?.toUpperCase()),
                 'bg-gray-100 border-gray-300 text-gray-900': !userAnswers[idx] && idx !== currentQuestionIndex,
               }" @click="jumpToQuestion(idx)" :disabled="isTestComplete || !showTest">
               <span class="w-8 h-8 flex items-center justify-center rounded-full border mr-2" :class="{
                 'bg-blue-600 text-white border-blue-600': idx === currentQuestionIndex,
-                'bg-green-400 text-white border-green-400': userAnswers[idx] && idx !== currentQuestionIndex,
-                'bg-gray-300 text-gray-600 border-gray-400': !userAnswers[idx] && idx !== currentQuestionIndex,
+                'bg-green-400 text-white border-green-400': userAnswers[idx] && q.correct.map(a => a.toUpperCase()).includes(userAnswers[idx]?.toUpperCase()),
+                'bg-red-400 text-white border-red-400': userAnswers[idx] && !q.correct.map(a => a.toUpperCase()).includes(userAnswers[idx]?.toUpperCase()),
+                'bg-gray-300 text-gray-600 border-gray-400': !userAnswers[idx],
               }">
                 {{ idx + 1 }}
               </span>
-              <span class="truncate max-w-[130px] text-left text-xs" :title="q.text">
-                {{ q.text.length > 30 ? q.text.slice(0, 30) + '…' : q.text }}
+              <span class="truncate max-w-[130px] text-left text-xs" :title="q.options.join(' | ')">
+                Frage {{ q.number }}
               </span>
             </button>
           </template>
@@ -247,11 +198,10 @@ const startTest = () => {
       <div class="flex-1 flex flex-col gap-4">
         <!-- Start Test Screen -->
         <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
-          <h2 class="text-2xl font-bold mb-4">Willkommen zum Mathematik-Test</h2>
+          <h2 class="text-2xl font-bold mb-4">Willkommen zum MRT-A Deutsch-Test</h2>
           <p class="mb-6 text-base text-center max-w-xl">
-            Dieser Test besteht aus {{ questions.length }} Fragen. Sie können während des Tests jederzeit zwischen den
-            Fragen navigieren.
-            Die benötigte Zeit pro Frage wird automatisch gemessen.
+            Dieser Test besteht aus {{ mrtQuestions.length }} Aufgaben. Wählen Sie jeweils die richtige Schreibweise.
+            Die benötigte Zeit pro Aufgabe wird automatisch gemessen.
           </p>
           <Button @click="startTest" class="px-8 py-3 text-lg font-semibold rounded-xl shadow">
             Test starten
@@ -261,27 +211,37 @@ const startTest = () => {
         <!-- Test Content -->
         <div v-else-if="!isTestComplete && currentQuestion" class="p-6 bg-background border rounded-lg">
           <h2 class="text-xl font-semibold mb-4">Frage {{ currentQuestionIndex + 1 }}:</h2>
-          <p class="text-lg mb-6" v-html="formatQuestionMark(currentQuestion.text)"></p>
-          <div v-if="currentQuestion.image" class="mb-4">
-            <img :src="currentQuestion.image" alt="Fragebild" class="max-w-xs border rounded shadow" />
+          <div class="mb-6 text-base">
+            <ul>
+              <li v-for="(option, oidx) in currentQuestion.options" :key="oidx" class="mb-2">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    class="accent-blue-600"
+                    :name="'question-' + currentQuestionIndex"
+                    :value="String.fromCharCode(65 + oidx)"
+                    v-model="userAnswers[currentQuestionIndex]"
+                    :disabled="isTestComplete"
+                  />
+                  <span class="font-mono font-semibold mr-1">{{ String.fromCharCode(65 + oidx) }})</span>
+                  <span>{{ option }}</span>
+                </label>
+              </li>
+            </ul>
           </div>
-          <div class="w-full md:w-1/2">
-            <Input ref="answerInput" type="text" v-model="userAnswers[currentQuestionIndex]" placeholder="Ihre Antwort"
-              class="mb-2 w-full" />
-
-            <div class="flex flex-row justify-between mt-2">
-              <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline">
-                Zurück
-              </Button>
-              <Button @click="handleNextClick">
-                {{ nextButtonText }}
-              </Button>
-            </div>
+          <div class="flex flex-row justify-between mt-4">
+            <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline">
+              Zurück
+            </Button>
+            <Button @click="handleNextClick" :disabled="userAnswers[currentQuestionIndex] === null">
+              {{ nextButtonText }}
+            </Button>
           </div>
           <p v-if="nextButtonClickCount === 1" class="text-sm text-muted-foreground mt-2">
             Klicken Sie erneut auf "Weiter (Bestätigen)", um fortzufahren.
           </p>
         </div>
+
         <!-- Test Results -->
         <div v-else-if="isTestComplete" class="p-6 bg-background border rounded-lg">
           <h2 class="text-xl font-semibold mb-4">Test abgeschlossen!</h2>
@@ -290,15 +250,7 @@ const startTest = () => {
               <tbody>
                 <tr class="bg-muted/40">
                   <td class="font-semibold px-3 py-2 w-1/2">Rohwert</td>
-                  <td class="px-3 py-2">{{ finalScore }} von {{ questions.length }}</td>
-                </tr>
-                <tr>
-                  <td class="font-semibold px-3 py-2">Prozentrang (PR)</td>
-                  <td class="px-3 py-2">{{ userPR }}</td>
-                </tr>
-                <tr class="bg-muted/40">
-                  <td class="font-semibold px-3 py-2">T-Wert (Normwert)</td>
-                  <td class="px-3 py-2">{{ userTwert }}</td>
+                  <td class="px-3 py-2">{{ finalScore }} von {{ mrtQuestions.length }}</td>
                 </tr>
                 <tr>
                   <td class="font-semibold px-3 py-2">Benötigte Zeit</td>
@@ -308,40 +260,34 @@ const startTest = () => {
                     </span>
                     <span v-else>–</span>
                   </td>
-
                 </tr>
               </tbody>
             </table>
           </div>
 
           <div>
-            <h3 class="font-bold mb-2">Antwort- und Bearbeitungszeit je Frage</h3>
+            <h3 class="font-bold mb-2">Antwort- und Bearbeitungszeit je Aufgabe</h3>
             <div class="overflow-x-auto">
               <table class="min-w-full text-sm border rounded-lg shadow">
                 <thead class="bg-muted/40">
                   <tr>
                     <th class="px-2 py-1 text-left font-semibold">#</th>
-                    <th class="px-2 py-1 text-left font-semibold">Frage</th>
-                    <th class="px-2 py-1 text-left font-semibold">Ihre Antwort</th>
-                    <th class="px-2 py-1 text-left font-semibold">Richtige Antwort</th>
+                    <th class="px-2 py-1 text-left font-semibold">Ihre Auswahl</th>
+                    <th class="px-2 py-1 text-left font-semibold">Richtige Antwort(en)</th>
                     <th class="px-2 py-1 text-left font-semibold">Bearbeitungszeit</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(q, idx) in questions" :key="idx"
-                    :class="userAnswers[idx]?.trim().replace(',', '.') === q.answer.trim().replace(',', '.') ? 'bg-green-50' : 'bg-red-50'">
+                  <tr v-for="(q, idx) in mrtQuestions" :key="idx"
+                    :class="userAnswers[idx] && q.correct.map(a => a.toUpperCase()).includes(userAnswers[idx]?.toUpperCase())
+                      ? 'bg-green-50'
+                      : 'bg-red-50'">
                     <td class="px-2 py-1 font-medium text-muted-foreground">{{ idx + 1 }}</td>
-                    <td class="px-2 py-1 align-top">
-                      <span v-html="formatQuestionMark(q.text)"></span>
-                      <div v-if="q.image" class="mt-1">
-                        <img :src="q.image" alt="Fragebild" class="max-w-[90px] border rounded shadow" />
-                      </div>
-                    </td>
                     <td class="px-2 py-1">
                       <span class="font-mono">{{ userAnswers[idx] || '–' }}</span>
                     </td>
                     <td class="px-2 py-1">
-                      <span class="font-mono">{{ q.answer }}</span>
+                      <span class="font-mono">{{ q.correct.join(', ') }}</span>
                     </td>
                     <td class="px-2 py-1 text-right text-gray-500 font-mono min-w-[60px]">
                       {{ formatTime(questionTimes[idx]) }}
@@ -351,7 +297,6 @@ const startTest = () => {
               </table>
             </div>
           </div>
-
         </div>
 
         <div v-else>

@@ -18,6 +18,11 @@ const mainNavItems: NavItem[] = [
     title: 'Tests',
     href: '/tests', // The new route for the Tests page
     icon: LayoutGrid, // Placeholder icon, can be changed later
+  },
+  {
+    title: 'MRT',
+    href: '/mrt', // The new route for the Tests page
+    icon: LayoutGrid, // Placeholder icon, can be changed later
   }
 ];
 

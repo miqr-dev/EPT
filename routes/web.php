@@ -13,6 +13,10 @@ Route::get('tests', function () {
   return Inertia::render('TestsPage');
 })->middleware(['auth', 'verified'])->name('tests');
 
+Route::get('mrt', function () {
+  return Inertia::render('MRT');
+})->middleware(['auth', 'verified'])->name('mrt');
+
 Route::get('dashboard', function () {
   return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
