@@ -4,7 +4,15 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
-import VueApexCharts from "vue3-apexcharts";
+import { Line } from 'vue-chartjs';
+import {
+  Chart, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title, registerables
+} from 'chart.js';
+import annotationPlugin from 'chartjs-plugin-annotation';
+
+Chart.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title)
+Chart.register(...registerables, annotationPlugin)
+
 
 
 // -------------- Utility ---------------
@@ -33,56 +41,56 @@ const mrtQuestions = ref<MRTQuestion[]>([
   { number: 8, options: ["Apettit", "Appetitt", "Appettit", "Appetit"], correct: ["D"] },
   { number: 9, options: ["Brennesel", "Brennnesel", "Brennessel", "Brennnessel"], correct: ["C", "D"] },
   { number: 10, options: ["Kontrollaparrat", "Kontrollapparrat", "Kontrolapparat", "Kontrollapparat"], correct: ["D"] },
-  { number: 11, options: ["Gutmüdigkeit", "Gutmüdichkeit", "Gutmütigkeid", "Gutmütigkeit"], correct: ["D"] },
-  { number: 12, options: ["täglisch und vierzehntägig", "täglich und vierzehntägich", "täglich und vierzehntägig", "täglig und vierzehntägig"], correct: ["C"] },
-  { number: 13, options: ["Flukzeugwerk", "Flugzeukwerk", "Flugzeugwerg", "Flugzeugwerk"], correct: ["D"] },
-  { number: 14, options: ["unendgeldlich", "unendgeltlich", "unentgeldlich", "unentgeltlich"], correct: ["D"] },
-  { number: 15, options: ["am bedeutendsden", "am bedeutendsten", "am bedeutentsten", "am bedeudendsten"], correct: ["B"] },
-  { number: 16, options: ["Liberalisierung", "Lieberalisirung", "Lieberalisierung", "Liberalisirung"], correct: ["A"] },
-  { number: 17, options: ["zwei menschenleere Säle", "zwei menschenlehre Säle", "zwei menschenlehre Sääle", "zwei menschenleere Sääle"], correct: ["A"] },
-  { number: 18, options: ["Nämaschiene", "Nähmaschiene", "Nämaschine", "Nähmaschine"], correct: ["D"] },
-  { number: 19, options: ["wiederstandsfäig", "widerstandsfähig", "widerstandsfäig", "wiederstandsfähig"], correct: ["B"] },
-  { number: 20, options: ["Wahreneinfuhr", "Wareneinfuhr", "Wahreneinfur", "Wareneinfur"], correct: ["B"] },
-  { number: 21, options: ["Kanallotse", "Kannallotse", "Kanallotze", "Kannalotse"], correct: ["A"] },
-  { number: 22, options: ["aggressiv", "agressiv", "agresiv", "aggresiv"], correct: ["A"] },
-  { number: 23, options: ["Komission", "Komision", "Kommission", "Kommision"], correct: ["C"] },
-  { number: 24, options: ["Dillemma", "Dilemma", "Dilema", "Dillema"], correct: ["B"] },
-  { number: 25, options: ["Rasieraparrat", "Rassierapparat", "Rasierapparat", "Rasieraparat"], correct: ["C"] },
-  { number: 26, options: ["Revormforschlag", "Reformforschlag", "Revormvorschlag", "Reformvorschlag"], correct: ["D"] },
-  { number: 27, options: ["tugenhaft", "tugenhafd", "tugenthaft", "tugendhaft"], correct: ["D"] },
-  { number: 28, options: ["Angeglagter", "Angeklakter", "Angeglakter", "Angeklagter"], correct: ["D"] },
-  { number: 29, options: ["Gewandheit", "Gewandtheit", "Gewandtheid", "Gewantheit"], correct: ["B"] },
-  { number: 30, options: ["schaudernt", "schauternt", "schaudernd", "schauternd"], correct: ["C"] },
-  { number: 31, options: ["Bundespräsidänt", "Bundespresident", "Bundespräsident", "Bundespresidänt"], correct: ["C"] },
-  { number: 32, options: ["Sekrätärin", "Sekretärin", "Säkretärin", "Sekräterin"], correct: ["B"] },
-  { number: 33, options: ["repräsentativ", "representativ", "repräsäntativ", "räpräsentativ"], correct: ["A"] },
-  { number: 34, options: ["annähärnd", "annähernd", "annehärnd", "annehernd"], correct: ["B"] },
-  { number: 35, options: ["ärgärlich", "ergerlich", "ergärlich", "ärgerlich"], correct: ["D"] },
-  { number: 36, options: ["vom kleinen auf das Große schließen", "vom Kleinen auf das Große schließen", "vom Kleinen auf das große schließen", "vom kleinen auf das große schließen"], correct: ["B"] },
-  { number: 37, options: ["im Dunkel der Nacht", "im dunkel der nacht", "im Dunkel der nacht", "im dunkel der Nacht"], correct: ["A"] },
-  { number: 38, options: ["sie hat angst und mir ist auch Angst", "sie hat Angst und mir ist auch angst", "sie hat Angst und mir ist auch Angst", "sie hat angst und mir ist auch angst"], correct: ["B"] },
-  { number: 39, options: ["wir froren ganze nächtelang vor Kälte", "wir froren ganze Nächtelang vor Kälte", "wir froren ganze nächte lang vor Kälte", "wir froren ganze Nächte lang vor Kälte"], correct: ["D"] },
-  { number: 40, options: ["ein einzelnes paar Schuhe", "ein Einzelnes paar Schuhe", "ein Einzelnes Paar Schuhe", "ein einzelnes Paar Schuhe"], correct: ["D"] },
-  { number: 41, options: ["Insditution", "Institution", "Instidution", "Insdidution"], correct: ["B"] },
-  { number: 42, options: ["generell", "gennerrell", "gennerell", "generrell"], correct: ["A"] },
-  { number: 43, options: ["Identifizierung", "Idäntifizierung", "Identifizirung", "Itentifizierung"], correct: ["A"] },
-  { number: 44, options: ["Differrenz", "Diferrenz", "Differenz", "Diferenz"], correct: ["C"] },
-  { number: 45, options: ["Sattellit", "Satellit", "Satellid", "Satelit"], correct: ["B"] },
-  { number: 46, options: ["die Maid ist zartbesaitet", "die Maid ist zartbeseitet", "die Meid ist zartbesaitet", "die Meid ist zartbeseitet"], correct: ["A"] },
-  { number: 47, options: ["Laubsegeblätter", "Laubsägeblätter", "Laubsegäblätter", "Laubsägebletter"], correct: ["B"] },
-  { number: 48, options: ["Dräschflegel", "Dräschflägel", "Dreschflegel", "Dreschflägel"], correct: ["C"] },
-  { number: 49, options: ["unabänderlich", "unabendärlich", "unabändärlich", "unabenderlich"], correct: ["A"] },
-  { number: 50, options: ["Salzbräzel", "Salzbräzäl", "Salzbrezäl", "Salzbrezel"], correct: ["D"] },
-  { number: 51, options: ["das für und wider", "das für und Wider", "das Für und wider", "das Für und Wider"], correct: ["D"] },
-  { number: 52, options: ["über kurz oder Lang", "über kurz oder lang", "über Kurz oder Lang", "über Kurz oder lang"], correct: ["B"] },
-  { number: 53, options: ["es sangen junge und alte, klein und groß", "es sangen Junge und Alte, Klein und Groß", "es sangen junge und alte, Klein und Groß", "es sangen Junge und Alte, klein und groß"], correct: ["D"] },
-  { number: 54, options: ["er kam gestern mittag", "er kam Gestern Mittag", "er kam gestern Mittag", "er kam Gestern mittag"], correct: ["A", "C"] },
-  { number: 55, options: ["sie kann gut maschineschreiben", "sie kann gut Maschineschreiben", "sie kann gut Maschine schreiben", "sie kann gut maschine schreiben"], correct: ["A", "C"] },
-  { number: 56, options: ["Allmosen", "Almosen", "Almoosen", "Allmoosen"], correct: ["B"] },
-  { number: 57, options: ["debbattieren", "debattiren", "debbatieren", "debattieren"], correct: ["D"] },
-  { number: 58, options: ["Witalität", "Vitalidät", "Vitalität", "Vitallität"], correct: ["C"] },
-  { number: 59, options: ["Arbeitsmillieu", "Arbeitsmiliö", "Arbeitsmülieu", "Arbeitsmilieu"], correct: ["D"] },
-  { number: 60, options: ["Interwiew", "Interviev", "Interwiu", "Interview"], correct: ["D"] },
+  // { number: 11, options: ["Gutmüdigkeit", "Gutmüdichkeit", "Gutmütigkeid", "Gutmütigkeit"], correct: ["D"] },
+  // { number: 12, options: ["täglisch und vierzehntägig", "täglich und vierzehntägich", "täglich und vierzehntägig", "täglig und vierzehntägig"], correct: ["C"] },
+  // { number: 13, options: ["Flukzeugwerk", "Flugzeukwerk", "Flugzeugwerg", "Flugzeugwerk"], correct: ["D"] },
+  // { number: 14, options: ["unendgeldlich", "unendgeltlich", "unentgeldlich", "unentgeltlich"], correct: ["D"] },
+  // { number: 15, options: ["am bedeutendsden", "am bedeutendsten", "am bedeutentsten", "am bedeudendsten"], correct: ["B"] },
+  // { number: 16, options: ["Liberalisierung", "Lieberalisirung", "Lieberalisierung", "Liberalisirung"], correct: ["A"] },
+  // { number: 17, options: ["zwei menschenleere Säle", "zwei menschenlehre Säle", "zwei menschenlehre Sääle", "zwei menschenleere Sääle"], correct: ["A"] },
+  // { number: 18, options: ["Nämaschiene", "Nähmaschiene", "Nämaschine", "Nähmaschine"], correct: ["D"] },
+  // { number: 19, options: ["wiederstandsfäig", "widerstandsfähig", "widerstandsfäig", "wiederstandsfähig"], correct: ["B"] },
+  // { number: 20, options: ["Wahreneinfuhr", "Wareneinfuhr", "Wahreneinfur", "Wareneinfur"], correct: ["B"] },
+  // { number: 21, options: ["Kanallotse", "Kannallotse", "Kanallotze", "Kannalotse"], correct: ["A"] },
+  // { number: 22, options: ["aggressiv", "agressiv", "agresiv", "aggresiv"], correct: ["A"] },
+  // { number: 23, options: ["Komission", "Komision", "Kommission", "Kommision"], correct: ["C"] },
+  // { number: 24, options: ["Dillemma", "Dilemma", "Dilema", "Dillema"], correct: ["B"] },
+  // { number: 25, options: ["Rasieraparrat", "Rassierapparat", "Rasierapparat", "Rasieraparat"], correct: ["C"] },
+  // { number: 26, options: ["Revormforschlag", "Reformforschlag", "Revormvorschlag", "Reformvorschlag"], correct: ["D"] },
+  // { number: 27, options: ["tugenhaft", "tugenhafd", "tugenthaft", "tugendhaft"], correct: ["D"] },
+  // { number: 28, options: ["Angeglagter", "Angeklakter", "Angeglakter", "Angeklagter"], correct: ["D"] },
+  // { number: 29, options: ["Gewandheit", "Gewandtheit", "Gewandtheid", "Gewantheit"], correct: ["B"] },
+  // { number: 30, options: ["schaudernt", "schauternt", "schaudernd", "schauternd"], correct: ["C"] },
+  // { number: 31, options: ["Bundespräsidänt", "Bundespresident", "Bundespräsident", "Bundespresidänt"], correct: ["C"] },
+  // { number: 32, options: ["Sekrätärin", "Sekretärin", "Säkretärin", "Sekräterin"], correct: ["B"] },
+  // { number: 33, options: ["repräsentativ", "representativ", "repräsäntativ", "räpräsentativ"], correct: ["A"] },
+  // { number: 34, options: ["annähärnd", "annähernd", "annehärnd", "annehernd"], correct: ["B"] },
+  // { number: 35, options: ["ärgärlich", "ergerlich", "ergärlich", "ärgerlich"], correct: ["D"] },
+  // { number: 36, options: ["vom kleinen auf das Große schließen", "vom Kleinen auf das Große schließen", "vom Kleinen auf das große schließen", "vom kleinen auf das große schließen"], correct: ["B"] },
+  // { number: 37, options: ["im Dunkel der Nacht", "im dunkel der nacht", "im Dunkel der nacht", "im dunkel der Nacht"], correct: ["A"] },
+  // { number: 38, options: ["sie hat angst und mir ist auch Angst", "sie hat Angst und mir ist auch angst", "sie hat Angst und mir ist auch Angst", "sie hat angst und mir ist auch angst"], correct: ["B"] },
+  // { number: 39, options: ["wir froren ganze nächtelang vor Kälte", "wir froren ganze Nächtelang vor Kälte", "wir froren ganze nächte lang vor Kälte", "wir froren ganze Nächte lang vor Kälte"], correct: ["D"] },
+  // { number: 40, options: ["ein einzelnes paar Schuhe", "ein Einzelnes paar Schuhe", "ein Einzelnes Paar Schuhe", "ein einzelnes Paar Schuhe"], correct: ["D"] },
+  // { number: 41, options: ["Insditution", "Institution", "Instidution", "Insdidution"], correct: ["B"] },
+  // { number: 42, options: ["generell", "gennerrell", "gennerell", "generrell"], correct: ["A"] },
+  // { number: 43, options: ["Identifizierung", "Idäntifizierung", "Identifizirung", "Itentifizierung"], correct: ["A"] },
+  // { number: 44, options: ["Differrenz", "Diferrenz", "Differenz", "Diferenz"], correct: ["C"] },
+  // { number: 45, options: ["Sattellit", "Satellit", "Satellid", "Satelit"], correct: ["B"] },
+  // { number: 46, options: ["die Maid ist zartbesaitet", "die Maid ist zartbeseitet", "die Meid ist zartbesaitet", "die Meid ist zartbeseitet"], correct: ["A"] },
+  // { number: 47, options: ["Laubsegeblätter", "Laubsägeblätter", "Laubsegäblätter", "Laubsägebletter"], correct: ["B"] },
+  // { number: 48, options: ["Dräschflegel", "Dräschflägel", "Dreschflegel", "Dreschflägel"], correct: ["C"] },
+  // { number: 49, options: ["unabänderlich", "unabendärlich", "unabändärlich", "unabenderlich"], correct: ["A"] },
+  // { number: 50, options: ["Salzbräzel", "Salzbräzäl", "Salzbrezäl", "Salzbrezel"], correct: ["D"] },
+  // { number: 51, options: ["das für und wider", "das für und Wider", "das Für und wider", "das Für und Wider"], correct: ["D"] },
+  // { number: 52, options: ["über kurz oder Lang", "über kurz oder lang", "über Kurz oder Lang", "über Kurz oder lang"], correct: ["B"] },
+  // { number: 53, options: ["es sangen junge und alte, klein und groß", "es sangen Junge und Alte, Klein und Groß", "es sangen junge und alte, Klein und Groß", "es sangen Junge und Alte, klein und groß"], correct: ["D"] },
+  // { number: 54, options: ["er kam gestern mittag", "er kam Gestern Mittag", "er kam gestern Mittag", "er kam Gestern mittag"], correct: ["A", "C"] },
+  // { number: 55, options: ["sie kann gut maschineschreiben", "sie kann gut Maschineschreiben", "sie kann gut Maschine schreiben", "sie kann gut maschine schreiben"], correct: ["A", "C"] },
+  // { number: 56, options: ["Allmosen", "Almosen", "Almoosen", "Allmoosen"], correct: ["B"] },
+  // { number: 57, options: ["debbattieren", "debattiren", "debbatieren", "debattieren"], correct: ["D"] },
+  // { number: 58, options: ["Witalität", "Vitalidät", "Vitalität", "Vitallität"], correct: ["C"] },
+  // { number: 59, options: ["Arbeitsmillieu", "Arbeitsmiliö", "Arbeitsmülieu", "Arbeitsmilieu"], correct: ["D"] },
+  // { number: 60, options: ["Interwiew", "Interviev", "Interwiu", "Interview"], correct: ["D"] },
 ]);
 
 const userAge = ref<number>(28);
@@ -100,9 +108,9 @@ const groupMap = [
 const SN_WERTE_MATRIX = [
   // 0  1  2  3  4  5  6  7  8  9  10  
   // U1
-  [1, 1, 1, 1, 2, 2, 3, 4, 5, 6, 9],
+  [1, 1, 1, 1, 2, 3, 3, 4, 5, 6, 9],
   // U2
-  [1, 1, 1, 2, 3, 4, 6, 6, 7, 8, 9],
+  [1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9],
   // U3
   [1, 1, 1, 1, 2, 2, 3, 4, 5, 7, 9],
   // U4
@@ -131,7 +139,7 @@ const groupStanines = computed(() =>
   })
 );
 
-const prTable_18_30 = [{ rwgs: 9, PR: 0 }, { rwgs: 10, PR: 0 }, { rwgs: 11, PR: 0 }, { rwgs: 12, PR: 0 }, { rwgs: 13, PR: 1 }, { rwgs: 14, PR: 1 }, { rwgs: 15, PR: 1 }, { rwgs: 16, PR: 1 }, { rwgs: 17, PR: 1 }, { rwgs: 18, PR: 1 }, { rwgs: 19, PR: 1 }, { rwgs: 20, PR: 2 }, { rwgs: 21, PR: 2 }, { rwgs: 22, PR: 4 }, { rwgs: 23, PR: 4 }, { rwgs: 24, PR: 5 }, { rwgs: 25, PR: 7 }, { rwgs: 26, PR: 8 }, { rwgs: 27, PR: 10 }, { rwgs: 28, PR: 12 }, { rwgs: 29, PR: 13 }, { rwgs: 30, PR: 16 }, { rwgs: 31, PR: 18 }, { rwgs: 32, PR: 21 }, { rwgs: 33, PR: 24 }, { rwgs: 34, PR: 27 }, { rwgs: 35, PR: 31 }, { rwgs: 36, PR: 31 }, { rwgs: 37, PR: 34 }, { rwgs: 38, PR: 38 }, { rwgs: 39, PR: 42 }, { rwgs: 40, PR: 46 }, { rwgs: 41, PR: 50 }, { rwgs: 42, PR: 54 }, { rwgs: 43, PR: 58 }, { rwgs: 44, PR: 66 }, { rwgs: 45, PR: 69 }, { rwgs: 46, PR: 73 }, { rwgs: 47, PR: 76 }, { rwgs: 48, PR: 79 }, { rwgs: 49, PR: 82 }, { rwgs: 50, PR: 86 }, { rwgs: 51, PR: 88 }, { rwgs: 52, PR: 90 }, { rwgs: 53, PR: 93 }, { rwgs: 54, PR: 96 }, { rwgs: 55, PR: 97 }, { rwgs: 56, PR: 99 }, { rwgs: 57, PR: 100 }, { rwgs: 58, PR: 100 }, { rwgs: 59, PR: 100 }, { rwgs: 60, PR: 100 }]
+const prTable_18_30 = [{ rwgs: 9, PR: 0 }, { rwgs: 10, PR: 0 }, { rwgs: 11, PR: 0 }, { rwgs: 12, PR: 0 }, { rwgs: 13, PR: 0 }, { rwgs: 14, PR: 0 }, { rwgs: 15, PR: 0 }, { rwgs: 16, PR: 0 }, { rwgs: 17, PR: 0 }, { rwgs: 18, PR: 1 }, { rwgs: 19, PR: 1 }, { rwgs: 20, PR: 1 }, { rwgs: 21, PR: 2 }, { rwgs: 22, PR: 2 }, { rwgs: 23, PR: 3 }, { rwgs: 24, PR: 3 }, { rwgs: 25, PR: 3 }, { rwgs: 26, PR: 3 }, { rwgs: 27, PR: 3 }, { rwgs: 28, PR: 4 }, { rwgs: 29, PR: 5 }, { rwgs: 30, PR: 7 }, { rwgs: 31, PR: 8 }, { rwgs: 32, PR: 10 }, { rwgs: 33, PR: 12 }, { rwgs: 34, PR: 13 }, { rwgs: 35, PR: 16 }, { rwgs: 36, PR: 18 }, { rwgs: 37, PR: 18 }, { rwgs: 38, PR: 21 }, { rwgs: 39, PR: 24 }, { rwgs: 40, PR: 27 }, { rwgs: 41, PR: 31 }, { rwgs: 42, PR: 34 }, { rwgs: 43, PR: 38 }, { rwgs: 44, PR: 42 }, { rwgs: 45, PR: 46 }, { rwgs: 46, PR: 50 }, { rwgs: 47, PR: 54 }, { rwgs: 48, PR: 58 }, { rwgs: 49, PR: 62 }, { rwgs: 50, PR: 69 }, { rwgs: 51, PR: 73 }, { rwgs: 52, PR: 79 }, { rwgs: 53, PR: 84 }, { rwgs: 54, PR: 88 }, { rwgs: 55, PR: 93 }, { rwgs: 56, PR: 96 }, { rwgs: 57, PR: 98 }, { rwgs: 58, PR: 99 }, { rwgs: 59, PR: 100 }, { rwgs: 60, PR: 100 }];
 
 function getPR(rwgs) {
   const found = prTable_18_30.find(row => row.rwgs === rwgs);
@@ -141,43 +149,49 @@ function getPR(rwgs) {
 const prValue = computed(() => getPR(totalScore.value));
 
 
-const chartOptions = ref({
-  chart: {
-    type: 'line',
-    height: 320,
-    toolbar: { show: false },
-    animations: { enabled: true }
-  },
-  stroke: {
-    curve: 'stepline',
-    width: 4
-  },
-  yaxis: {
-    categories: ['U1', 'U2', 'U3', 'U4', 'U5', 'U6'],
-    labels: { style: { fontSize: '14px' } }
-  },
-  xaxis: {
-    min: 1,
-    max: 9,
-    tickAmount: 8,
-    labels: {
-      style: { fontSize: '14px' },
-      formatter: (val: number) => Math.round(val)
+const groupLabels = ['U1', 'U2', 'U3', 'U4', 'U5', 'U6']
+const chartData = computed(() => ({
+  labels: groupLabels,
+  datasets: [
+    {
+      label: 'SN',
+      data: groupStanines.value, // [1,2,3,4,5,6] as an example
+      borderColor: '#1d4ed8',
+      backgroundColor: '#1d4ed8',
+      tension: 0,   // 0 = stepline, 0.4 = curve
+      pointRadius: 6,
+      pointBackgroundColor: '#1d4ed8',
+      fill: false
+    }
+  ]
+}))
+
+const chartOptions = {
+  responsive: true,
+  plugins: {
+    legend: { display: false },
+    title: { display: false },
+    annotation: {
+      annotations: {
+        rangeBox: {
+          type: 'box',
+          xMin: 4,
+          xMax: 6,
+          backgroundColor: 'rgba(144,238,144,0.3)', // light green
+          borderWidth: 0,
+        }
+      }
     }
   },
-  dataLabels: { enabled: true },
-  markers: { size: 6 },
-  grid: { xaxis: { lines: { show: true } }, yaxis: { lines: { show: true } } }
-});
-
-
-
-const chartSeries = computed(() => [
-  {
-    name: 'SN',
-    data: groupStanines.value
+  indexAxis: 'y',
+  scales: {
+    x: {
+      min: 1,
+      max: 9,
+      ticks: { stepSize: 1 }
+    }
   }
-]);
+};
 
 const groupScores = computed(() =>
   groupMap.map(indices =>
@@ -376,7 +390,7 @@ const startTest = () => {
                   userAnswers[currentQuestionIndex] ? 'cursor-default opacity-60' : 'cursor-pointer'
                 ]" @click="handleOptionClick(oidx)" :disabled="false">
                 <!-- *** NO LETTERS, JUST OPTION *** -->
-                <span class="font-sans">{{ option }}</span>
+                <span class="font-sans select-none">{{ option }}</span>
               </button>
               <span
                 v-if="tempSelected[currentQuestionIndex] === String.fromCharCode(65 + oidx) && tempClickState[currentQuestionIndex] && !userAnswers[currentQuestionIndex]"
@@ -497,27 +511,24 @@ const startTest = () => {
                 </div>
               </div>
               <!-- Stepline Chart Centered -->
-              <VueApexCharts width="480" height="320" type="line" :options="chartOptions" :series="chartSeries" />
+              <div style="width: 480px; height: 320px;">
+                <Line :data="chartData" :options="chartOptions" />
+              </div>
               <!-- PR Bar Chart -->
               <div class="w-full flex justify-center mt-6">
-                <!-- PR Bar (Percentage) -->
-                <!-- PR Bar (Percentage) -->
-                <div class="w-full flex justify-center mt-6">
-                  <div class="w-[400px] h-8 rounded-full bg-gray-200 relative overflow-hidden shadow-inner">
-                    <!-- The filled part -->
-                    <div class="h-full bg-red-600 transition-all duration-700 flex items-center justify-center"
-                      :style="{ width: (prValue || 0) + '%' }">
-                      <!-- Empty span just for flex alignment, no text here -->
-                      <span class="opacity-0">.</span>
-                    </div>
-                    <!-- The text is absolutely centered on top of the bar -->
-                    <span class="absolute left-0 w-full h-full flex items-center justify-center text-black font-bold"
-                      style="top: 0;" v-if="prValue !== null">
-                      {{ prValue }}%
-                    </span>
+                <div class="w-[400px] h-8 rounded-full bg-gray-200 relative overflow-hidden shadow-inner">
+                  <!-- The filled part -->
+                  <div class="h-full bg-red-600 transition-all duration-700 flex items-center justify-center"
+                    :style="{ width: (prValue || 0) + '%' }">
+                    <!-- Empty span just for flex alignment, no text here -->
+                    <span class="opacity-0">.</span>
                   </div>
+                  <!-- The text is absolutely centered on top of the bar -->
+                  <span class="absolute left-0 w-full h-full flex items-center justify-center text-black font-bold"
+                    style="top: 0;" v-if="prValue !== null">
+                    {{ prValue }}%
+                  </span>
                 </div>
-
               </div>
             </div>
           </div>

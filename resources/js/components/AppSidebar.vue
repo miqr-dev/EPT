@@ -23,7 +23,12 @@ const mainNavItems: NavItem[] = [
     title: 'MRT',
     href: '/mrt', // The new route for the Tests page
     icon: LayoutGrid, // Placeholder icon, can be changed later
-  }
+  },
+  {
+    title: 'FPI',
+    href: '/fpi', // The new route for the Tests page
+    icon: LayoutGrid, // Placeholder icon, can be changed later
+  },
 ];
 
 const footerNavItems: NavItem[] = [

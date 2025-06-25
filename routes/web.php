@@ -17,6 +17,10 @@ Route::get('mrt', function () {
   return Inertia::render('MRT');
 })->middleware(['auth', 'verified'])->name('mrt');
 
+Route::get('fpi', function () {
+  return Inertia::render('FPI');
+})->middleware(['auth', 'verified'])->name('fpi');
+
 Route::get('dashboard', function () {
   return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
