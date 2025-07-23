@@ -9,9 +9,9 @@ Route::get('/', function () {
   return Inertia::render('Welcome');
 })->name('home');
 
-Route::get('tests', function () {
-  return Inertia::render('TestsPage');
-})->middleware(['auth', 'verified'])->name('tests');
+Route::get('brt', function () {
+  return Inertia::render('BRT');
+})->middleware(['auth', 'verified'])->name('brt');
 
 Route::get('mrt', function () {
   return Inertia::render('MRT');
@@ -20,6 +20,14 @@ Route::get('mrt', function () {
 Route::get('fpi', function () {
   return Inertia::render('FPI');
 })->middleware(['auth', 'verified'])->name('fpi');
+
+Route::get('lmt', function () {
+  return Inertia::render('LMT');
+})->middleware(['auth', 'verified'])->name('lmt');
+
+Route::get('lmt2', function () {
+  return Inertia::render('LMT2');
+})->middleware(['auth', 'verified'])->name('lmt2');
 
 Route::get('dashboard', function () {
   return Inertia::render('Dashboard');

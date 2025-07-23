@@ -16,29 +16,29 @@ function formatTime(sec: number | null): string {
 
 interface Question {
   text: string;
-  answer: string;
+  answers: string[];
   image?: string;
 }
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Tests', href: '/tests' },
 ];
 const questions = ref<Question[]>([
-  { text: "619020 – 541600 = ?", answer: "77420" },
-  { text: "619020 = 174309 + ?", answer: "444711" },
-  { text: "4 : 80 = ?", answer: "0,05" },
-  { text: "0,2 · ____ = 0,1", answer: "0,5" },
-  { text: "1/3 : 1/2 = ?", answer: "2/3" },
-  { text: "Verwandle 0,4 in einen gewöhnlichen Bruch.", answer: "2/5" },
-  { text: "Ein Mechaniker hat aus 3 Teilen ein Gerät hergestellt. Die Einzelteile wiegen: 50 g, 9,4 kg, 1050 g. Wie viel wiegt das gesamte Gerät?", answer: "10500" },
-  { text: "Rechne um: Wie viel g sind 9 kg und 1 g?", answer: "9001" },
-  { text: "Wie viel Zinsen erbringen 1000 € zu 4 % in einem Jahr?", answer: "40" },
-  { text: "Rudi kauft sich ein neues Mofa. Es kostet 1390 €. Bei Barzahlung bekommt er 2 % Rabatt. Wie viel muss er bezahlen?", answer: "1362,2" },
-  { text: "Im Sägewerk können aus einem Baumstamm 20 Bretter von 3 cm Dicke geschnitten werden. Wie viele Bretter erhält man, wenn sie 2 cm dick sind?", answer: "30" },
-  { text: "Im Sägewerk können aus einem Baumstamm 20 Bretter von 3 cm Dicke geschnitten werden. Wie dick wird ein Brett, wenn man 15 Bretter aus dem Stamm schneidet?", answer: "4" },
-  { text: "Berechne die Grundstücksgröße in m².", answer: "60", image: "/images/Math/Mathe1.png" },
-  { text: "Das Rad hat einen Durchmesser von 0,6 m. Welche Strecke legt es zurück, wenn es sich 100 mal dreht?", answer: "188,5", image: "/images/Math/Mathe2.png" },
-  { text: "√81 = ?", answer: "9" },
-  { text: "10³ = ?", answer: "1000" },
+  { text: "619020 – 541600 = ?", answers: ["77420"] },
+  { text: "619020 = 174309 + ?", answers: ["444711"] },
+  { text: "4 : 80 = ?", answers: ["0,05"] },
+  { text: "0,2 · ____ = 0,1", answers: ["0,5", "1/2"] },
+  { text: "1/3 : 1/2 = ?", answers: ["2/3"] },
+  { text: "Verwandle 0,4 in einen gewöhnlichen Bruch.", answers: ["2/5", "4/10"] },
+  { text: "Ein Mechaniker hat aus 3 Teilen ein Gerät hergestellt. Die Einzelteile wiegen: 50 g, 9,4 kg, 1050 g. Wie viel wiegt das gesamte Gerät?", answers: ["10500", "10500 g", "10500g", "10,5", "10,5Kg", "10,5kg", "10,5 Kg", "10,5 kg"] },
+  { text: "Rechne um: Wie viel g sind 9 kg und 1 g?", answers: ["9001","9001g", "9001 g", "9001 G", "9001G"] },
+  { text: "Wie viel Zinsen erbringen 1000 € zu 4 % in einem Jahr?", answers: ["40","40€", "40 €"] },
+  { text: "Rudi kauft sich ein neues Mofa. Es kostet 1390 €. Bei Barzahlung bekommt er 2 % Rabatt. Wie viel muss er bezahlen?", answers: ["1362,2","1362,20","1362,20 €", "1362,2 €", "1362,2€", "1362,20€"] },
+  { text: "Im Sägewerk können aus einem Baumstamm 20 Bretter von 3 cm Dicke geschnitten werden. Wie viele Bretter erhält man, wenn sie 2 cm dick sind?", answers: ["30"] },
+  { text: "Im Sägewerk können aus einem Baumstamm 20 Bretter von 3 cm Dicke geschnitten werden. Wie dick wird ein Brett, wenn man 15 Bretter aus dem Stamm schneidet?", answers: ["4", "4cm", "4 cm", "4 Cm", "4Cm"] },
+  { text: "Berechne die Grundstücksgröße in m².", answers: ["930" , "930 m²", "930m²", "930 m2"], image: "/images/Math/Mathe1.png" },
+  { text: "Das Rad hat einen Durchmesser von 0,6 m. Welche Strecke legt es zurück, wenn es sich 100 mal dreht?", answers: ["188,4","188,4 m","188,4m"], image: "/images/Math/Mathe2.png" },
+  { text: "√81 = ?", answers: ["9"] },
+  { text: "10³ = ?", answers: ["1000"] },
 ]);
 
 const showTest = ref(false);
@@ -87,15 +87,15 @@ const isTestComplete = computed(() => currentQuestionIndex.value >= questions.va
 const finalScore = computed(() => {
   let correct = 0;
   questions.value.forEach((q, i) => {
-    if (
-      (userAnswers.value[i] ?? "").trim().replace(",", ".") ===
-      q.answer.trim().replace(",", ".")
-    ) {
+    const user = (userAnswers.value[i] ?? "").trim().replace(",", ".").toLowerCase();
+    const validAnswers = q.answers.map(a => a.trim().replace(",", ".").toLowerCase());
+    if (validAnswers.includes(user)) {
       correct++;
     }
   });
   return correct;
 });
+
 const userPR = computed(() => getPRFromRohwert(finalScore.value));
 const userTwert = computed(() => getTwertFromPR(userPR.value));
 const totalTimeTaken = computed(() =>
@@ -209,6 +209,35 @@ const startTest = () => {
   questionStartTimestamps.value = Array(questions.value.length).fill(null);
   startTime.value = null;
 };
+
+function normalizeAnswer(answer: string): string {
+  return answer
+    .trim()
+    .replace(",", ".")
+    .replace(/[€%$]/g, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
+
+function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[]): boolean {
+  if (!userAnswer) return false;
+
+  const normalizedUser = normalizeAnswer(userAnswer);
+  const normalizedCorrectAnswers = validAnswers.map(normalizeAnswer);
+
+  const userAsNumber = parseFloat(normalizedUser);
+  const isNumeric = !isNaN(userAsNumber);
+
+  return normalizedCorrectAnswers.some(correct => {
+    const correctAsNumber = parseFloat(correct);
+    if (isNumeric && !isNaN(correctAsNumber)) {
+      // Numeric comparison with tolerance
+      return Math.abs(userAsNumber - correctAsNumber) < 0.001;
+    }
+    // Fallback to string compare
+    return normalizedUser === correct;
+  });
+}
 </script>
 
 <template>
@@ -329,7 +358,7 @@ const startTest = () => {
                 </thead>
                 <tbody>
                   <tr v-for="(q, idx) in questions" :key="idx"
-                    :class="userAnswers[idx]?.trim().replace(',', '.') === q.answer.trim().replace(',', '.') ? 'bg-green-50' : 'bg-red-50'">
+                    :class="isCorrectAnswer(userAnswers[idx], q.answers) ? 'bg-green-50' : 'bg-red-50'">
                     <td class="px-2 py-1 font-medium text-muted-foreground">{{ idx + 1 }}</td>
                     <td class="px-2 py-1 align-top">
                       <span v-html="formatQuestionMark(q.text)"></span>
@@ -341,7 +370,7 @@ const startTest = () => {
                       <span class="font-mono">{{ userAnswers[idx] || '–' }}</span>
                     </td>
                     <td class="px-2 py-1">
-                      <span class="font-mono">{{ q.answer }}</span>
+                      <span class="font-mono">{{ q.answers.join(', ') }}</span>
                     </td>
                     <td class="px-2 py-1 text-right text-gray-500 font-mono min-w-[60px]">
                       {{ formatTime(questionTimes[idx]) }}

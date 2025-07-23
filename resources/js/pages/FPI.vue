@@ -5,29 +5,38 @@ import { Head } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { FPI_QUESTIONS } from '@/Pages/Questions/FPIQuestions';
+import { norms_male_16_24 } from '@/Pages/Scores/FPI/norms_male_16_24';
+import { norms_male_25_44 } from '@/Pages/Scores/FPI/norms_male_25_44';
+import { norms_male_45_59 } from '@/Pages/Scores/FPI/norms_male_45_59';
+import { norms_male_60up } from '@/Pages/Scores/FPI/norms_male_60up';
+import { norms_female_16_24 } from '@/Pages/Scores/FPI/norms_female_16_24';
+import { norms_female_25_44 } from '@/Pages/Scores/FPI/norms_female_25_44';
+import { norms_female_45_59 } from '@/Pages/Scores/FPI/norms_female_45_59';
+import { norms_female_60up } from '@/Pages/Scores/FPI/norms_female_60up';
+import FPIResult from '@/Pages/Scores/FPI/FPIResult.vue'; // adjust the path if FPIResult.vue is not in the same folder
 
-import { onMounted, onBeforeUnmount, watch } from 'vue';
-const sentinel = ref<null | HTMLElement>(null);
-let observer: IntersectionObserver | null = null;
 
-function observeSentinel() {
-  if (!sentinel.value) return;
-  observer = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting && !finished.value && blockIndex.value < totalBlocks.value - 1) {
-      handleNextBlock();
-    }
-  }, { threshold: 1.0 });
-  observer.observe(sentinel.value);
+
+const showDemographics = ref(true);
+const sex = ref<'male' | 'female' | null>(null);
+const age = ref<number | null>(null);
+
+function getNormTable() {
+  if (!sex.value || !age.value) return null;
+  if (sex.value === 'male') {
+    if (age.value >= 16 && age.value <= 24) return norms_male_16_24;
+    if (age.value >= 25 && age.value <= 44) return norms_male_25_44;
+    if (age.value >= 45 && age.value <= 59) return norms_male_45_59;
+    if (age.value >= 60) return norms_male_60up;
+  }
+  if (sex.value === 'female') {
+    if (age.value >= 16 && age.value <= 24) return norms_female_16_24;
+    if (age.value >= 25 && age.value <= 44) return norms_female_25_44;
+    if (age.value >= 45 && age.value <= 59) return norms_female_45_59;
+    if (age.value >= 60) return norms_female_60up;
+  }
+  return null;
 }
-
-onMounted(() => {
-  watch([showTest, blockIndex, finished], () => {
-    // (Re-)attach observer whenever these change
-    if (observer) observer.disconnect();
-    if (showTest.value && !finished.value && sentinel.value) observeSentinel();
-  }, { immediate: true });
-});
-onBeforeUnmount(() => { if (observer) observer.disconnect(); });
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Tests', href: '/tests' },
@@ -75,11 +84,23 @@ const currentBlockQuestions = computed(() => {
 });
 
 // Sidebar: Show missed questions only after Weiter was clicked
-const missedSidebarQuestions = computed(() =>
-  missedQuestions.value
-    .map(num => FPI_QUESTIONS.find(q => q.number === num))
-    .filter(Boolean)
-);
+// Get the highest-numbered answered question
+const lastAnsweredNumber = computed(() => {
+  // Get all numbers with an answer
+  const answeredNums = Object.keys(answers.value)
+    .map(n => Number(n))
+    .filter(n => answers.value[n] !== null);
+  return answeredNums.length ? Math.max(...answeredNums) : 0;
+});
+
+// Show only missed (unanswered) questions BEFORE the last answered
+const missedSidebarQuestions = computed(() => {
+  if (!lastAnsweredNumber.value) return [];
+  return FPI_QUESTIONS.filter(q =>
+    !answers.value[q.number] && q.number < lastAnsweredNumber.value
+  );
+});
+
 
 // Navigation
 function handleNextBlock() {
@@ -134,6 +155,29 @@ const categoryScores = computed(() => {
   return scores;
 });
 
+const categoryStanines = computed(() => {
+  const table = getNormTable();
+  if (!table) return {};
+
+  // key order: LEB, SOZ, LEI, GEH, ERR, AGGR, BEAN, KORP, GES, OFF, EXTR, EMOT
+  const keys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
+  const stanines: Record<string, number | null> = {};
+
+  keys.forEach((key, i) => {
+    const score = categoryScores.value[categoryKeys[i]];
+    stanines[key] = null;
+    if (!table[key]) return;
+    for (let st = 0; st < 9; ++st) {
+      const [min, max] = table[key][st];
+      if (score >= min && score <= max) {
+        stanines[key] = st + 1; // Stanine 1-9
+        break;
+      }
+    }
+  });
+  return stanines;
+});
+
 function startTest() {
   showTest.value = true;
 }
@@ -148,6 +192,56 @@ function restart() {
     answers.value[q.number] = null;
   });
 }
+
+function getStanineKey(idx: number) {
+  const keys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
+  return keys[idx];
+}
+
+const categoryStaninesArray = computed(() =>
+  categoryKeys.map((_, idx) => categoryStanines.value[getStanineKey(idx)] ?? 0)
+);
+
+const rohwerteArray = computed(() =>
+  categoryKeys.map(key => categoryScores.value[key] ?? 0)
+);
+// Chart
+const chartCategories = [
+  { label: "Lebenszufriedenheit", commentL: "lebenszufrieden, gute Laune, zuversichtlich", commentR: "unzufrieden, bedrückt, negative Lebenseinstellung" },
+  { label: "Soziale Orientierung", commentL: "sozial verantwortlich, hilfsbereit, mitmenschlich", commentR: "Eigenverantwortung in Notlagen betonend, selbstbezogen unsolidarisch" },
+  { label: "Leistungsorientierung", commentL: "leistungsorientiert, aktiv, schnell-handelnd, ehrgeizig-konkurrierend", commentR: "wenig leistungsorientiert oder energisch, wenig ehrgeizig-konkurrierend" },
+  { label: "Gehemmtheit", commentL: "gehemmt, unsicher, kontaktscheu", commentR: "ungezwungen, selbstsicher, kontaktbereit" },
+  { label: "Erregbarkeit", commentL: "erregbar, empfindlich, unbeherrscht", commentR: "ruhig, gelassen, selbstbeherrscht" },
+  { label: "Aggressivität", commentL: "aggressives Verhalten, spontan und reaktiv, sich durchsetzend", commentR: "wenig aggressiv, kontrolliert, zurückhaltend" },
+  { label: "Beanspruchung", commentL: "angespannt, überfordert, sich oft 'im Stress' fühlend", commentR: "wenig beansprucht, nicht überfordert, belastbar" },
+  { label: "Körperliche Beschwerden", commentL: "viele Beschwerden, psychosomatisch gestört", commentR: "wenig Beschwerden, psychosomatisch nicht gestört" },
+  { label: "Gesundheitssorgen", commentL: "furcht vor Erkrankung, gesundheitsbewusst, sich schonend", commentR: "wenig Gesundheitssorgen, gesundheitlich unbekümmert, robust" },
+  { label: "Offenheit", commentL: "Offenes Zugeben kleiner Schwächen und alltäglicher Normverletzungen, ungeniert, unkonventionell", commentR: "an Umgangsnormen orientiert, auf guten Eindruck bedacht, mangelnde Selbstkritik, verschlossen (Achtung bei Stanine 1–3)" },
+  { label: "Extraversion", commentL: "extravertiert, gesellig, impulsiv, unternehmungslustig", commentR: "introvertiert, zurückhaltend, überlegt, ernst" },
+  { label: "Emotionalität", commentL: "emotional, labil, empfindlich, ängstlich, viele Probleme und körperliche Beschwerden", commentR: "emotional stabil, gelassen, selbstvertrauend, lebenszuversichtlich" },
+];
+
+const rowHeight = 42;
+const stanineWidth = 42;
+const svgWidth = stanineWidth * 9;
+const svgHeight = rowHeight * 12;
+
+function stanineX(idx: number) {
+  return stanineWidth * idx + stanineWidth / 2;
+}
+function rowY(idx: number) {
+  return rowHeight * idx + rowHeight / 2;
+}
+
+const staninePoints = computed(() => {
+  // List of [x, y] for each category's Stanine
+  return chartCategories.map((_, idx) => {
+    const st = categoryStanines.value[getStanineKey(idx)];
+    if (!st) return null;
+    return `${stanineX(st - 1)},${rowY(idx)}`;
+  }).filter(Boolean).join(' ');
+});
+
 </script>
 
 <template>
@@ -218,7 +312,18 @@ function restart() {
           <table class="w-full text-base mb-6 border-separate" style="border-spacing: 0;">
             <thead>
               <tr>
-                <th class="w-48">{{ currentRangeString }}</th>
+                <th colspan="4" class="p-0">
+                  <div class="flex items-center justify-between w-full text-base font-medium pt-1 pb-2">
+                    <span class="w-1/3 text-left">{{ currentRangeString }}</span>
+                    <span class="w-1/3 text-center text-sm text-muted-foreground font-semibold">
+                      Seite {{ blockIndex + 1 }}/{{ totalBlocks }}
+                    </span>
+                    <span class="w-1/3"></span>
+                  </div>
+                </th>
+              </tr>
+              <tr>
+                <th class="w-12"></th>
                 <th class="text-left"></th>
                 <th class="w-36 text-center">stimmt</th>
                 <th class="w-36 text-center">stimmt nicht</th>
@@ -226,8 +331,12 @@ function restart() {
             </thead>
             <tbody>
               <tr v-for="q in currentBlockQuestions" :key="q.number" :class="{ 'bg-gray-50': !answers[q.number] }">
-                <td class="pr-2 font-mono align-top pt-2 border-b-2 border-gray-200">{{ q.number }}.</td>
-                <td class="pr-4 align-top pt-2 border-b-2 border-gray-200">{{ q.text }}</td>
+                <td class="font-mono align-top pt-2 border-b-2 border-gray-200 w-12 text-right">
+                  {{ q.number }}.
+                </td>
+                <td class="align-top pt-2 border-b-2 border-gray-200 pl-2">
+                  {{ q.text }}
+                </td>
                 <td class="text-center align-top pt-2 border-b-2 border-gray-200">
                   <input type="radio" :name="'q' + q.number" v-model="answers[q.number]" value="stimmt" />
                 </td>
@@ -235,7 +344,6 @@ function restart() {
                   <input type="radio" :name="'q' + q.number" v-model="answers[q.number]" value="stimmtNicht" />
                 </td>
               </tr>
-
             </tbody>
           </table>
           <div class="flex flex-row justify-between">
@@ -251,27 +359,40 @@ function restart() {
         <!-- Results -->
         <div v-else class="p-6 bg-background border rounded-lg">
           <h2 class="text-xl font-semibold mb-4">Test abgeschlossen!</h2>
-          <div class="mb-6 w-full max-w-md">
-            <table class="w-full text-sm border rounded-lg overflow-hidden shadow">
-              <thead>
-                <tr class="bg-muted/40">
-                  <th class="text-left py-2 px-4">Kategorie</th>
-                  <th class="text-left py-2 px-4">Punkte</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="cat in categoryKeys" :key="cat">
-                  <td class="py-2 px-4">{{ categoryLabels[typeof cat === 'number' ? cat - 1 : (cat === 'E' ? 10 : 11)]
-                  }}
-                  </td>
-                  <td class="py-2 px-4">{{ categoryScores[cat] }}</td>
-                </tr>
-              </tbody>
-            </table>
+          <div class="mb-6 w-full max-w-3xl">
+            <!-- SVG Auswertungsbogen -->
+            <div class="relative fpi-auswertungsbogen bg-white shadow border mx-auto">
+              <FPIResult :stanines="categoryStaninesArray" :rohwerte="rohwerteArray" />
+            </div>
           </div>
           <Button @click="restart" class="px-6 py-2 rounded font-bold">Test neu starten</Button>
         </div>
+
+
       </div>
     </div>
+
+    <!-- Demographics Popup -->
+    <div v-if="showDemographics" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-lg p-8 max-w-xs w-full flex flex-col gap-4">
+        <h2 class="font-bold text-lg mb-2">Bitte geben Sie Ihr Geschlecht und Alter an</h2>
+        <div class="flex flex-row gap-4 justify-center">
+          <label class="flex items-center cursor-pointer">
+            <input type="radio" v-model="sex" value="male" />
+            <span class="ml-2">männlich</span>
+          </label>
+          <label class="flex items-center cursor-pointer">
+            <input type="radio" v-model="sex" value="female" />
+            <span class="ml-2">weiblich</span>
+          </label>
+        </div>
+        <input type="number" min="16" max="120" class="border rounded p-2 mt-2" v-model="age"
+          placeholder="Alter (z.B. 32)" />
+        <Button :disabled="!sex || !age" @click="showDemographics = false" class="w-full mt-4">
+          Bestätigen
+        </Button>
+      </div>
+    </div>
+
   </AppLayout>
 </template>

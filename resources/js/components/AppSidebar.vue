@@ -15,8 +15,8 @@ const mainNavItems: NavItem[] = [
     icon: LayoutGrid,
   },
   {
-    title: 'Tests',
-    href: '/tests', // The new route for the Tests page
+    title: 'BRT',
+    href: '/brt', // The new route for the Tests page
     icon: LayoutGrid, // Placeholder icon, can be changed later
   },
   {
@@ -27,6 +27,16 @@ const mainNavItems: NavItem[] = [
   {
     title: 'FPI',
     href: '/fpi', // The new route for the Tests page
+    icon: LayoutGrid, // Placeholder icon, can be changed later
+  },
+  {
+    title: 'LMT',
+    href: '/lmt', // The new route for the Tests page
+    icon: LayoutGrid, // Placeholder icon, can be changed later
+  },
+  {
+    title: 'LMT2',
+    href: '/lmt2', // The new route for the Tests page
     icon: LayoutGrid, // Placeholder icon, can be changed later
   },
 ];
