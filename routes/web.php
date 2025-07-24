@@ -1,55 +1,18 @@
 <?php
 
-use App\Http\Controllers\CustomSettings\EinstellungenController;
-use App\Http\Controllers\QuestionController; // Added this import
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-  return Inertia::render('Welcome');
-})->name('home');
-
-Route::get('brt', function () {
-  return Inertia::render('BRT');
-})->middleware(['auth', 'verified'])->name('brt');
-
-Route::get('mrt', function () {
-  return Inertia::render('MRT');
-})->middleware(['auth', 'verified'])->name('mrt');
-
-Route::get('fpi', function () {
-  return Inertia::render('FPI');
-})->middleware(['auth', 'verified'])->name('fpi');
-
-Route::get('lmt', function () {
-  return Inertia::render('LMT');
-})->middleware(['auth', 'verified'])->name('lmt');
-
-Route::get('lmt2', function () {
-  return Inertia::render('LMT2');
-})->middleware(['auth', 'verified'])->name('lmt2');
-
-Route::get('dashboard', function () {
-  return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-// Einstellungen (Custom Settings) Routes
-Route::get('/einstellungen', [EinstellungenController::class, 'showEinstellungenPage'])
-    ->middleware(['auth', 'verified'])
-    ->name('einstellungen.index');
-
-Route::get('/einstellungen/fragen', [EinstellungenController::class, 'showFragenPage'])
-    ->middleware(['auth', 'verified'])
-    ->name('einstellungen.fragen');
-
-// CRUD operations for Questions under /einstellungen/fragen
-Route::group(['prefix' => 'einstellungen', 'as' => 'einstellungen.', 'middleware' => ['auth', 'verified']], function () {
-    // The GET route for /einstellungen/fragen is handled by EinstellungenController and is defined above.
-    // This group handles the actions (POST, PUT, DELETE) for questions.
-    // Note: Route model binding {question} will work as expected.
-    Route::post('/fragen', [QuestionController::class, 'store'])->name('questions.store');
-    Route::put('/fragen/{question}', [QuestionController::class, 'update'])->name('questions.update');
-    Route::delete('/fragen/{question}', [QuestionController::class, 'destroy'])->name('questions.destroy');
+Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
+    // All role-protected pages
+    Route::get('dashboard', fn() => Inertia::render('Dashboard'))->name('dashboard');
+    Route::get('participant', fn() => Inertia::render('Participant'))->name('participant');
+    Route::get('mrt', fn() => Inertia::render('MRT'))->name('mrt');
+    Route::get('brt', fn() => Inertia::render('BRT'))->name('brt');
+    Route::get('fpi', fn() => Inertia::render('FPI'))->name('fpi');
+    Route::get('lmt', fn() => Inertia::render('LMT'))->name('lmt');
+    Route::get('lmt2', fn() => Inertia::render('LMT2'))->name('lmt2');
+    Route::get('/', fn() => Inertia::render('Welcome'))->name('home');
 });
 
 require __DIR__ . '/settings.php';

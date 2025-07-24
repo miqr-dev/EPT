@@ -2,32 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Test extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'title',
+        'code',
+        'name',
         'description',
-        'active',
-        'scoring_table_id',
     ];
 
-    public function questions()
+    // Assignments for this test
+    public function assignments(): HasMany
     {
-        return $this->hasMany(Question::class);
-    }
-
-    public function normtable()
-    {
-        return $this->belongsTo(Normtable::class, 'scoring_table_id');
-    }
-
-    public function testBatteries()
-    {
-        return $this->belongsToMany(TestBattery::class, 'test_battery_tests')->withPivot('order');
+        return $this->hasMany(TestAssignment::class);
     }
 }
