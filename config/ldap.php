@@ -12,7 +12,6 @@ return [
       'use_ssl' => true, // true for LDAPS
       'use_tls' => false, // true for LDAPS
       'use_sasl' => false,
-      'username_attribute' => 'mail',
     ],
   ],
 
