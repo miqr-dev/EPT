@@ -28,6 +28,7 @@ return [
         'sync_attributes' => [
           'name' => 'cn',
           'email' => 'mail',
+          'firstname' => 'givenName',
         ],
       ],
     ],

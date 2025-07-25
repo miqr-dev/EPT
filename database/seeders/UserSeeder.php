@@ -11,9 +11,9 @@ class UserSeeder extends Seeder
   public function run(): void
   {
     User::create([
-      'name' => 'Ara',
-      'firstname' => 'Matoyan',
-      'email' => 'ara@miqr.de',
+      'name' => 'Admin',
+      'firstname' => 'AM',
+      'email' => 'admin@email.com',
       'password' => Hash::make('123qwe!"§'),
       'role' => 'admin',
       'city_id' => 1,
@@ -21,7 +21,7 @@ class UserSeeder extends Seeder
     User::create([
       'name' => 'Doe',
       'firstname' => 'John',
-      'email' => 'johnd@miqr.de',
+      'email' => 'john@email.com',
       'password' => Hash::make('123qwe!"§'),
       'role' => 'participant',
       'city_id' => 1,
@@ -29,7 +29,7 @@ class UserSeeder extends Seeder
     User::create([
       'name' => 'Doe',
       'firstname' => 'Jane',
-      'email' => 'janed@miqr.de',
+      'email' => 'jane@email.com',
       'password' => Hash::make('123qwe!"§'),
       'role' => 'teacher',
       'city_id' => 1,

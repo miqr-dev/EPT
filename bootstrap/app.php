@@ -23,9 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
             RedirectBasedOnRole::class,
         ]);
         // Here is where you define route middleware aliases:
-        $middleware->alias([
-            'role.redirect' => \App\Http\Middleware\RedirectBasedOnRole::class,
-        ]);
+        // $middleware->alias([
+        //     'role.redirect' => \App\Http\Middleware\RedirectBasedOnRole::class,
+        // ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

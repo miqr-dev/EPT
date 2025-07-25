@@ -19,7 +19,7 @@ return new class extends Migration
       $table->timestamp('email_verified_at')->nullable();
       $table->string('password');
       $table->enum('role', ['participant', 'teacher','admin']);
-      $table->foreignId('city_id')->constrained()->cascadeOnDelete();
+      $table->foreignId('city_id')->constrained()->cascadeOnDelete()->nullable();
       $table->boolean('can_login')->default(true);
       $table->rememberToken();
       $table->timestamps();
