@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
+// Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     // All role-protected pages
     Route::get('dashboard', fn() => Inertia::render('Dashboard'))->name('dashboard');
     Route::get('participant', fn() => Inertia::render('Participant'))->name('participant');
@@ -13,7 +13,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('lmt', fn() => Inertia::render('LMT'))->name('lmt');
     Route::get('lmt2', fn() => Inertia::render('LMT2'))->name('lmt2');
     Route::get('/', fn() => Inertia::render('Welcome'))->name('home');
-});
+// });
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
