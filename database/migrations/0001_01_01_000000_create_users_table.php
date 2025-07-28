@@ -15,11 +15,11 @@ return new class extends Migration
       $table->id();
       $table->string('name');
       $table->string('firstname');
+      $table->string('username');
       $table->string('email')->unique();
-      $table->timestamp('email_verified_at')->nullable();
       $table->string('password');
       $table->enum('role', ['participant', 'teacher','admin']);
-      $table->foreignId('city_id')->constrained()->cascadeOnDelete()->nullable();
+      $table->foreignId('city_id')->nullable()->constrained()->cascadeOnDelete();
       $table->boolean('can_login')->default(true);
       $table->rememberToken();
       $table->timestamps();

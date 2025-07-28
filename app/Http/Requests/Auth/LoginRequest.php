@@ -27,22 +27,16 @@ class LoginRequest extends FormRequest
   public function rules(): array
   {
     return [
-      'email' => ['required', 'string', 'email'],
-      'password' => ['required', 'string'],
+        'username' => ['required', 'string'],
+        'password' => ['required', 'string'],
     ];
   }
-
-  /**
-   * Attempt to authenticate the request's credentials.
-   *
-   * @throws \Illuminate\Validation\ValidationException
-   */
   public function authenticate(): void
   {
     $this->ensureIsNotRateLimited();
 
     $credentials = [
-      'mail' => $this->input('email'),
+      'samaccountname' => $this->input('username'),
       'password' => $this->input('password'),
     ];
 
@@ -50,7 +44,7 @@ class LoginRequest extends FormRequest
       RateLimiter::hit($this->throttleKey());
 
       throw ValidationException::withMessages([
-        'email' => trans('auth.failed'),
+        'username' => trans('auth.failed'),
       ]);
     }
 
@@ -68,7 +62,7 @@ class LoginRequest extends FormRequest
     $seconds = RateLimiter::availableIn($this->throttleKey());
 
     throw ValidationException::withMessages([
-      'email' => trans('auth.throttle', [
+      'username' => trans('auth.throttle', [
         'seconds' => $seconds,
         'minutes' => ceil($seconds / 60),
       ]),
@@ -80,6 +74,6 @@ class LoginRequest extends FormRequest
    */
   public function throttleKey(): string
   {
-    return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
+    return Str::transliterate(Str::lower($this->string('username')) . '|' . $this->ip());
   }
 }
