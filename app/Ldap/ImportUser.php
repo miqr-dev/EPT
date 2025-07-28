@@ -18,20 +18,27 @@ class ImportUser
     $role = null;
     $cityId = null;
 
-    // Role logic as before
+    // ----- Updated Role logic -----
     foreach ($ous as $ou) {
       if (stripos($ou, 'EDV') !== false) {
         $role = 'Admin';
         break;
       }
-      if (stripos($ou, 'Verwaltung') !== false) {
-        $role = 'teacher';
-        break;
+    }
+    if (!$role) {
+      foreach ($ous as $ou) {
+        if (
+          stripos($ou, 'Verwaltung') !== false ||
+          stripos($ou, 'Mitarbeiter') !== false
+        ) {
+          $role = 'teacher';
+          break;
+        }
       }
-      if (stripos($ou, 'Teilnehmer') !== false) {
-        $role = 'participant';
-        break;
-      }
+    }
+    // If still not set, assign participant
+    if (!$role) {
+      $role = 'participant';
     }
 
     // City logic as before

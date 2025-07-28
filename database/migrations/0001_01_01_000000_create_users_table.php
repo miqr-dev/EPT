@@ -16,7 +16,7 @@ return new class extends Migration
       $table->string('name');
       $table->string('firstname');
       $table->string('username');
-      $table->string('email')->unique();
+      $table->string('email')->nullable()->unique();
       $table->string('password');
       $table->enum('role', ['participant', 'teacher','admin']);
       $table->foreignId('city_id')->nullable()->constrained()->cascadeOnDelete();
