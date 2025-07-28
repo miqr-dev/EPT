@@ -25,11 +25,7 @@ return [
       'database' => [
         'model' => App\Models\User::class,
         'sync_passwords' => false,
-        'sync_attributes' => [
-          'name' => 'cn',
-          'email' => 'mail',
-          'firstname' => 'givenName',
-        ],
+        'sync_attributes' => \App\Ldap\ImportUser::class,
       ],
     ],
 
