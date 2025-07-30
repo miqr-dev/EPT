@@ -2,8 +2,10 @@
 
 namespace App\Ldap;
 
-use App\Models\User;
 use App\Models\City;
+use App\Models\Test;
+use App\Models\User;
+use App\Models\TestAssignment;
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 
 class ImportUser
@@ -66,5 +68,22 @@ class ImportUser
     $eloquentUser->city_id   = $cityId;
 
     $eloquentUser->save();
+    if ($role === 'participant') {
+      if (TestAssignment::where('participant_id', $eloquentUser->id)->count() === 0) {
+        $defaultCodes = ['BRT-A', 'MRT-A', 'FPI-R', 'LMT'];
+        $defaultTests = Test::whereIn('code', $defaultCodes)->get();
+
+        foreach ($defaultTests as $test) {
+          TestAssignment::firstOrCreate([
+            'participant_id' => $eloquentUser->id,
+            'test_id'        => $test->id,
+          ], [
+            'assigned_by' => null,
+            'assigned_at' => now(),
+            'status'      => 'assigned',
+          ]);
+        }
+      }
+    }
   }
 }

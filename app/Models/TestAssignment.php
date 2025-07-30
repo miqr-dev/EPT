@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class TestAssignment extends Model
 {
   protected $fillable = [
-    'participant_user_id',
+    'participant_id',
     'test_id',
     'status',
     'started_at',

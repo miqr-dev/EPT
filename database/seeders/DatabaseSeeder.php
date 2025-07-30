@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
       CitySeeder::class,
       ProfessionGroupSeeder::class,
       //UserSeeder::class,
+      TestsTableSeeder::class
     ]);
   }
 }
