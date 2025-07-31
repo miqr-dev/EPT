@@ -10,6 +10,8 @@ const props = defineProps<{
 
 const today = new Date()
 const form = useForm({
+  firstname: props.profile?.firstname ?? '',
+  name: props.profile?.name ?? '',
   birthday: props.profile?.birthday ?? '',
   age: props.profile?.age ?? '',
   sex: props.profile?.sex ?? '',
@@ -71,14 +73,28 @@ const householdOptions = [
       </p>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
+          <label class="block mb-1">Vorname</label>
+          <input v-model="form.firstname" type="text"
+            class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition" required>
+          <p v-if="form.errors.firstname" class="text-sm text-red-600 dark:text-red-400">{{ form.errors.firstname }}</p>
+        </div>
+        <div>
+          <label class="block mb-1">Nachname</label>
+          <input v-model="form.name" type="text"
+            class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition" required>
+          <p v-if="form.errors.name" class="text-sm text-red-600 dark:text-red-400">{{ form.errors.name }}</p>
+        </div>
+        <div>
           <label class="block mb-1">Geburtsdatum</label>
           <input v-model="form.birthday" type="date"
             class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition" required>
+          <p v-if="form.errors.birthday" class="text-sm text-red-600 dark:text-red-400">{{ form.errors.birthday }}</p>
         </div>
         <div>
           <label class="block mb-1">Alter</label>
           <input v-model="form.age" type="number" readonly
             class="border rounded px-2 py-2 w-full bg-gray-100 dark:bg-gray-700 dark:text-gray-100 transition">
+          <p v-if="form.errors.age" class="text-sm text-red-600 dark:text-red-400">{{ form.errors.age }}</p>
         </div>
         <div>
           <label class="block mb-1">Geschlecht</label>
@@ -89,6 +105,7 @@ const householdOptions = [
             <option value="f">Weiblich</option>
             <option value="d">Divers</option>
           </select>
+          <p v-if="form.errors.sex" class="text-sm text-red-600 dark:text-red-400">{{ form.errors.sex }}</p>
         </div>
         <div>
           <label class="block mb-1">Schulabschluss</label>
@@ -97,6 +114,7 @@ const householdOptions = [
             <option value="" disabled>Bitte wählen</option>
             <option v-for="option in educationOptions" :key="option" :value="option">{{ option }}</option>
           </select>
+          <p v-if="form.errors.education" class="text-sm text-red-600 dark:text-red-400">{{ form.errors.education }}</p>
         </div>
         <div>
           <label class="block mb-1">Familienstand</label>
@@ -106,6 +124,8 @@ const householdOptions = [
             <option v-for="option in maritalStatusOptions" :key="option.value" :value="option.value">{{ option.label }}
             </option>
           </select>
+          <p v-if="form.errors.marital_status" class="text-sm text-red-600 dark:text-red-400">{{
+            form.errors.marital_status }}</p>
         </div>
         <div>
           <label class="block mb-1">Haushalt</label>
@@ -115,6 +135,7 @@ const householdOptions = [
             <option v-for="option in householdOptions" :key="option.value" :value="option.value">{{ option.label }}
             </option>
           </select>
+          <p v-if="form.errors.household" class="text-sm text-red-600 dark:text-red-400">{{ form.errors.household }}</p>
         </div>
         <div>
           <label class="block mb-1">Berufstätig?</label>
@@ -123,6 +144,8 @@ const householdOptions = [
             <option value="" disabled>Bitte wählen</option>
             <option v-for="e in props.employeds" :key="e.id" :value="e.id">{{ e.name }}</option>
           </select>
+          <p v-if="form.errors.employed_id" class="text-sm text-red-600 dark:text-red-400">{{ form.errors.employed_id
+            }}</p>
         </div>
         <div>
           <label class="block mb-1">Berufsgruppe</label>
@@ -131,11 +154,15 @@ const householdOptions = [
             <option value="" disabled>Bitte wählen</option>
             <option v-for="g in props.professionGroups" :key="g.id" :value="g.id">{{ g.name }}</option>
           </select>
+          <p v-if="form.errors.profession_group_id" class="text-sm text-red-600 dark:text-red-400">{{
+            form.errors.profession_group_id }}</p>
         </div>
         <div class="md:col-span-2">
           <label class="block mb-1">Beruf</label>
           <input v-model="form.profession"
             class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
+          <p v-if="form.errors.profession" class="text-sm text-red-600 dark:text-red-400">{{ form.errors.profession }}
+          </p>
         </div>
       </div>
       <div class="pt-4 flex justify-end">
