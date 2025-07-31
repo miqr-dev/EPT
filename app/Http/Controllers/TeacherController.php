@@ -17,7 +17,7 @@ class TeacherController extends Controller
 
 $participants = User::with(['city', 'testAssignments.test'])
     ->where('role', 'participant')
-    ->where('city_id', $teacher->city_id)
+    ->where('city_id', $cityId)
     ->orderBy('created_at', 'desc')
     ->get();
 

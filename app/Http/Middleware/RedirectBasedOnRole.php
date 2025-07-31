@@ -25,15 +25,36 @@ class RedirectBasedOnRole
       return $next($request);
     }
 
-    $user = Auth::user();
-    if ($user) {
-      if ($user->role === 'participant' && $request->route()->getName() !== 'participant') {
+    if (Auth::check()) {
+      $user = Auth::user();
+      $currentRoute = $request->route()->getName();
+
+      // Allowed routes for participants
+      $participantRoutes = ['participant', 'logout'];
+
+      // Allowed routes for teachers/admins
+      $teacherAdminRoutes = [
+        'dashboard',
+        'participant',
+        'mrt',
+        'brt',
+        'fpi',
+        'lmt',
+        'lmt2',
+        'assign.tests',
+        'remove.tests',
+        'logout'
+      ];
+
+      if ($user->role === 'participant' && !in_array($currentRoute, $participantRoutes)) {
         return redirect()->route('participant');
       }
-      if (in_array($user->role, ['admin', 'teacher']) && $request->route()->getName() !== 'dashboard') {
+
+      if (in_array($user->role, ['admin', 'teacher']) && !in_array($currentRoute, $teacherAdminRoutes)) {
         return redirect()->route('dashboard');
       }
     }
+
     return $next($request);
   }
 }

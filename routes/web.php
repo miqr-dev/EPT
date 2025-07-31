@@ -16,6 +16,8 @@ Route::get('lmt2', fn() => Inertia::render('LMT2'))->name('lmt2');
 Route::get('dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
 Route::post('assign-tests', [TeacherController::class, 'assignTests'])->name('assign.tests');
 Route::post('remove-tests', [TeacherController::class, 'removeTests'])->name('remove.tests');
+Route::get('/onboarding', [ParticipantController::class, 'showProfileForm'])->name('participant.onboarding');
+Route::post('/onboarding', [ParticipantController::class, 'storeProfile'])->name('participant.onboarding.save');
 
 Route::get('/login', function () {
   return Inertia::render('auth/Login', [
