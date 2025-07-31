@@ -3,11 +3,13 @@
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\ParticipantController;
+
 
 // Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
 // All role-protected pages
 Route::get('dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
-Route::get('participant', fn() => Inertia::render('Participant'))->name('participant');
+Route::get('participant', [ParticipantController::class, 'showProfileForm'])->name('participant');
 Route::get('mrt', fn() => Inertia::render('MRT'))->name('mrt');
 Route::get('brt', fn() => Inertia::render('BRT'))->name('brt');
 Route::get('fpi', fn() => Inertia::render('FPI'))->name('fpi');
@@ -27,7 +29,6 @@ Route::get('/login', function () {
 })->middleware('guest')->name('login');
 Route::redirect('/', '/login');
 Route::get('/home', fn() => redirect()->route('dashboard'))->name('home');
-
 // });
 
 require __DIR__ . '/settings.php';

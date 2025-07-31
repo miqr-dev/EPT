@@ -61,23 +61,28 @@ const householdOptions = [
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition">
     <form @submit.prevent="submit"
-          class="bg-white dark:bg-gray-800 dark:text-gray-100 shadow rounded-lg p-8 w-full max-w-xl space-y-6">
-      <h2 class="text-xl font-bold text-gray-700 dark:text-gray-100 mb-2">Profil ausfüllen</h2>
+      class="bg-white dark:bg-gray-800 dark:text-gray-100 shadow rounded-lg p-8 w-full max-w-xl space-y-6">
+      <h2 class="text-xl font-bold text-gray-700 dark:text-gray-100 mb-2">
+        Willkommen, {{ props.profile?.firstname || props.profile?.name || 'Teilnehmer:in' }}!
+      </h2>
+      <p class="text-gray-500 dark:text-gray-400 mb-2">
+        Bitte fülle dein Profil aus, um fortzufahren.
+      </p>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block mb-1">Geburtsdatum</label>
           <input v-model="form.birthday" type="date"
-                 class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition" required>
+            class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition" required>
         </div>
         <div>
           <label class="block mb-1">Alter</label>
           <input v-model="form.age" type="number" readonly
-                 class="border rounded px-2 py-2 w-full bg-gray-100 dark:bg-gray-700 dark:text-gray-100 transition">
+            class="border rounded px-2 py-2 w-full bg-gray-100 dark:bg-gray-700 dark:text-gray-100 transition">
         </div>
         <div>
           <label class="block mb-1">Geschlecht</label>
           <select v-model="form.sex" required
-                  class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
+            class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
             <option value="" disabled>Bitte wählen</option>
             <option value="m">Männlich</option>
             <option value="f">Weiblich</option>
@@ -87,7 +92,7 @@ const householdOptions = [
         <div>
           <label class="block mb-1">Schulabschluss</label>
           <select v-model="form.education" required
-                  class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
+            class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
             <option value="" disabled>Bitte wählen</option>
             <option v-for="option in educationOptions" :key="option" :value="option">{{ option }}</option>
           </select>
@@ -95,23 +100,25 @@ const householdOptions = [
         <div>
           <label class="block mb-1">Familienstand</label>
           <select v-model="form.marital_status" required
-                  class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
+            class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
             <option value="" disabled>Bitte wählen</option>
-            <option v-for="option in maritalStatusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+            <option v-for="option in maritalStatusOptions" :key="option.value" :value="option.value">{{ option.label }}
+            </option>
           </select>
         </div>
         <div>
           <label class="block mb-1">Haushalt</label>
           <select v-model="form.household" required
-                  class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
+            class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
             <option value="" disabled>Bitte wählen</option>
-            <option v-for="option in householdOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+            <option v-for="option in householdOptions" :key="option.value" :value="option.value">{{ option.label }}
+            </option>
           </select>
         </div>
         <div>
           <label class="block mb-1">Berufstätig?</label>
           <select v-model="form.employed" required
-                  class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
+            class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
             <option :value="true">Ja</option>
             <option :value="false">Nein</option>
           </select>
@@ -119,7 +126,7 @@ const householdOptions = [
         <div>
           <label class="block mb-1">Berufsgruppe</label>
           <select v-model="form.profession_group_id"
-                  class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
+            class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
             <option value="" disabled>Bitte wählen</option>
             <option v-for="g in props.professionGroups" :key="g.id" :value="g.id">{{ g.name }}</option>
           </select>
@@ -127,12 +134,12 @@ const householdOptions = [
         <div class="md:col-span-2">
           <label class="block mb-1">Beruf</label>
           <input v-model="form.profession"
-                 class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
+            class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
         </div>
       </div>
       <div class="pt-4 flex justify-end">
         <button type="submit"
-                class="bg-blue-600 text-white px-8 py-2 rounded font-semibold hover:bg-blue-700 transition">
+          class="bg-blue-600 text-white px-8 py-2 rounded font-semibold hover:bg-blue-700 transition">
           Speichern & Weiter
         </button>
       </div>

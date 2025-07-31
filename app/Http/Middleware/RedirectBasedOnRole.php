@@ -19,6 +19,8 @@ class RedirectBasedOnRole
         'password.request',
         'password.email',
         'password.reset',
+        'participant.onboarding',
+        'participant.onboarding.save',
         // ...any other auth routes
       ])
     ) {
@@ -30,12 +32,19 @@ class RedirectBasedOnRole
       $currentRoute = $request->route()->getName();
 
       // Allowed routes for participants
-      $participantRoutes = ['participant', 'logout'];
+      $participantRoutes = [
+        'participant',
+        'participant.onboarding',
+        'participant.onboarding.save',
+        'logout'
+      ];
 
       // Allowed routes for teachers/admins
       $teacherAdminRoutes = [
         'dashboard',
         'participant',
+        'participant.onboarding',
+        'participant.onboarding.save',
         'mrt',
         'brt',
         'fpi',
