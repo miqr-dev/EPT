@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ParticipantProfile;
 use App\Models\ProfessionGroup;
+use App\Models\Employed;
 
 class ParticipantController extends Controller
 {
@@ -14,10 +15,12 @@ class ParticipantController extends Controller
   {
     $profile = Auth::user()?->participantProfile;
     $professionGroups = ProfessionGroup::all();
+    $employeds = Employed::all();
 
     return inertia('Participant', [
       'profile' => $profile,
       'professionGroups' => $professionGroups,
+      'employeds' => $employeds,
     ]);
   }
 
@@ -30,12 +33,12 @@ class ParticipantController extends Controller
       'firstname'            => 'required|string|max:255',
       'name'                 => 'required|string|max:255',
       'birthday'             => 'required|date',
-      'sex'                  => 'required|in:m,f,d',
+      'sex'                  => 'required|string|max:255',
       'education'            => 'nullable|string|max:255',
       'profession'           => 'nullable|string|max:255',
-      'marital_status'       => 'required|in:single,married,divorced/separated,widowed',
-      'household'            => 'required|in:single,with_partner',
-      'employed'             => 'required|boolean',
+      'marital_status'       => 'required|string|max:255',
+      'household'            => 'required|string|max:255',
+      'employed_id'          => 'nullable|exists:employeds,id',
       'profession_group_id'  => 'nullable|exists:profession_groups,id',
     ]);
 

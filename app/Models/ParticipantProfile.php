@@ -18,7 +18,7 @@ class ParticipantProfile extends Model
     'profession',
     'marital_status',
     'household',
-    'employed',
+    'employed_id',
     'profession_group_id',
   ];
 
@@ -36,5 +36,11 @@ class ParticipantProfile extends Model
   public function professionGroup(): BelongsTo
   {
     return $this->belongsTo(ProfessionGroup::class);
+  }
+
+  // Belongs to employed status
+  public function employed(): BelongsTo
+  {
+    return $this->belongsTo(Employed::class);
   }
 }

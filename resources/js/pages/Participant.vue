@@ -5,6 +5,7 @@ import { useForm } from '@inertiajs/vue3'
 const props = defineProps<{
   profile?: any
   professionGroups: any[]
+  employeds: any[]
 }>()
 
 const today = new Date()
@@ -16,7 +17,7 @@ const form = useForm({
   profession: props.profile?.profession ?? '',
   marital_status: props.profile?.marital_status ?? '',
   household: props.profile?.household ?? '',
-  employed: props.profile?.employed ?? false,
+  employed_id: props.profile?.employed_id ?? '',
   profession_group_id: props.profile?.profession_group_id ?? '',
 })
 
@@ -117,10 +118,10 @@ const householdOptions = [
         </div>
         <div>
           <label class="block mb-1">Berufstätig?</label>
-          <select v-model="form.employed" required
+          <select v-model="form.employed_id"
             class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
-            <option :value="true">Ja</option>
-            <option :value="false">Nein</option>
+            <option value="" disabled>Bitte wählen</option>
+            <option v-for="e in props.employeds" :key="e.id" :value="e.id">{{ e.name }}</option>
           </select>
         </div>
         <div>
