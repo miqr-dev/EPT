@@ -13,12 +13,13 @@ class ParticipantController extends Controller
   // Show the form
   public function showProfileForm()
   {
-    $profile = Auth::user()?->participantProfile;
+    // $profile = Auth::user()?->participantProfile;
     $professionGroups = ProfessionGroup::all();
     $employeds = Employed::all();
 
     return inertia('Participant', [
-      'profile' => $profile,
+      // 'profile' => $profile,
+      'user' => Auth::user(),
       'professionGroups' => $professionGroups,
       'employeds' => $employeds,
     ]);
@@ -30,12 +31,9 @@ class ParticipantController extends Controller
     $user = Auth::user();
 
     $data = $request->validate([
-      'firstname'            => 'required|string|max:255',
-      'name'                 => 'required|string|max:255',
       'birthday'             => 'required|date',
       'sex'                  => 'required|string|max:255',
       'education'            => 'nullable|string|max:255',
-      'profession'           => 'nullable|string|max:255',
       'marital_status'       => 'required|string|max:255',
       'household'            => 'required|string|max:255',
       'employed_id'          => 'nullable|exists:employeds,id',

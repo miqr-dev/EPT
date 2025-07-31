@@ -11,7 +11,6 @@ class EmployedSeeder extends Seeder
 
   public function run(): void
   {
-    Employed::create(['name' => 'Berufstätig']);
     Employed::create(['name' => 'ja ']);
     Employed::create(['name' => 'ja- mithelfend im eigenen Betrieb ']);
     Employed::create(['name' => 'Hausfaru / Hausmann']);

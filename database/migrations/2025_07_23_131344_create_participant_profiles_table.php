@@ -12,13 +12,10 @@ return new class extends Migration {
     Schema::create('participant_profiles', function (Blueprint $table) {
       $table->id();
       $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();
-      $table->string('firstname');
-      $table->string('name');
       $table->date('birthday');
       $table->unsignedTinyInteger('age')->nullable(); // Can be calculated, but store for fast filtering
       $table->string('sex');
       $table->string('education')->nullable();
-      $table->string('profession')->nullable();
       $table->string('marital_status');
       $table->string('household');
       $table->foreignId('employed_id')->nullable()->constrained('employeds');
