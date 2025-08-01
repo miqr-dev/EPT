@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Exam;
 use App\Models\ExamParticipant;
 use App\Models\ExamStep;
+use App\Models\ExamStepStatus;
 use App\Models\User;
 use App\Models\Test;
 use App\Models\City;
@@ -69,6 +70,13 @@ class ExamController extends Controller
   public function show(Exam $exam)
   {
     $exam->load(['city', 'teacher', 'participants.user', 'steps.test', 'currentStep']);
+
+    if ($exam->currentStep) {
+        $exam->load(['participants.stepStatuses' => function ($query) use ($exam) {
+            $query->where('exam_step_id', $exam->current_exam_step_id);
+        }]);
+    }
+
     $existingParticipantIds = $exam->participants->pluck('participant_id');
     $availableParticipants = User::where('role', 'participant')
       ->where('city_id', $exam->city_id)
@@ -99,5 +107,67 @@ class ExamController extends Controller
   }
 
   // 6. Flow controls (start, pause, resume, next step, extra time)
-  // ... (see previous post for methods, but always use Inertia::render or redirect)
+    public function start(Exam $exam)
+    {
+        if ($exam->status !== 'not_started') {
+            return back(303)->with('error', 'Exam already started.');
+        }
+
+        $firstStep = $exam->steps()->orderBy('step_order')->first();
+
+        if (!$firstStep) {
+            return back(303)->with('error', 'Exam has no steps.');
+        }
+
+        $exam->update([
+            'status' => 'in_progress',
+            'current_exam_step_id' => $firstStep->id,
+            'started_at' => now(),
+        ]);
+
+        // Create status records for all participants for the first step
+        foreach ($exam->participants as $participant) {
+            ExamStepStatus::create([
+                'exam_step_id' => $firstStep->id,
+                'participant_id' => $participant->participant_id,
+                'status' => 'not_started',
+            ]);
+        }
+
+        return back(303)->with('success', 'Exam started!');
+    }
+
+    public function nextStep(Exam $exam)
+    {
+        $currentStepOrder = $exam->currentStep->step_order;
+        $nextStep = $exam->steps()->where('step_order', '>', $currentStepOrder)->orderBy('step_order')->first();
+
+        if ($nextStep) {
+            $exam->update(['current_exam_step_id' => $nextStep->id]);
+
+            // Create status records for all participants for the new step
+            foreach ($exam->participants as $participant) {
+                ExamStepStatus::create([
+                    'exam_step_id' => $nextStep->id,
+                    'participant_id' => $participant->participant_id,
+                    'status' => 'not_started',
+                ]);
+            }
+            return back(303)->with('success', 'Moved to next step.');
+        } else {
+            $exam->update(['status' => 'completed', 'completed_at' => now()]);
+            return back(303)->with('success', 'Exam completed!');
+        }
+    }
+
+    public function setStatus(Request $request, Exam $exam)
+    {
+        $data = $request->validate([
+            'status' => 'required|in:not_started,in_progress,paused,completed',
+        ]);
+
+        $exam->update(['status' => $data['status']]);
+
+        return back(303)->with('success', 'Exam status updated.');
+    }
 }

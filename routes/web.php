@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\ParticipantController;
+use App\Http\Controllers\ExamStepStatusController;
 
 
 Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
@@ -22,14 +23,24 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
   Route::get('/onboarding', [ParticipantController::class, 'showProfileForm'])->name('participant.onboarding');
   Route::post('/onboarding', [ParticipantController::class, 'storeProfile'])->name('participant.onboarding.save');
 
+  // Participant's exam room
+  Route::get('/my-exam', [ParticipantController::class, 'myExam'])->name('my-exam');
+  Route::post('/my-exam/start-step', [ParticipantController::class, 'startStep'])->name('my-exam.start-step');
+    Route::post('/my-exam/complete-step', [ParticipantController::class, 'completeStep'])->name('my-exam.complete-step');
+
   // Exam management (teacher/admin only, add middleware if needed)
-  Route::resource('exams', ExamController::class)
-    ->only(['index', 'create', 'store', 'show'])
-    ->names('exams');
+  Route::post('/exam-step-status/{status}/add-time', [ExamStepStatusController::class, 'addTime'])->name('exam-step-status.add-time');
 
   // Participants management (assign to exam)
   Route::post('exams/{exam}/participants', [ExamController::class, 'addParticipants'])
     ->name('exams.addParticipants');
+
+  // Exam flow control
+    Route::post('/exams/{exam}/start', [ExamController::class, 'start'])->name('exams.start');
+    Route::post('/exams/{exam}/next-step', [ExamController::class, 'nextStep'])->name('exams.next-step');
+    Route::post('/exams/{exam}/set-status', [ExamController::class, 'setStatus'])->name('exams.set-status');
+    
+    Route::post('/exams', [ExamController::class, 'store'])->name('exams.store');
 
 
   Route::get('/login', function () {

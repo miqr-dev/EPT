@@ -18,7 +18,6 @@ class ExamParticipant extends Model
   }
   public function stepStatuses()
   {
-    return $this->hasMany(ExamStepStatus::class, 'participant_id', 'participant_id')
-      ->where('exam_id', $this->exam_id);
+    return $this->hasMany(ExamStepStatus::class, 'participant_id', 'participant_id');
   }
 }
