@@ -16,6 +16,7 @@ class RedirectBasedOnRole
       in_array($request->route()->getName(), [
         'logout',
         'login',
+        'exams',
         'password.request',
         'password.email',
         'password.reset',
@@ -52,6 +53,7 @@ class RedirectBasedOnRole
         'lmt2',
         'assign.tests',
         'remove.tests',
+        'exams',
         'logout'
       ];
 

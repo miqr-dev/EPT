@@ -6,22 +6,22 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::create('exams', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('exams');
-    }
+  public function up(): void
+  {
+    Schema::create('exams', function (Blueprint $table) {
+      $table->id();
+      $table->string('name');
+      $table->foreignId('city_id')->constrained()->cascadeOnDelete();
+      $table->foreignId('teacher_id')->constrained('users')->cascadeOnDelete();
+      $table->enum('status', ['not_started', 'in_progress', 'paused', 'finished'])->default('not_started');
+      $table->foreignId('current_exam_step_id')->nullable()->constrained('exam_steps');
+      $table->timestamp('started_at')->nullable();
+      $table->timestamp('completed_at')->nullable();
+      $table->timestamps();
+    });
+  }
+  public function down(): void
+  {
+    Schema::dropIfExists('exams');
+  }
 };

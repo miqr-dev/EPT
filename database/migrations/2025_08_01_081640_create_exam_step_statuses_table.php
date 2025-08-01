@@ -6,22 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::create('exam_step_statuses', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('exam_step_statuses');
-    }
+  public function up(): void
+  {
+    Schema::create('exam_step_statuses', function (Blueprint $table) {
+      $table->id();
+      $table->foreignId('exam_id')->constrained('exams')->cascadeOnDelete();
+      $table->foreignId('participant_id')->constrained('users')->cascadeOnDelete();
+      $table->foreignId('exam_step_id')->constrained('exam_steps')->cascadeOnDelete();
+      $table->enum('status', ['not_started', 'in_progress', 'waiting', 'completed'])->default('not_started');
+      $table->unsignedInteger('duration')->nullable(); // actual duration (in minutes)
+      $table->unsignedInteger('extra_time')->default(0); // minutes of extra time
+      $table->timestamp('started_at')->nullable();
+      $table->timestamp('completed_at')->nullable();
+      $table->timestamps();
+    });
+  }
+  public function down(): void
+  {
+    Schema::dropIfExists('exam_step_statuses');
+  }
 };
