@@ -69,8 +69,10 @@ class ExamController extends Controller
   public function show(Exam $exam)
   {
     $exam->load(['city', 'teacher', 'participants.user', 'steps.test', 'currentStep']);
+    $existingParticipantIds = $exam->participants->pluck('participant_id');
     $availableParticipants = User::where('role', 'participant')
       ->where('city_id', $exam->city_id)
+      ->whereNotIn('id', $existingParticipantIds)
       ->get();
 
     return Inertia::render('Exams/Show', [

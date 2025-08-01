@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3'
 import AppLayout from '@/layouts/AppLayout.vue'
+import { ref } from 'vue'
 
 const props = defineProps<{
   exam: {
@@ -10,7 +11,8 @@ const props = defineProps<{
     status?: string
     participants: Array<{ id: number; name: string; firstname: string }>
     steps: Array<{ id: number; name: string; order: number }>
-  }
+  },
+  availableParticipants: Array<{ id: number; name: string; firstname: string }>
 }>()
 
 // For adding participants (later you can upgrade to multi-select or modal)
@@ -18,9 +20,12 @@ const newParticipantId = ref('')
 function addParticipant() {
   if (!newParticipantId.value) return
   router.post(`/exams/${props.exam.id}/participants`, {
-    participant_id: newParticipantId.value
+    participant_ids: [newParticipantId.value] // Fix: send as array
+  }, {
+    onSuccess: () => {
+      newParticipantId.value = ''
+    }
   })
-  newParticipantId.value = ''
 }
 </script>
 
@@ -54,7 +59,28 @@ function addParticipant() {
             </li>
             <li v-if="!props.exam.participants.length" class="text-gray-400">Keine Teilnehmer:innen zugewiesen.</li>
           </ul>
-          <!-- Example: Add participant logic can go here -->
+          <form @submit.prevent="addParticipant" class="mt-4 pt-4 border-t border-gray-200">
+            <label for="participant-select" class="block text-sm font-medium text-gray-600 mb-1">Teilnehmer:in hinzufügen</label>
+            <div class="flex items-center gap-2">
+              <select
+                id="participant-select"
+                v-model="newParticipantId"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              >
+                <option value="" disabled>Bitte auswählen...</option>
+                <option v-for="p in props.availableParticipants" :key="p.id" :value="p.id">
+                  {{ p.firstname }} {{ p.name }}
+                </option>
+              </select>
+              <button
+                type="submit"
+                class="bg-blue-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                :disabled="!newParticipantId"
+              >
+                Hinzufügen
+              </button>
+            </div>
+          </form>
         </div>
         <div>
           <div class="text-lg font-medium text-gray-700 mb-1">Ablauf / Schritte</div>

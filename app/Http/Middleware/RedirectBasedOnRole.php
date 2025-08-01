@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class RedirectBasedOnRole
@@ -16,7 +17,6 @@ class RedirectBasedOnRole
       in_array($request->route()->getName(), [
         'logout',
         'login',
-        'exams',
         'password.request',
         'password.email',
         'password.reset',
@@ -61,7 +61,12 @@ class RedirectBasedOnRole
         return redirect()->route('participant');
       }
 
-      if (in_array($user->role, ['admin', 'teacher']) && !in_array($currentRoute, $teacherAdminRoutes)) {
+      // if (in_array($user->role, ['admin', 'teacher']) && !in_array($currentRoute, $teacherAdminRoutes)) {
+      if (
+        in_array($user->role, ['admin', 'teacher']) &&
+        !in_array($currentRoute, $teacherAdminRoutes) &&
+        !Str::startsWith($currentRoute, 'exams.')
+      ) {
         return redirect()->route('dashboard');
       }
     }

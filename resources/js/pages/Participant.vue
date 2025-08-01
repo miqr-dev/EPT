@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useForm } from '@inertiajs/vue3'
+import { useForm, Link, router } from '@inertiajs/vue3'
+import { LogOut } from 'lucide-vue-next'
 
 const props = defineProps<{
   user: any
@@ -35,6 +36,10 @@ function submit() {
   form.post('/onboarding')
 }
 
+const handleLogout = () => {
+    router.flushAll();
+};
+
 // Dropdown options
 const educationOptions = [
   'vor der letzten Hauptschulklasse abgeschlossen',
@@ -60,12 +65,21 @@ const householdOptions = [
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition">
-    <form @submit.prevent="submit"
-      class="bg-white dark:bg-gray-800 dark:text-gray-100 shadow rounded-lg px-8 py-8 w-full max-w-xl space-y-6">
-      <h2 class="text-xl font-bold text-gray-700 dark:text-gray-100 mb-2">
-        Willkommen, {{ props.user?.name || 'Teilnehmer:in' }}!
-      </h2>
+    <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition relative p-4">
+        <div class="absolute top-4 right-4">
+            <Link :href="route('logout')" method="post" as="button" @click="handleLogout"
+                class="flex items-center space-x-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition">
+            <LogOut class="h-5 w-5" />
+            <span>Abmelden</span>
+            </Link>
+        </div>
+
+        <div class="min-h-screen flex items-center justify-center">
+            <form @submit.prevent="submit"
+                class="bg-white dark:bg-gray-800 dark:text-gray-100 shadow rounded-lg px-8 py-8 w-full max-w-xl space-y-6">
+                <h2 class="text-xl font-bold text-gray-700 dark:text-gray-100 mb-2">
+                    Willkommen, {{ props.user?.name || 'Teilnehmer:in' }}!
+                </h2>
       <p class="text-gray-500 dark:text-gray-400 mb-2">
         Bitte fülle dein Profil aus, um fortzufahren.
       </p>
@@ -174,5 +188,6 @@ const householdOptions = [
         </button>
       </div>
     </form>
-  </div>
+        </div>
+    </div>
 </template>
