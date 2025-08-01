@@ -13,10 +13,10 @@ class EmployedSeeder extends Seeder
   {
     Employed::create(['name' => 'ja ']);
     Employed::create(['name' => 'ja- mithelfend im eigenen Betrieb ']);
-    Employed::create(['name' => 'Hausfaru / Hausmann']);
+    Employed::create(['name' => 'Hausfrau / Hausmann']);
     Employed::create(['name' => 'Schüler(in)']);
     Employed::create(['name' => 'Student(in)']);
-    Employed::create(['name' => 'inBerfusausbildung']);
+    Employed::create(['name' => 'in Berufsausbildung']);
     Employed::create(['name' => 'Rentner(in) ']);
     Employed::create(['name' => 'Ruhestand']);
     Employed::create(['name' => 'arbeitslos']);
