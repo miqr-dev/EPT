@@ -23,13 +23,8 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
   Route::post('/onboarding', [ParticipantController::class, 'storeProfile'])->name('participant.onboarding.save');
 
   // Exam management (teacher/admin only, add middleware if needed)
-  Route::resource('exams', ExamController::class)
-    ->only(['index', 'create', 'store', 'show'])
-    ->names('exams');
-
-  // Participants management (assign to exam)
-  Route::post('exams/{exam}/participants', [ExamController::class, 'addParticipants'])
-    ->name('exams.addParticipants');
+  Route::post('exams/store-with-participants', [ExamController::class, 'storeWithParticipants'])->name('exams.storeWithParticipants');
+  Route::put('exams/{exam}/steps', [ExamController::class, 'updateSteps'])->name('exams.updateSteps');
 
 
   Route::get('/login', function () {

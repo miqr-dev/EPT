@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Exam;
 use App\Models\Test;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\TestAssignment;
 use Illuminate\Support\Facades\Auth;
@@ -15,16 +17,29 @@ class TeacherController extends Controller
     $teacher = Auth::user();
     $cityId = $teacher->city_id;
 
-$participants = User::with(['city', 'testAssignments.test'])
-    ->where('role', 'participant')
-    ->where('city_id', $cityId)
-    ->orderBy('created_at', 'desc')
-    ->get();
+    // Existing participants query
+    $participants = User::with(['city', 'testAssignments.test'])
+      ->where('role', 'participant')
+      ->where('city_id', $cityId)
+      ->orderBy('created_at', 'desc')
+      ->get();
+
+    // New: Fetch users created in the last 6 hours in the same city
+    $recentUsers = User::where('role', 'participant')
+      ->where('city_id', $cityId)
+      ->where('created_at', '>=', Carbon::now()->subHours(6))
+      ->orderBy('created_at', 'desc')
+      ->get();
+
+    // New: Fetch all exams
+    $exams = Exam::with(['city', 'teacher', 'participants.user', 'steps.test'])->get();
 
     $tests = Test::all();
 
     return inertia('Dashboard', [
       'participants' => $participants,
+      'recentUsers' => $recentUsers,
+      'exams' => $exams,
       'tests' => $tests,
     ]);
   }

@@ -9,6 +9,8 @@ use App\Models\User;
 use App\Models\Test;
 use App\Models\City;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class ExamController extends Controller
@@ -98,4 +100,66 @@ class ExamController extends Controller
 
   // 6. Flow controls (start, pause, resume, next step, extra time)
   // ... (see previous post for methods, but always use Inertia::render or redirect)
+
+  public function storeWithParticipants(Request $request)
+  {
+      $data = $request->validate([
+          'title' => 'required|string|max:255',
+          'participant_ids' => 'required|array|min:1',
+          'participant_ids.*' => 'exists:users,id',
+      ]);
+
+      $teacher = Auth::user();
+
+      DB::transaction(function () use ($data, $teacher) {
+          $exam = Exam::create([
+              'name' => $data['title'],
+              'city_id' => $teacher->city_id,
+              'teacher_id' => $teacher->id,
+              'status' => 'not_started',
+          ]);
+
+          foreach ($data['participant_ids'] as $participantId) {
+              ExamParticipant::create([
+                  'exam_id' => $exam->id,
+                  'participant_id' => $participantId,
+              ]);
+          }
+
+          // Create default steps
+          $defaultTestNames = ['LMT', 'LMT2', 'BRT', 'FPI', 'MRT'];
+          $defaultTests = Test::whereIn('name', $defaultTestNames)->pluck('id', 'name');
+
+          $stepIndex = 1;
+          foreach ($defaultTestNames as $testName) {
+              if (isset($defaultTests[$testName])) {
+                  ExamStep::create([
+                      'exam_id' => $exam->id,
+                      'test_id' => $defaultTests[$testName],
+                      'step_order' => $stepIndex++,
+                      'duration' => 60, // default duration
+                  ]);
+              }
+          }
+      });
+
+      return redirect()->route('dashboard')->with('success', 'Exam created successfully!');
+  }
+
+  public function updateSteps(Request $request, Exam $exam)
+  {
+      $data = $request->validate([
+          'steps' => 'required|array',
+          'steps.*.id' => 'required|exists:exam_steps,id',
+      ]);
+
+      DB::transaction(function () use ($data, $exam) {
+          foreach ($data['steps'] as $index => $stepData) {
+              $step = ExamStep::where('exam_id', $exam->id)->findOrFail($stepData['id']);
+              $step->update(['step_order' => $index + 1]);
+          }
+      });
+
+      return redirect()->route('dashboard')->with('success', 'Exam steps updated successfully!');
+  }
 }
