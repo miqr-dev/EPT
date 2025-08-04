@@ -2,7 +2,7 @@
 import ExamDetailsModal from '@/components/ExamDetailsModal.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch, nextTick } from 'vue';
 
 const props = defineProps<{
     participants: any[];
@@ -25,10 +25,12 @@ const defaultSteps = ['BRT-A', 'MRT-A', 'FPI-R'];
 watch(
     () => props.tests,
     (newTests) => {
-        if (newTests.length > 0) {
-            const defaultTestIds = newTests.filter((test) => defaultSteps.includes(test.code)).map((test) => test.id);
-            newExamSteps.value = defaultTestIds;
-        }
+        nextTick(() => {
+            if (newTests.length > 0) {
+                const defaultTestIds = newTests.filter((test) => defaultSteps.includes(test.code)).map((test) => test.id);
+                newExamSteps.value = defaultTestIds;
+            }
+        });
     },
     { immediate: true },
 );
