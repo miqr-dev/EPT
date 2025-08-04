@@ -54,6 +54,8 @@ class RedirectBasedOnRole
         'assign.tests',
         'remove.tests',
         'exams',
+        'settings',
+        'appearance',
         'logout'
       ];
 
