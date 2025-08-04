@@ -90,6 +90,10 @@ function addSelectedUsersToStage() {
   selectedRecentUserIds.value = []
 }
 
+function removeStagedUser(userId: number) {
+  stagedUserIds.value = stagedUserIds.value.filter(id => id !== userId)
+}
+
 function saveExam() {
   router.post(route('exams.storeWithParticipants'), {
     title: newExamTitle.value,
@@ -211,9 +215,14 @@ function addTests() {
                 <div class="flex-1 border dark:border-gray-600 rounded-md p-2 h-24 overflow-y-auto">
                   <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Staged Participants:</p>
                   <ul>
-                    <li v-for="userId in stagedUserIds" :key="userId" class="text-sm">
-                      {{ props.recentUsers.find(u => u.id === userId)?.name }},
-                      {{ props.recentUsers.find(u => u.id === userId)?.firstname }}
+                    <li v-for="userId in stagedUserIds" :key="userId" class="text-sm flex justify-between items-center">
+                      <span>
+                        {{ props.recentUsers.find(u => u.id === userId)?.name }},
+                        {{ props.recentUsers.find(u => u.id === userId)?.firstname }}
+                      </span>
+                      <button @click="removeStagedUser(userId)" class="text-red-500 hover:text-red-700">
+                        &times;
+                      </button>
                     </li>
                   </ul>
                   <p v-if="!stagedUserIds.length" class="text-xs text-gray-400 dark:text-gray-500">No users staged.</p>

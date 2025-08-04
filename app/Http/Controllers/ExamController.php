@@ -10,6 +10,8 @@ use App\Models\User;
 use App\Models\Test;
 use App\Models\City;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 
 class ExamController extends Controller
@@ -65,6 +67,41 @@ class ExamController extends Controller
 
     return redirect()->route('exams.index')->with('success', 'Exam created!');
   }
+
+  public function storeWithParticipants(Request $request): RedirectResponse
+  {
+    $data = $request->validate([
+      'title' => 'required|string|max:255',
+      'participant_ids' => 'required|array',
+      'participant_ids.*' => 'exists:users,id',
+    ]);
+
+    $teacher = Auth::user();
+
+    // Find the city from the first participant if the teacher doesn't have one.
+    $cityId = $teacher->city_id;
+    if (!$cityId && count($data['participant_ids']) > 0) {
+        $firstParticipant = User::find($data['participant_ids'][0]);
+        $cityId = $firstParticipant->city_id;
+    }
+
+    $exam = Exam::create([
+      'name' => $data['title'],
+      'teacher_id' => $teacher->id,
+      'city_id' => $cityId,
+      'status' => 'not_started',
+    ]);
+
+    foreach ($data['participant_ids'] as $participantId) {
+      ExamParticipant::create([
+        'exam_id' => $exam->id,
+        'participant_id' => $participantId,
+      ]);
+    }
+
+    return redirect()->route('dashboard')->with('success', 'Exam created successfully!');
+  }
+
 
   // 4. Show exam details (with step/participant management)
   public function show(Exam $exam)
