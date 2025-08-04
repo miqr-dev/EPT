@@ -146,19 +146,19 @@ function addTests() {
 <template>
   <Head title="Dashboard" />
   <AppLayout>
-    <div class="min-h-screen bg-[#f6f7f9] flex flex-col items-center py-4">
+    <div class="min-h-screen bg-[#f6f7f9] dark:bg-gray-900 flex flex-col items-center py-4">
       <!-- New Exam Management Section -->
       <div class="w-full flex flex-col md:flex-row gap-4 max-w-7xl mt-6">
         <!-- Box 1: Recent Users -->
         <div class="flex-1 flex flex-col">
-          <div class="bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col h-full">
-            <div class="px-4 py-3 border-b border-gray-100 flex items-center">
-              <h2 class="text-base font-semibold flex-1 text-gray-800">Recent Users (6h)</h2>
-              <span class="text-xs text-gray-500">{{ props.recentUsers.length }}</span>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-full">
+            <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center">
+              <h2 class="text-base font-semibold flex-1 text-gray-800 dark:text-gray-200">Recent Users (6h)</h2>
+              <span class="text-xs text-gray-500 dark:text-gray-400">{{ props.recentUsers.length }}</span>
             </div>
             <div class="flex-1 overflow-auto">
               <table class="w-full text-sm">
-                <thead class="bg-gray-50 sticky top-0 z-10">
+                <thead class="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
                   <tr>
                     <th class="w-8 px-2 py-2 text-center">
                       <input type="checkbox" @change="toggleSelectAllRecent" class="accent-blue-600 w-4 h-4" />
@@ -168,7 +168,7 @@ function addTests() {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="user in props.recentUsers" :key="user.id" class="hover:bg-gray-50 cursor-pointer"
+                  <tr v-for="user in props.recentUsers" :key="user.id" class="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                     @click="toggleRecentUser(user.id)">
                     <td class="px-2 py-1 text-center">
                       <input type="checkbox" :checked="selectedRecentUserIds.includes(user.id)"
@@ -178,7 +178,7 @@ function addTests() {
                     <td class="px-2 py-1">{{ user.firstname }}</td>
                   </tr>
                   <tr v-if="!props.recentUsers.length">
-                    <td colspan="3" class="text-center py-4 text-gray-400">No recent users found.</td>
+                    <td colspan="3" class="text-center py-4 text-gray-400 dark:text-gray-500">No recent users found.</td>
                   </tr>
                 </tbody>
               </table>
@@ -188,8 +188,8 @@ function addTests() {
 
         <!-- Box 2: Create Exam -->
         <div class="flex-1 flex flex-col">
-          <div class="bg-white rounded-xl shadow border border-gray-100 p-4 h-full">
-            <h2 class="text-base font-semibold text-gray-800 mb-3">Create New Exam</h2>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 p-4 h-full">
+            <h2 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">Create New Exam</h2>
             <div v-if="!showCreateExamForm">
               <button @click="showCreateExamForm = true"
                 class="w-full bg-blue-600 text-white px-4 py-2 rounded font-semibold hover:bg-blue-700">
@@ -198,29 +198,29 @@ function addTests() {
             </div>
             <div v-else>
               <div class="mb-4">
-                <label for="exam-title" class="block text-sm font-medium text-gray-700">Exam Title</label>
+                <label for="exam-title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Exam Title</label>
                 <input type="text" id="exam-title" v-model="newExamTitle"
-                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="e.g. Final Exam Summer 2025" />
               </div>
               <div class="flex items-center gap-4">
                 <button @click="addSelectedUsersToStage" :disabled="!selectedRecentUserIds.length"
-                  class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded disabled:opacity-50">
+                  class="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded disabled:opacity-50">
                   &rarr;
                 </button>
-                <div class="flex-1 border rounded-md p-2 h-24 overflow-y-auto">
-                  <p class="text-sm text-gray-500 mb-2">Staged Participants:</p>
+                <div class="flex-1 border dark:border-gray-600 rounded-md p-2 h-24 overflow-y-auto">
+                  <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Staged Participants:</p>
                   <ul>
                     <li v-for="userId in stagedUserIds" :key="userId" class="text-sm">
                       {{ props.recentUsers.find(u => u.id === userId)?.name }},
                       {{ props.recentUsers.find(u => u.id === userId)?.firstname }}
                     </li>
                   </ul>
-                  <p v-if="!stagedUserIds.length" class="text-xs text-gray-400">No users staged.</p>
+                  <p v-if="!stagedUserIds.length" class="text-xs text-gray-400 dark:text-gray-500">No users staged.</p>
                 </div>
               </div>
               <div class="mt-4 flex justify-end gap-2">
-                <button @click="showCreateExamForm = false" class="text-gray-600 hover:text-gray-900">Cancel</button>
+                <button @click="showCreateExamForm = false" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">Cancel</button>
                 <button @click="saveExam" :disabled="!newExamTitle || !stagedUserIds.length"
                   class="bg-green-600 text-white px-4 py-2 rounded font-semibold hover:bg-green-700 disabled:opacity-50">
                   Save Exam
@@ -232,14 +232,14 @@ function addTests() {
 
         <!-- Box 3: All Exams -->
         <div class="flex-1 flex flex-col">
-          <div class="bg-white rounded-xl shadow border border-gray-100 overflow-hidden flex flex-col h-full">
-            <div class="px-4 py-3 border-b border-gray-100 flex items-center">
-              <h2 class="text-base font-semibold flex-1 text-gray-800">All Exams</h2>
-              <span class="text-xs text-gray-500">{{ props.exams.length }}</span>
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-full">
+            <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center">
+              <h2 class="text-base font-semibold flex-1 text-gray-800 dark:text-gray-200">All Exams</h2>
+              <span class="text-xs text-gray-500 dark:text-gray-400">{{ props.exams.length }}</span>
             </div>
             <div class="flex-1 overflow-auto">
               <table class="w-full text-sm">
-                <thead class="bg-gray-50 sticky top-0 z-10">
+                <thead class="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
                   <tr>
                     <th class="px-2 py-2 font-medium text-left">Name</th>
                     <th class="px-2 py-2 font-medium text-left">City</th>
@@ -248,7 +248,7 @@ function addTests() {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="exam in props.exams" :key="exam.id" class="hover:bg-gray-50">
+                  <tr v-for="exam in props.exams" :key="exam.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td class="px-2 py-1">{{ exam.name }}</td>
                     <td class="px-2 py-1">{{ exam.city.name }}</td>
                     <td class="px-2 py-1">{{ exam.status }}</td>
@@ -257,7 +257,7 @@ function addTests() {
                     </td>
                   </tr>
                   <tr v-if="!props.exams.length">
-                    <td colspan="4" class="text-center py-4 text-gray-400">No exams found.</td>
+                    <td colspan="4" class="text-center py-4 text-gray-400 dark:text-gray-500">No exams found.</td>
                   </tr>
                 </tbody>
               </table>
