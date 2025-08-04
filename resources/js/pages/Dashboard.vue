@@ -63,6 +63,10 @@ function toggleRow(id: number, idx: number) {
     selectedIdx.value = idx
   }
 }
+const availableRecentUsers = computed(() =>
+  props.recentUsers.filter(u => !stagedUserIds.value.includes(u.id))
+)
+
 function singleRowSelect(idx: number, id: number) {
   selectedIdx.value = idx
   selectedIds.value = [id]
@@ -79,7 +83,7 @@ function toggleRecentUser(id: number) {
 function toggleSelectAllRecent(event: Event) {
   const target = event.target as HTMLInputElement
   if (target.checked) {
-    selectedRecentUserIds.value = props.recentUsers.map(u => u.id)
+    selectedRecentUserIds.value = availableRecentUsers.value.map(u => u.id)
   } else {
     selectedRecentUserIds.value = []
   }
@@ -158,7 +162,7 @@ function addTests() {
           <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-full">
             <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center">
               <h2 class="text-base font-semibold flex-1 text-gray-800 dark:text-gray-200">Recent Users (6h)</h2>
-              <span class="text-xs text-gray-500 dark:text-gray-400">{{ props.recentUsers.length }}</span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">{{ availableRecentUsers.length }}</span>
             </div>
             <div class="flex-1 overflow-auto">
               <table class="w-full text-sm">
@@ -172,7 +176,7 @@ function addTests() {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="user in props.recentUsers" :key="user.id" class="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                  <tr v-for="user in availableRecentUsers" :key="user.id" class="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                     @click="toggleRecentUser(user.id)">
                     <td class="px-2 py-1 text-center">
                       <input type="checkbox" :checked="selectedRecentUserIds.includes(user.id)"
@@ -181,7 +185,7 @@ function addTests() {
                     <td class="px-2 py-1">{{ user.name }}</td>
                     <td class="px-2 py-1">{{ user.firstname }}</td>
                   </tr>
-                  <tr v-if="!props.recentUsers.length">
+                  <tr v-if="!availableRecentUsers.length">
                     <td colspan="3" class="text-center py-4 text-gray-400 dark:text-gray-500">No recent users found.</td>
                   </tr>
                 </tbody>

@@ -28,29 +28,29 @@ function saveChanges() {
 
 <template>
   <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-2xl border border-gray-200 dark:border-gray-700">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold">{{ exam.name }}</h2>
-        <button @click="closeModal" class="text-gray-500 hover:text-gray-800">&times;</button>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ exam.name }}</h2>
+        <button @click="closeModal" class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">&times;</button>
       </div>
       <div>
-        <h3 class="font-semibold mb-2">Participants</h3>
-        <ul>
+        <h3 class="font-semibold mb-2 text-gray-800 dark:text-gray-200">Participants</h3>
+        <ul class="text-gray-700 dark:text-gray-300">
           <li v-for="p in exam.participants" :key="p.id">{{ p.user.name }}, {{ p.user.firstname }}</li>
         </ul>
       </div>
       <div class="mt-4">
-        <h3 class="font-semibold mb-2">Steps (Drag to re-order)</h3>
+        <h3 class="font-semibold mb-2 text-gray-800 dark:text-gray-200">Steps (Drag to re-order)</h3>
         <draggable v-model="localSteps" item-key="id" class="space-y-2">
           <template #item="{ element }">
-            <div class="p-2 border rounded-md bg-gray-50 cursor-move">
+            <div class="p-2 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 cursor-move text-gray-800 dark:text-gray-200">
               {{ element.test.name }}
             </div>
           </template>
         </draggable>
       </div>
       <div class="mt-6 flex justify-end gap-2">
-        <button @click="closeModal" class="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">Close</button>
+        <button @click="closeModal" class="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-500">Close</button>
         <button @click="saveChanges" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save Changes</button>
       </div>
     </div>
