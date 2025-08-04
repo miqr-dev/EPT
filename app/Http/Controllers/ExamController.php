@@ -74,6 +74,8 @@ class ExamController extends Controller
       'title' => 'required|string|max:255',
       'participant_ids' => 'required|array',
       'participant_ids.*' => 'exists:users,id',
+      'steps' => 'sometimes|array',
+      'steps.*' => 'exists:tests,id',
     ]);
 
     $teacher = Auth::user();
@@ -97,6 +99,18 @@ class ExamController extends Controller
         'exam_id' => $exam->id,
         'participant_id' => $participantId,
       ]);
+    }
+
+    if (isset($data['steps'])) {
+      $tests = Test::findMany($data['steps']);
+      foreach ($tests as $index => $test) {
+        ExamStep::create([
+          'exam_id' => $exam->id,
+          'test_id' => $test->id,
+          'step_order' => $index + 1,
+          'duration' => $test->duration ?? 60, // Default to 60 mins if not set
+        ]);
+      }
     }
 
     return redirect()->route('dashboard')->with('success', 'Exam created successfully!');

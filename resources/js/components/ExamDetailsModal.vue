@@ -12,8 +12,10 @@ const emit = defineEmits(['close', 'save'])
 const localSteps = ref([])
 
 watch(() => props.exam, (newExam) => {
-  if (newExam) {
+  if (newExam && newExam.steps) {
     localSteps.value = [...newExam.steps].sort((a, b) => a.step_order - b.step_order)
+  } else {
+    localSteps.value = []
   }
 })
 

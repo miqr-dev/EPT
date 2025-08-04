@@ -12,6 +12,7 @@ return new class extends Migration {
             $table->string('code')->unique(); // MRT, FPI, etc.
             $table->string('name');
             $table->text('description')->nullable();
+            $table->integer('duration')->nullable();
             $table->timestamps();
         });
     }

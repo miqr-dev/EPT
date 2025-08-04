@@ -11,6 +11,7 @@ class Test extends Model
         'code',
         'name',
         'description',
+        'duration',
     ];
 
     // Assignments for this test

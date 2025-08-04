@@ -12,12 +12,12 @@ class TestsTableSeeder extends Seeder
   public function run(): void
   {
     $tests = [
-      ['name' => 'BRT-A', 'code' => 'BRT-A'],
-      ['name' => 'BRT-B', 'code' => 'BRT-B'],
-      ['name' => 'MRT-A', 'code' => 'MRT-A'],
-      ['name' => 'MRT-B', 'code' => 'MRT-B'],
-      ['name' => 'FPI-R', 'code' => 'FPI-R'],
-      ['name' => 'LMT',   'code' => 'LMT'],
+      ['name' => 'BRT-A', 'code' => 'BRT-A', 'duration' => 60],
+      ['name' => 'BRT-B', 'code' => 'BRT-B', 'duration' => 60],
+      ['name' => 'MRT-A', 'code' => 'MRT-A', 'duration' => 60],
+      ['name' => 'MRT-B', 'code' => 'MRT-B', 'duration' => 60],
+      ['name' => 'FPI-R', 'code' => 'FPI-R', 'duration' => 60],
+      ['name' => 'LMT',   'code' => 'LMT', 'duration' => 60],
     ];
 
     foreach ($tests as $test) {
