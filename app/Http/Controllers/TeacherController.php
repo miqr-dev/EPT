@@ -82,4 +82,38 @@ class TeacherController extends Controller
 
     return back()->with('success', 'Tests removed successfully!');
   }
+
+  public function getActiveExam()
+  {
+    $activeExam = Exam::with('currentStep.test')
+      ->where('status', 'in_progress')
+      ->first();
+
+    if (!$activeExam) {
+      return response()->json(null);
+    }
+
+    $activeExam->load(['participants.user', 'participants.stepStatuses' => function ($query) use ($activeExam) {
+      $query->where('exam_step_id', $activeExam->current_exam_step_id);
+    }]);
+
+    if ($activeExam->currentStep) {
+      $duration = $activeExam->currentStep->duration; // duration in minutes
+      foreach ($activeExam->participants as $participant) {
+        $status = $participant->stepStatuses->first();
+        if ($status && $status->started_at) {
+          $startTime = Carbon::parse($status->started_at);
+          $endTime = $startTime->copy()->addMinutes($duration);
+          $status->time_remaining = now()->diffInSeconds($endTime, false);
+        } else {
+          // If the step has not been started, time_remaining can be considered full duration
+          if ($status) {
+            $status->time_remaining = $duration * 60;
+          }
+        }
+      }
+    }
+
+    return response()->json($activeExam);
+  }
 }
