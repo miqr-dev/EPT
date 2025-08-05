@@ -53,20 +53,22 @@ class ParticipantController extends Controller
 
   public function examLauncher()
   {
-      return Inertia::render('Exams/ExamLauncher', [
-          'examUrl' => route('exam-room'),
-      ]);
+    $user = Auth::user();
+    $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
+
+    if (!$examParticipant) {
+        return redirect()->route('participant.onboarding')->with('error', 'You are not yet assigned to an exam. Please wait for an administrator to assign you.');
+    }
+
+    return Inertia::render('Exams/ExamLauncher', [
+        'examUrl' => route('exam-room'),
+    ]);
   }
 
     public function myExam()
     {
         $user = Auth::user();
-        $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
-
-        if (!$examParticipant) {
-            return redirect()->route('dashboard')->with('error', 'You are not assigned to any exam.');
-        }
-
+        $examParticipant = ExamParticipant::where('participant_id', $user->id)->firstOrFail();
         $exam = $examParticipant->exam()->with(['currentStep.test'])->first();
 
         $myStepStatus = null;

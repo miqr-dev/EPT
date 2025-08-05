@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { useForm, Link, router } from '@inertiajs/vue3'
+import { computed, ref, watch } from 'vue'
+import { useForm, Link, router, usePage } from '@inertiajs/vue3'
 import { LogOut } from 'lucide-vue-next'
 
+const page = usePage()
 const props = defineProps<{
   user: any
   profile?: any
@@ -21,6 +22,8 @@ const form = useForm({
   employed_id: props.profile?.employed_id ?? '',
   profession_group_id: props.profile?.profession_group_id ?? '',
 })
+
+const flash = computed(() => page.props.flash)
 
 // Age calculation
 watch(() => form.birthday, val => {
@@ -77,6 +80,9 @@ const householdOptions = [
         <div class="min-h-screen flex items-center justify-center">
             <form @submit.prevent="submit"
                 class="bg-white dark:bg-gray-800 dark:text-gray-100 shadow rounded-lg px-8 py-8 w-full max-w-xl space-y-6">
+                <div v-if="flash?.error" class="mb-4 p-4 bg-red-100 text-red-800 rounded-lg dark:bg-red-900 dark:text-red-200">
+                    {{ flash.error }}
+                </div>
                 <h2 class="text-xl font-bold text-gray-700 dark:text-gray-100 mb-2">
                     Willkommen, {{ props.user?.name || 'Teilnehmer:in' }}!
                 </h2>
