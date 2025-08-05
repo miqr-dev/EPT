@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use App\Models\ExamParticipant;
 use Symfony\Component\HttpFoundation\Response;
 
 class RedirectBasedOnRole
@@ -65,11 +66,20 @@ class RedirectBasedOnRole
 
         $allowedRoutes = $participantRoutes;
         if ($profileComplete) {
-            $allowedRoutes = array_merge($allowedRoutes, ['my-exam', 'exam-room', 'my-exam.start-step', 'my-exam.complete-step']);
+          $hasExam = ExamParticipant::where('participant_id', $user->id)->exists();
+          $allowedRoutes = array_merge($allowedRoutes, ['my-exam', 'exam-room', 'my-exam.start-step', 'my-exam.complete-step']);
+          if (!$hasExam) {
+            $allowedRoutes[] = 'participant.no-exam';
+          }
         }
 
         if (!in_array($currentRoute, $allowedRoutes)) {
-            return redirect()->route($profileComplete ? 'my-exam' : 'participant.onboarding');
+          if (!$profileComplete) {
+            return redirect()->route('participant.onboarding');
+          } else {
+            $hasExam = ExamParticipant::where('participant_id', $user->id)->exists();
+            return redirect()->route($hasExam ? 'my-exam' : 'participant.no-exam');
+          }
         }
       }
 

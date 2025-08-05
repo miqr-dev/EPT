@@ -65,6 +65,11 @@ class ParticipantController extends Controller
     ]);
   }
 
+  public function noExam()
+  {
+    return Inertia::render('Exams/NoExam');
+  }
+
     public function myExam()
     {
         $user = Auth::user();

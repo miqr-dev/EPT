@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { defineProps, defineEmits, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
+import { router } from '@inertiajs/vue3'
 
 const props = defineProps<{
   exam: any
@@ -26,6 +27,15 @@ function closeModal() {
 function saveChanges() {
   emit('save', localSteps.value)
 }
+
+function startExam() {
+  if (!props.exam) return
+  router.post(`/exams/${props.exam.id}/start`, {}, {
+    onSuccess: () => {
+      closeModal()
+    }
+  })
+}
 </script>
 
 <template>
@@ -45,15 +55,18 @@ function saveChanges() {
         <h3 class="font-semibold mb-2 text-gray-800 dark:text-gray-200">Steps (Drag to re-order)</h3>
         <draggable v-model="localSteps" item-key="id" class="space-y-2">
           <template #item="{ element }">
-            <div class="p-2 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 cursor-move text-gray-800 dark:text-gray-200">
+            <div class="p-2 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 cursor-move text-ray-800 dark:text-gray-200">
               {{ element.test.name }}
             </div>
           </template>
         </draggable>
       </div>
       <div class="mt-6 flex justify-end gap-2">
-        <button @click="closeModal" class="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-500">Close</button>
+        <button @click="closeModal" class="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded hover:bg-ray-300 dark:hover:bg-gray-500">Close</button>
         <button @click="saveChanges" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save Changes</button>
+        <button v-if="exam && exam.status === 'not_started'" @click="startExam" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+          Start Exam
+        </button>
       </div>
     </div>
   </div>
