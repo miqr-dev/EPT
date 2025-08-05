@@ -48,7 +48,14 @@ class ParticipantController extends Controller
     $profile = $user->participantProfile ?: new ParticipantProfile(['user_id' => $user->id]);
     $profile->fill($data)->save();
 
-    return redirect()->route('dashboard'); // or any route you want
+    return redirect()->route('my-exam');
+  }
+
+  public function examLauncher()
+  {
+      return Inertia::render('Exams/ExamLauncher', [
+          'examUrl' => route('exam-room'),
+      ]);
   }
 
     public function myExam()

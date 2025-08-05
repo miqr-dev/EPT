@@ -68,14 +68,44 @@ function startTest() {
     router.post('/my-exam/start-step', { exam_step_id: props.exam.currentStep.id }, {
         onSuccess: () => {
             isTestDialogOpen.value = true;
+            requestFullscreen();
+            window.addEventListener('beforeunload', handleBeforeUnload);
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
         }
     });
+}
+
+function requestFullscreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.mozRequestFullScreen) { /* Firefox */
+        elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE/Edge */
+        elem.msRequestFullscreen();
+    }
+}
+
+function handleFullscreenChange() {
+    if (!document.fullscreenElement) {
+        alert('You have exited full-screen mode. The test will now end.');
+        completeTest();
+    }
+}
+
+function handleBeforeUnload(event) {
+    event.preventDefault();
+    event.returnValue = '';
 }
 
 function completeTest() {
     router.post('/my-exam/complete-step', { exam_step_id: props.exam.currentStep.id }, {
         onSuccess: () => {
             isTestDialogOpen.value = false;
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
         }
     });
 }

@@ -24,7 +24,8 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
   Route::post('/onboarding', [ParticipantController::class, 'storeProfile'])->name('participant.onboarding.save');
 
   // Participant's exam room
-  Route::get('/my-exam', [ParticipantController::class, 'myExam'])->name('my-exam');
+  Route::get('/my-exam', [ParticipantController::class, 'examLauncher'])->name('my-exam');
+  Route::get('/exam-room', [ParticipantController::class, 'myExam'])->name('exam-room');
   Route::post('/my-exam/start-step', [ParticipantController::class, 'startStep'])->name('my-exam.start-step');
   Route::post('/my-exam/complete-step', [ParticipantController::class, 'completeStep'])->name('my-exam.complete-step');
 
