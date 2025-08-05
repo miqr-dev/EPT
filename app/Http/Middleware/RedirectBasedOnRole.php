@@ -59,8 +59,18 @@ class RedirectBasedOnRole
         'logout'
       ];
 
-      if ($user->role === 'participant' && !in_array($currentRoute, $participantRoutes)) {
-        return redirect()->route('participant');
+      if ($user->role === 'participant') {
+        $profile = $user->participantProfile;
+        $profileComplete = $profile && $profile->birthday && $profile->sex && $profile->marital_status && $profile->household;
+
+        $allowedRoutes = $participantRoutes;
+        if ($profileComplete) {
+            $allowedRoutes = array_merge($allowedRoutes, ['my-exam', 'exam-room', 'my-exam.start-step', 'my-exam.complete-step']);
+        }
+
+        if (!in_array($currentRoute, $allowedRoutes)) {
+            return redirect()->route($profileComplete ? 'my-exam' : 'participant.onboarding');
+        }
       }
 
       // if (in_array($user->role, ['admin', 'teacher']) && !in_array($currentRoute, $teacherAdminRoutes)) {

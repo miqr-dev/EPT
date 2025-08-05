@@ -4,16 +4,16 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { Button } from '@/components/ui/button';
-import { FPI_QUESTIONS } from '@/Pages/Questions/FPIQuestions';
-import { norms_male_16_24 } from '@/Pages/Scores/FPI/norms_male_16_24';
-import { norms_male_25_44 } from '@/Pages/Scores/FPI/norms_male_25_44';
-import { norms_male_45_59 } from '@/Pages/Scores/FPI/norms_male_45_59';
-import { norms_male_60up } from '@/Pages/Scores/FPI/norms_male_60up';
-import { norms_female_16_24 } from '@/Pages/Scores/FPI/norms_female_16_24';
-import { norms_female_25_44 } from '@/Pages/Scores/FPI/norms_female_25_44';
-import { norms_female_45_59 } from '@/Pages/Scores/FPI/norms_female_45_59';
-import { norms_female_60up } from '@/Pages/Scores/FPI/norms_female_60up';
-import FPIResult from '@/Pages/Scores/FPI/FPIResult.vue'; // adjust the path if FPIResult.vue is not in the same folder
+import { FPI_QUESTIONS } from '@/pages/Questions/FPIQuestions';
+import { norms_male_16_24 } from '@/pages/Scores/FPI/norms_male_16_24';
+import { norms_male_25_44 } from '@/pages/Scores/FPI/norms_male_25_44';
+import { norms_male_45_59 } from '@/pages/Scores/FPI/norms_male_45_59';
+import { norms_male_60up } from '@/pages/Scores/FPI/norms_male_60up';
+import { norms_female_16_24 } from '@/pages/Scores/FPI/norms_female_16_24';
+import { norms_female_25_44 } from '@/pages/Scores/FPI/norms_female_25_44';
+import { norms_female_45_59 } from '@/pages/Scores/FPI/norms_female_45_59';
+import { norms_female_60up } from '@/pages/Scores/FPI/norms_female_60up';
+import FPIResult from '@/pages/Scores/FPI/FPIResult.vue';
 
 
 
