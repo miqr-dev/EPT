@@ -83,8 +83,8 @@ class ExamController extends Controller
     // Find the city from the first participant if the teacher doesn't have one.
     $cityId = $teacher->city_id;
     if (!$cityId && count($data['participant_ids']) > 0) {
-        $firstParticipant = User::find($data['participant_ids'][0]);
-        $cityId = $firstParticipant->city_id;
+      $firstParticipant = User::find($data['participant_ids'][0]);
+      $cityId = $firstParticipant->city_id;
     }
 
     $exam = Exam::create([
@@ -123,9 +123,9 @@ class ExamController extends Controller
     $exam->load(['city', 'teacher', 'participants.user', 'steps.test', 'currentStep']);
 
     if ($exam->currentStep) {
-        $exam->load(['participants.stepStatuses' => function ($query) use ($exam) {
-            $query->where('exam_step_id', $exam->current_exam_step_id);
-        }]);
+      $exam->load(['participants.stepStatuses' => function ($query) use ($exam) {
+        $query->where('exam_step_id', $exam->current_exam_step_id);
+      }]);
     }
 
     $existingParticipantIds = $exam->participants->pluck('participant_id');
@@ -158,67 +158,95 @@ class ExamController extends Controller
   }
 
   // 6. Flow controls (start, pause, resume, next step, extra time)
-    public function start(Exam $exam)
-    {
-        if ($exam->status !== 'not_started') {
-            return back(303)->with('error', 'Exam already started.');
-        }
+  public function start(Exam $exam)
+  {
+    if ($exam->status !== 'not_started') {
+      return back(303)->with('error', 'Exam already started.');
+    }
 
-        $firstStep = $exam->steps()->orderBy('step_order')->first();
+    $firstStep = $exam->steps()->orderBy('step_order')->first();
 
-        if (!$firstStep) {
-            return back(303)->with('error', 'Exam has no steps.');
-        }
+    if (!$firstStep) {
+      return back(303)->with('error', 'Exam has no steps.');
+    }
 
-        $exam->update([
-            'status' => 'in_progress',
-            'current_exam_step_id' => $firstStep->id,
-            'started_at' => now(),
+    $exam->update([
+      'status' => 'in_progress',
+      'current_exam_step_id' => $firstStep->id,
+      'started_at' => now(),
+    ]);
+
+    // Create status records for all participants for the first step
+    foreach ($exam->participants as $participant) {
+      ExamStepStatus::create([
+        'exam_id' => $exam->id,
+        'exam_step_id' => $firstStep->id,
+        'participant_id' => $participant->participant_id,
+        'status' => 'not_started',
+      ]);
+    }
+
+    return back(303)->with('success', 'Exam started!');
+  }
+
+  public function nextStep(Exam $exam)
+  {
+    $currentStepOrder = $exam->currentStep->step_order;
+    $nextStep = $exam->steps()->where('step_order', '>', $currentStepOrder)->orderBy('step_order')->first();
+
+    if ($nextStep) {
+      $exam->update(['current_exam_step_id' => $nextStep->id]);
+
+      // Create status records for all participants for the new step
+      foreach ($exam->participants as $participant) {
+        ExamStepStatus::create([
+          'exam_id' => $exam->id,
+          'exam_step_id' => $nextStep->id,
+          'participant_id' => $participant->participant_id,
+          'status' => 'not_started',
         ]);
+      }
+      return back(303)->with('success', 'Moved to next step.');
+    } else {
+      $exam->update(['status' => 'completed', 'completed_at' => now()]);
+      return back(303)->with('success', 'Exam completed!');
+    }
+  }
 
-        // Create status records for all participants for the first step
-        foreach ($exam->participants as $participant) {
-            ExamStepStatus::create([
-                'exam_step_id' => $firstStep->id,
-                'participant_id' => $participant->participant_id,
-                'status' => 'not_started',
-            ]);
-        }
+  public function setStatus(Request $request, Exam $exam)
+  {
+    $data = $request->validate([
+      'status' => 'required|in:not_started,in_progress,paused,completed',
+    ]);
 
-        return back(303)->with('success', 'Exam started!');
+    $exam->update(['status' => $data['status']]);
+
+    return back(303)->with('success', 'Exam status updated.');
+  }
+
+  public function getActiveExam()
+  {
+    $user = Auth::user();
+    $activeExam = null;
+
+    if ($user->role === 'teacher' || $user->role === 'admin') {
+      $activeExam = Exam::where('teacher_id', $user->id)
+        ->where('status', 'in_progress')
+        ->first();
     }
 
-    public function nextStep(Exam $exam)
-    {
-        $currentStepOrder = $exam->currentStep->step_order;
-        $nextStep = $exam->steps()->where('step_order', '>', $currentStepOrder)->orderBy('step_order')->first();
-
-        if ($nextStep) {
-            $exam->update(['current_exam_step_id' => $nextStep->id]);
-
-            // Create status records for all participants for the new step
-            foreach ($exam->participants as $participant) {
-                ExamStepStatus::create([
-                    'exam_step_id' => $nextStep->id,
-                    'participant_id' => $participant->participant_id,
-                    'status' => 'not_started',
-                ]);
-            }
-            return back(303)->with('success', 'Moved to next step.');
-        } else {
-            $exam->update(['status' => 'completed', 'completed_at' => now()]);
-            return back(303)->with('success', 'Exam completed!');
-        }
+    if (!$activeExam) {
+      return response()->json(null);
     }
 
-    public function setStatus(Request $request, Exam $exam)
-    {
-        $data = $request->validate([
-            'status' => 'required|in:not_started,in_progress,paused,completed',
-        ]);
+    $activeExam->load(['city', 'teacher', 'participants.user', 'steps.test', 'currentStep']);
 
-        $exam->update(['status' => $data['status']]);
-
-        return back(303)->with('success', 'Exam status updated.');
+    if ($activeExam->currentStep) {
+      $activeExam->load(['participants.stepStatuses' => function ($query) use ($activeExam) {
+        $query->where('exam_step_id', $activeExam->current_exam_step_id);
+      }]);
     }
+
+    return response()->json($activeExam);
+  }
 }

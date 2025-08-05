@@ -12,11 +12,11 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
   // All role-protected pages
   Route::get('dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
   Route::get('participant', [ParticipantController::class, 'showProfileForm'])->name('participant');
-  Route::get('mrt', fn () => Inertia::render('MRT'))->name('mrt');
-  Route::get('brt', fn () => Inertia::render('BRT'))->name('brt');
-  Route::get('fpi', fn () => Inertia::render('FPI'))->name('fpi');
-  Route::get('lmt', fn () => Inertia::render('LMT'))->name('lmt');
-  Route::get('lmt2', fn () => Inertia::render('LMT2'))->name('lmt2');
+  Route::get('mrt', fn() => Inertia::render('MRT'))->name('mrt');
+  Route::get('brt', fn() => Inertia::render('BRT'))->name('brt');
+  Route::get('fpi', fn() => Inertia::render('FPI'))->name('fpi');
+  Route::get('lmt', fn() => Inertia::render('LMT'))->name('lmt');
+  Route::get('lmt2', fn() => Inertia::render('LMT2'))->name('lmt2');
   Route::get('dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
   Route::post('assign-tests', [TeacherController::class, 'assignTests'])->name('assign.tests');
   Route::post('remove-tests', [TeacherController::class, 'removeTests'])->name('remove.tests');
@@ -44,6 +44,8 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
 
   Route::post('/exams', [ExamController::class, 'store'])->name('exams.store');
   Route::post('/exams/store-with-participants', [ExamController::class, 'storeWithParticipants'])->name('exams.storeWithParticipants');
+  Route::get('/api/active-exam', [ExamController::class, 'getActiveExam'])->name('api.active-exam');
+
 
 
   Route::get('/login', function () {
@@ -53,7 +55,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     ]);
   })->middleware('guest')->name('login');
   Route::redirect('/', '/login');
-  Route::get('/home', fn () => redirect()->route('dashboard'))->name('home');
+  Route::get('/home', fn() => redirect()->route('dashboard'))->name('home');
 });
 
 
