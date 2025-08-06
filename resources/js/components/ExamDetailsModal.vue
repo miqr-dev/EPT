@@ -23,6 +23,9 @@ watch(() => props.exam, (newExam) => {
 function closeModal() {
   emit('close')
 }
+function removeStep(stepId: number) {
+  localSteps.value = localSteps.value.filter((step) => step.id !== stepId)
+}
 
 function saveChanges() {
   emit('save', localSteps.value)

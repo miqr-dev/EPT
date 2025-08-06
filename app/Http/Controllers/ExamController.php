@@ -258,4 +258,28 @@ class ExamController extends Controller
 
     return response()->json($activeExam);
   }
+  public function updateSteps(Request $request, Exam $exam): RedirectResponse
+  {
+    $data = $request->validate([
+      'steps' => 'required|array',
+      'steps.*.id' => 'required|exists:tests,id'
+    ]);
+
+    // Delete existing steps
+    $exam->steps()->delete();
+
+    // Create new steps from request
+    foreach ($data['steps'] as $index => $stepData) {
+      $test = Test::find($stepData['id']);
+      if ($test) {
+        ExamStep::create([
+          'exam_id' => $exam->id,
+          'test_id' => $test->id,
+          'step_order' => $index + 1,
+          'duration' => $test->duration ?? 60, // Default duration
+        ]);
+      }
+    }
+    return redirect()->route('dashboard')->with('success', 'Exam steps updated successfully!');
+  }
 }

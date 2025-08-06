@@ -47,9 +47,9 @@ class RedirectBasedOnRole
         'participant',
         'participant.onboarding',
         'participant.onboarding.save',
-        'mrt',
-        'brt',
-        'fpi',
+        'mrt-a',
+        'brt-a',
+        'fpi-r',
         'lmt',
         'lmt2',
         'assign.tests',
@@ -58,7 +58,8 @@ class RedirectBasedOnRole
         'settings',
         'appearance',
         'logout',
-        'api.active-exam'
+        'api.active-exam',
+        'exams.updateSteps'
       ];
 
       if ($user->role === 'participant') {

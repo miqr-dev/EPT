@@ -12,7 +12,15 @@ class Test extends Model
         'name',
         'description',
         'duration',
+        'component_name',
     ];
+
+    protected $appends = ['component_name'];
+
+    public function getComponentNameAttribute(): string
+    {
+        return explode('-', $this->code)[0];
+    }
 
     // Assignments for this test
     public function assignments(): HasMany

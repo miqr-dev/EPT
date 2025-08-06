@@ -13,10 +13,11 @@ import {
 } from '@/components/ui/dialog'
 
 // Import test components
-import BRT from '@/pages/BRT.vue'
-import FPI from '@/pages/FPI.vue'
+import BRTA from '@/pages/BRT-A.vue'
+import BRTB from '@/pages/BRT-B.vue'
+import FPI from '@/pages/FPI-R.vue'
 import LMT from '@/pages/LMT.vue'
-import MRT from '@/pages/MRT.vue'
+import MRTA from '@/pages/MRT-A.vue'
 import LMT2 from '@/pages/LMT2.vue'
 
 
@@ -30,7 +31,6 @@ const props = defineProps<{
       test: {
         id: number
         name: string
-        component_name: string
       }
     }
   }
@@ -58,8 +58,15 @@ const isExamCompleted = computed(() => {
 
 const testComponent = computed(() => {
     if (!props.exam.currentStep) return null;
-    const components = { BRT, FPI, LMT, MRT, LMT2 };
-    return components[props.exam.currentStep.test.component_name] || null;
+    const components = {
+        'BRT-A': BRTA,
+        'BRT-B': BRTB,
+        'FPI-R': FPI,
+        'LMT': LMT,
+        'MRT-A': MRTA,
+        'LMT2': LMT2,
+    };
+    return components[props.exam.currentStep.test.name] || null;
 });
 
 const isTestDialogOpen = ref(false)

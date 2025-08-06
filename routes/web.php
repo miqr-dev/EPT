@@ -12,9 +12,9 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
   // All role-protected pages
   Route::get('dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
   Route::get('participant', [ParticipantController::class, 'showProfileForm'])->name('participant');
-  Route::get('mrt', fn() => Inertia::render('MRT'))->name('mrt');
-  Route::get('brt', fn() => Inertia::render('BRT'))->name('brt');
-  Route::get('fpi', fn() => Inertia::render('FPI'))->name('fpi');
+  Route::get('mrt-a', fn() => Inertia::render('MRT-A'))->name('mrt-a');
+  Route::get('brt-a', fn() => Inertia::render('BRT-A'))->name('brt-a');
+  Route::get('fpi-r', fn() => Inertia::render('FPI-R'))->name('fpi-r');
   Route::get('lmt', fn() => Inertia::render('LMT'))->name('lmt');
   Route::get('lmt2', fn() => Inertia::render('LMT2'))->name('lmt2');
   Route::get('dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
@@ -44,6 +44,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
 
   Route::post('/exams', [ExamController::class, 'store'])->name('exams.store');
   Route::post('/exams/store-with-participants', [ExamController::class, 'storeWithParticipants'])->name('exams.storeWithParticipants');
+  Route::put('/exams/{exam}/steps', [ExamController::class, 'updateSteps'])->name('exams.updateSteps');
   Route::get('/api/active-exam', [ExamController::class, 'getActiveExam'])->name('api.active-exam');
 
 
