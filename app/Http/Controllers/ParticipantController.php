@@ -61,7 +61,7 @@ class ParticipantController extends Controller
     }
 
     return Inertia::render('Exams/ExamLauncher', [
-        'examUrl' => route('exam-room'),
+        'examUrl' => route('exam-room', ['exam' => $examParticipant->exam_id]),
     ]);
   }
 
@@ -70,11 +70,17 @@ class ParticipantController extends Controller
     return Inertia::render('Exams/NoExam');
   }
 
-    public function myExam()
+    public function myExam($examId)
     {
         $user = Auth::user();
-        $examParticipant = ExamParticipant::where('participant_id', $user->id)->firstOrFail();
-        $exam = $examParticipant->exam()->with(['currentStep.test'])->first();
+
+        $exam = Exam::with(['currentStep.test'])->findOrFail($examId);
+
+        // Ensure the participant is assigned to this exam
+        $isParticipant = $exam->participants()->where('participant_id', $user->id)->exists();
+        if (!$isParticipant) {
+            abort(403, 'You are not assigned to this exam.');
+        }
 
         $myStepStatus = null;
         if ($exam->currentStep) {
