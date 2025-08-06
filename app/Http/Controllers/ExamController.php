@@ -9,6 +9,7 @@ use App\Models\ExamStepStatus;
 use App\Models\User;
 use App\Models\Test;
 use App\Models\City;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
@@ -226,25 +227,33 @@ class ExamController extends Controller
 
   public function getActiveExam()
   {
-    $user = Auth::user();
-    $activeExam = null;
-
-    if ($user->role === 'teacher' || $user->role === 'admin') {
-      $activeExam = Exam::where('teacher_id', $user->id)
-        ->where('status', 'in_progress')
-        ->first();
-    }
+    $activeExam = Exam::with('currentStep.test')
+      ->where('status', 'in_progress')
+      ->first();
 
     if (!$activeExam) {
       return response()->json(null);
     }
 
-    $activeExam->load(['city', 'teacher', 'participants.user', 'steps.test', 'currentStep']);
+    $activeExam->load(['participants.user', 'participants.stepStatuses' => function ($query) use ($activeExam) {
+      $query->where('exam_step_id', $activeExam->current_exam_step_id);
+    }]);
 
     if ($activeExam->currentStep) {
-      $activeExam->load(['participants.stepStatuses' => function ($query) use ($activeExam) {
-        $query->where('exam_step_id', $activeExam->current_exam_step_id);
-      }]);
+      $duration = $activeExam->currentStep->duration; // duration in minutes
+      foreach ($activeExam->participants as $participant) {
+        $status = $participant->stepStatuses->first();
+        if ($status && $status->started_at) {
+          $startTime = Carbon::parse($status->started_at);
+          $endTime = $startTime->copy()->addMinutes($duration);
+          $status->time_remaining = now()->diffInSeconds($endTime, false);
+        } else {
+          // If the step has not been started, time_remaining can be considered full duration
+          if ($status) {
+            $status->time_remaining = $duration * 60;
+          }
+        }
+      }
     }
 
     return response()->json($activeExam);

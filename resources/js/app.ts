@@ -1,4 +1,5 @@
 import '../css/app.css';
+import axios from 'axios';
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
@@ -25,3 +26,5 @@ createInertiaApp({
 
 // This will set light / dark mode on page load...
 initializeTheme();
+
+axios.defaults.withCredentials = true;
