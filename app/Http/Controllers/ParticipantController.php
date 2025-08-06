@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\ParticipantProfile;
 use App\Models\ProfessionGroup;
 use App\Models\Employed;
+use App\Models\Exam;
 use App\Models\ExamParticipant;
 use App\Models\ExamStepStatus;
 use Inertia\Inertia;
