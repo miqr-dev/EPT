@@ -58,8 +58,9 @@ function startExam() {
         <h3 class="font-semibold mb-2 text-gray-800 dark:text-gray-200">Steps (Drag to re-order)</h3>
         <draggable v-model="localSteps" item-key="id" class="space-y-2">
           <template #item="{ element }">
-            <div class="p-2 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 cursor-move text-ray-800 dark:text-gray-200">
-              {{ element.test.name }}
+            <div class="flex items-center justify-between p-2 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 cursor-move text-ray-800 dark:text-gray-200">
+              <span>{{ element.test.name }}</span>
+              <button @click="removeStep(element.id)" class="text-red-500 hover:text-red-700 font-bold">&times;</button>
             </div>
           </template>
         </draggable>
