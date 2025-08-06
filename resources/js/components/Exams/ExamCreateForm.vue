@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineProps, defineEmits } from 'vue'
+import { ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 
 const props = defineProps<{

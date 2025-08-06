@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, defineProps, defineEmits } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 
 const props = defineProps<{

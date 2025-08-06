@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 
 const props = defineProps<{
   exam: any
