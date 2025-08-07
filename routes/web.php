@@ -26,7 +26,6 @@ use App\Http\Controllers\ExamStepStatusController;
   // Participant's exam room
   Route::get('/my-exam', [ParticipantController::class, 'examLauncher'])->name('my-exam');
   Route::get('/no-exam', [ParticipantController::class, 'noExam'])->name('participant.no-exam');
-  Route::get('/exam-room/{exam}', [ParticipantController::class, 'myExam'])->name('exam-room');
   Route::post('/my-exam/start-step', [ParticipantController::class, 'startStep'])->name('my-exam.start-step');
   Route::post('/my-exam/complete-step', [ParticipantController::class, 'completeStep'])->name('my-exam.complete-step');
 

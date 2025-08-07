@@ -58,49 +58,45 @@ class ParticipantController extends Controller
     $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
 
     if (!$examParticipant) {
+      // Redirect to onboarding if not yet assigned to an exam.
       return redirect()->route('participant.onboarding')->with('error', 'You are not yet assigned to an exam. Please wait for an administrator to assign you.');
     }
 
-    return Inertia::render('Exams/ExamLauncher', [
-      'examUrl' => route('exam-room', ['exam' => $examParticipant->exam_id]),
+    $exam = Exam::with(['steps.test', 'currentStep.test'])->find($examParticipant->exam_id);
+
+    if (!$exam) {
+      // This case should ideally not happen if data is consistent.
+      return redirect()->route('participant.no-exam');
+    }
+
+    // Eager load all step statuses for this participant in this exam.
+    $stepStatuses = ExamStepStatus::where('exam_id', $exam->id)
+      ->where('participant_id', $user->id)
+      ->get()
+      ->keyBy('exam_step_id');
+
+    // Ensure step statuses exist for all steps, creating them if necessary.
+    foreach ($exam->steps as $step) {
+      if (!isset($stepStatuses[$step->id])) {
+        $newStatus = ExamStepStatus::create([
+          'exam_id' => $exam->id,
+          'exam_step_id' => $step->id,
+          'participant_id' => $user->id,
+          'status' => 'not_started',
+        ]);
+        $stepStatuses[$step->id] = $newStatus;
+      }
+    }
+
+    return Inertia::render('Exams/ExamRoom', [
+      'exam' => $exam,
+      'stepStatuses' => $stepStatuses, // Pass all statuses to the view.
     ]);
   }
 
   public function noExam()
   {
     return Inertia::render('Exams/NoExam');
-  }
-
-  public function myExam(Exam $exam)
-  {
-    $user = Auth::user();
-
-    $exam->load('currentStep.test');
-
-    // Ensure the participant is assigned to this exam
-    $isParticipant = $exam->participants()->where('participant_id', $user->id)->exists();
-    if (!$isParticipant) {
-      abort(403, 'You are not assigned to this exam.');
-    }
-
-    $myStepStatus = null;
-    if ($exam->currentStep) {
-      $myStepStatus = ExamStepStatus::firstOrCreate(
-        [
-          'exam_step_id' => $exam->currentStep->id,
-          'participant_id' => $user->id,
-        ],
-        [
-          'exam_id' => $exam->id,
-          'status' => 'not_started',
-        ]
-      );
-    }
-
-    return Inertia::render('Exams/ExamRoom', [
-      'exam' => $exam,
-      'myStepStatus' => $myStepStatus,
-    ]);
   }
 
   public function startStep(Request $request)
