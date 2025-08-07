@@ -178,6 +178,7 @@ class ExamController extends Controller
     ]);
 
     // Create status records for all participants for the first step
+    $exam->load('participants');
     foreach ($exam->participants as $participant) {
       ExamStepStatus::create([
         'exam_id' => $exam->id,
@@ -199,6 +200,7 @@ class ExamController extends Controller
       $exam->update(['current_exam_step_id' => $nextStep->id]);
 
       // Create status records for all participants for the new step
+      $exam->load('participants');
       foreach ($exam->participants as $participant) {
         ExamStepStatus::create([
           'exam_id' => $exam->id,

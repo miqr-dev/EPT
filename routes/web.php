@@ -8,7 +8,7 @@ use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\ExamStepStatusController;
 
 
-Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
+// Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
   // All role-protected pages
   Route::get('dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
   Route::get('participant', [ParticipantController::class, 'showProfileForm'])->name('participant');
@@ -57,7 +57,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
   })->middleware('guest')->name('login');
   Route::redirect('/', '/login');
   Route::get('/home', fn() => redirect()->route('dashboard'))->name('home');
-});
+// });
 
 
 require __DIR__ . '/settings.php';

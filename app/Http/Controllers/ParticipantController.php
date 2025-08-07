@@ -58,11 +58,11 @@ class ParticipantController extends Controller
     $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
 
     if (!$examParticipant) {
-        return redirect()->route('participant.onboarding')->with('error', 'You are not yet assigned to an exam. Please wait for an administrator to assign you.');
+      return redirect()->route('participant.onboarding')->with('error', 'You are not yet assigned to an exam. Please wait for an administrator to assign you.');
     }
 
     return Inertia::render('Exams/ExamLauncher', [
-        'examUrl' => route('exam-room', ['exam' => $examParticipant->exam_id]),
+      'examUrl' => route('exam-room', ['exam' => $examParticipant->exam_id]),
     ]);
   }
 
@@ -71,58 +71,65 @@ class ParticipantController extends Controller
     return Inertia::render('Exams/NoExam');
   }
 
-    public function myExam($examId)
-    {
-        $user = Auth::user();
+  public function myExam($examId)
+  {
+    $user = Auth::user();
 
-        $exam = Exam::with(['currentStep.test'])->findOrFail($examId);
+    $exam = Exam::with(['currentStep.test'])->findOrFail($examId);
 
-        // Ensure the participant is assigned to this exam
-        $isParticipant = $exam->participants()->where('participant_id', $user->id)->exists();
-        if (!$isParticipant) {
-            abort(403, 'You are not assigned to this exam.');
-        }
-
-        $myStepStatus = null;
-        if ($exam->currentStep) {
-            $myStepStatus = ExamStepStatus::where('exam_step_id', $exam->currentStep->id)
-                ->where('participant_id', $user->id)
-                ->first();
-        }
-
-        return Inertia::render('Exams/ExamRoom', [
-            'exam' => $exam,
-            'myStepStatus' => $myStepStatus,
-        ]);
+    // Ensure the participant is assigned to this exam
+    $isParticipant = $exam->participants()->where('participant_id', $user->id)->exists();
+    if (!$isParticipant) {
+      abort(403, 'You are not assigned to this exam.');
     }
 
-    public function startStep(Request $request)
-    {
-        $user = Auth::user();
-        $examStepStatus = ExamStepStatus::where('participant_id', $user->id)
-            ->where('exam_step_id', $request->input('exam_step_id'))
-            ->firstOrFail();
-
-        $examStepStatus->update([
-            'status' => 'in_progress',
-            'started_at' => now(),
-        ]);
-
-        return back(303);
+    $myStepStatus = null;
+    if ($exam->currentStep) {
+      $myStepStatus = ExamStepStatus::firstOrCreate(
+        [
+          'exam_step_id' => $exam->currentStep->id,
+          'participant_id' => $user->id,
+        ],
+        [
+          'exam_id' => $exam->id,
+          'status' => 'not_started',
+        ]
+      );
     }
 
-    public function completeStep(Request $request)
-    {
-        $user = Auth::user();
-        $examStepStatus = ExamStepStatus::where('participant_id', $user->id)
-            ->where('exam_step_id', $request->input('exam_step_id'))
-            ->firstOrFail();
+    return Inertia::render('Exams/ExamRoom', [
+      'exam' => $exam,
+      'myStepStatus' => $myStepStatus,
+    ]);
+  }
 
-        $examStepStatus->update([
-            'status' => 'completed',
-            'completed_at' => now(),
-        ]);
+  public function startStep(Request $request)
+  {
+    $user = Auth::user();
+    $examStepStatus = ExamStepStatus::where('participant_id', $user->id)
+      ->where('exam_step_id', $request->input('exam_step_id'))
+      ->firstOrFail();
 
-        return back(303);
-    }
+    $examStepStatus->update([
+      'status' => 'in_progress',
+      'started_at' => now(),
+    ]);
+
+    return back(303);
+  }
+
+  public function completeStep(Request $request)
+  {
+    $user = Auth::user();
+    $examStepStatus = ExamStepStatus::where('participant_id', $user->id)
+      ->where('exam_step_id', $request->input('exam_step_id'))
+      ->firstOrFail();
+
+    $examStepStatus->update([
+      'status' => 'completed',
+      'completed_at' => now(),
+    ]);
+
+    return back(303);
+  }
 }
