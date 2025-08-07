@@ -41,7 +41,7 @@ const props = defineProps<{
 }>()
 
 const isTestActive = computed(() => {
-  return props.exam.status === 'in_progress' && props.myStepStatus?.status === 'not_started'
+  return props.exam.status === 'in_progress' && props.myStepStatus?.status === 'not_started' && !!props.exam.currentStep
 })
 
 const isTestCompleted = computed(() => {
@@ -58,6 +58,7 @@ const isExamCompleted = computed(() => {
 
 const testComponent = computed(() => {
     if (!props.exam.currentStep) return null;
+    const testName = props.exam.currentStep.test.name;
     const components = {
         'BRT-A': BRTA,
         'BRT-B': BRTB,
@@ -66,7 +67,12 @@ const testComponent = computed(() => {
         'MRT-A': MRTA,
         'LMT2': LMT2,
     };
-    return components[props.exam.currentStep.test.name] || null;
+    const component = components[testName];
+
+    if (testName === 'BRT-A' && !component) {
+        console.error('BRT-A component could not be loaded or imported.');
+    }
+    return component || null;
 });
 
 const isTestDialogOpen = ref(false)

@@ -71,11 +71,11 @@ class ParticipantController extends Controller
     return Inertia::render('Exams/NoExam');
   }
 
-  public function myExam($examId)
+  public function myExam(Exam $exam)
   {
     $user = Auth::user();
 
-    $exam = Exam::with(['currentStep.test'])->findOrFail($examId);
+    $exam->load('currentStep.test');
 
     // Ensure the participant is assigned to this exam
     $isParticipant = $exam->participants()->where('participant_id', $user->id)->exists();
