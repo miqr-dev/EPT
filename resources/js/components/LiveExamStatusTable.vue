@@ -18,7 +18,7 @@ const formatTime = (seconds: number) => {
 const localExam = ref(JSON.parse(JSON.stringify(props.exam)))
 
 const getParticipantStatus = (participant: any) => {
-  if (!localExam.value.currentStep || !participant.stepStatuses) {
+  if (!localExam.value.current_step || !participant.stepStatuses) {
     return null
   }
   return participant.stepStatuses.find((s: any) => s.exam_step_id === localExam.value.current_exam_step_id)
@@ -119,7 +119,7 @@ const setStatus = (status: string) => {
               {{ participant.user.name }}, {{ participant.user.firstname }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-              {{ localExam.currentStep?.test.name || 'N/A' }}
+              {{ localExam.current_step?.test.name || 'N/A' }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
               <span v-if="getParticipantStatus(participant)"

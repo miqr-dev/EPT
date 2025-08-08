@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
-import AppLayout from '@/layouts/AppLayout.vue'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -32,7 +31,7 @@ const props = defineProps<{
       name: string
       test: { id: number; name: string }
     }>
-    currentStep?: {
+    current_step?: {
       id: number
       test: { id: number; name: string }
     }
@@ -127,7 +126,6 @@ onUnmounted(() => {
 <template>
 
   <Head title="My Exam" />
-  <AppLayout>
     <div class="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
       <div class="w-full max-w-2xl p-8 space-y-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
         <h1 class="text-2xl font-bold text-center text-gray-800 dark:text-gray-100">{{ exam.name }}</h1>
@@ -180,7 +178,7 @@ onUnmounted(() => {
                     <Dialog v-model:open="isTestDialogOpen">
                       <DialogTrigger as-child>
                         <Button size="sm"
-                          :disabled="exam.currentStep?.id !== step.id || stepStatuses[step.id]?.status !== 'not_started' || exam.status !== 'in_progress'"
+                          :disabled="exam.current_step?.id !== step.id || stepStatuses[step.id]?.status !== 'not_started' || exam.status !== 'in_progress'"
                           @click="startTest(step)">
                           Test starten
                         </Button>
@@ -205,5 +203,4 @@ onUnmounted(() => {
 
       </div>
     </div>
-  </AppLayout>
 </template>

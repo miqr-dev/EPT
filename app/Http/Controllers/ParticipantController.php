@@ -88,6 +88,7 @@ class ParticipantController extends Controller
       }
     }
 
+
     return Inertia::render('Exams/ExamRoom', [
       'exam' => $exam,
       'stepStatuses' => $stepStatuses, // Pass all statuses to the view.

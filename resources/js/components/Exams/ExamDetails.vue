@@ -63,9 +63,9 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
-      <div v-if="exam.currentStep" class="mt-6">
+      <div v-if="exam.current_step" class="mt-6">
         <h3 class="text-lg font-medium text-gray-700 mb-2">
-          Aktueller Schritt: {{ exam.currentStep.test.name }} (Status)
+          Aktueller Schritt: {{ exam.current_step.test.name }} (Status)
         </h3>
         <div class="overflow-x-auto rounded-lg border border-gray-200">
           <table class="min-w-full divide-y divide-gray-200">

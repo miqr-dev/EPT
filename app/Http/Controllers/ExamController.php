@@ -165,9 +165,7 @@ class ExamController extends Controller
       return back(303)->with('error', 'Exam already started.');
     }
 
-    $firstStep = $exam->steps()->orderBy('step_order')->first();
-
-    if (!$firstStep) {
+    if (!$exam->steps()->exists()) {
       return back(303)->with('error', 'Exam has no steps.');
     }
 
@@ -176,18 +174,6 @@ class ExamController extends Controller
       'current_exam_step_id' => $firstStep->id,
       'started_at' => now(),
     ]);
-
-    // Create status records for all participants for the first step
-    $exam->load('participants');
-    foreach ($exam->participants as $participant) {
-      ExamStepStatus::create([
-        'exam_id' => $exam->id,
-        'exam_step_id' => $firstStep->id,
-        'participant_id' => $participant->participant_id,
-        'status' => 'not_started',
-      ]);
-    }
-
     return back(303)->with('success', 'Exam started!');
   }
 
@@ -229,68 +215,68 @@ class ExamController extends Controller
 
   public function setStep(Request $request, Exam $exam)
   {
-      $data = $request->validate([
-          'step_id' => 'required|exists:exam_steps,id',
+    $data = $request->validate([
+      'step_id' => 'required|exists:exam_steps,id',
+    ]);
+
+    $exam->update(['current_exam_step_id' => $data['step_id']]);
+
+    // Create status records for all participants for the new step
+    $exam->load('participants');
+    foreach ($exam->participants as $participant) {
+      ExamStepStatus::firstOrCreate([
+        'exam_id' => $exam->id,
+        'exam_step_id' => $data['step_id'],
+        'participant_id' => $participant->participant_id,
+      ], [
+        'status' => 'not_started',
       ]);
+    }
 
-      $exam->update(['current_exam_step_id' => $data['step_id']]);
-
-      // Create status records for all participants for the new step
-      $exam->load('participants');
-      foreach ($exam->participants as $participant) {
-          ExamStepStatus::firstOrCreate([
-              'exam_id' => $exam->id,
-              'exam_step_id' => $data['step_id'],
-              'participant_id' => $participant->participant_id,
-          ], [
-              'status' => 'not_started',
-          ]);
-      }
-
-      return back(303)->with('success', 'Moved to selected step.');
+    return back(303)->with('success', 'Moved to selected step.');
   }
 
   public function getActiveExam()
   {
-      $activeExam = Exam::with(['steps.test', 'currentStep.test'])
-          ->where('status', 'in_progress')
-          ->first();
+    $activeExam = Exam::with(['steps.test', 'currentStep.test'])
+      ->where('status', 'in_progress')
+      ->first();
 
-      if (!$activeExam) {
-          return response()->json(null);
+    if (!$activeExam) {
+      return response()->json(null);
+    }
+
+    $activeExam->load(['participants.user', 'participants.stepStatuses' => function ($query) use ($activeExam) {
+      $query->where('exam_id', $activeExam->id);
+    }]);
+
+    if ($activeExam->currentStep) {
+      $duration = $activeExam->currentStep->duration; // duration in minutes
+      foreach ($activeExam->participants as $participant) {
+        $status = $participant->stepStatuses->where('exam_step_id', $activeExam->current_exam_step_id)->first();
+
+        if (!$status) {
+          $status = ExamStepStatus::create([
+            'exam_id' => $activeExam->id,
+            'exam_step_id' => $activeExam->current_exam_step_id,
+            'participant_id' => $participant->participant_id,
+            'status' => 'not_started',
+          ]);
+          // Manually add to collection to avoid re-query
+          $participant->stepStatuses->push($status);
+        }
+
+        if ($status->status === 'not_started') {
+          $status->time_remaining = $duration * 60;
+        } elseif ($status->started_at) {
+          $startTime = Carbon::parse($status->started_at);
+          $endTime = $startTime->copy()->addMinutes($duration);
+          $status->time_remaining = now()->diffInSeconds($endTime, false);
+        }
       }
+    }
 
-      $activeExam->load(['participants.user', 'participants.stepStatuses' => function ($query) use ($activeExam) {
-          $query->where('exam_id', $activeExam->id);
-      }]);
-
-      if ($activeExam->currentStep) {
-          $duration = $activeExam->currentStep->duration; // duration in minutes
-          foreach ($activeExam->participants as $participant) {
-              $status = $participant->stepStatuses->where('exam_step_id', $activeExam->current_exam_step_id)->first();
-
-              if (!$status) {
-                  $status = ExamStepStatus::create([
-                      'exam_id' => $activeExam->id,
-                      'exam_step_id' => $activeExam->current_exam_step_id,
-                      'participant_id' => $participant->participant_id,
-                      'status' => 'not_started',
-                  ]);
-                  // Manually add to collection to avoid re-query
-                  $participant->stepStatuses->push($status);
-              }
-
-              if ($status->status === 'not_started') {
-                  $status->time_remaining = $duration * 60;
-              } elseif ($status->started_at) {
-                  $startTime = Carbon::parse($status->started_at);
-                  $endTime = $startTime->copy()->addMinutes($duration);
-                  $status->time_remaining = now()->diffInSeconds($endTime, false);
-              }
-          }
-      }
-
-      return response()->json($activeExam);
+    return response()->json($activeExam);
   }
   public function updateSteps(Request $request, Exam $exam): RedirectResponse
   {
