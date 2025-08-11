@@ -169,11 +169,24 @@ class ExamController extends Controller
       return back(303)->with('error', 'Exam has no steps.');
     }
 
+    $firstStep = $exam->steps()->orderBy('step_order')->first();
+
     $exam->update([
       'status' => 'in_progress',
       'current_exam_step_id' => $firstStep->id,
       'started_at' => now(),
     ]);
+
+    // Create status records for all participants for the first step
+    $exam->load('participants');
+    foreach ($exam->participants as $participant) {
+      ExamStepStatus::create([
+        'exam_id' => $exam->id,
+        'exam_step_id' => $firstStep->id,
+        'participant_id' => $participant->participant_id,
+        'status' => 'not_started',
+      ]);
+    }
     return back(303)->with('success', 'Exam started!');
   }
 
