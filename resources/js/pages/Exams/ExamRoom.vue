@@ -184,7 +184,7 @@ onUnmounted(() => {
                         </Button>
                       </DialogTrigger>
                       <DialogContent
-                         class="inset-0 top-0 left-0 w-screen h-screen max-w-none translate-x-0 translate-y-0 rounded-none border-none p-0 bg-white dark:bg-gray-900 text-black dark:text-white overflow-auto">
+                        class="inset-0 top-0 left-0 w-screen h-screen max-w-none sm:max-w-none translate-x-0 translate-y-0 rounded-none border-none p-0 bg-white dark:bg-gray-900 text-black dark:text-white overflow-auto">
                         <component :is="activeTestComponent" class="w-full h-full" @complete="completeTest" />
                       </DialogContent>
                     </Dialog>
