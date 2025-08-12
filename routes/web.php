@@ -14,6 +14,7 @@ use App\Http\Controllers\ExamStepStatusController;
   Route::get('participant', [ParticipantController::class, 'showProfileForm'])->name('participant');
   Route::get('mrt-a', fn() => Inertia::render('MRT-A'))->name('mrt-a');
   Route::get('brt-a', fn() => Inertia::render('BRT-A'))->name('brt-a');
+  Route::get('brt-b', fn() => Inertia::render('BRT-B'))->name('brt-b');
   Route::get('fpi-r', fn() => Inertia::render('FPI-R'))->name('fpi-r');
   Route::get('lmt', fn() => Inertia::render('LMT'))->name('lmt');
   Route::get('lmt2', fn() => Inertia::render('LMT2'))->name('lmt2');

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted } from 'vue';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { type BreadcrumbItem } from '@/types';
+import { Head } from '@inertiajs/vue3';
+import { ref, computed, watch, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-
-const emit = defineEmits(['complete']);
 
 function formatTime(sec: number | null): string {
   if (sec === null || isNaN(sec)) return "–";
@@ -18,6 +19,9 @@ interface Question {
   answers: string[];
   image?: string;
 }
+const breadcrumbs: BreadcrumbItem[] = [
+  { title: 'Tests', href: '/tests' },
+];
 const questions = ref<Question[]>([
   { text: "619020 – 541600 = ?", answers: ["77420"] },
   { text: "619020 = 174309 + ?", answers: ["444711"] },
@@ -45,18 +49,6 @@ const answerInput = ref<InstanceType<typeof Input> | null>(null);
 const questionTimes = ref<number[]>(Array(questions.value.length).fill(0));
 const questionStartTimestamps = ref<(number | null)[]>(Array(questions.value.length).fill(null));
 const startTime = ref<number | null>(null);
-
-onMounted(() => {
-  startTest();
-});
-
-watch(isTestComplete, (newValue) => {
-  if (newValue) {
-    setTimeout(() => {
-        emit('complete');
-    }, 5000);
-  }
-});
 
 function formatQuestionMark(text: string): string {
   if (text.endsWith('?')) {
@@ -249,64 +241,80 @@ function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[])
 </script>
 
 <template>
-  <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-black">
-    <!-- Sidebar Navigation -->
-    <aside v-if="showTest" class="w-64 flex-shrink-0 flex flex-col items-start space-y-2 py-4 h-fit sticky top-8">
-      <h3 class="font-bold mb-2 text-sm text-muted-foreground pl-4">Fragen</h3>
-      <div class="flex flex-col space-y-1 w-full items-start">
-        <template v-for="(q, idx) in questions" :key="idx">
-          <button class="w-full flex items-center space-x-2 py-1 px-2 rounded-lg font-medium border transition hover:bg-blue-50 focus:outline-none text-base" :class="{
-              'bg-blue-600 text-white border-blue-600': idx === currentQuestionIndex,
-              'hover:bg-blue-500': idx === currentQuestionIndex,
-              'bg-green-200 border-green-400 text-green-900': userAnswers[idx] && idx !== currentQuestionIndex,
-              'bg-gray-100 border-gray-300 text-gray-900': !userAnswers[idx] && idx !== currentQuestionIndex,
-            }" @click="jumpToQuestion(idx)" :disabled="isTestComplete || !showTest">
-            <span class="w-8 h-8 flex items-center justify-center rounded-full border mr-2" :class="{
+
+  <Head title="Tests" />
+  <AppLayout :breadcrumbs="breadcrumbs">
+    <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20">
+      <!-- Sidebar Navigation: Only visible during the test -->
+      <aside v-if="showTest" class="w-64 flex-shrink-0 flex flex-col items-start space-y-2  py-4 h-fit sticky top-8">
+        <h3 class="font-bold mb-2 text-sm text-muted-foreground pl-4">Fragen</h3>
+        <div class="flex flex-col space-y-1 w-full items-start">
+          <template v-for="(q, idx) in questions" :key="idx">
+            <button class="w-full flex items-center space-x-2 py-1 px-2 rounded-lg font-medium border transition
+               hover:bg-blue-50 focus:outline-none text-base" :class="{
+                'bg-blue-600 text-white border-blue-600': idx === currentQuestionIndex,
+                'hover:bg-blue-500': idx === currentQuestionIndex,
+                'bg-green-200 border-green-400 text-green-900': userAnswers[idx] && idx !== currentQuestionIndex,
+                'bg-gray-100 border-gray-300 text-gray-900': !userAnswers[idx] && idx !== currentQuestionIndex,
+              }" @click="jumpToQuestion(idx)" :disabled="isTestComplete || !showTest">
+              <span class="w-8 h-8 flex items-center justify-center rounded-full border mr-2" :class="{
                 'bg-blue-600 text-white border-blue-600': idx === currentQuestionIndex,
                 'bg-green-400 text-white border-green-400': userAnswers[idx] && idx !== currentQuestionIndex,
                 'bg-gray-300 text-gray-600 border-gray-400': !userAnswers[idx] && idx !== currentQuestionIndex,
               }">
-              {{ idx + 1 }}
-            </span>
-            <span class="truncate max-w-[130px] text-left text-xs" :title="q.text">
-              {{ q.text.length > 30 ? q.text.slice(0, 30) + '…' : q.text }}
-            </span>
-          </button>
-        </template>
-      </div>
-    </aside>
-
-    <!-- Main Content -->
-    <div class="flex-1 flex flex-col gap-4">
-      <!-- Test Content -->
-      <div v-if="showTest && !isTestComplete && currentQuestion" class="p-6 bg-background border rounded-lg">
-        <h2 class="text-xl font-semibold mb-4">Frage {{ currentQuestionIndex + 1 }}:</h2>
-        <p class="text-lg mb-6" v-html="formatQuestionMark(currentQuestion.text)"></p>
-        <div v-if="currentQuestion.image" class="mb-4">
-          <img :src="currentQuestion.image" alt="Fragebild" class="max-w-xs border rounded shadow" />
+                {{ idx + 1 }}
+              </span>
+              <span class="truncate max-w-[130px] text-left text-xs" :title="q.text">
+                {{ q.text.length > 30 ? q.text.slice(0, 30) + '…' : q.text }}
+              </span>
+            </button>
+          </template>
         </div>
-        <div class="w-full md:w-1/2">
-          <Input ref="answerInput" type="text" v-model="userAnswers[currentQuestionIndex]" placeholder="Ihre Antwort"
-            class="mb-2 w-full" />
+      </aside>
 
-          <div class="flex flex-row justify-between mt-2">
-            <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline">
-              Zurück
-            </Button>
-            <Button @click="handleNextClick">
-              {{ nextButtonText }}
-            </Button>
+      <!-- Main Content -->
+      <div class="flex-1 flex flex-col gap-4">
+        <!-- Start Test Screen -->
+        <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
+          <h2 class="text-2xl font-bold mb-4">Willkommen zum Mathematik-Test</h2>
+          <p class="mb-6 text-base text-center max-w-xl">
+            Dieser Test besteht aus {{ questions.length }} Fragen. Sie können während des Tests jederzeit zwischen den
+            Fragen navigieren.
+            Die benötigte Zeit pro Frage wird automatisch gemessen.
+          </p>
+          <Button @click="startTest" class="px-8 py-3 text-lg font-semibold rounded-xl shadow">
+            Test starten
+          </Button>
+        </div>
+
+        <!-- Test Content -->
+        <div v-else-if="!isTestComplete && currentQuestion" class="p-6 bg-background border rounded-lg">
+          <h2 class="text-xl font-semibold mb-4">Frage {{ currentQuestionIndex + 1 }}:</h2>
+          <p class="text-lg mb-6" v-html="formatQuestionMark(currentQuestion.text)"></p>
+          <div v-if="currentQuestion.image" class="mb-4">
+            <img :src="currentQuestion.image" alt="Fragebild" class="max-w-xs border rounded shadow" />
           </div>
+          <div class="w-full md:w-1/2">
+            <Input ref="answerInput" type="text" v-model="userAnswers[currentQuestionIndex]" placeholder="Ihre Antwort"
+              class="mb-2 w-full" />
+
+            <div class="flex flex-row justify-between mt-2">
+              <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline">
+                Zurück
+              </Button>
+              <Button @click="handleNextClick">
+                {{ nextButtonText }}
+              </Button>
+            </div>
+          </div>
+          <p v-if="nextButtonClickCount === 1" class="text-sm text-muted-foreground mt-2">
+            Klicken Sie erneut auf "Weiter (Bestätigen)", um fortzufahren.
+          </p>
         </div>
-        <p v-if="nextButtonClickCount === 1" class="text-sm text-muted-foreground mt-2">
-          Klicken Sie erneut auf "Weiter (Bestätigen)", um fortzufahren.
-        </p>
-      </div>
-      <!-- Test Results -->
-      <div v-else-if="isTestComplete" class="p-6 bg-background border rounded-lg">
-        <h2 class="text-xl font-semibold mb-4">Test abgeschlossen!</h2>
-        <p class="mb-4">Ihre Ergebnisse werden gespeichert. Sie können dieses Fenster in Kürze schließen.</p>
-        <div class="mb-6 w-full max-w-md">
+        <!-- Test Results -->
+        <div v-else-if="isTestComplete" class="p-6 bg-background border rounded-lg">
+          <h2 class="text-xl font-semibold mb-4">Test abgeschlossen!</h2>
+          <div class="mb-6 w-full max-w-md">
             <table class="w-full text-sm border rounded-lg overflow-hidden shadow">
               <tbody>
                 <tr class="bg-muted/40">
@@ -334,11 +342,51 @@ function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[])
               </tbody>
             </table>
           </div>
-      </div>
-      <!-- Loading -->
-      <div v-else>
-        <p>Fragen werden geladen...</p>
+
+          <div>
+            <h3 class="font-bold mb-2">Antwort- und Bearbeitungszeit je Frage</h3>
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-sm border rounded-lg shadow">
+                <thead class="bg-muted/40">
+                  <tr>
+                    <th class="px-2 py-1 text-left font-semibold">#</th>
+                    <th class="px-2 py-1 text-left font-semibold">Frage</th>
+                    <th class="px-2 py-1 text-left font-semibold">Ihre Antwort</th>
+                    <th class="px-2 py-1 text-left font-semibold">Richtige Antwort</th>
+                    <th class="px-2 py-1 text-left font-semibold">Bearbeitungszeit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(q, idx) in questions" :key="idx"
+                    :class="isCorrectAnswer(userAnswers[idx], q.answers) ? 'bg-green-50' : 'bg-red-50'">
+                    <td class="px-2 py-1 font-medium text-muted-foreground">{{ idx + 1 }}</td>
+                    <td class="px-2 py-1 align-top">
+                      <span v-html="formatQuestionMark(q.text)"></span>
+                      <div v-if="q.image" class="mt-1">
+                        <img :src="q.image" alt="Fragebild" class="max-w-[90px] border rounded shadow" />
+                      </div>
+                    </td>
+                    <td class="px-2 py-1">
+                      <span class="font-mono">{{ userAnswers[idx] || '–' }}</span>
+                    </td>
+                    <td class="px-2 py-1">
+                      <span class="font-mono">{{ q.answers.join(', ') }}</span>
+                    </td>
+                    <td class="px-2 py-1 text-right text-gray-500 font-mono min-w-[60px]">
+                      {{ formatTime(questionTimes[idx]) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <div v-else>
+          <p>Fragen werden geladen...</p>
+        </div>
       </div>
     </div>
-  </div>
+  </AppLayout>
 </template>
