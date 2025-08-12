@@ -78,12 +78,16 @@ const setStatus = (status: string) => {
           Start Exam
         </Button>
         <template v-if="exam.status === 'in_progress'">
-          <Button v-for="step in exam.steps" :key="step.id" @click="setStep(step.id)" :disabled="exam.current_exam_step_id === step.id">
+          <Button v-for="step in exam.steps" :key="step.id" @click="setStep(step.id)"
+            :disabled="exam.current_exam_step_id === step.id">
             Start {{ step.test.name }}
           </Button>
         </template>
-        <Button v-if="exam.status === 'in_progress' || exam.status === 'paused'" @click="setStatus(exam.status === 'paused' ? 'in_progress' : 'paused')">
-          {{ exam.status === 'paused' ? 'Resume' : 'Pause' }} Exam
+        <Button v-if="exam.status === 'in_progress'" @click="setStatus('paused')">
+          Pause Exam
+        </Button>
+        <Button v-else-if="exam.status === 'paused'" @click="setStatus('in_progress')">
+          Resume Exam
         </Button>
         <Button v-if="exam.status !== 'completed'" @click="setStatus('completed')">
           End Exam
@@ -123,15 +127,15 @@ const setStatus = (status: string) => {
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
               <span v-if="getParticipantStatus(participant)"
-                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                :class="{
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="{
                   'bg-green-100 text-green-800': getParticipantStatus(participant)?.status === 'completed',
                   'bg-yellow-100 text-yellow-800': getParticipantStatus(participant)?.status === 'in_progress',
                   'bg-blue-100 text-blue-800': getParticipantStatus(participant)?.status === 'not_started',
                 }">
                 {{ getParticipantStatus(participant)?.status?.replace('_', ' ') }}
               </span>
-              <span v-else class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+              <span v-else
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                 N/A
               </span>
             </td>

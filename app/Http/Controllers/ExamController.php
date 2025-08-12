@@ -252,7 +252,7 @@ class ExamController extends Controller
   public function getActiveExam()
   {
     $activeExam = Exam::with(['steps.test', 'currentStep.test'])
-      ->where('status', 'in_progress')
+      ->whereIn('status', ['in_progress', 'paused'])
       ->first();
 
     if (!$activeExam) {
