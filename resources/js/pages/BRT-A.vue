@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+
+const page = usePage<{ auth: { user: { name: string } } }>();
+const userName = computed(() => page.props.auth?.user?.name ?? '');
+
+const emit = defineEmits(['complete']);
 
 function formatTime(sec: number | null): string {
   if (sec === null || isNaN(sec)) return "–";
@@ -19,9 +22,6 @@ interface Question {
   answers: string[];
   image?: string;
 }
-const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Tests', href: '/tests' },
-];
 const questions = ref<Question[]>([
   { text: "619020 – 541600 = ?", answers: ["77420"] },
   { text: "619020 = 174309 + ?", answers: ["444711"] },
@@ -113,6 +113,9 @@ const currentQuestion = computed(() =>
 const nextButtonText = computed(() =>
   nextButtonClickCount.value === 1 ? "Weiter (Bestätigen)" : "Weiter"
 );
+const isLastQuestion = computed(
+  () => currentQuestionIndex.value === questions.value.length - 1
+);
 
 const jumpToQuestion = (index: number) => {
   const now = Date.now();
@@ -171,6 +174,27 @@ const handlePrevClick = () => {
     currentQuestionIndex.value--;
     nextButtonClickCount.value = 0;
   }
+};
+
+const finishTest = () => {
+  const confirmed = window.confirm(
+    'Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.'
+  );
+  if (!confirmed) return;
+  const now = Date.now();
+  if (
+    currentQuestionIndex.value >= 0 &&
+    currentQuestionIndex.value < questions.value.length &&
+    questionStartTimestamps.value[currentQuestionIndex.value]
+  ) {
+    questionTimes.value[currentQuestionIndex.value] += Math.round(
+      (now - (questionStartTimestamps.value[currentQuestionIndex.value] as number)) / 1000
+    );
+    questionStartTimestamps.value[currentQuestionIndex.value] = null;
+  }
+  currentQuestionIndex.value = questions.value.length;
+  nextButtonClickCount.value = 0;
+  emit('complete');
 };
 
 // Per-question timer starter
@@ -243,7 +267,11 @@ function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[])
 <template>
 
   <Head title="Tests" />
-  <AppLayout :breadcrumbs="breadcrumbs">
+  <div class="p-4">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">Tests</h1>
+      <span class="font-medium">{{ userName }}</span>
+    </div>
     <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20">
       <!-- Sidebar Navigation: Only visible during the test -->
       <aside v-if="showTest" class="w-64 flex-shrink-0 flex flex-col items-start space-y-2  py-4 h-fit sticky top-8">
@@ -302,7 +330,10 @@ function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[])
               <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline">
                 Zurück
               </Button>
-              <Button @click="handleNextClick">
+              <Button v-if="isLastQuestion" @click="finishTest" variant="destructive">
+                Test beenden
+              </Button>
+              <Button v-else @click="handleNextClick">
                 {{ nextButtonText }}
               </Button>
             </div>
@@ -388,5 +419,5 @@ function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[])
         </div>
       </div>
     </div>
-  </AppLayout>
+  </div>
 </template>
