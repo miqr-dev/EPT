@@ -382,7 +382,7 @@ const startTest = () => {
 
   <Head title="MRT-A Test" />
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20">
+    <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
       <div class="flex-1 flex flex-col gap-4">
         <!-- Start Test Screen -->
         <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
@@ -394,7 +394,8 @@ const startTest = () => {
           <div class="flex flex-col items-center mb-6 gap-2">
             <label for="age-input" class="font-semibold text-base">Bitte geben Sie Ihr Alter ein:</label>
             <input id="age-input" type="number" min="10" max="99" v-model.number="userAge"
-              class="border rounded px-4 py-2 text-base text-center w-32" placeholder="z.B. 28" />
+              class="border rounded px-4 py-2 text-base text-center w-32 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              placeholder="z.B. 28" />
             <span v-if="userAge && (userAge < 16 || userAge > 80)" class="text-red-600 text-xs">Bitte geben Sie ein
               realistisches Alter ein.</span>
           </div>
@@ -412,10 +413,10 @@ const startTest = () => {
               <button class="px-4 py-3 rounded-xl border transition text-base font-sans font-semibold min-w-[120px]"
                 :class="[
                   userAnswers[currentQuestionIndex] === String.fromCharCode(65 + oidx)
-                    ? 'bg-blue-300 border-blue-700 text-blue-900'
+                    ? 'bg-blue-300 border-blue-700 text-blue-900 dark:bg-blue-900 dark:text-blue-100'
                     : tempSelected[currentQuestionIndex] === String.fromCharCode(65 + oidx)
-                      ? 'bg-blue-100 border-blue-500 text-blue-900'
-                      : 'bg-white border-gray-300 hover:bg-blue-50',
+                      ? 'bg-blue-100 border-blue-500 text-blue-900 dark:bg-blue-800 dark:border-blue-600 dark:text-blue-100'
+                      : 'bg-white border-gray-300 hover:bg-blue-50 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-blue-900',
                   'focus:outline-none',
                   userAnswers[currentQuestionIndex] ? 'cursor-default opacity-60' : 'cursor-pointer'
                 ]" @click="handleOptionClick(oidx)" :disabled="false">
@@ -483,8 +484,8 @@ const startTest = () => {
                 </thead>
                 <tbody>
                   <tr v-for="(q, idx) in mrtQuestions" :key="idx" :class="userAnswers[idx] && q.correct.map(a => a.toUpperCase()).includes(userAnswers[idx]?.toUpperCase())
-                    ? 'bg-green-50'
-                    : 'bg-red-50'">
+                    ? 'bg-green-50 dark:bg-green-900/50'
+                    : 'bg-red-50 dark:bg-red-900/50'">
                     <td class="px-2 py-1 font-medium text-muted-foreground">{{ idx + 1 }}</td>
                     <td class="px-2 py-1">
                       <span class="font-mono">
@@ -496,7 +497,7 @@ const startTest = () => {
                         {{ q.correct.join(', ') }}
                       </span>
                     </td>
-                    <td class="px-2 py-1 text-right text-gray-500 font-mono min-w-[60px]">
+                    <td class="px-2 py-1 text-right text-gray-500 dark:text-gray-400 font-mono min-w-[60px]">
                       {{ formatTime(questionTimes[idx]) }}
                     </td>
                   </tr>
@@ -517,24 +518,24 @@ const startTest = () => {
                     <div class="w-10 h-10 border-2 border-black flex items-center justify-center text-base font-bold">
                       {{ score }}
                     </div>
-                    <span class="text-xs text-gray-700 mt-1">U{{ i + 1 }}</span>
+                    <span class="text-xs text-gray-700 dark:text-gray-300 mt-1">U{{ i + 1 }}</span>
                   </div>
                 </template>
                 <!-- RW Total -->
                 <div class="flex flex-col items-center ml-6">
                   <div
-                    class="w-10 h-10 border-2 border-black flex items-center justify-center text-base font-bold bg-blue-50">
+                    class="w-10 h-10 border-2 border-black flex items-center justify-center text-base font-bold bg-blue-50 dark:bg-blue-900">
                     {{ totalScore }}
                   </div>
-                  <span class="text-xs text-gray-700 mt-1 font-bold">RW GS</span>
+                  <span class="text-xs text-gray-700 dark:text-gray-300 mt-1 font-bold">RW GS</span>
                 </div>
                 <!-- PR -->
                 <div class="flex flex-col items-center ml-6">
                   <div
-                    class="w-10 h-10 border-2 border-black flex items-center justify-center text-base font-bold bg-yellow-50">
+                    class="w-10 h-10 border-2 border-black flex items-center justify-center text-base font-bold bg-yellow-50 dark:bg-yellow-900">
                     {{ prValue }}
                   </div>
-                  <span class="text-xs text-gray-700 mt-1 font-bold">PR</span>
+                  <span class="text-xs text-gray-700 dark:text-gray-300 mt-1 font-bold">PR</span>
                 </div>
               </div>
               <!-- Stepline Chart Centered -->
@@ -543,7 +544,7 @@ const startTest = () => {
               </div>
               <!-- PR Bar Chart -->
               <div class="w-full flex justify-center mt-6">
-                <div class="w-[400px] h-8 rounded-full bg-gray-200 relative overflow-hidden shadow-inner">
+                <div class="w-[400px] h-8 rounded-full bg-gray-200 dark:bg-gray-700 relative overflow-hidden shadow-inner">
                   <!-- The filled part -->
                   <div class="h-full bg-red-600 transition-all duration-700 flex items-center justify-center"
                     :style="{ width: (prValue || 0) + '%' }">

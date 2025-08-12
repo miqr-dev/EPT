@@ -203,7 +203,8 @@ function addTests() {
 
   <Head title="Dashboard" />
   <AppLayout>
-    <div class="flex min-h-screen flex-col items-center bg-[#f6f7f9] py-4 dark:bg-gray-900">
+    <div
+      class="flex min-h-screen flex-col items-center bg-[#f6f7f9] py-4 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <!-- Live Exam Status -->
       <div v-if="activeExam" class="w-full max-w-7xl">
         <LiveExamStatusTable :exam="activeExam" />
@@ -295,7 +296,7 @@ function addTests() {
                       class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                     <label :for="`test-${test.id}`" class="ml-2 block text-sm text-gray-900 dark:text-gray-200">{{
                       test.name
-                    }}</label>
+                      }}</label>
                   </div>
                 </div>
               </div>

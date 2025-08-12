@@ -248,7 +248,7 @@ const staninePoints = computed(() => {
 
   <Head title="FPI-R Test" />
   <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20">
+    <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
 
       <!-- Sidebar: Only missed (unanswered after Weiter) -->
       <aside v-if="showTest && !finished && missedSidebarQuestions.length"
@@ -256,10 +256,13 @@ const staninePoints = computed(() => {
         <h3 class="font-bold mb-2 text-sm text-muted-foreground pl-4">Offene Fragen</h3>
         <div class="flex flex-col space-y-1 w-full items-start">
           <template v-for="q in missedSidebarQuestions" :key="q?.number">
-            <button class="w-full flex items-center py-1 px-2 rounded-lg border transition text-base hover:bg-blue-50"
-              @click="jumpToQuestion(q.number)">
+            <button
+              class="w-full flex items-center py-1 px-2 rounded-lg border transition text-base hover:bg-blue-50 dark:hover:bg-blue-900"
+              @click="jumpToQuestion(q.number)"
+            >
               <span
-                class="w-8 h-8 flex items-center justify-center rounded-full border mr-2 bg-yellow-100 text-black font-bold">
+                class="w-8 h-8 flex items-center justify-center rounded-full border mr-2 bg-yellow-100 text-black font-bold dark:bg-yellow-900 dark:text-yellow-100"
+              >
                 {{ q.number }}
               </span>
               <span class="truncate max-w-[130px] text-left text-xs" :title="q.text">
@@ -269,11 +272,13 @@ const staninePoints = computed(() => {
           </template>
         </div>
         <div class="w-full mt-6">
-          <div class="h-2 rounded bg-gray-200 overflow-hidden">
-            <div class="h-full bg-blue-500 transition-all duration-300"
-              :style="{ width: Math.round((blockIndex + 1) / totalBlocks * 100) + '%' }"></div>
+          <div class="h-2 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
+            <div
+              class="h-full bg-blue-500 transition-all duration-300"
+              :style="{ width: Math.round((blockIndex + 1) / totalBlocks * 100) + '%' }"
+            ></div>
           </div>
-          <div class="text-xs text-gray-600 text-center mt-1">
+          <div class="text-xs text-gray-600 dark:text-gray-400 text-center mt-1">
             {{ blockIndex + 1 }}/{{ totalBlocks }} Seiten
           </div>
         </div>
@@ -286,9 +291,13 @@ const staninePoints = computed(() => {
         <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
           <h2 class="text-2xl font-bold mb-4">Willkommen zum FPI-R-Test</h2>
           <div
-            class="mb-6 whitespace-pre-line text-base text-gray-900 border p-4 rounded-lg shadow-sm bg-yellow-50 w-full max-w-2xl">
-            {{ instructions }}</div>
-          <div class="mb-8 mt-4 p-4 bg-blue-50 rounded-lg border font-semibold w-full max-w-xl">
+            class="mb-6 whitespace-pre-line text-base text-foreground border p-4 rounded-lg shadow-sm bg-yellow-50 dark:bg-yellow-900 dark:border-yellow-700 w-full max-w-2xl"
+          >
+            {{ instructions }}
+          </div>
+          <div
+            class="mb-8 mt-4 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg border dark:border-blue-700 font-semibold w-full max-w-xl"
+          >
             <div class="mb-3">Ich habe die Anleitung gelesen und bin bereit, jeden Satz offen zu beantworten.</div>
             <div class="flex flex-row gap-8">
               <label class="flex items-center cursor-pointer">
@@ -330,17 +339,21 @@ const staninePoints = computed(() => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="q in currentBlockQuestions" :key="q.number" :class="{ 'bg-gray-50': !answers[q.number] }">
-                <td class="font-mono align-top pt-2 border-b-2 border-gray-200 w-12 text-right">
+              <tr
+                v-for="q in currentBlockQuestions"
+                :key="q.number"
+                :class="{ 'bg-gray-50 dark:bg-gray-700': !answers[q.number] }"
+              >
+                <td class="font-mono align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700 w-12 text-right">
                   {{ q.number }}.
                 </td>
-                <td class="align-top pt-2 border-b-2 border-gray-200 pl-2">
+                <td class="align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700 pl-2">
                   {{ q.text }}
                 </td>
-                <td class="text-center align-top pt-2 border-b-2 border-gray-200">
+                <td class="text-center align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700">
                   <input type="radio" :name="'q' + q.number" v-model="answers[q.number]" value="stimmt" />
                 </td>
-                <td class="text-center align-top pt-2 border-b-2 border-gray-200">
+                <td class="text-center align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700">
                   <input type="radio" :name="'q' + q.number" v-model="answers[q.number]" value="stimmtNicht" />
                 </td>
               </tr>
@@ -361,7 +374,7 @@ const staninePoints = computed(() => {
           <h2 class="text-xl font-semibold mb-4">Test abgeschlossen!</h2>
           <div class="mb-6 w-full max-w-3xl">
             <!-- SVG Auswertungsbogen -->
-            <div class="relative fpi-auswertungsbogen bg-white shadow border mx-auto">
+            <div class="relative fpi-auswertungsbogen bg-white dark:bg-gray-800 shadow border dark:border-gray-700 mx-auto">
               <FPIResult :stanines="categoryStaninesArray" :rohwerte="rohwerteArray" />
             </div>
           </div>
@@ -374,7 +387,7 @@ const staninePoints = computed(() => {
 
     <!-- Demographics Popup -->
     <div v-if="showDemographics" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-lg p-8 max-w-xs w-full flex flex-col gap-4">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 max-w-xs w-full flex flex-col gap-4">
         <h2 class="font-bold text-lg mb-2">Bitte geben Sie Ihr Geschlecht und Alter an</h2>
         <div class="flex flex-row gap-4 justify-center">
           <label class="flex items-center cursor-pointer">
