@@ -18,10 +18,14 @@ const formatTime = (seconds: number) => {
 const localExam = ref(JSON.parse(JSON.stringify(props.exam)))
 
 const getParticipantStatus = (participant: any) => {
-  if (!localExam.value.current_step || !participant.stepStatuses) {
+  if (!localExam.value.current_step) {
     return null
   }
-  return participant.stepStatuses.find((s: any) => s.exam_step_id === localExam.value.current_exam_step_id)
+  const statuses = participant.stepStatuses || participant.step_statuses
+  if (!statuses) {
+    return null
+  }
+  return statuses.find((s: any) => s.exam_step_id === localExam.value.current_exam_step_id)
 }
 
 let timerInterval: any = null
@@ -30,7 +34,7 @@ onMounted(() => {
   timerInterval = setInterval(() => {
     if (localExam.value && localExam.value.participants) {
       localExam.value.participants.forEach((participant: any) => {
-        const status = participant.stepStatuses?.[0]
+        const status = getParticipantStatus(participant)
         if (status && status.time_remaining > 0) {
           status.time_remaining--
         }
