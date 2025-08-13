@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { FPI_QUESTIONS } from '@/pages/Questions/FPIQuestions';
@@ -15,7 +13,9 @@ import { norms_female_45_59 } from '@/pages/Scores/FPI/norms_female_45_59';
 import { norms_female_60up } from '@/pages/Scores/FPI/norms_female_60up';
 import FPIResult from '@/pages/Scores/FPI/FPIResult.vue';
 
-
+const page = usePage<{ auth: { user: { name: string } } }>();
+const userName = computed(() => page.props.auth?.user?.name ?? '');
+const emit = defineEmits(['complete']);
 
 const showDemographics = ref(true);
 const sex = ref<'male' | 'female' | null>(null);
@@ -37,11 +37,6 @@ function getNormTable() {
   }
   return null;
 }
-
-const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Tests', href: '/tests' },
-  { title: 'FPI-R', href: '/tests/fpi-r' },
-];
 
 const instructions = `
 Sie werden auf den folgenden Seiten eine Reihe von Aussagen über bestimmte Verhaltensweisen, Einstellungen und Gewohnheiten finden. Sie können jede entweder mit „stimmt“ oder mit „stimmt nicht“ beantworten. Setzen Sie bitte ein Kreuz (X) in den dafür vorgesehenen Kreis. Es gibt keine richtigen oder falschen Antworten, weil jeder Mensch das Recht zu eigenen Anschauungen hat.
@@ -193,6 +188,14 @@ function restart() {
   });
 }
 
+function finishTest() {
+  const confirmed = window.confirm(
+    'Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.'
+  );
+  if (!confirmed) return;
+  emit('complete');
+}
+
 function getStanineKey(idx: number) {
   const keys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
   return keys[idx];
@@ -245,9 +248,12 @@ const staninePoints = computed(() => {
 </script>
 
 <template>
-
-  <Head title="FPI-R Test" />
-  <AppLayout :breadcrumbs="breadcrumbs">
+  <Head title="Tests" />
+  <div class="p-4">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">Tests</h1>
+      <span class="font-medium">{{ userName }}</span>
+    </div>
     <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
 
       <!-- Sidebar: Only missed (unanswered after Weiter) -->
@@ -378,7 +384,12 @@ const staninePoints = computed(() => {
               <FPIResult :stanines="categoryStaninesArray" :rohwerte="rohwerteArray" />
             </div>
           </div>
-          <Button @click="restart" class="px-6 py-2 rounded font-bold">Test neu starten</Button>
+          <div class="flex gap-2">
+            <Button @click="restart" class="px-6 py-2 rounded font-bold">Test neu starten</Button>
+            <Button @click="finishTest" variant="destructive" class="px-6 py-2 rounded font-bold">
+              Test beenden
+            </Button>
+          </div>
         </div>
 
 
@@ -406,6 +417,5 @@ const staninePoints = computed(() => {
         </Button>
       </div>
     </div>
-
-  </AppLayout>
+  </div>
 </template>
