@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { FPI_QUESTIONS } from '@/pages/Questions/FPIQuestions';
@@ -15,11 +13,31 @@ import { norms_female_45_59 } from '@/pages/Scores/FPI/norms_female_45_59';
 import { norms_female_60up } from '@/pages/Scores/FPI/norms_female_60up';
 import FPIResult from '@/pages/Scores/FPI/FPIResult.vue';
 
+const page = usePage<{
+  auth: {
+    user: {
+      name: string;
+      participant_profile?: {
+        sex?: string;
+        age?: number;
+      };
+    };
+  };
+}>();
+const userName = computed(() => page.props.auth?.user?.name ?? '');
+const emit = defineEmits(['complete']);
 
-
-const showDemographics = ref(true);
-const sex = ref<'male' | 'female' | null>(null);
-const age = ref<number | null>(null);
+const profile = computed(() => page.props.auth?.user?.participant_profile);
+const sex = computed<'male' | 'female' | null>(() => {
+  const s = profile.value?.sex;
+  if (s === 'm') return 'male';
+  if (s === 'f') return 'female';
+  return null;
+});
+const age = computed<number | null>(() => {
+  const a = profile.value?.age;
+  return typeof a === 'number' ? a : a ? Number(a) : null;
+});
 
 function getNormTable() {
   if (!sex.value || !age.value) return null;
@@ -37,11 +55,6 @@ function getNormTable() {
   }
   return null;
 }
-
-const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Tests', href: '/tests' },
-  { title: 'FPI-R', href: '/tests/fpi-r' },
-];
 
 const instructions = `
 Sie werden auf den folgenden Seiten eine Reihe von Aussagen über bestimmte Verhaltensweisen, Einstellungen und Gewohnheiten finden. Sie können jede entweder mit „stimmt“ oder mit „stimmt nicht“ beantworten. Setzen Sie bitte ein Kreuz (X) in den dafür vorgesehenen Kreis. Es gibt keine richtigen oder falschen Antworten, weil jeder Mensch das Recht zu eigenen Anschauungen hat.
@@ -193,6 +206,15 @@ function restart() {
   });
 }
 
+function finishTest() {
+  const confirmed = window.confirm(
+    'Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.'
+  );
+  if (!confirmed) return;
+  handleNextBlock();
+  emit('complete');
+}
+
 function getStanineKey(idx: number) {
   const keys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
   return keys[idx];
@@ -245,9 +267,12 @@ const staninePoints = computed(() => {
 </script>
 
 <template>
-
-  <Head title="FPI-R Test" />
-  <AppLayout :breadcrumbs="breadcrumbs">
+  <Head title="Tests" />
+  <div class="p-4">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">Tests</h1>
+      <span class="font-medium">{{ userName }}</span>
+    </div>
     <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
 
       <!-- Sidebar: Only missed (unanswered after Weiter) -->
@@ -363,8 +388,18 @@ const staninePoints = computed(() => {
             <Button @click="handlePrevBlock" :disabled="blockIndex === 0" variant="outline">
               Zurück
             </Button>
-            <Button @click="handleNextBlock">
+            <Button
+              v-if="blockIndex < totalBlocks - 1"
+              @click="handleNextBlock"
+            >
               Weiter
+            </Button>
+            <Button
+              v-else
+              @click="finishTest"
+              variant="destructive"
+            >
+              Test beenden
             </Button>
           </div>
         </div>
@@ -378,34 +413,14 @@ const staninePoints = computed(() => {
               <FPIResult :stanines="categoryStaninesArray" :rohwerte="rohwerteArray" />
             </div>
           </div>
-          <Button @click="restart" class="px-6 py-2 rounded font-bold">Test neu starten</Button>
+          <div class="flex gap-2">
+            <Button @click="restart" class="px-6 py-2 rounded font-bold">Test neu starten</Button>
+          </div>
         </div>
 
 
       </div>
     </div>
 
-    <!-- Demographics Popup -->
-    <div v-if="showDemographics" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 max-w-xs w-full flex flex-col gap-4">
-        <h2 class="font-bold text-lg mb-2">Bitte geben Sie Ihr Geschlecht und Alter an</h2>
-        <div class="flex flex-row gap-4 justify-center">
-          <label class="flex items-center cursor-pointer">
-            <input type="radio" v-model="sex" value="male" />
-            <span class="ml-2">männlich</span>
-          </label>
-          <label class="flex items-center cursor-pointer">
-            <input type="radio" v-model="sex" value="female" />
-            <span class="ml-2">weiblich</span>
-          </label>
-        </div>
-        <input type="number" min="16" max="120" class="border rounded p-2 mt-2" v-model="age"
-          placeholder="Alter (z.B. 32)" />
-        <Button :disabled="!sex || !age" @click="showDemographics = false" class="w-full mt-4">
-          Bestätigen
-        </Button>
-      </div>
-    </div>
-
-  </AppLayout>
+  </div>
 </template>
