@@ -670,8 +670,8 @@ export const FPI_QUESTIONS: FPIQuestion[] = [
   {
     number: 112,
     text: "Ich grüble viel über mein bisheriges Leben nach",
-    stimmt: [{ category: 'N', points: 1 },{ category: 1, points: 1 }],
-    stimmtNicht: []
+    stimmt: [{ category: 'N', points: 1 }],
+    stimmtNicht: [{ category: 1, points: 1 }]
   },
   {
     number: 113,
