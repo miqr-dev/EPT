@@ -1,9 +1,15 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Line } from 'vue-chartjs';
 import {
   Chart, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title, registerables
@@ -13,7 +19,10 @@ import annotationPlugin from 'chartjs-plugin-annotation';
 Chart.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title)
 Chart.register(...registerables, annotationPlugin)
 
-
+const page = usePage<{ auth: { user: { name: string } } }>();
+const userName = computed(() => page.props.auth?.user?.name ?? '');
+const emit = defineEmits(['complete']);
+const endConfirmOpen = ref(false);
 
 // -------------- Utility ---------------
 function formatTime(sec: number | null): string {
@@ -234,13 +243,9 @@ const totalScore = computed(() => groupScores.value.reduce((a, b) => a + b, 0));
 // }
 // const normResult = computed(() => getNormByTotal(totalScore.value));
 
-const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Tests', href: '/tests' },
-  { title: 'MRT-A', href: '/tests/mrt-a' },
-];
-
 const showTest = ref(false);
 const currentQuestionIndex = ref(0);
+const isLastQuestion = computed(() => currentQuestionIndex.value === mrtQuestions.value.length - 1);
 
 // --- For per-question state:
 const userAnswers = ref<(string | null)[]>(Array(mrtQuestions.value.length).fill(null));
@@ -345,6 +350,34 @@ const handlePrevClick = () => {
   }
 };
 
+const finishTest = () => {
+  window.dispatchEvent(new Event('start-finish'));
+  endConfirmOpen.value = true;
+};
+
+const cancelEnd = () => {
+  window.dispatchEvent(new Event('cancel-finish'));
+  endConfirmOpen.value = false;
+};
+
+const confirmEnd = () => {
+  const now = Date.now();
+  const qidx = currentQuestionIndex.value;
+  if (
+    qidx >= 0 &&
+    qidx < mrtQuestions.value.length &&
+    questionStartTimestamps.value[qidx]
+  ) {
+    questionTimes.value[qidx] += Math.round(
+      (now - (questionStartTimestamps.value[qidx] as number)) / 1000
+    );
+    questionStartTimestamps.value[qidx] = null;
+  }
+  currentQuestionIndex.value = mrtQuestions.value.length;
+  endConfirmOpen.value = false;
+  emit('complete');
+};
+
 watch(currentQuestionIndex, async (newIndex, oldIndex) => {
   const now = Date.now();
   if (
@@ -379,9 +412,12 @@ const startTest = () => {
 </script>
 
 <template>
-
-  <Head title="MRT-A Test" />
-  <AppLayout :breadcrumbs="breadcrumbs">
+  <Head title="Tests" />
+  <div class="p-4">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">Tests</h1>
+      <span class="font-medium">{{ userName }}</span>
+    </div>
     <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
       <div class="flex-1 flex flex-col gap-4">
         <!-- Start Test Screen -->
@@ -435,14 +471,17 @@ const startTest = () => {
             <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline">
               Zurück
             </Button>
-            <Button @click="handleNextClick" :disabled="!userAnswers[currentQuestionIndex]">
+            <Button v-if="isLastQuestion" @click="finishTest" :disabled="!userAnswers[currentQuestionIndex]" variant="destructive">
+              Test beenden
+            </Button>
+            <Button v-else @click="handleNextClick" :disabled="!userAnswers[currentQuestionIndex]">
               Weiter
             </Button>
           </div>
         </div>
-
+        
         <!-- Test Results -->
-        <div v-else-if="isTestComplete" class="p-6 bg-background border rounded-lg">
+        <div v-else-if="isTestComplete && showResults" class="p-6 bg-background border rounded-lg">
           <h2 class="text-xl font-semibold mb-4">Test abgeschlossen!</h2>
           <div class="mb-6 w-full max-w-md">
             <table class="w-full text-sm border rounded-lg overflow-hidden shadow">
@@ -563,10 +602,22 @@ const startTest = () => {
 
         </div>
 
-        <div v-else>
-          <p>Fragen werden geladen...</p>
-        </div>
+        <div v-else></div>
       </div>
     </div>
-  </AppLayout>
+    <Dialog v-model:open="endConfirmOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Test beenden</DialogTitle>
+          <DialogDescription>
+            Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter class="gap-2">
+          <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
+          <Button variant="destructive" @click="confirmEnd">Ja</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
 </template>
