@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Line } from 'vue-chartjs';
@@ -93,7 +93,16 @@ const mrtQuestions = ref<MRTQuestion[]>([
   { number: 60, options: ["Interwiew", "Interviev", "Interwiu", "Interview"], correct: ["D"] },
 ]);
 
-const userAge = ref<number | null>(null);
+const page = usePage<{
+  auth: {
+    user: {
+      participant_profile?: { age?: number }
+    }
+  }
+}>();
+const userAge = computed<number | null>(
+  () => page.props.auth.user.participant_profile?.age ?? null
+);
 
 const showResults = ref(false);
 
@@ -391,16 +400,9 @@ const startTest = () => {
             Dieser Test besteht aus {{ mrtQuestions.length }} Aufgaben. Wählen Sie jeweils die richtige Schreibweise.
             Die benötigte Zeit pro Aufgabe wird automatisch gemessen.
           </p>
-          <div class="flex flex-col items-center mb-6 gap-2">
-            <label for="age-input" class="font-semibold text-base">Bitte geben Sie Ihr Alter ein:</label>
-            <input id="age-input" type="number" min="10" max="99" v-model.number="userAge"
-              class="border rounded px-4 py-2 text-base text-center w-32 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-              placeholder="z.B. 28" />
-            <span v-if="userAge && (userAge < 16 || userAge > 80)" class="text-red-600 text-xs">Bitte geben Sie ein
-              realistisches Alter ein.</span>
-          </div>
+          <p v-if="userAge" class="mb-6 text-base">Ihr Alter: {{ userAge }}</p>
           <Button @click="startTest" class="px-8 py-3 text-lg font-semibold rounded-xl shadow"
-            :disabled="!userAge || userAge < 16 || userAge > 80">
+            :disabled="!userAge">
             Test starten
           </Button>
         </div>
