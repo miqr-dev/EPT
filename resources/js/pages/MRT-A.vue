@@ -19,8 +19,22 @@ import annotationPlugin from 'chartjs-plugin-annotation';
 Chart.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title)
 Chart.register(...registerables, annotationPlugin)
 
-const page = usePage<{ auth: { user: { name: string } } }>();
+const page = usePage<{
+  auth: {
+    user: {
+      name: string;
+      participant_profile?: {
+        age?: number;
+      };
+    };
+  };
+}>();
 const userName = computed(() => page.props.auth?.user?.name ?? '');
+const profile = computed(() => page.props.auth?.user?.participant_profile);
+const userAge = computed<number | null>(() => {
+  const age = profile.value?.age;
+  return typeof age === 'number' ? age : age ? Number(age) : null;
+});
 const emit = defineEmits(['complete']);
 const endConfirmOpen = ref(false);
 
@@ -101,8 +115,6 @@ const mrtQuestions = ref<MRTQuestion[]>([
   { number: 59, options: ["Arbeitsmillieu", "Arbeitsmiliö", "Arbeitsmülieu", "Arbeitsmilieu"], correct: ["D"] },
   { number: 60, options: ["Interwiew", "Interviev", "Interwiu", "Interview"], correct: ["D"] },
 ]);
-
-const userAge = ref<number | null>(null);
 
 const showResults = ref(false);
 
@@ -427,14 +439,6 @@ const startTest = () => {
             Dieser Test besteht aus {{ mrtQuestions.length }} Aufgaben. Wählen Sie jeweils die richtige Schreibweise.
             Die benötigte Zeit pro Aufgabe wird automatisch gemessen.
           </p>
-          <div class="flex flex-col items-center mb-6 gap-2">
-            <label for="age-input" class="font-semibold text-base">Bitte geben Sie Ihr Alter ein:</label>
-            <input id="age-input" type="number" min="10" max="99" v-model.number="userAge"
-              class="border rounded px-4 py-2 text-base text-center w-32 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-              placeholder="z.B. 28" />
-            <span v-if="userAge && (userAge < 16 || userAge > 80)" class="text-red-600 text-xs">Bitte geben Sie ein
-              realistisches Alter ein.</span>
-          </div>
           <Button @click="startTest" class="px-8 py-3 text-lg font-semibold rounded-xl shadow"
             :disabled="!userAge || userAge < 16 || userAge > 80">
             Test starten
