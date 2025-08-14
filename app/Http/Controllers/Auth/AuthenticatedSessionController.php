@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 use LdapRecord\Laravel\Auth\ListensForLdapBindFailure;
+use App\Models\Exam;
+use App\Models\ExamParticipant;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -41,7 +43,20 @@ class AuthenticatedSessionController extends Controller
 
     $user = $request->user();
     if ($user->role === 'participant') {
-      return redirect()->intended(route('my-exam', absolute: false));
+      $profile = $user->participantProfile;
+      $profileComplete = $profile && $profile->birthday && $profile->sex && $profile->marital_status && $profile->household;
+      if (!$profileComplete) {
+        return redirect()->intended(route('participant.onboarding', absolute: false));
+      }
+      $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
+      if (!$examParticipant) {
+        return redirect()->intended(route('participant.no-exam', absolute: false));
+      }
+      $exam = Exam::find($examParticipant->exam_id);
+      if ($exam && $exam->status === 'in_progress') {
+        return redirect()->intended(route('my-exam', absolute: false));
+      }
+      return redirect()->intended(route('participant.no-exam', absolute: false));
     }
 
     return redirect()->intended(route('dashboard', absolute: false));

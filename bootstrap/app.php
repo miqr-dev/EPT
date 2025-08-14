@@ -2,7 +2,7 @@
 
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\HandleAppearance;
-// use App\Http\Middleware\RedirectBasedOnRole;
+use App\Http\Middleware\RedirectBasedOnRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,12 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
-            //RedirectBasedOnRole::class,
+            RedirectBasedOnRole::class,
         ]);
         // Here is where you define route middleware aliases:
-      //   $middleware->alias([
-      //        'role.redirect' => \App\Http\Middleware\RedirectBasedOnRole::class,
-      //  ]);
+        $middleware->alias([
+            'role.redirect' => \App\Http\Middleware\RedirectBasedOnRole::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -49,7 +49,14 @@ class ParticipantController extends Controller
     $profile = $user->participantProfile ?: new ParticipantProfile(['user_id' => $user->id]);
     $profile->fill($data)->save();
 
-    return redirect()->route('my-exam');
+    $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
+    if ($examParticipant) {
+      $exam = Exam::find($examParticipant->exam_id);
+      if ($exam && $exam->status === 'in_progress') {
+        return redirect()->route('my-exam');
+      }
+    }
+    return redirect()->route('participant.no-exam');
   }
 
   public function examLauncher()
@@ -64,8 +71,8 @@ class ParticipantController extends Controller
 
     $exam = Exam::with(['steps.test', 'currentStep.test'])->find($examParticipant->exam_id);
 
-    if (!$exam) {
-      // This case should ideally not happen if data is consistent.
+    if (!$exam || $exam->status !== 'in_progress') {
+      // Either exam does not exist or hasn't started yet.
       return redirect()->route('participant.no-exam');
     }
 

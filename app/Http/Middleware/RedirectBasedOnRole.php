@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Models\ExamParticipant;
+use App\Models\Exam;
 use Symfony\Component\HttpFoundation\Response;
 
 class RedirectBasedOnRole
@@ -67,21 +68,25 @@ class RedirectBasedOnRole
         $profileComplete = $profile && $profile->birthday && $profile->sex && $profile->marital_status && $profile->household;
 
         $allowedRoutes = $participantRoutes;
+        $examStarted = false;
         if ($profileComplete) {
-          $hasExam = ExamParticipant::where('participant_id', $user->id)->exists();
-          $allowedRoutes = array_merge($allowedRoutes, ['my-exam', 'exam-room', 'my-exam.start-step', 'my-exam.complete-step']);
-          if (!$hasExam) {
-            $allowedRoutes[] = 'participant.no-exam';
-          }
+          $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
+          $exam = $examParticipant?->exam;
+          $examStarted = $exam && $exam->status === 'in_progress';
+          $allowedRoutes = array_merge($allowedRoutes, [
+            'my-exam',
+            'exam-room',
+            'my-exam.start-step',
+            'my-exam.complete-step',
+            'participant.no-exam',
+          ]);
         }
 
         if (!in_array($currentRoute, $allowedRoutes)) {
           if (!$profileComplete) {
             return redirect()->route('participant.onboarding');
-          } else {
-            $hasExam = ExamParticipant::where('participant_id', $user->id)->exists();
-            return redirect()->route($hasExam ? 'my-exam' : 'participant.no-exam');
           }
+          return redirect()->route($examStarted ? 'my-exam' : 'participant.no-exam');
         }
       }
 
