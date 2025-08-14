@@ -6,6 +6,10 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -119,6 +123,7 @@ function breakTest() {
 
 // --- Fullscreen and Anti-Cheating ---
 const finishing = ref(false)
+const fullscreenWarningOpen = ref(false)
 
 function requestFullscreen() {
   const elem = document.documentElement
@@ -128,15 +133,18 @@ function requestFullscreen() {
 function handleFullscreenChange() {
   if (!document.fullscreenElement) {
     if (finishing.value) return
-    const confirmExit = confirm(
-      'Sie haben den Vollbildmodus verlassen. Der Test wird jetzt beendet. Klicken Sie auf "OK", um den Test zu beenden, oder auf "Abbrechen", um fortzufahren.'
-    )
-    if (confirmExit) {
-      breakTest()
-    } else {
-      requestFullscreen()
-    }
+    fullscreenWarningOpen.value = true
   }
+}
+
+function confirmFullscreenExit() {
+  fullscreenWarningOpen.value = false
+  breakTest()
+}
+
+function cancelFullscreenExit() {
+  fullscreenWarningOpen.value = false
+  requestFullscreen()
 }
 
 function beginFinish() {
@@ -250,5 +258,19 @@ onUnmounted(() => {
       </div>
 
     </div>
+    <Dialog :open="fullscreenWarningOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Vollbildmodus verlassen</DialogTitle>
+          <DialogDescription>
+            Sie haben den Vollbildmodus verlassen. Der Test wird jetzt beendet. Klicken Sie auf „Ja“, um den Test zu beenden, oder auf „Abbrechen“, um fortzufahren.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter class="gap-2">
+          <Button variant="secondary" @click="cancelFullscreenExit">Abbrechen</Button>
+          <Button variant="destructive" @click="confirmFullscreenExit">Ja</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
