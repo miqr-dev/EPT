@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { Head, router } from '@inertiajs/vue3'
+import { Head, router, usePage } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -45,6 +45,8 @@ const props = defineProps<{
 const activeTestComponent = ref(null)
 const isTestDialogOpen = ref(false)
 const activeStepId = ref<number | null>(null)
+const page = usePage()
+const userName = computed(() => page.props.auth?.user?.name)
 
 const testComponents = {
   'BRT-A': BRTA,
@@ -100,8 +102,12 @@ function requestFullscreen() {
 
 function handleFullscreenChange() {
   if (!document.fullscreenElement) {
-    alert('You have exited full-screen mode. The test will now end.')
-    completeTest()
+    const confirmExit = confirm('You have exited full-screen mode. The test will now end. Do you want to continue?')
+    if (confirmExit) {
+      completeTest()
+    } else {
+      requestFullscreen()
+    }
   }
 }
 
@@ -187,6 +193,9 @@ onUnmounted(() => {
                     </DialogTrigger>
                     <DialogContent
                       class="inset-0 top-0 left-0 w-screen h-screen max-w-none sm:max-w-none translate-x-0 translate-y-0 rounded-none border-none p-0 bg-white dark:bg-gray-900 text-black dark:text-white overflow-auto">
+                      <template #top-right>
+                        <div class="absolute top-4 right-4 font-semibold">{{ userName }}</div>
+                      </template>
                       <component :is="activeTestComponent" class="w-full h-full" @complete="completeTest" />
                     </DialogContent>
                   </Dialog>
