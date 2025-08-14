@@ -124,6 +124,10 @@ function startTest() {
   })
 }
 
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
 function handleNextPage() {
   stopTimingCurrentPage()
 
@@ -133,6 +137,7 @@ function handleNextPage() {
   } else {
     completeTest()
   }
+  scrollToTop()
 }
 
 function handlePrevPage() {

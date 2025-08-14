@@ -38,6 +38,10 @@ function startTest() {
   startTime.value = null
 }
 
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
 function handlePrevClick() {
   stopTiming(currentQuestionIndex.value)
   if (currentQuestionIndex.value > 0) {
@@ -53,6 +57,7 @@ function handleNextClick() {
   } else {
     currentQuestionIndex.value = questions.value.length
   }
+  scrollToTop()
 }
 
 function stopTiming(index: number) {
@@ -76,6 +81,7 @@ function selectAnswerAndAdvance(optionIndex: number) {
   } else {
     currentQuestionIndex.value = questions.value.length
   }
+  scrollToTop()
 }
 
 watch(currentQuestionIndex, async (newIndex, oldIndex) => {
