@@ -136,4 +136,19 @@ class ParticipantController extends Controller
 
     return back(303);
   }
+
+  public function breakStep(Request $request)
+  {
+    $user = Auth::user();
+    $examStepStatus = ExamStepStatus::where('participant_id', $user->id)
+      ->where('exam_step_id', $request->input('exam_step_id'))
+      ->firstOrFail();
+
+    $examStepStatus->update([
+      'status' => 'broken',
+      'completed_at' => now(),
+    ]);
+
+    return back(303);
+  }
 }

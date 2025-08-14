@@ -177,10 +177,14 @@ const handlePrevClick = () => {
 };
 
 const finishTest = () => {
+  window.dispatchEvent(new Event('start-finish'))
   const confirmed = window.confirm(
     'Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.'
-  );
-  if (!confirmed) return;
+  )
+  if (!confirmed) {
+    window.dispatchEvent(new Event('cancel-finish'))
+    return
+  }
   const now = Date.now();
   if (
     currentQuestionIndex.value >= 0 &&
@@ -194,7 +198,7 @@ const finishTest = () => {
   }
   currentQuestionIndex.value = questions.value.length;
   nextButtonClickCount.value = 0;
-  emit('complete');
+  emit('complete')
 };
 
 // Per-question timer starter

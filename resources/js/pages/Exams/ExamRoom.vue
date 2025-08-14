@@ -18,7 +18,7 @@ import LMT from '@/pages/LMT.vue'
 import MRTA from '@/pages/MRT-A.vue'
 import LMT2 from '@/pages/LMT2.vue'
 
-type StepStatus = 'not_started' | 'in_progress' | 'completed'
+type StepStatus = 'not_started' | 'in_progress' | 'completed' | 'broken'
 type ExamStatus = 'not_started' | 'in_progress' | 'paused' | 'completed'
 
 const props = defineProps<{
@@ -62,7 +62,8 @@ function getStatusText(status: StepStatus) {
     not_started: 'Nicht gestartet',
     in_progress: 'In Bearbeitung',
     completed: 'Abgeschlossen',
-  }
+    broken: 'Abgebrochen',
+  } as const
   return map[status]
 }
 
@@ -76,6 +77,8 @@ function startTest(step: any) {
       requestFullscreen()
       window.addEventListener('beforeunload', handleBeforeUnload)
       document.addEventListener('fullscreenchange', handleFullscreenChange)
+      window.addEventListener('start-finish', beginFinish as EventListener)
+      window.addEventListener('cancel-finish', cancelFinish as EventListener)
     }
   })
 }
@@ -87,6 +90,9 @@ function completeTest() {
       isTestDialogOpen.value = false
       window.removeEventListener('beforeunload', handleBeforeUnload)
       document.removeEventListener('fullscreenchange', handleFullscreenChange)
+      window.removeEventListener('start-finish', beginFinish as EventListener)
+      window.removeEventListener('cancel-finish', cancelFinish as EventListener)
+      finishing.value = false
       if (document.fullscreenElement) document.exitFullscreen()
       activeStepId.value = null;
       activeTestComponent.value = null;
@@ -94,7 +100,26 @@ function completeTest() {
   })
 }
 
+function breakTest() {
+  if (!activeStepId.value) return;
+  router.post('/my-exam/break-step', { exam_step_id: activeStepId.value }, {
+    onSuccess: () => {
+      isTestDialogOpen.value = false;
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('start-finish', beginFinish as EventListener);
+      window.removeEventListener('cancel-finish', cancelFinish as EventListener);
+      finishing.value = false;
+      if (document.fullscreenElement) document.exitFullscreen();
+      activeStepId.value = null;
+      activeTestComponent.value = null;
+    }
+  })
+}
+
 // --- Fullscreen and Anti-Cheating ---
+const finishing = ref(false)
+
 function requestFullscreen() {
   const elem = document.documentElement
   if (elem.requestFullscreen) elem.requestFullscreen()
@@ -102,13 +127,25 @@ function requestFullscreen() {
 
 function handleFullscreenChange() {
   if (!document.fullscreenElement) {
-    const confirmExit = confirm('You have exited full-screen mode. The test will now end. Do you want to continue?')
+    if (finishing.value) return
+    const confirmExit = confirm(
+      'Sie haben den Vollbildmodus verlassen. Der Test wird jetzt beendet. Klicken Sie auf "OK", um den Test zu beenden, oder auf "Abbrechen", um fortzufahren.'
+    )
     if (confirmExit) {
-      completeTest()
+      breakTest()
     } else {
       requestFullscreen()
     }
   }
+}
+
+function beginFinish() {
+  finishing.value = true
+}
+
+function cancelFinish() {
+  finishing.value = false
+  requestFullscreen()
 }
 
 function handleBeforeUnload(event: BeforeUnloadEvent) {

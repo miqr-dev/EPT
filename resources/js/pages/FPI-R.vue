@@ -207,12 +207,16 @@ function restart() {
 }
 
 function finishTest() {
+  window.dispatchEvent(new Event('start-finish'))
   const confirmed = window.confirm(
     'Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.'
-  );
-  if (!confirmed) return;
-  handleNextBlock();
-  emit('complete');
+  )
+  if (!confirmed) {
+    window.dispatchEvent(new Event('cancel-finish'))
+    return
+  }
+  handleNextBlock()
+  emit('complete')
 }
 
 function getStanineKey(idx: number) {
