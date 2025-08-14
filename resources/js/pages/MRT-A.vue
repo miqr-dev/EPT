@@ -299,7 +299,7 @@ const handleOptionClick = (optIdx: number) => {
     tempClickState.value[qidx] = false;
     tempSelected.value[qidx] = null;
 
-    // --- Now, auto jump to next (or finish test) ---
+    // --- After confirming, record time and auto-jump ---
     const now = Date.now();
     if (
       qidx >= 0 &&
@@ -313,8 +313,6 @@ const handleOptionClick = (optIdx: number) => {
     }
     if (currentQuestionIndex.value < mrtQuestions.value.length - 1) {
       currentQuestionIndex.value++;
-    } else {
-      currentQuestionIndex.value = mrtQuestions.value.length;
     }
   } else {
     // Clicked a different option, reset temp selection
@@ -339,8 +337,6 @@ const handleNextClick = () => {
   }
   if (currentQuestionIndex.value < mrtQuestions.value.length - 1) {
     currentQuestionIndex.value++;
-  } else {
-    currentQuestionIndex.value = mrtQuestions.value.length;
   }
 };
 
