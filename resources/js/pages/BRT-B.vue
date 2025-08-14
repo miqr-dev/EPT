@@ -3,6 +3,14 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 function formatTime(sec: number | null): string {
   if (sec === null || isNaN(sec)) return "–";
@@ -48,6 +56,7 @@ const answerInput = ref<InstanceType<typeof Input> | null>(null);
 const questionTimes = ref<number[]>(Array(questions.value.length).fill(0));
 const questionStartTimestamps = ref<(number | null)[]>(Array(questions.value.length).fill(null));
 const startTime = ref<number | null>(null);
+const endConfirmOpen = ref(false);
 
 function formatQuestionMark(text: string): string {
   if (text.endsWith('?')) {
@@ -177,14 +186,11 @@ const handlePrevClick = () => {
 };
 
 const finishTest = () => {
-  window.dispatchEvent(new Event('start-finish'))
-  const confirmed = window.confirm(
-    'Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.'
-  )
-  if (!confirmed) {
-    window.dispatchEvent(new Event('cancel-finish'))
-    return
-  }
+  window.dispatchEvent(new Event('start-finish'));
+  endConfirmOpen.value = true;
+};
+
+const confirmEnd = () => {
   const now = Date.now();
   if (
     currentQuestionIndex.value >= 0 &&
@@ -198,7 +204,13 @@ const finishTest = () => {
   }
   currentQuestionIndex.value = questions.value.length;
   nextButtonClickCount.value = 0;
-  emit('complete')
+  endConfirmOpen.value = false;
+  emit('complete');
+};
+
+const cancelEnd = () => {
+  window.dispatchEvent(new Event('cancel-finish'));
+  endConfirmOpen.value = false;
 };
 
 // Per-question timer starter
@@ -418,10 +430,25 @@ function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[])
 
         </div>
 
-        <div v-else>
-          <p>Fragen werden geladen...</p>
-        </div>
+      <div v-else>
+        <p>Fragen werden geladen...</p>
       </div>
     </div>
   </div>
+  <Dialog v-model:open="endConfirmOpen">
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Test beenden</DialogTitle>
+        <DialogDescription>
+          Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
+        </DialogDescription>
+      </DialogHeader>
+      <DialogFooter class="gap-2">
+        <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
+        <Button variant="destructive" @click="confirmEnd">Ja</Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+</div>
 </template>
+

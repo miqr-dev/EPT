@@ -12,6 +12,14 @@ import { norms_female_25_44 } from '@/pages/Scores/FPI/norms_female_25_44';
 import { norms_female_45_59 } from '@/pages/Scores/FPI/norms_female_45_59';
 import { norms_female_60up } from '@/pages/Scores/FPI/norms_female_60up';
 import FPIResult from '@/pages/Scores/FPI/FPIResult.vue';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 const page = usePage<{
   auth: {
@@ -74,6 +82,7 @@ const blockIndex = ref(0);
 const answers = ref<Record<number, 'stimmt' | 'stimmtNicht' | null>>({});
 const missedQuestions = ref<number[]>([]);
 const finished = ref(false);
+const endConfirmOpen = ref(false);
 const totalQuestions = FPI_QUESTIONS.length;
 const currentFrom = computed(() => blockIndex.value * QUESTIONS_PER_BLOCK + 1);
 const currentTo = computed(() => Math.min((blockIndex.value + 1) * QUESTIONS_PER_BLOCK, totalQuestions));
@@ -208,15 +217,18 @@ function restart() {
 
 function finishTest() {
   window.dispatchEvent(new Event('start-finish'))
-  const confirmed = window.confirm(
-    'Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.'
-  )
-  if (!confirmed) {
-    window.dispatchEvent(new Event('cancel-finish'))
-    return
-  }
+  endConfirmOpen.value = true
+}
+
+function confirmEnd() {
   handleNextBlock()
+  endConfirmOpen.value = false
   emit('complete')
+}
+
+function cancelEnd() {
+  window.dispatchEvent(new Event('cancel-finish'))
+  endConfirmOpen.value = false
 }
 
 function getStanineKey(idx: number) {
@@ -411,6 +423,20 @@ const staninePoints = computed(() => {
 
       </div>
     </div>
-
+    <Dialog v-model:open="endConfirmOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Test beenden</DialogTitle>
+          <DialogDescription>
+            Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter class="gap-2">
+          <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
+          <Button variant="destructive" @click="confirmEnd">Ja</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
+
