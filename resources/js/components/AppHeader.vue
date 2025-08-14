@@ -13,7 +13,7 @@ import { getInitials } from '@/composables/useInitials';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 interface Props {
     breadcrumbs?: BreadcrumbItem[];
@@ -25,6 +25,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const page = usePage();
 const auth = computed(() => page.props.auth);
+const userMenuOpen = ref(false);
 
 const isCurrentRoute = computed(() => (url: string) => page.url === url);
 
@@ -154,7 +155,7 @@ const rightNavItems: NavItem[] = [
                         </div>
                     </div>
 
-                    <DropdownMenu>
+                    <DropdownMenu v-model:open="userMenuOpen">
                         <DropdownMenuTrigger :as-child="true">
                             <Button
                                 variant="ghost"
@@ -169,7 +170,7 @@ const rightNavItems: NavItem[] = [
                                 </Avatar>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" class="w-56">
+                        <DropdownMenuContent v-if="userMenuOpen" align="end" class="w-56">
                             <UserMenuContent :user="auth.user" />
                         </DropdownMenuContent>
                     </DropdownMenu>
