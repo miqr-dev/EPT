@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue'
-import { Head } from '@inertiajs/vue3'
+import { Head, usePage } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 import { LMT_QUESTIONS, LMTQuestion } from '@/pages/Questions/LMTQuestions'
 
@@ -78,11 +85,6 @@ function getTValue(group: 'L1' | 'L2' | 'F+' | 'F-'): number | null {
   return raw < table.length ? table[raw] : null
 }
 
-const breadcrumbs = [
-  { title: 'Tests', href: '/tests' },
-  { title: 'LMT', href: '/tests/lmt' },
-]
-
 const questions = ref<LMTQuestion[]>(LMT_QUESTIONS)
 
 const showTest = ref(false)
@@ -102,6 +104,13 @@ const totalPages = computed(() =>
 )
 
 const isTestComplete = ref(false)
+
+const page = usePage<{ auth: { user: { name: string } } }>()
+const userName = computed(() => page.props.auth?.user?.name ?? '')
+
+const emit = defineEmits(['complete'])
+
+const endConfirmOpen = ref(false)
 
 const questionsOnPage = computed(() => {
   const start = (currentPage.value - 1) * questionsPerPage
@@ -134,8 +143,6 @@ function handleNextPage() {
   if (currentPage.value < totalPages.value) {
     currentPage.value++
     startTimingCurrentPage()
-  } else {
-    completeTest()
   }
   scrollToTop()
 }
@@ -178,6 +185,22 @@ function completeTest() {
   showTest.value = false
 }
 
+function finishTest() {
+  window.dispatchEvent(new Event('start-finish'))
+  endConfirmOpen.value = true
+}
+
+function confirmEnd() {
+  completeTest()
+  endConfirmOpen.value = false
+  emit('complete')
+}
+
+function cancelEnd() {
+  window.dispatchEvent(new Event('cancel-finish'))
+  endConfirmOpen.value = false
+}
+
 function selectAnswer(questionIndex: number, optionIndex: number) {
   userAnswers.value[questionIndex] = optionIndex
 }
@@ -198,8 +221,12 @@ const totalTimeTaken = computed(() => {
 
 <template>
 
-  <Head title="LMT" />
-  <AppLayout :breadcrumbs="breadcrumbs">
+  <Head title="Tests" />
+  <div class="p-4">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">Tests</h1>
+      <span class="font-medium">{{ userName }}</span>
+    </div>
     <div class="max-w-5xl mx-auto p-6 bg-background border border-border rounded shadow space-y-8 text-foreground">
 
       <!-- Start Screen -->
@@ -251,8 +278,11 @@ const totalTimeTaken = computed(() => {
             Zurück
           </Button>
 
-          <Button @click="handleNextPage">
-            {{ currentPage === totalPages ? 'Test abschließen' : 'Weiter' }}
+          <Button v-if="currentPage < totalPages" @click="handleNextPage">
+            Weiter
+          </Button>
+          <Button v-else @click="finishTest" variant="destructive">
+            Test beenden
           </Button>
         </div>
       </div>
@@ -353,5 +383,20 @@ const totalTimeTaken = computed(() => {
       </div>
 
     </div>
-  </AppLayout>
+
+    <Dialog v-model:open="endConfirmOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Test beenden</DialogTitle>
+          <DialogDescription>
+            Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter class="gap-2">
+          <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
+          <Button variant="destructive" @click="confirmEnd">Ja</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
 </template>
