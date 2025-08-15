@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\TestAssignment;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TeacherController extends Controller
 {
@@ -24,11 +25,18 @@ class TeacherController extends Controller
       ->orderBy('created_at', 'desc')
       ->get();
 
-    // New: Fetch users created in the last 6 hours in the same city
+    // New: Fetch users who have logged in within the last 6 hours in the same city
+    $recentUserIds = DB::table('sessions')
+      ->select('user_id')
+      ->whereNotNull('user_id')
+      ->where('last_activity', '>=', Carbon::now()->subHours(6)->getTimestamp())
+      ->distinct()
+      ->pluck('user_id');
+
     $recentUsers = User::where('role', 'participant')
       ->where('city_id', $cityId)
-      ->where('created_at', '>=', Carbon::now()->subHours(6))
-      ->orderBy('created_at', 'desc')
+      ->whereIn('id', $recentUserIds)
+      ->orderBy('id', 'desc')
       ->get();
 
     // New: Fetch all exams
@@ -55,10 +63,17 @@ class TeacherController extends Controller
       ->orderBy('created_at', 'desc')
       ->get();
 
+    $recentUserIds = DB::table('sessions')
+      ->select('user_id')
+      ->whereNotNull('user_id')
+      ->where('last_activity', '>=', Carbon::now()->subHours(6)->getTimestamp())
+      ->distinct()
+      ->pluck('user_id');
+
     $recentUsers = User::where('role', 'participant')
       ->where('city_id', $cityId)
-      ->where('created_at', '>=', Carbon::now()->subHours(6))
-      ->orderBy('created_at', 'desc')
+      ->whereIn('id', $recentUserIds)
+      ->orderBy('id', 'desc')
       ->get();
 
     return response()->json([
