@@ -76,7 +76,7 @@ const setStatus = (status: string) => {
 <template>
   <div class="mt-8">
     <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Live Exam Status</h2>
+      <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ exam.name }}</h2>
       <div class="flex space-x-2">
         <Button v-if="exam.status === 'not_started'" @click="startExam">
           Start Exam
