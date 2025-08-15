@@ -460,4 +460,5 @@ function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[])
       </DialogContent>
     </Dialog>
   </div>
+</div>
 </template>
