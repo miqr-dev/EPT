@@ -13,6 +13,8 @@ const props = defineProps<{
   tests: any[];
 }>();
 
+const participants = ref(props.participants);
+const recentUsers = ref(props.recentUsers);
 const activeExam = ref(null);
 let polling: any = null;
 
@@ -25,9 +27,23 @@ const fetchActiveExam = async () => {
   }
 };
 
+const fetchDashboardUsers = async () => {
+  try {
+    const response = await axios.get(route('api.dashboard-data'));
+    participants.value = response.data.participants;
+    recentUsers.value = response.data.recentUsers;
+  } catch (error) {
+    console.error("Error fetching dashboard data:", error);
+  }
+};
+
 onMounted(() => {
   fetchActiveExam();
-  polling = setInterval(fetchActiveExam, 5000);
+  fetchDashboardUsers();
+  polling = setInterval(() => {
+    fetchActiveExam();
+    fetchDashboardUsers();
+  }, 5000);
 });
 
 onUnmounted(() => {
@@ -84,16 +100,16 @@ function saveExamSteps(steps: any[]) {
 }
 
 const selectedParticipant = computed(() =>
-  props.participants && props.participants.length && selectedIds.value.length === 1 ? props.participants[selectedIdx.value] : null,
+  participants.value && participants.value.length && selectedIds.value.length === 1 ? participants.value[selectedIdx.value] : null,
 );
 
-const allSelected = computed(() => props.participants.length > 0 && selectedIds.value.length === props.participants.length);
+const allSelected = computed(() => participants.value.length > 0 && selectedIds.value.length === participants.value.length);
 
 function toggleSelectAll() {
   if (allSelected.value) {
     selectedIds.value = [];
   } else {
-    selectedIds.value = props.participants.map((p) => p.id);
+    selectedIds.value = participants.value.map((p) => p.id);
   }
 }
 function toggleRow(id: number, idx: number) {
@@ -104,7 +120,7 @@ function toggleRow(id: number, idx: number) {
     selectedIdx.value = idx;
   }
 }
-const availableRecentUsers = computed(() => props.recentUsers.filter((u) => !stagedUserIds.value.includes(u.id)));
+const availableRecentUsers = computed(() => recentUsers.value.filter((u) => !stagedUserIds.value.includes(u.id)));
 
 function singleRowSelect(idx: number, id: number) {
   selectedIdx.value = idx;
@@ -157,7 +173,7 @@ function saveExam() {
 
 const assignedTestsForSelected = computed(() => {
   if (selectedIds.value.length === 0) return [];
-  const all = props.participants.filter((p) => selectedIds.value.includes(p.id));
+  const all = participants.value.filter((p) => selectedIds.value.includes(p.id));
   const testIdSets = all.map((p) => new Set((p.test_assignments || []).map((a: any) => a.test_id)));
   if (testIdSets.length === 0) return [];
   const intersection = [...testIdSets[0]].filter((testId) => testIdSets.every((set) => set.has(testId)));
@@ -279,8 +295,8 @@ function addTests() {
                   <ul>
                     <li v-for="userId in stagedUserIds" :key="userId" class="flex items-center justify-between text-sm">
                       <span>
-                        {{props.recentUsers.find((u) => u.id === userId)?.name}},
-                        {{props.recentUsers.find((u) => u.id === userId)?.firstname}}
+                        {{recentUsers.value.find((u) => u.id === userId)?.name}},
+                        {{recentUsers.value.find((u) => u.id === userId)?.firstname}}
                       </span>
                       <button @click="removeStagedUser(userId)" class="text-red-500 hover:text-red-700">&times;</button>
                     </li>

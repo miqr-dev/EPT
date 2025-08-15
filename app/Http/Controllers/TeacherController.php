@@ -44,6 +44,29 @@ class TeacherController extends Controller
     ]);
   }
 
+  public function dashboardData()
+  {
+    $teacher = Auth::user();
+    $cityId = $teacher->city_id;
+
+    $participants = User::with(['city', 'testAssignments.test'])
+      ->where('role', 'participant')
+      ->where('city_id', $cityId)
+      ->orderBy('created_at', 'desc')
+      ->get();
+
+    $recentUsers = User::where('role', 'participant')
+      ->where('city_id', $cityId)
+      ->where('created_at', '>=', Carbon::now()->subHours(6))
+      ->orderBy('created_at', 'desc')
+      ->get();
+
+    return response()->json([
+      'participants' => $participants,
+      'recentUsers' => $recentUsers,
+    ]);
+  }
+
   // 2. Assign Tests
   public function assignTests(Request $request)
   {
