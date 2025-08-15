@@ -17,13 +17,13 @@ class ParticipantController extends Controller
   // Show the form
   public function showProfileForm()
   {
-    // $profile = Auth::user()?->participantProfile;
+    $user = Auth::user()->load('participantProfile');
     $professionGroups = ProfessionGroup::all();
     $employeds = Employed::all();
 
     return inertia('Participant', [
-      // 'profile' => $profile,
-      'user' => Auth::user(),
+      'user' => $user,
+      'profile' => $user->participantProfile,
       'professionGroups' => $professionGroups,
       'employeds' => $employeds,
     ]);

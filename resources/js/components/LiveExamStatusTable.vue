@@ -124,7 +124,7 @@ const setStatus = (status: string) => {
           <tr v-if="localExam && localExam.participants" v-for="participant in localExam.participants"
             :key="participant.id">
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-              {{ participant.user.name }}, {{ participant.user.firstname }}
+              {{ participant.user.name }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
               {{ localExam.current_step?.test.name || 'N/A' }}
