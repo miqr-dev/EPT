@@ -133,18 +133,13 @@ function requestFullscreen() {
 function handleFullscreenChange() {
   if (!document.fullscreenElement) {
     if (finishing.value) return
+    breakTest()
     fullscreenWarningOpen.value = true
   }
 }
 
-function confirmFullscreenExit() {
+function closeFullscreenWarning() {
   fullscreenWarningOpen.value = false
-  breakTest()
-}
-
-function cancelFullscreenExit() {
-  fullscreenWarningOpen.value = false
-  requestFullscreen()
 }
 
 function beginFinish() {
@@ -264,12 +259,11 @@ onUnmounted(() => {
         <DialogHeader>
           <DialogTitle>Vollbildmodus verlassen</DialogTitle>
           <DialogDescription>
-            Sie haben den Vollbildmodus verlassen. Der Test wird jetzt beendet. Klicken Sie auf „Ja“, um den Test zu beenden, oder auf „Abbrechen“, um fortzufahren.
+            Sie haben den Vollbildmodus verlassen. Der Test wurde beendet.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter class="gap-2">
-          <Button variant="secondary" @click="cancelFullscreenExit">Abbrechen</Button>
-          <Button variant="destructive" @click="confirmFullscreenExit">Ja</Button>
+          <Button @click="closeFullscreenWarning">OK</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
