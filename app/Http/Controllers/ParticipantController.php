@@ -145,7 +145,7 @@ class ParticipantController extends Controller
       ->firstOrFail();
 
     $examStepStatus->update([
-      'status' => 'broken',
+      'status' => 'uncompleted',
       'completed_at' => now(),
     ]);
 

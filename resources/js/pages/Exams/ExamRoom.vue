@@ -22,7 +22,7 @@ import LMT from '@/pages/LMT.vue'
 import MRTA from '@/pages/MRT-A.vue'
 import LMT2 from '@/pages/LMT2.vue'
 
-type StepStatus = 'not_started' | 'in_progress' | 'completed' | 'broken'
+type StepStatus = 'not_started' | 'in_progress' | 'completed' | 'uncompleted'
 type ExamStatus = 'not_started' | 'in_progress' | 'paused' | 'completed'
 
 const props = defineProps<{
@@ -66,7 +66,7 @@ function getStatusText(status: StepStatus) {
     not_started: 'Nicht gestartet',
     in_progress: 'In Bearbeitung',
     completed: 'Abgeschlossen',
-    broken: 'Abgebrochen',
+    uncompleted: 'Nicht abgeschlossen',
   } as const
   return map[status]
 }
@@ -222,7 +222,8 @@ onUnmounted(() => {
                   <Badge :class="cn(
                     stepStatuses[step.id]?.status === 'completed' && 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
                     stepStatuses[step.id]?.status === 'in_progress' && 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-                    stepStatuses[step.id]?.status === 'not_started' && 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200'
+                    stepStatuses[step.id]?.status === 'not_started' && 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200',
+                    stepStatuses[step.id]?.status === 'uncompleted' && 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                   )">
                     {{ getStatusText(stepStatuses[step.id]?.status) }}
                   </Badge>
