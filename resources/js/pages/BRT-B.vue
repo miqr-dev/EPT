@@ -11,6 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import axios from 'axios';
 
 function formatTime(sec: number | null): string {
   if (sec === null || isNaN(sec)) return "–";
@@ -28,6 +29,7 @@ interface Question {
 
 const page = usePage<{ auth: { user: { name: string } } }>();
 const userName = computed(() => page.props.auth?.user?.name ?? '');
+const props = defineProps<{ assignmentId?: number }>();
 const emit = defineEmits(['complete']);
 const questions = ref<Question[]>([
   { text: "619020 – 541600 = ?", answers: ["77420"] },
@@ -190,7 +192,7 @@ const finishTest = () => {
   endConfirmOpen.value = true;
 };
 
-const confirmEnd = () => {
+const confirmEnd = async () => {
   const now = Date.now();
   if (
     currentQuestionIndex.value >= 0 &&
@@ -205,7 +207,26 @@ const confirmEnd = () => {
   currentQuestionIndex.value = questions.value.length;
   nextButtonClickCount.value = 0;
   endConfirmOpen.value = false;
-  emit('complete');
+
+  const result = {
+    answers: userAnswers.value,
+    questionTimes: questionTimes.value,
+    finalScore: finalScore.value,
+    userPR: userPR.value,
+    userTwert: userTwert.value,
+    totalTimeTaken: totalTimeTaken.value,
+  };
+
+  try {
+    await axios.post('/test-results', {
+      assignment_id: props.assignmentId,
+      result_json: result,
+    });
+  } catch (error) {
+    console.error('Error saving test results', error);
+  } finally {
+    emit('complete');
+  }
 };
 
 const cancelEnd = () => {

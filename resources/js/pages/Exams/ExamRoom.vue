@@ -51,6 +51,9 @@ const isTestDialogOpen = ref(false)
 const activeStepId = ref<number | null>(null)
 const page = usePage()
 const userName = computed(() => page.props.auth?.user?.name)
+const activeAssignmentId = computed(() =>
+  activeStepId.value ? props.stepStatuses[activeStepId.value]?.id : null
+)
 
 const testComponents = {
   'BRT-A': BRTA,
@@ -241,7 +244,7 @@ onUnmounted(() => {
                       <template #top-right>
                         <div class="absolute top-4 right-4 font-semibold">{{ userName }}</div>
                       </template>
-                      <component :is="activeTestComponent" class="w-full h-full" @complete="completeTest" />
+                      <component :is="activeTestComponent" class="w-full h-full" :assignment-id="activeAssignmentId" @complete="completeTest" />
                     </DialogContent>
                   </Dialog>
                 </td>

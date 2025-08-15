@@ -15,6 +15,7 @@ import {
   Chart, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title, registerables
 } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
+import axios from 'axios';
 
 Chart.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title)
 Chart.register(...registerables, annotationPlugin)
@@ -35,6 +36,7 @@ const userAge = computed<number | null>(() => {
   const age = profile.value?.age;
   return typeof age === 'number' ? age : age ? Number(age) : null;
 });
+const props = defineProps<{ assignmentId?: number }>();
 const emit = defineEmits(['complete']);
 const endConfirmOpen = ref(false);
 
@@ -368,7 +370,7 @@ const cancelEnd = () => {
   endConfirmOpen.value = false;
 };
 
-const confirmEnd = () => {
+const confirmEnd = async () => {
   const now = Date.now();
   const qidx = currentQuestionIndex.value;
   if (
@@ -383,7 +385,27 @@ const confirmEnd = () => {
   }
   currentQuestionIndex.value = mrtQuestions.value.length;
   endConfirmOpen.value = false;
-  emit('complete');
+
+  const result = {
+    userAnswers: userAnswers.value,
+    questionTimes: questionTimes.value,
+    groupScores: groupScores.value,
+    groupStanines: groupStanines.value,
+    totalScore: totalScore.value,
+    totalPR: getPR(totalScore.value),
+    totalTimeTaken: totalTimeTaken.value,
+  };
+
+  try {
+    await axios.post('/test-results', {
+      assignment_id: props.assignmentId,
+      result_json: result,
+    });
+  } catch (error) {
+    console.error('Error saving test results', error);
+  } finally {
+    emit('complete');
+  }
 };
 
 watch(currentQuestionIndex, async (newIndex, oldIndex) => {

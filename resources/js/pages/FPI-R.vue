@@ -20,6 +20,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import axios from 'axios';
 
 const page = usePage<{
   auth: {
@@ -33,6 +34,7 @@ const page = usePage<{
   };
 }>();
 const userName = computed(() => page.props.auth?.user?.name ?? '');
+const props = defineProps<{ assignmentId?: number }>();
 const emit = defineEmits(['complete']);
 
 const profile = computed(() => page.props.auth?.user?.participant_profile);
@@ -220,10 +222,26 @@ function finishTest() {
   endConfirmOpen.value = true
 }
 
-function confirmEnd() {
+async function confirmEnd() {
   handleNextBlock()
   endConfirmOpen.value = false
-  emit('complete')
+
+  const result = {
+    answers: answers.value,
+    categoryScores: categoryScores.value,
+    categoryStanines: categoryStanines.value,
+  }
+
+  try {
+    await axios.post('/test-results', {
+      assignment_id: props.assignmentId,
+      result_json: result,
+    })
+  } catch (error) {
+    console.error('Error saving test results', error)
+  } finally {
+    emit('complete')
+  }
 }
 
 function cancelEnd() {

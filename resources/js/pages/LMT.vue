@@ -10,6 +10,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
+import axios from 'axios'
 
 import { LMT_QUESTIONS, LMTQuestion } from '@/pages/Questions/LMTQuestions'
 
@@ -19,6 +20,8 @@ const normTable = {
   "F-": [24, 30, 33, 35, 38, 41, 42, 45, 46, 49, 51, 54, 57, 58, 60, 63, 66, 71, 76],
   "F+": [33, 39, 43, 47, 50, 52.5, 55, 58, 62, 66, 75],
 }
+
+const props = defineProps<{ assignmentId?: number }>()
 
 const groupScores = computed(() => {
   const totals: Record<'L1' | 'L2' | 'F+' | 'F-', number> = {
@@ -190,10 +193,33 @@ function finishTest() {
   endConfirmOpen.value = true
 }
 
-function confirmEnd() {
+async function confirmEnd() {
   completeTest()
   endConfirmOpen.value = false
-  emit('complete')
+
+  const result = {
+    answers: userAnswers.value,
+    questionTimes: questionTimes.value,
+    groupScores: groupScores.value,
+    tValues: {
+      L1: getTValue('L1'),
+      L2: getTValue('L2'),
+      'F+': getTValue('F+'),
+      'F-': getTValue('F-'),
+    },
+    totalTimeTaken: totalTimeTaken.value,
+  }
+
+  try {
+    await axios.post('/test-results', {
+      assignment_id: props.assignmentId,
+      result_json: result,
+    })
+  } catch (error) {
+    console.error('Error saving test results', error)
+  } finally {
+    emit('complete')
+  }
 }
 
 function cancelEnd() {
