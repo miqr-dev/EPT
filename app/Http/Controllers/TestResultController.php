@@ -45,7 +45,7 @@ class TestResultController extends Controller
 
             Log::info('BRT-A result stored', ['id' => $testResult->id]);
 
-            return response()->json(['status' => 'ok']);
+            return back();
         } catch (\Throwable $e) {
             Log::error('BRT-A result store exception: '.$e->getMessage(), [
                 'trace' => $e->getTraceAsString(),

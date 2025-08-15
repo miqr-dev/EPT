@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, usePage, router } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
-import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -214,9 +213,10 @@ const confirmEnd = () => {
     pr: userPR.value,
     t_score: userTwert.value,
   };
-  axios.post('/tests/brt-a/results', payload)
-    .then(() => emit('complete'))
-    .catch(err => console.error('Failed to store BRT-A results', err));
+  router.post('/tests/brt-a/results', payload, {
+    onSuccess: () => emit('complete'),
+    onError: err => console.error('Failed to store BRT-A results', err),
+  })
 };
 
 const cancelEnd = () => {

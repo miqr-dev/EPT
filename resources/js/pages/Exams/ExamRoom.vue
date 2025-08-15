@@ -238,6 +238,10 @@ onUnmounted(() => {
                     </DialogTrigger>
                     <DialogContent
                       class="inset-0 top-0 left-0 w-screen h-screen max-w-none sm:max-w-none translate-x-0 translate-y-0 rounded-none border-none p-0 bg-white dark:bg-gray-900 text-black dark:text-white overflow-auto">
+                      <DialogHeader class="sr-only">
+                        <DialogTitle>Test</DialogTitle>
+                        <DialogDescription>Aktiver Test</DialogDescription>
+                      </DialogHeader>
                       <template #top-right>
                         <div class="absolute top-4 right-4 font-semibold">{{ userName }}</div>
                       </template>
@@ -258,7 +262,7 @@ onUnmounted(() => {
       </div>
 
     </div>
-    <Dialog :open="fullscreenWarningOpen">
+    <Dialog v-model:open="fullscreenWarningOpen">
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Vollbildmodus verlassen</DialogTitle>
