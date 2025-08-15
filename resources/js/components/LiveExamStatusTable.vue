@@ -7,26 +7,30 @@ const props = defineProps<{
   exam: any
 }>()
 
-const formatTime = (seconds: number) => {
-  if (seconds < 0) return '00:00'
-  const minutes = Math.floor(seconds / 60)
-  const secs = seconds % 60
+const formatTime = (seconds?: number) => {
+  if (typeof seconds !== 'number' || seconds < 0) return '00:00'
+  const whole = Math.floor(seconds)
+  const minutes = Math.floor(whole / 60)
+  const secs = whole % 60
   return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 }
 
 // We need a local copy of the exam to update the timer
 const localExam = ref(JSON.parse(JSON.stringify(props.exam)))
 
-const getParticipantStatus = (participant: any) => {
-  if (!localExam.value.current_step) {
+const getParticipantStatusFromExam = (exam: any, participant: any) => {
+  if (!exam.current_step) {
     return null
   }
   const statuses = participant.stepStatuses || participant.step_statuses
   if (!statuses) {
     return null
   }
-  return statuses.find((s: any) => s.exam_step_id === localExam.value.current_exam_step_id)
+  return statuses.find((s: any) => s.exam_step_id === exam.current_exam_step_id)
 }
+
+const getParticipantStatus = (participant: any) =>
+  getParticipantStatusFromExam(localExam.value, participant)
 
 let timerInterval: any = null
 
@@ -35,8 +39,12 @@ onMounted(() => {
     if (localExam.value && localExam.value.participants) {
       localExam.value.participants.forEach((participant: any) => {
         const status = getParticipantStatus(participant)
-        if (status && status.time_remaining > 0) {
-          status.time_remaining--
+        if (status) {
+          if (status.status === 'in_progress' && status.time_remaining > 0) {
+            status.time_remaining = Math.max(0, Math.floor(status.time_remaining) - 1)
+          } else if (status.status !== 'in_progress') {
+            status.time_remaining = 0
+          }
         }
       })
     }
@@ -49,9 +57,42 @@ onUnmounted(() => {
   }
 })
 
-watch(() => props.exam, (newExam) => {
-  localExam.value = JSON.parse(JSON.stringify(newExam))
-}, { deep: true })
+watch(
+  () => props.exam,
+  (newExam) => {
+    const updatedExam = JSON.parse(JSON.stringify(newExam))
+    if (
+      localExam.value &&
+      updatedExam.current_exam_step_id === localExam.value.current_exam_step_id &&
+      localExam.value.participants
+    ) {
+      updatedExam.participants = updatedExam.participants.map((participant: any) => {
+        const existing = localExam.value!.participants.find(
+          (p: any) => p.id === participant.id,
+        )
+        if (existing) {
+          const updatedStatus = getParticipantStatusFromExam(updatedExam, participant)
+          const existingStatus = getParticipantStatusFromExam(localExam.value!, existing)
+          if (updatedStatus && existingStatus) {
+            if (typeof existingStatus.time_remaining === 'number') {
+              const newTime =
+                typeof updatedStatus.time_remaining === 'number'
+                  ? Math.floor(updatedStatus.time_remaining)
+                  : existingStatus.time_remaining
+              updatedStatus.time_remaining = Math.min(newTime, existingStatus.time_remaining)
+            }
+            if (updatedStatus.status !== 'in_progress') {
+              updatedStatus.time_remaining = 0
+            }
+          }
+        }
+        return participant
+      })
+    }
+    localExam.value = updatedExam
+  },
+  { deep: true },
+)
 
 const startExam = () => {
   router.post(route('exams.start', { exam: props.exam.id }), {}, {
