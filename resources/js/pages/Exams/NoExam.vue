@@ -2,17 +2,40 @@
 import { Head, Link, router } from '@inertiajs/vue3'
 import { LogOut } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
+import { onMounted, onUnmounted, ref } from 'vue'
+import axios from 'axios'
 
 const handleLogout = () => {
   router.flushAll()
 }
+
+const examAvailable = ref(false)
+let intervalId: number | undefined
+
+const checkExam = async () => {
+  try {
+    const { data } = await axios.get(route('api.active-exam'))
+    examAvailable.value = !!data
+  } catch {
+    examAvailable.value = false
+  }
+}
+
+onMounted(() => {
+  checkExam()
+  intervalId = window.setInterval(checkExam, 5000)
+})
+
+onUnmounted(() => {
+  if (intervalId) clearInterval(intervalId)
+})
 </script>
 
 
 
 <template>
 
-  <Head title="No Exam..." />
+  <Head title="Warten auf Prüfung" />
   <div class="flex items-center justify-center min-h-screen bg-gray-100">
     <div class="absolute top-4 right-4">
       <Link
@@ -27,10 +50,14 @@ const handleLogout = () => {
       </Link>
     </div>
     <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md text-center">
-      <h1 class="text-2xl font-bold text-gray-800">No Exam</h1>
-      <Link :href="route('my-exam')" class="block mt-4">
-        <Button class="w-full">Zur Prüfung</Button>
-      </Link>
+      <h1 class="text-2xl font-bold text-gray-800">
+        Bitte warten Sie, bis die Prüfung beginnt.
+      </h1>
+      <div v-if="examAvailable" class="mt-4">
+        <Link :href="route('my-exam')" class="block">
+          <Button class="w-full">Zur Prüfung</Button>
+        </Link>
+      </div>
     </div>
   </div>
 </template>
