@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -205,7 +205,17 @@ const confirmEnd = () => {
   currentQuestionIndex.value = questions.value.length;
   nextButtonClickCount.value = 0;
   endConfirmOpen.value = false;
-  emit('complete');
+  const payload = {
+    assignment_id: (page.props as any)?.exam?.current_step?.id,
+    answers: userAnswers.value,
+    timings: questionTimes.value,
+    raw_score: finalScore.value,
+    pr: userPR.value,
+    t_score: userTwert.value,
+  };
+  router.post('/tests/brt-a/results', payload, {
+    onFinish: () => emit('complete'),
+  });
 };
 
 const cancelEnd = () => {
