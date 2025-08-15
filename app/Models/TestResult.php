@@ -13,6 +13,10 @@ class TestResult extends Model
     'pdf_file_path',
   ];
 
+  protected $casts = [
+    'result_json' => 'array',
+  ];
+
   // Assignment for which this result belongs
   public function assignment(): BelongsTo
   {
