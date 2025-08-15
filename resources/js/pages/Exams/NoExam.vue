@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3'
+import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import { LogOut } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { onMounted, onUnmounted, ref } from 'vue'
@@ -11,11 +11,13 @@ const handleLogout = () => {
 
 const examAvailable = ref(false)
 let intervalId: number | undefined
+const page = usePage<{ auth: { user: { id: number } } }>()
+const userId = page.props.auth.user.id
 
 const checkExam = async () => {
   try {
     const { data } = await axios.get(route('api.active-exam'))
-    examAvailable.value = !!data
+    examAvailable.value = !!data && data.participants?.some((p: any) => p.participant_id === userId)
   } catch {
     examAvailable.value = false
   }
