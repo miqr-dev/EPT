@@ -4,19 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Models\TestResult;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class TestResultController extends Controller
 {
     public function storeBrtA(Request $request)
     {
-        $data = $request->validate([
-            'assignment_id' => 'required|exists:test_assignments,id',
+        $validator = Validator::make($request->all(), [
+            'assignment_id' => 'required|integer',
             'answers' => 'required|array',
             'timings' => 'required|array',
             'raw_score' => 'required|integer',
             'pr' => 'required|numeric',
             't_score' => 'required|numeric',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $data = $validator->validated();
 
         $result = [
             'answers' => $data['answers'],

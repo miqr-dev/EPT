@@ -214,7 +214,7 @@ const confirmEnd = () => {
     t_score: userTwert.value,
   };
   router.post('/tests/brt-a/results', payload, {
-    onFinish: () => emit('complete'),
+    onSuccess: () => emit('complete'),
   });
 };
 
