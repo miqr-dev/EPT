@@ -13,21 +13,21 @@ const props = defineProps<{
   tests: any[];
 }>();
 
-const activeExam = ref(null);
+const activeExams = ref<any[]>([]);
 let polling: any = null;
 
-const fetchActiveExam = async () => {
+const fetchActiveExams = async () => {
   try {
-    const response = await axios.get(route('api.active-exam'));
-    activeExam.value = response.data;
+    const response = await axios.get(route('api.active-exams'));
+    activeExams.value = response.data || [];
   } catch (error) {
-    console.error("Error fetching active exam:", error);
+    console.error("Error fetching active exams:", error);
   }
 };
 
 onMounted(() => {
-  fetchActiveExam();
-  polling = setInterval(fetchActiveExam, 5000);
+  fetchActiveExams();
+  polling = setInterval(fetchActiveExams, 5000);
 });
 
 onUnmounted(() => {
@@ -206,8 +206,8 @@ function addTests() {
     <div
       class="flex min-h-screen flex-col items-center bg-[#f6f7f9] py-4 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <!-- Live Exam Status -->
-      <div v-if="activeExam" class="w-full max-w-7xl">
-        <LiveExamStatusTable :exam="activeExam" />
+      <div v-for="exam in activeExams" :key="exam.id" class="w-full max-w-7xl">
+        <LiveExamStatusTable :exam="exam" />
       </div>
       <!-- New Exam Management Section -->
       <div class="mt-6 flex w-full max-w-7xl flex-col gap-4 md:flex-row">

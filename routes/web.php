@@ -45,7 +45,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::post('/exams', [ExamController::class, 'store'])->name('exams.store');
     Route::post('/exams/store-with-participants', [ExamController::class, 'storeWithParticipants'])->name('exams.storeWithParticipants');
     Route::put('/exams/{exam}/steps', [ExamController::class, 'updateSteps'])->name('exams.updateSteps');
-    Route::get('/api/active-exam', [ExamController::class, 'getActiveExam'])->name('api.active-exam');
+    Route::get('/api/active-exams', [ExamController::class, 'getActiveExams'])->name('api.active-exams');
 });
 
 Route::get('/login', function () {

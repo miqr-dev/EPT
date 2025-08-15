@@ -59,7 +59,7 @@ class RedirectBasedOnRole
         'settings',
         'appearance',
         'logout',
-        'api.active-exam',
+        'api.active-exams',
         'exams.updateSteps'
       ];
 
