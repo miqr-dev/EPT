@@ -149,6 +149,10 @@ class ParticipantController extends Controller
       'completed_at' => now(),
     ]);
 
+    ExamParticipant::where('participant_id', $user->id)
+      ->where('exam_id', $examStepStatus->exam_id)
+      ->update(['status' => 'broken']);
+
     return back(303);
   }
 }

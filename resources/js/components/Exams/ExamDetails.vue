@@ -84,8 +84,9 @@ onUnmounted(() => {
                     'bg-gray-200 text-gray-800': !p.stepStatuses[0]?.status,
                     'bg-blue-100 text-blue-800': p.stepStatuses[0]?.status === 'in_progress',
                     'bg-green-100 text-green-800': p.stepStatuses[0]?.status === 'completed',
+                    'bg-red-100 text-red-800': p.stepStatuses[0]?.status === 'broken',
                   }" class="inline-flex rounded-full px-2 text-xs font-semibold leading-5">
-                    {{ p.stepStatuses[0]?.status || 'nicht gestartet' }}
+                    {{ p.stepStatuses[0]?.status === 'broken' ? 'abgebrochen' : p.stepStatuses[0]?.status || 'nicht gestartet' }}
                   </span>
                 </td>
                 <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">

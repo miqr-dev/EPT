@@ -12,7 +12,7 @@ return new class extends Migration
       $table->id();
       $table->foreignId('exam_id')->constrained('exams')->cascadeOnDelete();
       $table->foreignId('participant_id')->constrained('users')->cascadeOnDelete();
-      $table->enum('status', ['not_started', 'in_progress', 'waiting', 'completed'])->default('not_started');
+      $table->enum('status', ['not_started', 'in_progress', 'waiting', 'completed', 'broken'])->default('not_started');
       $table->timestamps();
     });
   }

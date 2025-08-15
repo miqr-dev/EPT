@@ -17,6 +17,13 @@ const formatTime = (seconds: number) => {
 // We need a local copy of the exam to update the timer
 const localExam = ref(JSON.parse(JSON.stringify(props.exam)))
 
+const statusTexts: Record<string, string> = {
+  completed: 'Abgeschlossen',
+  in_progress: 'In Bearbeitung',
+  not_started: 'Nicht gestartet',
+  broken: 'Abgebrochen'
+};
+
 const getParticipantStatus = (participant: any) => {
   if (!localExam.value.current_step) {
     return null
@@ -135,8 +142,9 @@ const setStatus = (status: string) => {
                   'bg-green-100 text-green-800': getParticipantStatus(participant)?.status === 'completed',
                   'bg-yellow-100 text-yellow-800': getParticipantStatus(participant)?.status === 'in_progress',
                   'bg-blue-100 text-blue-800': getParticipantStatus(participant)?.status === 'not_started',
+                  'bg-red-100 text-red-800': getParticipantStatus(participant)?.status === 'broken',
                 }">
-                {{ getParticipantStatus(participant)?.status?.replace('_', ' ') }}
+                {{ statusTexts[getParticipantStatus(participant)?.status] ?? getParticipantStatus(participant)?.status?.replace('_', ' ') }}
               </span>
               <span v-else
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
