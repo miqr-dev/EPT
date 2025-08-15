@@ -13,8 +13,8 @@ const props = defineProps<{
   tests: any[];
 }>();
 
-const participants = ref(props.participants);
-const recentUsers = ref(props.recentUsers);
+const participants = ref(props.participants || []);
+const recentUsers = ref(props.recentUsers || []);
 const activeExam = ref(null);
 let polling: any = null;
 
@@ -30,8 +30,8 @@ const fetchActiveExam = async () => {
 const fetchDashboardUsers = async () => {
   try {
     const response = await axios.get(route('api.dashboard-data'));
-    participants.value = response.data.participants;
-    recentUsers.value = response.data.recentUsers;
+    participants.value = response.data.participants || [];
+    recentUsers.value = response.data.recentUsers || [];
   } catch (error) {
     console.error("Error fetching dashboard data:", error);
   }
@@ -120,7 +120,7 @@ function toggleRow(id: number, idx: number) {
     selectedIdx.value = idx;
   }
 }
-const availableRecentUsers = computed(() => recentUsers.value.filter((u) => !stagedUserIds.value.includes(u.id)));
+const availableRecentUsers = computed(() => (recentUsers.value || []).filter((u) => !stagedUserIds.value.includes(u.id)));
 
 function singleRowSelect(idx: number, id: number) {
   selectedIdx.value = idx;
