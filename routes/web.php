@@ -6,6 +6,7 @@ use App\Http\Controllers\ExamController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\ExamStepStatusController;
+use App\Http\Controllers\TestResultController;
 
 Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     // All role-protected pages
@@ -28,6 +29,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::post('/my-exam/start-step', [ParticipantController::class, 'startStep'])->name('my-exam.start-step');
     Route::post('/my-exam/complete-step', [ParticipantController::class, 'completeStep'])->name('my-exam.complete-step');
     Route::post('/my-exam/break-step', [ParticipantController::class, 'breakStep'])->name('my-exam.break-step');
+
 
     // Exam management (teacher/admin only, add middleware if needed)
     Route::post('/exam-step-status/{status}/add-time', [ExamStepStatusController::class, 'addTime'])->name('exam-step-status.add-time');
@@ -56,6 +58,8 @@ Route::get('/login', function () {
 })->middleware('guest')->name('login');
 Route::redirect('/', '/login');
 Route::get('/home', fn () => redirect()->route('dashboard'))->name('home');
+
+Route::post('/tests/brt-a/results', [TestResultController::class, 'storeBrtA'])->middleware('auth');
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

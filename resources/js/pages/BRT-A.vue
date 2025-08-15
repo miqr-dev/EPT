@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, usePage, router } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -205,7 +205,18 @@ const confirmEnd = () => {
   currentQuestionIndex.value = questions.value.length;
   nextButtonClickCount.value = 0;
   endConfirmOpen.value = false;
-  emit('complete');
+  const payload = {
+    assignment_id: (page.props as any)?.exam?.current_step?.id,
+    answers: userAnswers.value,
+    timings: questionTimes.value,
+    raw_score: finalScore.value,
+    pr: userPR.value,
+    t_score: userTwert.value,
+  };
+  router.post('/tests/brt-a/results', payload, {
+    onSuccess: () => emit('complete'),
+    onError: err => console.error('Failed to store BRT-A results', err),
+  })
 };
 
 const cancelEnd = () => {
@@ -281,9 +292,9 @@ function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[])
 </script>
 
 <template>
-
-  <Head title="Tests" />
-  <div class="p-4">
+  <div class="w-full h-full">
+    <Head title="Tests" />
+    <div class="p-4">
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">BRT-A</h1>
     </div>
@@ -449,4 +460,5 @@ function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[])
       </DialogContent>
     </Dialog>
   </div>
+</div>
 </template>
