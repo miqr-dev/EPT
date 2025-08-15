@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
+import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -213,9 +214,9 @@ const confirmEnd = () => {
     pr: userPR.value,
     t_score: userTwert.value,
   };
-  router.post('/tests/brt-a/results', payload, {
-    onSuccess: () => emit('complete'),
-  });
+  axios.post('/tests/brt-a/results', payload)
+    .then(() => emit('complete'))
+    .catch(err => console.error('Failed to store BRT-A results', err));
 };
 
 const cancelEnd = () => {
@@ -291,9 +292,9 @@ function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[])
 </script>
 
 <template>
-
-  <Head title="Tests" />
-  <div class="p-4">
+  <div class="w-full h-full">
+    <Head title="Tests" />
+    <div class="p-4">
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">BRT-A</h1>
     </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, markRaw } from 'vue'
 import { Head, router, usePage } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import {
@@ -53,12 +53,12 @@ const page = usePage()
 const userName = computed(() => page.props.auth?.user?.name)
 
 const testComponents = {
-  'BRT-A': BRTA,
-  'BRT-B': BRTB,
-  'FPI-R': FPI,
-  'LMT': LMT,
-  'MRT-A': MRTA,
-  'LMT2': LMT2,
+  'BRT-A': markRaw(BRTA),
+  'BRT-B': markRaw(BRTB),
+  'FPI-R': markRaw(FPI),
+  'LMT': markRaw(LMT),
+  'MRT-A': markRaw(MRTA),
+  'LMT2': markRaw(LMT2),
 }
 
 function getStatusText(status: StepStatus) {
@@ -241,7 +241,7 @@ onUnmounted(() => {
                       <template #top-right>
                         <div class="absolute top-4 right-4 font-semibold">{{ userName }}</div>
                       </template>
-                      <component :is="activeTestComponent" class="w-full h-full" @complete="completeTest" />
+                      <component :is="activeTestComponent" @complete="completeTest" />
                     </DialogContent>
                   </Dialog>
                 </td>
