@@ -79,7 +79,10 @@ watch(
                 typeof updatedStatus.time_remaining === 'number'
                   ? Math.floor(updatedStatus.time_remaining)
                   : existingStatus.time_remaining
-              updatedStatus.time_remaining = Math.min(newTime, existingStatus.time_remaining)
+              updatedStatus.time_remaining =
+                existingStatus.time_remaining > 0
+                  ? Math.min(newTime, existingStatus.time_remaining)
+                  : newTime
             }
             if (updatedStatus.status !== 'in_progress') {
               updatedStatus.time_remaining = 0
