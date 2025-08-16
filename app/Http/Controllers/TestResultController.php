@@ -40,12 +40,11 @@ class TestResultController extends Controller
 
             $testResult = TestResult::create([
                 'assignment_id' => $data['assignment_id'],
-                'result_json' => $result,
+                'result_json' => json_encode($result),
             ]);
 
             Log::info('BRT-A result stored', ['id' => $testResult->id]);
-
-            return back();
+            return response()->noContent();
         } catch (\Throwable $e) {
             Log::error('BRT-A result store exception: '.$e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
