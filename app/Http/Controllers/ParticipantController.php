@@ -181,4 +181,19 @@ class ParticipantController extends Controller
 
     return back(303);
   }
+
+  public function list()
+    {
+        $user = Auth::user();
+        $cityId = $user->city_id;
+
+        $participants = \App\Models\User::where('role', 'participant')
+            ->where('city_id', $cityId)
+            ->with(['participantProfile', 'testAssignments.test', 'testAssignments.results'])
+            ->get();
+
+        return Inertia::render('Participants/List', [
+            'participants' => $participants,
+        ]);
+    }
 }
