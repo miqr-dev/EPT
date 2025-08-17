@@ -127,7 +127,8 @@ class ParticipantController extends Controller
   public function completeStep(Request $request)
   {
     $user = Auth::user();
-    $examStepStatus = ExamStepStatus::where('participant_id', $user->id)
+    $examStepStatus = ExamStepStatus::with('step.test')
+      ->where('participant_id', $user->id)
       ->where('exam_step_id', $request->input('exam_step_id'))
       ->firstOrFail();
 
@@ -139,7 +140,7 @@ class ParticipantController extends Controller
     $results = $request->input('results');
 
     if ($results) {
-      $examStep = $examStepStatus->examStep()->with('test')->first();
+      $examStep = $examStepStatus->step;
       if ($examStep && $examStep->test) {
         $assignment = TestAssignment::firstOrCreate(
           [
