@@ -87,9 +87,12 @@ function startTest(step: any) {
   })
 }
 
-function completeTest() {
+function completeTest(results: any) {
   if (!activeStepId.value) return;
-  router.post('/my-exam/complete-step', { exam_step_id: activeStepId.value }, {
+  router.post('/my-exam/complete-step', {
+    exam_step_id: activeStepId.value,
+    results: results
+  }, {
     onSuccess: () => {
       isTestDialogOpen.value = false
       window.removeEventListener('beforeunload', handleBeforeUnload)

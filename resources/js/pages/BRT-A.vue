@@ -205,7 +205,21 @@ const confirmEnd = () => {
   currentQuestionIndex.value = questions.value.length;
   nextButtonClickCount.value = 0;
   endConfirmOpen.value = false;
-  emit('complete');
+
+  const results = {
+    rohwert: finalScore.value,
+    prozentrang: userPR.value,
+    twert: userTwert.value,
+    total_time_seconds: totalTimeTaken.value,
+    answers: questions.value.map((q, i) => ({
+      question: q.text,
+      user_answer: userAnswers.value[i],
+      correct_answers: q.answers,
+      time_seconds: questionTimes.value[i],
+      is_correct: isCorrectAnswer(userAnswers.value[i], q.answers)
+    }))
+  };
+  emit('complete', results);
 };
 
 const cancelEnd = () => {

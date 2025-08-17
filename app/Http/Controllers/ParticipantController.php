@@ -10,6 +10,8 @@ use App\Models\Employed;
 use App\Models\Exam;
 use App\Models\ExamParticipant;
 use App\Models\ExamStepStatus;
+use App\Models\TestAssignment;
+use App\Models\TestResult;
 use Inertia\Inertia;
 
 class ParticipantController extends Controller
@@ -133,6 +135,33 @@ class ParticipantController extends Controller
       'status' => 'completed',
       'completed_at' => now(),
     ]);
+
+    $results = $request->input('results');
+
+    if ($results) {
+      $examStep = $examStepStatus->examStep()->with('test')->first();
+      if ($examStep && $examStep->test) {
+        $assignment = TestAssignment::firstOrCreate(
+          [
+            'participant_id' => $user->id,
+            'test_id' => $examStep->test->id,
+          ],
+          [
+            'status' => 'assigned',
+          ]
+        );
+
+        TestResult::create([
+          'assignment_id' => $assignment->id,
+          'result_json' => $results,
+        ]);
+
+        $assignment->update([
+          'status' => 'completed',
+          'completed_at' => now(),
+        ]);
+      }
+    }
 
     return back(303);
   }
