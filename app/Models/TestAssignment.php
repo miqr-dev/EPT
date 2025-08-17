@@ -28,9 +28,9 @@ class TestAssignment extends Model
     return $this->belongsTo(Test::class);
   }
 
-  // The result (if completed)
-  public function result(): HasOne
+  // The results (if completed)
+  public function results(): \Illuminate\Database\Eloquent\Relations\HasMany
   {
-    return $this->hasOne(TestResult::class, 'assignment_id');
+    return $this->hasMany(TestResult::class, 'assignment_id');
   }
 }
