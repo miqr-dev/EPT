@@ -83,6 +83,7 @@ const answers = ref<Record<number, 'stimmt' | 'stimmtNicht' | null>>({});
 const missedQuestions = ref<number[]>([]);
 const finished = ref(false);
 const endConfirmOpen = ref(false);
+const startTime = ref<number | null>(null);
 const totalQuestions = FPI_QUESTIONS.length;
 const currentFrom = computed(() => blockIndex.value * QUESTIONS_PER_BLOCK + 1);
 const currentTo = computed(() => Math.min((blockIndex.value + 1) * QUESTIONS_PER_BLOCK, totalQuestions));
@@ -201,6 +202,7 @@ const categoryStanines = computed(() => {
 });
 
 function startTest() {
+  startTime.value = Date.now();
   showTest.value = true;
 }
 
@@ -210,6 +212,7 @@ function restart() {
   blockIndex.value = 0;
   finished.value = false;
   missedQuestions.value = [];
+  startTime.value = null;
   FPI_QUESTIONS.forEach(q => {
     answers.value[q.number] = null;
   });
@@ -221,9 +224,24 @@ function finishTest() {
 }
 
 function confirmEnd() {
-  handleNextBlock()
-  endConfirmOpen.value = false
-  emit('complete')
+  handleNextBlock();
+  endConfirmOpen.value = false;
+  const totalTimeSeconds = startTime.value
+    ? Math.round((Date.now() - startTime.value) / 1000)
+    : null;
+  const results = {
+    category_scores: categoryScores.value,
+    category_stanines: categoryStanines.value,
+    rohwerte: rohwerteArray.value,
+    stanines: categoryStaninesArray.value,
+    total_time_seconds: totalTimeSeconds,
+    answers: FPI_QUESTIONS.map(q => ({
+      number: q.number,
+      text: q.text,
+      answer: answers.value[q.number],
+    })),
+  };
+  emit('complete', results);
 }
 
 function cancelEnd() {
