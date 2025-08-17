@@ -181,4 +181,39 @@ class ParticipantController extends Controller
 
     return back(303);
   }
+
+  public function results()
+  {
+    $user = Auth::user();
+    $assignments = TestAssignment::with(['test', 'result'])
+      ->where('participant_id', $user->id)
+      ->get();
+
+    $results = $assignments->filter(fn($a) => $a->result)->map(fn($a) => [
+      'id' => $a->result->id,
+      'test_name' => $a->test->name,
+      'result_json' => $a->result->result_json,
+    ])->values();
+
+    return Inertia::render('ParticipantResults', [
+      'results' => $results,
+    ]);
+  }
+
+  public function updateResult(Request $request, TestResult $result)
+  {
+    $result->load('assignment');
+
+    if ($result->assignment->participant_id !== Auth::id()) {
+      abort(403);
+    }
+
+    $data = $request->validate([
+      'result_json' => 'required|array',
+    ]);
+
+    $result->update($data);
+
+    return back()->with('success', 'Result updated.');
+  }
 }
