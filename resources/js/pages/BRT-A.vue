@@ -69,48 +69,10 @@ function formatQuestionMark(text: string): string {
   return text;
 }
 
-// Normtables
-const rohwertToPR: Record<number, number> = {
-  1: 0, 2: 0, 3: 2.5, 4: 2.5, 5: 5, 6: 8.5, 7: 16,
-  8: 27, 9: 34, 10: 53, 11: 62, 12: 75, 13: 85, 14: 95, 15: 99, 16: 100,
-};
-const prToTwert = [
-  { pr: 0, t: 30 }, { pr: 2, t: 30 }, { pr: 5, t: 34 }, { pr: 7, t: 35 }, { pr: 8, t: 36 },
-  { pr: 16, t: 40 }, { pr: 27, t: 44 }, { pr: 34, t: 46 }, { pr: 53, t: 50 },
-  { pr: 62, t: 53 }, { pr: 75, t: 56 }, { pr: 85, t: 60 }, { pr: 95, t: 66 },
-  { pr: 99, t: 73 }, { pr: 100, t: 80 },
-];
-function getPRFromRohwert(rohwert: number): number {
-  return rohwertToPR[rohwert] ?? 0;
-}
-function getTwertFromPR(pr: number): number {
-  let best = prToTwert[0];
-  for (const entry of prToTwert) {
-    if (pr >= entry.pr) best = entry;
-  }
-  return best.t;
-}
-
 const isTestComplete = computed(() => currentQuestionIndex.value >= questions.value.length);
 
-const finalScore = computed(() => {
-  let correct = 0;
-  questions.value.forEach((q, i) => {
-    const user = (userAnswers.value[i] ?? "").trim().replace(",", ".").toLowerCase();
-    const validAnswers = q.answers.map(a => a.trim().replace(",", ".").toLowerCase());
-    if (validAnswers.includes(user)) {
-      correct++;
-    }
-  });
-  return correct;
-});
-
-const userPR = computed(() => getPRFromRohwert(finalScore.value));
-const userTwert = computed(() => getTwertFromPR(userPR.value));
 const totalTimeTaken = computed(() =>
-  isTestComplete.value
-    ? questionTimes.value.reduce((a, b) => a + b, 0)
-    : null
+  questionTimes.value.reduce((a, b) => a + b, 0)
 );
 
 const currentQuestion = computed(() =>
@@ -207,17 +169,8 @@ const confirmEnd = () => {
   endConfirmOpen.value = false;
 
   const results = {
-    rohwert: finalScore.value,
-    prozentrang: userPR.value,
-    twert: userTwert.value,
-    total_time_seconds: totalTimeTaken.value,
-    answers: questions.value.map((q, i) => ({
-      question: q.text,
-      user_answer: userAnswers.value[i],
-      correct_answers: q.answers,
-      time_seconds: questionTimes.value[i],
-      is_correct: isCorrectAnswer(userAnswers.value[i], q.answers)
-    }))
+    answers: [...userAnswers.value],
+    question_times: [...questionTimes.value],
   };
   emit('complete', results);
 };
@@ -264,34 +217,6 @@ const startTest = () => {
   startTime.value = null;
 };
 
-function normalizeAnswer(answer: string): string {
-  return answer
-    .trim()
-    .replace(",", ".")
-    .replace(/[€%$]/g, "")
-    .replace(/\s+/g, "")
-    .toLowerCase();
-}
-
-function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[]): boolean {
-  if (!userAnswer) return false;
-
-  const normalizedUser = normalizeAnswer(userAnswer);
-  const normalizedCorrectAnswers = validAnswers.map(normalizeAnswer);
-
-  const userAsNumber = parseFloat(normalizedUser);
-  const isNumeric = !isNaN(userAsNumber);
-
-  return normalizedCorrectAnswers.some(correct => {
-    const correctAsNumber = parseFloat(correct);
-    if (isNumeric && !isNaN(correctAsNumber)) {
-      // Numeric comparison with tolerance
-      return Math.abs(userAsNumber - correctAsNumber) < 0.001;
-    }
-    // Fallback to string compare
-    return normalizedUser === correct;
-  });
-}
 </script>
 
 <template>
@@ -371,77 +296,8 @@ function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[])
             Klicken Sie erneut auf "Weiter (Bestätigen)", um fortzufahren.
           </p>
         </div>
-        <!-- Test Results -->
-        <div v-else-if="isTestComplete" class="p-6 bg-background border rounded-lg">
-          <h2 class="text-xl font-semibold mb-4">Test abgeschlossen!</h2>
-          <div class="mb-6 w-full max-w-md">
-            <table class="w-full text-sm border rounded-lg overflow-hidden shadow">
-              <tbody>
-                <tr class="bg-muted/40">
-                  <td class="font-semibold px-3 py-2 w-1/2">Rohwert</td>
-                  <td class="px-3 py-2">{{ finalScore }} von {{ questions.length }}</td>
-                </tr>
-                <tr>
-                  <td class="font-semibold px-3 py-2">Prozentrang (PR)</td>
-                  <td class="px-3 py-2">{{ userPR }}</td>
-                </tr>
-                <tr class="bg-muted/40">
-                  <td class="font-semibold px-3 py-2">T-Wert (Normwert)</td>
-                  <td class="px-3 py-2">{{ userTwert }}</td>
-                </tr>
-                <tr>
-                  <td class="font-semibold px-3 py-2">Benötigte Zeit</td>
-                  <td class="px-3 py-2">
-                    <span v-if="totalTimeTaken !== null" :class="totalTimeTaken > 1800 ? 'text-red-600 font-bold' : ''">
-                      {{ formatTime(totalTimeTaken) }}
-                    </span>
-                    <span v-else>–</span>
-                  </td>
-
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div>
-            <h3 class="font-bold mb-2">Antwort- und Bearbeitungszeit je Frage</h3>
-            <div class="overflow-x-auto">
-              <table class="min-w-full text-sm border rounded-lg shadow">
-                <thead class="bg-muted/40">
-                  <tr>
-                    <th class="px-2 py-1 text-left font-semibold">#</th>
-                    <th class="px-2 py-1 text-left font-semibold">Frage</th>
-                    <th class="px-2 py-1 text-left font-semibold">Ihre Antwort</th>
-                    <th class="px-2 py-1 text-left font-semibold">Richtige Antwort</th>
-                    <th class="px-2 py-1 text-left font-semibold">Bearbeitungszeit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(q, idx) in questions" :key="idx"
-                    :class="isCorrectAnswer(userAnswers[idx], q.answers) ? 'bg-green-50' : 'bg-red-50'">
-                    <td class="px-2 py-1 font-medium text-muted-foreground">{{ idx + 1 }}</td>
-                    <td class="px-2 py-1 align-top">
-                      <span v-html="formatQuestionMark(q.text)"></span>
-                      <div v-if="q.image" class="mt-1">
-                        <img :src="q.image" alt="Fragebild" class="max-w-[90px] border rounded shadow" />
-                      </div>
-                    </td>
-                    <td class="px-2 py-1">
-                      <span class="font-mono">{{ userAnswers[idx] || '–' }}</span>
-                    </td>
-                    <td class="px-2 py-1">
-                      <span class="font-mono">{{ q.answers.join(', ') }}</span>
-                    </td>
-                    <td class="px-2 py-1 text-right text-gray-500 font-mono min-w-[60px]">
-                      {{ formatTime(questionTimes[idx]) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </div>
+        <!-- After completion show nothing (parent closes dialog) -->
+        <div v-else-if="isTestComplete"></div>
 
         <div v-else>
           <p>Fragen werden geladen...</p>
