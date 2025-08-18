@@ -152,12 +152,19 @@ class ParticipantController extends Controller
           ]
         );
 
-        // If BRT-A test, calculate score on backend
+        // Calculate score on backend for specific tests
         $resultData = $results;
         if ($examStep->test->name === 'BRT-A') {
           $answers = $results['answers'] ?? [];
           $times = $results['question_times'] ?? [];
           $resultData = \App\Services\BrtAScorer::score($answers, $times);
+        } elseif ($examStep->test->name === 'FPI-R') {
+          $answers = $results['answers'] ?? [];
+          $totalTime = $results['total_time_seconds'] ?? null;
+          $profile = $user->participant_profile;
+          $sex = $profile->sex ?? null;
+          $age = $profile->age ?? null;
+          $resultData = \App\Services\FpiRScorer::score($answers, $sex, $age, $totalTime);
         }
 
         $testResult = TestResult::create([
@@ -167,6 +174,12 @@ class ParticipantController extends Controller
 
         if ($examStep->test->name === 'BRT-A') {
           $pdfPath = \App\Services\BrtAPdfService::generate($testResult);
+          if ($pdfPath) {
+            $testResult->update(['pdf_file_path' => $pdfPath]);
+          }
+        }
+        if ($examStep->test->name === 'FPI-R') {
+          $pdfPath = \App\Services\FpiRPdfService::generate($testResult);
           if ($pdfPath) {
             $testResult->update(['pdf_file_path' => $pdfPath]);
           }
