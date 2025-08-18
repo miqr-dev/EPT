@@ -3,60 +3,54 @@ import { ref, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import TestResultViewer from '@/components/TestResultViewer.vue';
 
 const props = defineProps<{
-    isOpen: boolean;
-    testResult: any;
+  isOpen: boolean;
+  testResult: any;
 }>();
 
-const emit = defineEmits(['close', 'update']);
+const emit = defineEmits(['close']);
 
 const form = useForm({
-    result_json: '',
+  result_json: '',
 });
 
-watch(() => props.testResult, (newVal) => {
-    if (newVal) {
-        form.result_json = JSON.stringify(newVal.result_json, null, 2);
-    } else {
-        form.reset();
-    }
-});
+const editable = ref<any | null>(null);
+
+watch(
+  () => props.testResult,
+  (val) => {
+    editable.value = val ? JSON.parse(JSON.stringify(val.result_json)) : null;
+  }
+);
 
 function submit() {
-    if (props.testResult) {
-        form.put(route('test-results.update', { testResult: props.testResult.id }), {
-            onSuccess: () => {
-                closeModal();
-            },
-        });
-    }
+  if (props.testResult && editable.value) {
+    form.result_json = JSON.stringify(editable.value);
+    form.put(route('test-results.update', { testResult: props.testResult.id }), {
+      onSuccess: () => {
+        closeModal();
+      },
+    });
+  }
 }
 
 function closeModal() {
-    emit('close');
+  emit('close');
 }
 </script>
 
 <template>
-    <Dialog :open="isOpen" @update:open="closeModal">
-        <DialogContent class="sm:max-w-[425px]">
-            <DialogHeader>
-                <DialogTitle>Edit Test Result</DialogTitle>
-            </DialogHeader>
-            <div v-if="testResult" class="grid gap-4 py-4">
-                <div class="grid grid-cols-4 items-center gap-4">
-                    <Label for="result_json" class="text-right">
-                        Result JSON
-                    </Label>
-                    <Textarea id="result_json" v-model="form.result_json" class="col-span-3 h-64" />
-                </div>
-            </div>
-            <DialogFooter>
-                <Button type="submit" @click="submit">Save changes</Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
+  <Dialog :open="isOpen" @update:open="closeModal">
+    <DialogContent class="max-w-4xl">
+      <DialogHeader>
+        <DialogTitle>Edit Test Result</DialogTitle>
+      </DialogHeader>
+      <TestResultViewer v-if="editable" v-model="editable" class="mb-4" />
+      <DialogFooter>
+        <Button type="submit" @click="submit">Save changes</Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
