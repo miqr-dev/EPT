@@ -17,6 +17,6 @@ class TestResultController extends Controller
             'result_json' => json_decode($validatedData['result_json'], true),
         ]);
 
-        return redirect()->back()->with('success', 'Test result updated successfully.');
+        return back(303)->with('success', 'Test result updated successfully.');
     }
 }

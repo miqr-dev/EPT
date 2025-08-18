@@ -29,9 +29,7 @@ function submit() {
   if (props.testResult && editable.value) {
     form.result_json = JSON.stringify(editable.value);
     form.put(route('test-results.update', { testResult: props.testResult.id }), {
-      onSuccess: () => {
-        closeModal();
-      },
+      preserveState: true,
     });
   }
 }

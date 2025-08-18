@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -23,6 +23,21 @@ function closeModal() {
     isModalOpen.value = false;
     selectedTestResult.value = null;
 }
+
+watch(
+  () => props.participants,
+  (participants) => {
+    if (selectedTestResult.value) {
+      const updated = participants
+        .flatMap((p: any) => p.test_assignments)
+        .flatMap((a: any) => a.results)
+        .find((r: any) => r.id === selectedTestResult.value.id);
+      if (updated) {
+        selectedTestResult.value = updated;
+      }
+    }
+  }
+);
 </script>
 
 <template>
