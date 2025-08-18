@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, usePage, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { Button } from '@/components/ui/button';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { FPI_QUESTIONS } from '@/pages/Questions/FPIQuestions';
 import { norms_male_16_24 } from '@/pages/Scores/FPI/norms_male_16_24';
 import { norms_male_25_44 } from '@/pages/Scores/FPI/norms_male_25_44';
@@ -84,6 +86,7 @@ const missedQuestions = ref<number[]>([]);
 const finished = ref(false);
 const endConfirmOpen = ref(false);
 const startTime = ref<number | null>(null);
+const fpiResultComponent = ref(null);
 const totalQuestions = FPI_QUESTIONS.length;
 const currentFrom = computed(() => blockIndex.value * QUESTIONS_PER_BLOCK + 1);
 const currentTo = computed(() => Math.min((blockIndex.value + 1) * QUESTIONS_PER_BLOCK, totalQuestions));
@@ -247,6 +250,49 @@ function confirmEnd() {
 function cancelEnd() {
   window.dispatchEvent(new Event('cancel-finish'))
   endConfirmOpen.value = false
+}
+
+async function exportResultsAsPdf() {
+  const element = fpiResultComponent.value;
+  if (!element) {
+    console.error("Result component not found");
+    return;
+  }
+
+  const canvas = await html2canvas(element as HTMLElement, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+  });
+
+  const imgData = canvas.toDataURL('image/png');
+  const pdf = new jsPDF({
+    orientation: 'landscape',
+    unit: 'px',
+    format: [canvas.width, canvas.height]
+  });
+
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = pdf.internal.pageSize.getHeight();
+  pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+  const pdfBlob = pdf.output('blob');
+  const fileName = `${userName.value}_FPI-R.pdf`.replace(/[^a-z0-9_.-]/gi, '_');
+
+  const formData = new FormData();
+  formData.append('pdf', pdfBlob, fileName);
+  formData.append('filename', fileName);
+
+  router.post(route('test-results.save-pdf'), formData, {
+    forceFormData: true,
+    onSuccess: () => {
+      alert('PDF erfolgreich auf dem Server gespeichert!');
+    },
+    onError: (errors) => {
+      console.error('Fehler beim Speichern des PDFs:', errors);
+      alert('Fehler beim Speichern des PDFs.');
+    }
+  });
 }
 
 function getStanineKey(idx: number) {
@@ -428,12 +474,14 @@ const staninePoints = computed(() => {
           <div class="mb-6 w-full max-w-3xl">
             <!-- SVG Auswertungsbogen -->
             <div
+              ref="fpiResultComponent"
               class="relative fpi-auswertungsbogen bg-white dark:bg-gray-800 shadow border dark:border-gray-700 mx-auto">
               <FPIResult :stanines="categoryStaninesArray" :rohwerte="rohwerteArray" />
             </div>
           </div>
           <div class="flex gap-2">
             <Button @click="restart" class="px-6 py-2 rounded font-bold">Test neu starten</Button>
+            <Button @click="exportResultsAsPdf" class="px-6 py-2 rounded font-bold">Export PDF</Button>
           </div>
         </div>
 
