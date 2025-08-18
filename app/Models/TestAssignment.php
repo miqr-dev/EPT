@@ -19,7 +19,7 @@ class TestAssignment extends Model
   // The assigned participant (User)
   public function participant(): BelongsTo
   {
-    return $this->belongsTo(User::class, 'participant_user_id');
+    return $this->belongsTo(User::class, 'participant_id');
   }
 
   // The test

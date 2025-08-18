@@ -152,10 +152,25 @@ class ParticipantController extends Controller
           ]
         );
 
-        TestResult::create([
+        // If BRT-A test, calculate score on backend
+        $resultData = $results;
+        if ($examStep->test->name === 'BRT-A') {
+          $answers = $results['answers'] ?? [];
+          $times = $results['question_times'] ?? [];
+          $resultData = \App\Services\BrtAScorer::score($answers, $times);
+        }
+
+        $testResult = TestResult::create([
           'assignment_id' => $assignment->id,
-          'result_json' => $results,
+          'result_json' => $resultData,
         ]);
+
+        if ($examStep->test->name === 'BRT-A') {
+          $pdfPath = \App\Services\BrtAPdfService::generate($testResult);
+          if ($pdfPath) {
+            $testResult->update(['pdf_file_path' => $pdfPath]);
+          }
+        }
 
         $assignment->update([
           'status' => 'completed',
