@@ -11,6 +11,8 @@
 <body>
     <h1>{{ $test_name }}</h1>
     <p>Datum: {{ $date }}</p>
+    <p>Teilnehmer: {{ $participant_name }}</p>
+    <p>Dauer: {{ $duration }}</p>
     <table>
         <thead>
             <tr>
