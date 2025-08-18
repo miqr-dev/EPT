@@ -1,4 +1,7 @@
 <script setup lang="ts">
+defineOptions({
+  inheritAttrs: false,
+});
 import { ref, watch } from 'vue';
 import { Input } from '@/components/ui/input';
 
@@ -51,7 +54,7 @@ function formatTime(seconds?: number | null) {
 </script>
 
 <template>
-  <div v-if="local">
+  <div v-if="local" v-bind="$attrs">
     <table class="w-full text-sm border rounded-lg overflow-hidden shadow mb-4">
       <tbody>
         <tr class="bg-muted/40 dark:bg-gray-700">

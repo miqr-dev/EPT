@@ -43,11 +43,17 @@ function closeModal() {
 
 <template>
   <Dialog :open="isOpen" @update:open="closeModal">
-    <DialogContent class="max-w-4xl">
+    <DialogContent
+      class="max-w-6xl max-h-[80vh] flex flex-col"
+    >
       <DialogHeader>
         <DialogTitle>Edit Test Result</DialogTitle>
       </DialogHeader>
-      <TestResultViewer v-if="editable" v-model="editable" class="mb-4" />
+      <TestResultViewer
+        v-if="editable"
+        v-model="editable"
+        class="flex-1 overflow-y-auto mb-4"
+      />
       <DialogFooter>
         <Button type="submit" @click="submit">Save changes</Button>
       </DialogFooter>
