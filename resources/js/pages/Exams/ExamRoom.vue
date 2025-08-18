@@ -87,12 +87,15 @@ function startTest(step: any) {
   })
 }
 
-function completeTest(results: any) {
+function completeTest(results: any, pdf?: Blob | null) {
   if (!activeStepId.value) return;
-  router.post('/my-exam/complete-step', {
+  const data: Record<string, any> = {
     exam_step_id: activeStepId.value,
     results: results
-  }, {
+  };
+  if (pdf) data.pdf = pdf;
+  router.post('/my-exam/complete-step', data, {
+    forceFormData: true,
     onSuccess: () => {
       isTestDialogOpen.value = false
       window.removeEventListener('beforeunload', handleBeforeUnload)

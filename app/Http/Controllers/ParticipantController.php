@@ -138,6 +138,10 @@ class ParticipantController extends Controller
     ]);
 
     $results = $request->input('results');
+    $pdfPath = null;
+    if ($request->hasFile('pdf')) {
+      $pdfPath = $request->file('pdf')->store('test_results', 'public');
+    }
 
     if ($results) {
       $examStep = $examStepStatus->step;
@@ -155,6 +159,7 @@ class ParticipantController extends Controller
         TestResult::create([
           'assignment_id' => $assignment->id,
           'result_json' => $results,
+          'pdf_file_path' => $pdfPath,
         ]);
 
         $assignment->update([

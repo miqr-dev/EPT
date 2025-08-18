@@ -117,6 +117,7 @@ const mrtQuestions = ref<MRTQuestion[]>([
 ]);
 
 const showResults = ref(false);
+const resultsRef = ref<HTMLElement | null>(null);
 
 const groupMap = [
   [0, 1, 2, 3, 4, 15, 16, 17, 18, 19],       // U1
@@ -368,7 +369,7 @@ const cancelEnd = () => {
   endConfirmOpen.value = false;
 };
 
-const confirmEnd = () => {
+const confirmEnd = async () => {
   const now = Date.now();
   const qidx = currentQuestionIndex.value;
   if (
@@ -382,6 +383,7 @@ const confirmEnd = () => {
     questionStartTimestamps.value[qidx] = null;
   }
   currentQuestionIndex.value = mrtQuestions.value.length;
+  showResults.value = true;
   endConfirmOpen.value = false;
   const results = {
     group_scores: groupScores.value,
@@ -397,7 +399,25 @@ const confirmEnd = () => {
       is_correct: isCorrectAnswer(userAnswers.value[i], q.correct)
     }))
   };
-  emit('complete', results);
+
+  await nextTick();
+
+  let pdfBlob: Blob | null = null;
+  if (resultsRef.value) {
+    // @ts-ignore
+    const html2canvas = (await import('html2canvas')).default;
+    // @ts-ignore
+    const { jsPDF } = await import('jspdf');
+    const canvas = await html2canvas(resultsRef.value);
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdfBlob = pdf.output('blob');
+  }
+
+  emit('complete', results, pdfBlob);
 };
 
 watch(currentQuestionIndex, async (newIndex, oldIndex) => {
@@ -565,7 +585,7 @@ function isCorrectAnswer(userAnswer: string | null, validAnswers: string[]): boo
 
 
           <div v-if="isTestComplete">
-            <div class="flex flex-col items-center justify-center my-10 w-full">
+            <div ref="resultsRef" class="flex flex-col items-center justify-center my-10 w-full">
               <!-- RW Boxes Row -->
               <div class="flex flex-row items-center gap-3 mb-8">
                 <!-- RW label -->
