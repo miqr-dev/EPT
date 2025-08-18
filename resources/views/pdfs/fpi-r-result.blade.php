@@ -11,10 +11,9 @@
         .result-table th { text-align: center; }
         .rohwert-col { width: 85px; text-align: center; }
         .standard-col { width: 230px; }
-        .graph-col { width: 20px; text-align: center; }
+        .graph-col { width: {{ $grid_width }}px; padding:0; }
         .right-desc-col { width: 180px; font-size: 9px; }
         .rohwert-box { width:48px; height:20px; border:1px solid #000; border-radius:10px; line-height:20px; font-weight:bold; margin:auto; }
-        .graph-dot { width:4px; height:4px; background:#000; border-radius:50%; margin:auto; }
         .section-divider td { border-bottom:1.5px solid #000; }
     </style>
 </head>
@@ -41,12 +40,13 @@
     @php
         function catNum($i) { return $i < 10 ? $i + 1 : ($i === 10 ? 'E' : 'N'); }
     @endphp
+    <div style="position:relative;">
     <table class="result-table">
         <thead>
             <tr>
                 <th class="rohwert-col">Rohwert</th>
                 <th class="standard-col">Standardwert</th>
-                <th colspan="9">
+                <th class="graph-col">
                     <div>Normstichprobe</div>
                     <div style="display:flex; justify-content:space-around;">
                         @foreach([4,7,12,17,20,17,12,7,4] as $p)
@@ -67,24 +67,43 @@
         </thead>
         <tbody>
             @foreach($categories as $idx => $cat)
-            <tr class="{{ in_array($idx, [9,11]) ? 'section-divider' : '' }}">
+            <tr class="result-row {{ in_array($idx, [9,11]) ? 'section-divider' : '' }}" style="height:{{ $row_height }}px;">
                 <td class="rohwert-col"><div class="rohwert-box">{{ $cat['raw'] }}</div></td>
                 <td class="standard-col">
                     <strong>{{ catNum($idx) }}. {{ $cat['label'] }}</strong><br>
                     {!! $cat['commentL'] !!}
                 </td>
-                @for($s=9; $s>=1; $s--)
-                    <td class="graph-col">@if($cat['stanine'] == $s) <div class="graph-dot"></div> @endif</td>
-                @endfor
+                @if($idx === 0)
+                <td class="graph-col" rowspan="{{ count($categories) }}">
+                    <svg width="{{ $grid_width }}" height="{{ $grid_height }}">
+                        @for($i=0; $i < count($categories); $i++)
+                            @for($j=0; $j < 9; $j++)
+                                <circle cx="{{ $j * $cell_width + $cell_width/2 }}" cy="{{ $i * $row_height + $row_height/2 }}" r="2" fill="#000" />
+                            @endfor
+                        @endfor
+                        @foreach([2.5,6.5] as $pos)
+                            <line x1="{{ $cell_width * $pos }}" y1="0" x2="{{ $cell_width * $pos }}" y2="{{ $grid_height }}" stroke="#4a90e2" stroke-width="1.5" opacity="0.7" />
+                        @endforeach
+                        <polyline points="{{ $stanine_points }}" fill="none" stroke="#000" stroke-width="1.5" />
+                        <rect x="{{ $cell_width * 3 }}" y="0" width="{{ $cell_width * 3 }}" height="{{ $row_height * 10 }}" fill="none" stroke="#000" stroke-width="1" />
+                        <rect x="{{ $cell_width * 3 }}" y="{{ $row_height * 10 }}" width="{{ $cell_width * 3 }}" height="{{ $row_height * 2 }}" fill="none" stroke="#000" stroke-width="1" />
+                        <text x="{{ $cell_width * 4.5 }}" y="-5" font-size="11" text-anchor="middle">54%</text>
+                        <text x="{{ $cell_width * 4.5 }}" y="{{ $grid_height - 5 }}" font-size="11" text-anchor="middle">54%</text>
+                        @foreach([9,11] as $div)
+                            <line x1="0" y1="{{ ($div+1) * $row_height }}" x2="{{ $grid_width }}" y2="{{ ($div+1) * $row_height }}" stroke="#000" stroke-width="1.5" />
+                        @endforeach
+                    </svg>
+                </td>
+                @endif
                 <td class="right-desc-col">{!! $cat['commentR'] !!}</td>
             </tr>
             @endforeach
             <tr>
                 <td class="rohwert-col"><div class="rohwert-box"></div></td>
-                <td colspan="11">fehlende Antworten</td>
+                <td colspan="2">fehlende Antworten</td>
             </tr>
         </tbody>
     </table>
+    </div>
 </body>
 </html>
-

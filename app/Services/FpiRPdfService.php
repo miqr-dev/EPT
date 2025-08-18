@@ -141,6 +141,21 @@ class FpiRPdfService
             ];
         }
 
+        $cellWidth = 37.5;
+        $rowHeight = 65;
+        $points = [];
+        foreach ($categories as $idx => $cat) {
+            $s = $cat['stanine'];
+            if ($s && $s >= 1 && $s <= 9) {
+                $x = (9 - $s) * $cellWidth + $cellWidth / 2;
+                $y = $idx * $rowHeight + $rowHeight / 2;
+                $points[] = $x . ',' . $y;
+            }
+        }
+        $staninePoints = implode(' ', $points);
+        $gridWidth = $cellWidth * 9;
+        $gridHeight = $rowHeight * count($categories);
+
         $sex = $profile->sex ?? null;
         $age = $profile->age ?? null;
         $education = $profile->education ?? null;
@@ -156,6 +171,11 @@ class FpiRPdfService
             'age' => $age,
             'education' => $education,
             'norm_group' => $normGroup,
+            'stanine_points' => $staninePoints,
+            'grid_width' => $gridWidth,
+            'grid_height' => $gridHeight,
+            'cell_width' => $cellWidth,
+            'row_height' => $rowHeight,
         ];
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdfs.fpi-r-result', $data)->setPaper('a4');
