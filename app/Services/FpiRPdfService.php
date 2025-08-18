@@ -23,14 +23,38 @@ class FpiRPdfService
         ['label' => 'Emotionalität', 'score_key' => 'N', 'stanine_key' => 'EMOT'],
     ];
 
+    protected static function normGroupLabel(?string $sex, ?int $age): ?string
+    {
+        if (!$sex || !$age) {
+            return null;
+        }
+        $sexLabel = strtolower($sex) === 'f' ? 'weiblich' : 'männlich';
+        if ($age >= 16 && $age <= 24) {
+            $range = '16-24';
+        } elseif ($age >= 25 && $age <= 44) {
+            $range = '25-44';
+        } elseif ($age >= 45 && $age <= 59) {
+            $range = '45-59';
+        } else {
+            $range = '60+';
+        }
+        return $sexLabel . ' ' . $range;
+    }
+
     public static function generate(TestResult $result): ?string
     {
         if (!class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
             return null;
         }
 
-        $participantName = $result->assignment->participant->name ?? 'participant';
-        $testName = $result->assignment->test->name ?? 'test';
+        $assignment = $result->assignment;
+        $participant = $assignment->participant;
+        $profile = $participant->participantProfile;
+
+        $first = $profile->firstname ?? '';
+        $last = $profile->name ?? '';
+        $participantName = trim($first . ' ' . $last) ?: ($participant->name ?? 'participant');
+        $testName = $assignment->test->name ?? 'test';
         $durationSeconds = $result->result_json['total_time_seconds'] ?? 0;
         $durationFormatted = gmdate('i:s', $durationSeconds);
 
@@ -43,12 +67,21 @@ class FpiRPdfService
             ];
         }
 
+        $sex = $profile->sex ?? null;
+        $age = $profile->age ?? null;
+        $education = $profile->education ?? null;
+        $normGroup = self::normGroupLabel($sex, $age);
+
         $data = [
             'test_name' => $testName,
             'date' => now()->format('d.m.Y'),
             'participant_name' => $participantName,
             'duration' => $durationFormatted,
             'categories' => $categories,
+            'sex' => $sex,
+            'age' => $age,
+            'education' => $education,
+            'norm_group' => $normGroup,
         ];
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdfs.fpi-r-result', $data)->setPaper('a4');
@@ -58,4 +91,3 @@ class FpiRPdfService
         return $path;
     }
 }
-
