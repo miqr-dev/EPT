@@ -49,6 +49,7 @@ const props = defineProps<{
 const activeTestComponent = ref(null)
 const isTestDialogOpen = ref(false)
 const activeStepId = ref<number | null>(null)
+const activeTestName = ref<string | null>(null);
 const page = usePage()
 const userName = computed(() => page.props.auth?.user?.name)
 
@@ -73,7 +74,8 @@ function getStatusText(status: StepStatus) {
 
 function startTest(step: any) {
   activeStepId.value = step.id;
-  activeTestComponent.value = testComponents[step.test.name]
+  activeTestComponent.value = testComponents[step.test.name];
+  activeTestName.value = step.test.name;
 
   router.post('/my-exam/start-step', { exam_step_id: step.id }, {
     onSuccess: () => {
@@ -89,22 +91,58 @@ function startTest(step: any) {
 
 function completeTest(results: any) {
   if (!activeStepId.value) return;
-  router.post('/my-exam/complete-step', {
-    exam_step_id: activeStepId.value,
-    results: results
-  }, {
-    onSuccess: () => {
-      isTestDialogOpen.value = false
-      window.removeEventListener('beforeunload', handleBeforeUnload)
-      document.removeEventListener('fullscreenchange', handleFullscreenChange)
-      window.removeEventListener('start-finish', beginFinish as EventListener)
-      window.removeEventListener('cancel-finish', cancelFinish as EventListener)
-      finishing.value = false
-      if (document.fullscreenElement) document.exitFullscreen()
-      activeStepId.value = null;
-      activeTestComponent.value = null;
-    }
-  })
+
+  const cleanup = () => {
+    isTestDialogOpen.value = false
+    window.removeEventListener('beforeunload', handleBeforeUnload)
+    document.removeEventListener('fullscreenchange', handleFullscreenChange)
+    window.removeEventListener('start-finish', beginFinish as EventListener)
+    window.removeEventListener('cancel-finish', cancelFinish as EventListener)
+    finishing.value = false
+    if (document.fullscreenElement) document.exitFullscreen()
+    activeStepId.value = null;
+    activeTestComponent.value = null;
+    activeTestName.value = null;
+  };
+
+  if (activeTestName.value === 'BRT-A') {
+    const csrfToken = document.head.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    fetch('/tests/brt-a/score', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken || '',
+      },
+      body: JSON.stringify({
+        answers: results.answers,
+        exam_step_id: activeStepId.value
+      })
+    }).then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+    }).then(() => {
+      router.post('/my-exam/complete-step', {
+        exam_step_id: activeStepId.value,
+      }, {
+        onSuccess: cleanup,
+        preserveState: true,
+        preserveScroll: true,
+      });
+    }).catch(error => {
+      console.error("Error scoring test:", error);
+      // For now, we'll still try to complete the step
+      router.post('/my-exam/complete-step', {
+        exam_step_id: activeStepId.value,
+      }, { onSuccess: cleanup });
+    });
+  } else {
+    router.post('/my-exam/complete-step', {
+      exam_step_id: activeStepId.value,
+      results: results
+    }, {
+      onSuccess: cleanup
+    })
+  }
 }
 
 function breakTest() {
@@ -120,6 +158,7 @@ function breakTest() {
       if (document.fullscreenElement) document.exitFullscreen();
       activeStepId.value = null;
       activeTestComponent.value = null;
+      activeTestName.value = null;
     }
   })
 }

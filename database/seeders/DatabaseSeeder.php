@@ -13,7 +13,8 @@ class DatabaseSeeder extends Seeder
       ProfessionGroupSeeder::class,
       EmployedSeeder::class,
       //UserSeeder::class,
-      TestsTableSeeder::class
+      TestsTableSeeder::class,
+      NormtableSeeder::class,
     ]);
   }
 }
