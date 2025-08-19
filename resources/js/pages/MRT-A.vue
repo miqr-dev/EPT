@@ -10,14 +10,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Line } from 'vue-chartjs';
-import {
-  Chart, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title, registerables
-} from 'chart.js';
-import annotationPlugin from 'chartjs-plugin-annotation';
-
-Chart.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title)
-Chart.register(...registerables, annotationPlugin)
+import MrtAResult from '@/components/MrtAResult.vue';
 
 const page = usePage<{
   auth: {
@@ -37,16 +30,6 @@ const userAge = computed<number | null>(() => {
 });
 const emit = defineEmits(['complete']);
 const endConfirmOpen = ref(false);
-
-// -------------- Utility ---------------
-function formatTime(sec: number | null): string {
-  if (sec === null || isNaN(sec)) return "–";
-  if (sec < 60) return `${sec} Sekunden`;
-  const min = Math.round(sec / 60);
-  return `${min} Minuten`;
-}
-
-const showDetails = ref(false);
 // -------------- DATA ---------------
 interface MRTQuestion {
   number: number;
@@ -189,50 +172,6 @@ const selectedPRTable = computed(() => {
   if (userAge.value >= 31) return prTable_31_50;
   else return prTable_18_30;
 });
-
-const groupLabels = ['U1', 'U2', 'U3', 'U4', 'U5', 'U6']
-const chartData = computed(() => ({
-  labels: groupLabels,
-  datasets: [
-    {
-      label: 'SN',
-      data: groupStanines.value, // [1,2,3,4,5,6] as an example
-      borderColor: '#1d4ed8',
-      backgroundColor: '#1d4ed8',
-      tension: 0,   // 0 = stepline, 0.4 = curve
-      pointRadius: 6,
-      pointBackgroundColor: '#1d4ed8',
-      fill: false
-    }
-  ]
-}))
-
-const chartOptions = {
-  responsive: true,
-  plugins: {
-    legend: { display: false },
-    title: { display: false },
-    annotation: {
-      annotations: {
-        rangeBox: {
-          type: 'box',
-          xMin: 4,
-          xMax: 6,
-          backgroundColor: 'rgba(144,238,144,0.3)', // light green
-          borderWidth: 0,
-        }
-      }
-    }
-  },
-  indexAxis: 'y',
-  scales: {
-    x: {
-      min: 1,
-      max: 9,
-      ticks: { stepSize: 1 }
-    }
-  }
-};
 
 const groupScores = computed(() =>
   groupMap.map(indices =>
@@ -383,22 +322,27 @@ const confirmEnd = () => {
   }
   currentQuestionIndex.value = mrtQuestions.value.length;
   endConfirmOpen.value = false;
-  const results = {
-    group_scores: groupScores.value,
-    group_stanines: groupStanines.value,
-    total_score: totalScore.value,
-    prozentrang: prValue.value,
-    total_time_seconds: totalTimeTaken.value,
-    answers: mrtQuestions.value.map((q, i) => ({
-      number: q.number,
-      user_answer: userAnswers.value[i],
-      correct_answers: q.correct,
-      time_seconds: questionTimes.value[i],
-      is_correct: isCorrectAnswer(userAnswers.value[i], q.correct)
-    }))
-  };
-  emit('complete', results);
+  showResults.value = true;
+  emit('complete', calculatedResults.value);
 };
+
+const calculatedResults = computed(() => {
+    if (!isTestComplete.value) return null;
+    return {
+        group_scores: groupScores.value,
+        group_stanines: groupStanines.value,
+        total_score: totalScore.value,
+        prozentrang: prValue.value,
+        total_time_seconds: totalTimeTaken.value,
+        answers: mrtQuestions.value.map((q, i) => ({
+            number: q.number,
+            user_answer: userAnswers.value[i],
+            correct_answers: q.correct,
+            time_seconds: questionTimes.value[i],
+            is_correct: isCorrectAnswer(userAnswers.value[i], q.correct)
+        }))
+    };
+});
 
 watch(currentQuestionIndex, async (newIndex, oldIndex) => {
   const now = Date.now();
@@ -499,125 +443,8 @@ function isCorrectAnswer(userAnswer: string | null, validAnswers: string[]): boo
         </div>
         
         <!-- Test Results -->
-        <div v-else-if="isTestComplete && showResults" class="p-6 bg-background border rounded-lg">
-          <h2 class="text-xl font-semibold mb-4">Test abgeschlossen!</h2>
-          <div class="mb-6 w-full max-w-md">
-            <table class="w-full text-sm border rounded-lg overflow-hidden shadow">
-              <tbody>
-                <tr class="bg-muted/40">
-                  <td class="font-semibold px-3 py-2 w-1/2">Rohwert</td>
-                  <td class="px-3 py-2">{{ totalScore }} von {{ mrtQuestions.length }}</td>
-                </tr>
-                <tr>
-                  <td class="font-semibold px-3 py-2">Benötigte Zeit</td>
-                  <td class="px-3 py-2">
-                    <span v-if="totalTimeTaken !== null" :class="totalTimeTaken > 1800 ? 'text-red-600 font-bold' : ''">
-                      {{ formatTime(totalTimeTaken) }}
-                    </span>
-                    <span v-else>–</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <Button v-if="!showDetails" @click="showDetails = true" class="mb-4 px-4 py-2 rounded-lg font-semibold">
-            Antwort- und Bearbeitungszeit je Aufgabe anzeigen
-          </Button>
-          <Button v-else @click="showDetails = false" class="mb-4 px-4 py-2 rounded-lg font-semibold">
-            Antwort- und Bearbeitungszeit je Aufgabe verbergen
-          </Button>
-          <div v-if="showDetails">
-            <h3 class="font-bold mb-2">Antwort- und Bearbeitungszeit je Aufgabe</h3>
-            <div class="overflow-x-auto">
-              <table class="min-w-full text-sm border rounded-lg shadow">
-                <thead class="bg-muted/40">
-                  <tr>
-                    <th class="px-2 py-1 text-left font-semibold">#</th>
-                    <th class="px-2 py-1 text-left font-semibold">Ihre Auswahl</th>
-                    <th class="px-2 py-1 text-left font-semibold">Richtige Antwort(en)</th>
-                    <th class="px-2 py-1 text-left font-semibold">Bearbeitungszeit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(q, idx) in mrtQuestions" :key="idx" :class="userAnswers[idx] && q.correct.map(a => a.toUpperCase()).includes(userAnswers[idx]?.toUpperCase())
-                    ? 'bg-green-50 dark:bg-green-900/50'
-                    : 'bg-red-50 dark:bg-red-900/50'">
-                    <td class="px-2 py-1 font-medium text-muted-foreground">{{ idx + 1 }}</td>
-                    <td class="px-2 py-1">
-                      <span class="font-mono">
-                        {{ userAnswers[idx] ? userAnswers[idx] : '–' }}
-                      </span>
-                    </td>
-                    <td class="px-2 py-1">
-                      <span class="font-mono">
-                        {{ q.correct.join(', ') }}
-                      </span>
-                    </td>
-                    <td class="px-2 py-1 text-right text-gray-500 dark:text-gray-400 font-mono min-w-[60px]">
-                      {{ formatTime(questionTimes[idx]) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-
-          <div v-if="isTestComplete">
-            <div class="flex flex-col items-center justify-center my-10 w-full">
-              <!-- RW Boxes Row -->
-              <div class="flex flex-row items-center gap-3 mb-8">
-                <!-- RW label -->
-                <span class="font-bold text-base mr-3">RW</span>
-                <template v-for="(score, i) in groupScores" :key="'rwbox' + i">
-                  <div class="flex flex-col items-center">
-                    <div class="w-10 h-10 border-2 border-black flex items-center justify-center text-base font-bold">
-                      {{ score }}
-                    </div>
-                    <span class="text-xs text-gray-700 dark:text-gray-300 mt-1">U{{ i + 1 }}</span>
-                  </div>
-                </template>
-                <!-- RW Total -->
-                <div class="flex flex-col items-center ml-6">
-                  <div
-                    class="w-10 h-10 border-2 border-black flex items-center justify-center text-base font-bold bg-blue-50 dark:bg-blue-900">
-                    {{ totalScore }}
-                  </div>
-                  <span class="text-xs text-gray-700 dark:text-gray-300 mt-1 font-bold">RW GS</span>
-                </div>
-                <!-- PR -->
-                <div class="flex flex-col items-center ml-6">
-                  <div
-                    class="w-10 h-10 border-2 border-black flex items-center justify-center text-base font-bold bg-yellow-50 dark:bg-yellow-900">
-                    {{ prValue }}
-                  </div>
-                  <span class="text-xs text-gray-700 dark:text-gray-300 mt-1 font-bold">PR</span>
-                </div>
-              </div>
-              <!-- Stepline Chart Centered -->
-              <div style="width: 480px; height: 320px;">
-                <Line :data="chartData" :options="chartOptions" />
-              </div>
-              <!-- PR Bar Chart -->
-              <div class="w-full flex justify-center mt-6">
-                <div class="w-[400px] h-8 rounded-full bg-gray-200 dark:bg-gray-700 relative overflow-hidden shadow-inner">
-                  <!-- The filled part -->
-                  <div class="h-full bg-red-600 transition-all duration-700 flex items-center justify-center"
-                    :style="{ width: (prValue || 0) + '%' }">
-                    <!-- Empty span just for flex alignment, no text here -->
-                    <span class="opacity-0">.</span>
-                  </div>
-                  <!-- The text is absolutely centered on top of the bar -->
-                  <span class="absolute left-0 w-full h-full flex items-center justify-center text-black font-bold"
-                    style="top: 0;" v-if="prValue !== null">
-                    {{ prValue }}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        <div v-else-if="isTestComplete && showResults">
+          <MrtAResult :results="calculatedResults" />
         </div>
 
         <div v-else></div>

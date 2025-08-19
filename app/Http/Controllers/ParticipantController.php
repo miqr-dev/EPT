@@ -23,11 +23,27 @@ class ParticipantController extends Controller
     $professionGroups = ProfessionGroup::all();
     $employeds = Employed::all();
 
+    // Fetch MRT-A results
+    $mrtTest = \App\Models\Test::where('name', 'MRT-A')->first();
+    $mrtResult = null;
+    if ($mrtTest) {
+        $assignment = TestAssignment::where('participant_id', $user->id)
+            ->where('test_id', $mrtTest->id)
+            ->first();
+
+        if ($assignment) {
+            $mrtResult = TestResult::where('assignment_id', $assignment->id)
+                ->latest()
+                ->first();
+        }
+    }
+
     return inertia('Participant', [
       'user' => $user,
       'profile' => $user->participantProfile,
       'professionGroups' => $professionGroups,
       'employeds' => $employeds,
+      'mrtResult' => $mrtResult ? $mrtResult->result_json : null,
     ]);
   }
 
@@ -165,6 +181,13 @@ class ParticipantController extends Controller
           $sex = $profile->sex ?? null;
           $age = $profile->age ?? null;
           $resultData = \App\Services\FpiRScorer::score($answers, $sex, $age, $totalTime);
+        } elseif ($examStep->test->name === 'MRT-A') {
+            $userAnswers = array_column($results['answers'] ?? [], 'user_answer');
+            $questionTimes = array_column($results['answers'] ?? [], 'time_seconds');
+            $user->load('participantProfile');
+            $profile = $user->participantProfile;
+            $age = $profile->age ?? null;
+            $resultData = \App\Services\MrtAScorer::score($userAnswers, $age, $questionTimes);
         }
 
         $testResult = TestResult::create([
