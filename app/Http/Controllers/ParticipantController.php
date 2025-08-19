@@ -222,6 +222,26 @@ class ParticipantController extends Controller
     return back(303);
   }
 
+  public function mrtAResult()
+  {
+    $user = Auth::user();
+    $assignment = TestAssignment::where('participant_id', $user->id)
+      ->whereHas('test', function ($q) {
+        $q->where('name', 'MRT-A');
+      })
+      ->with('results')
+      ->first();
+
+    $result = null;
+    if ($assignment && $assignment->results->isNotEmpty()) {
+      $result = $assignment->results->last()->result_json;
+    }
+
+    return Inertia::render('Scores/MRT-AResult', [
+      'result' => $result,
+    ]);
+  }
+
   public function list()
     {
         $user = Auth::user();
