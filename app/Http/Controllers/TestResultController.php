@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\TestResult;
+use App\Services\MrtAChartService;
 use Illuminate\Http\Request;
 
 class TestResultController extends Controller
@@ -18,5 +19,18 @@ class TestResultController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Test result updated successfully.');
+    }
+
+    public function mrtAChart(TestResult $testResult)
+    {
+        $answers = collect($testResult->result_json['answers'] ?? [])
+            ->map(fn ($a) => $a['user_answer'] ?? null)
+            ->toArray();
+
+        $age = optional($testResult->assignment->participant->participant_profile)->age;
+
+        $data = MrtAChartService::generate($answers, is_numeric($age) ? (int) $age : null);
+
+        return response()->json($data);
     }
 }

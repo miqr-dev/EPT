@@ -23,6 +23,7 @@ interface ResultJson {
 
 const props = defineProps<{
   modelValue: ResultJson | null;
+  mrtData?: any | null;
 }>();
 
 const emit = defineEmits(['update:modelValue']);
@@ -75,6 +76,13 @@ function formatTime(seconds?: number | null) {
         </tr>
       </tbody>
     </table>
+
+    <div v-if="mrtData?.chart_base64" class="mb-4 flex justify-center">
+      <img
+        :src="`data:image/png;base64,${mrtData.chart_base64}`"
+        alt="MRT-A Chart"
+      />
+    </div>
 
     <h3 class="font-bold mb-2">Antworten</h3>
     <div class="overflow-x-auto">

@@ -8,6 +8,7 @@ import TestResultViewer from '@/components/TestResultViewer.vue';
 const props = defineProps<{
   isOpen: boolean;
   testResult: any;
+  test: any;
 }>();
 
 const emit = defineEmits(['close']);
@@ -17,12 +18,26 @@ const form = useForm({
 });
 
 const editable = ref<any | null>(null);
+const mrtData = ref<any | null>(null);
 
 watch(
-  () => props.testResult,
-  (val) => {
-    editable.value = val ? JSON.parse(JSON.stringify(val.result_json)) : null;
-  }
+  () => [props.testResult, props.test],
+  async ([result, test]) => {
+    editable.value = result ? JSON.parse(JSON.stringify(result.result_json)) : null;
+    if (result && test?.code === 'mrt-a') {
+      try {
+        const res = await fetch(
+          route('test-results.mrt-a-chart', { testResult: result.id })
+        );
+        mrtData.value = res.ok ? await res.json() : null;
+      } catch (e) {
+        mrtData.value = null;
+      }
+    } else {
+      mrtData.value = null;
+    }
+  },
+  { immediate: true }
 );
 
 function submit() {
@@ -53,6 +68,7 @@ function closeModal() {
         v-if="editable"
         v-model="editable"
         class="flex-1 overflow-y-auto mb-4"
+        :mrt-data="mrtData"
       />
       <DialogFooter>
         <Button type="submit" @click="submit">Save changes</Button>
