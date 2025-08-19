@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -10,14 +10,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Line } from 'vue-chartjs';
-import {
-  Chart, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title, registerables
-} from 'chart.js';
-import annotationPlugin from 'chartjs-plugin-annotation';
-
-Chart.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title)
-Chart.register(...registerables, annotationPlugin)
 
 const page = usePage<{
   auth: {
@@ -29,7 +21,6 @@ const page = usePage<{
     };
   };
 }>();
-const userName = computed(() => page.props.auth?.user?.name ?? '');
 const profile = computed(() => page.props.auth?.user?.participant_profile);
 const userAge = computed<number | null>(() => {
   const age = profile.value?.age;
@@ -39,14 +30,6 @@ const emit = defineEmits(['complete']);
 const endConfirmOpen = ref(false);
 
 // -------------- Utility ---------------
-function formatTime(sec: number | null): string {
-  if (sec === null || isNaN(sec)) return "–";
-  if (sec < 60) return `${sec} Sekunden`;
-  const min = Math.round(sec / 60);
-  return `${min} Minuten`;
-}
-
-const showDetails = ref(false);
 // -------------- DATA ---------------
 interface MRTQuestion {
   number: number;
@@ -116,145 +99,6 @@ const mrtQuestions = ref<MRTQuestion[]>([
   { number: 60, options: ["Interwiew", "Interviev", "Interwiu", "Interview"], correct: ["D"] },
 ]);
 
-const showResults = ref(false);
-
-const groupMap = [
-  [0, 1, 2, 3, 4, 15, 16, 17, 18, 19],       // U1
-  [5, 6, 7, 8, 9, 20, 21, 22, 23, 24],       // U2
-  [10, 11, 12, 13, 14, 25, 26, 27, 28, 29],  // U3
-  [30, 31, 32, 33, 34, 45, 46, 47, 48, 49],  // U4
-  [35, 36, 37, 38, 39, 50, 51, 52, 53, 54],  // U5
-  [40, 41, 42, 43, 44, 55, 56, 57, 58, 59],  // U6
-];
-
-const SN_WERTE_MATRIX_18_30 = [
-  // 0  1  2  3  4  5  6  7  8  9  10  
-  // U1
-  [1, 1, 1, 1, 2, 3, 3, 4, 5, 6, 9],
-  // U2
-  [1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-  // U3
-  [1, 1, 1, 1, 2, 2, 3, 4, 5, 7, 9],
-  // U4
-  [1, 1, 1, 1, 1, 1, 2, 3, 4, 6, 9],
-  // U5
-  [1, 1, 2, 3, 4, 4, 5, 6, 7, 9, 9],
-  // U6
-  [1, 1, 1, 1, 2, 3, 3, 4, 5, 7, 9],
-];
-
-// A 31-50
-const SN_WERTE_MATRIX_31_50 = [
-  // 0  1  2  3  4  5  6  7  8  9  10  
-  // U1
-  [1, 1, 1, 2, 2, 3, 4, 5, 5, 7, 9],
-  // U2
-  [1, 1, 1, 1, 2, 3, 4, 4, 5, 6, 9],
-  // U3
-  [1, 1, 1, 2, 2, 3, 4, 5, 6, 7, 9],
-  // U4
-  [1, 1, 1, 1, 1, 2, 2, 3, 4, 6, 9],
-  // U5
-  [1, 2, 2, 4, 4, 5, 6, 7, 8, 9, 9],
-  // U6
-  [1, 1, 1, 2, 3, 3, 4, 5, 6, 7, 9],
-];
-
-
-
-// Stanine value per group (U1–U6)
-const groupStanines = computed(() =>
-  groupScores.value.map((rw, groupIdx) => {
-    // Clamp rw to [0, 10]
-    const safeRW = Math.max(0, Math.min(10, rw));
-    return selectedMatrix.value[groupIdx][safeRW];
-  })
-);
-
-function getPR(rwgs) {
-  const found = selectedPRTable.value.find(row => row.rwgs === rwgs);
-  return found ? found.PR : 0;
-}
-const prValue = computed(() => getPR(totalScore.value));
-
-const prTable_18_30 = [{ rwgs: 9, PR: 0 }, { rwgs: 10, PR: 0 }, { rwgs: 11, PR: 0 }, { rwgs: 12, PR: 0 }, { rwgs: 13, PR: 0 }, { rwgs: 14, PR: 0 }, { rwgs: 15, PR: 0 }, { rwgs: 16, PR: 0 }, { rwgs: 17, PR: 0 }, { rwgs: 18, PR: 1 }, { rwgs: 19, PR: 1 }, { rwgs: 20, PR: 1 }, { rwgs: 21, PR: 2 }, { rwgs: 22, PR: 2 }, { rwgs: 23, PR: 3 }, { rwgs: 24, PR: 3 }, { rwgs: 25, PR: 3 }, { rwgs: 26, PR: 3 }, { rwgs: 27, PR: 3 }, { rwgs: 28, PR: 4 }, { rwgs: 29, PR: 5 }, { rwgs: 30, PR: 7 }, { rwgs: 31, PR: 8 }, { rwgs: 32, PR: 10 }, { rwgs: 33, PR: 12 }, { rwgs: 34, PR: 13 }, { rwgs: 35, PR: 16 }, { rwgs: 36, PR: 18 }, { rwgs: 37, PR: 18 }, { rwgs: 38, PR: 21 }, { rwgs: 39, PR: 24 }, { rwgs: 40, PR: 27 }, { rwgs: 41, PR: 31 }, { rwgs: 42, PR: 34 }, { rwgs: 43, PR: 38 }, { rwgs: 44, PR: 42 }, { rwgs: 45, PR: 46 }, { rwgs: 46, PR: 50 }, { rwgs: 47, PR: 54 }, { rwgs: 48, PR: 58 }, { rwgs: 49, PR: 62 }, { rwgs: 50, PR: 69 }, { rwgs: 51, PR: 73 }, { rwgs: 52, PR: 79 }, { rwgs: 53, PR: 84 }, { rwgs: 54, PR: 88 }, { rwgs: 55, PR: 93 }, { rwgs: 56, PR: 96 }, { rwgs: 57, PR: 98 }, { rwgs: 58, PR: 99 }, { rwgs: 59, PR: 100 }, { rwgs: 60, PR: 100 }]
-
-const prTable_31_50 = [{ rwgs: 9, PR: 0 }, { rwgs: 10, PR: 0 }, { rwgs: 11, PR: 0 }, { rwgs: 12, PR: 0 }, { rwgs: 13, PR: 0 }, { rwgs: 14, PR: 0 }, { rwgs: 15, PR: 1 }, { rwgs: 16, PR: 1 }, { rwgs: 17, PR: 1 }, { rwgs: 18, PR: 1 }, { rwgs: 19, PR: 3 }, { rwgs: 20, PR: 3 }, { rwgs: 21, PR: 3 }, { rwgs: 22, PR: 3 }, { rwgs: 23, PR: 4 }, { rwgs: 24, PR: 5 }, { rwgs: 25, PR: 5 }, { rwgs: 26, PR: 7 }, { rwgs: 27, PR: 8 }, { rwgs: 28, PR: 10 }, { rwgs: 29, PR: 10 }, { rwgs: 30, PR: 12 }, { rwgs: 31, PR: 13 }, { rwgs: 32, PR: 13 }, { rwgs: 33, PR: 16 }, { rwgs: 34, PR: 18 }, { rwgs: 35, PR: 21 }, { rwgs: 36, PR: 21 }, { rwgs: 37, PR: 24 }, { rwgs: 38, PR: 27 }, { rwgs: 39, PR: 31 }, { rwgs: 40, PR: 34 }, { rwgs: 41, PR: 38 }, { rwgs: 42, PR: 42 }, { rwgs: 43, PR: 42 }, { rwgs: 44, PR: 46 }, { rwgs: 45, PR: 50 }, { rwgs: 46, PR: 58 }, { rwgs: 47, PR: 62 }, { rwgs: 48, PR: 62 }, { rwgs: 49, PR: 66 }, { rwgs: 50, PR: 79 }, { rwgs: 51, PR: 79 }, { rwgs: 52, PR: 82 }, { rwgs: 53, PR: 84 }, { rwgs: 54, PR: 86 }, { rwgs: 55, PR: 90 }, { rwgs: 56, PR: 95 }, { rwgs: 57, PR: 98 }, { rwgs: 58, PR: 99 }, { rwgs: 59, PR: 100 }, { rwgs: 60, PR: 100 }]
-
-const selectedMatrix = computed(() => {
-  if (userAge.value >= 31) return SN_WERTE_MATRIX_31_50;
-  else return SN_WERTE_MATRIX_18_30;
-});
-const selectedPRTable = computed(() => {
-  if (userAge.value >= 31) return prTable_31_50;
-  else return prTable_18_30;
-});
-
-const groupLabels = ['U1', 'U2', 'U3', 'U4', 'U5', 'U6']
-const chartData = computed(() => ({
-  labels: groupLabels,
-  datasets: [
-    {
-      label: 'SN',
-      data: groupStanines.value, // [1,2,3,4,5,6] as an example
-      borderColor: '#1d4ed8',
-      backgroundColor: '#1d4ed8',
-      tension: 0,   // 0 = stepline, 0.4 = curve
-      pointRadius: 6,
-      pointBackgroundColor: '#1d4ed8',
-      fill: false
-    }
-  ]
-}))
-
-const chartOptions = {
-  responsive: true,
-  plugins: {
-    legend: { display: false },
-    title: { display: false },
-    annotation: {
-      annotations: {
-        rangeBox: {
-          type: 'box',
-          xMin: 4,
-          xMax: 6,
-          backgroundColor: 'rgba(144,238,144,0.3)', // light green
-          borderWidth: 0,
-        }
-      }
-    }
-  },
-  indexAxis: 'y',
-  scales: {
-    x: {
-      min: 1,
-      max: 9,
-      ticks: { stepSize: 1 }
-    }
-  }
-};
-
-const groupScores = computed(() =>
-  groupMap.map(indices =>
-    indices.reduce((sum, idx) => {
-      const ans = userAnswers.value[idx];
-      if (!ans) return sum;
-      const q = mrtQuestions.value[idx];
-      return sum + (q.correct.map(x => x.toUpperCase()).includes(ans.toUpperCase()) ? 1 : 0);
-    }, 0)
-  )
-);
-
-const totalScore = computed(() => groupScores.value.reduce((a, b) => a + b, 0));
-
-
-//! remove code 
-// function getNormByTotal(total: number) {
-//   const found = normtable_18_30.find(row => row.total === total);
-//   return found ? { SN: found.SN, PR: found.PR } : { SN: null, PR: null };
-// }
-// const normResult = computed(() => getNormByTotal(totalScore.value));
-
 const showTest = ref(false);
 const currentQuestionIndex = ref(0);
 const isLastQuestion = computed(() => currentQuestionIndex.value === mrtQuestions.value.length - 1);
@@ -268,11 +112,6 @@ const startTime = ref<number | null>(null);
 const isTestComplete = computed(() => currentQuestionIndex.value >= mrtQuestions.value.length);
 
 
-const totalTimeTaken = computed(() =>
-  isTestComplete.value
-    ? questionTimes.value.reduce((a, b) => a + b, 0)
-    : null
-);
 const currentQuestion = computed(() =>
   currentQuestionIndex.value < mrtQuestions.value.length
     ? mrtQuestions.value[currentQuestionIndex.value]
@@ -384,18 +223,8 @@ const confirmEnd = () => {
   currentQuestionIndex.value = mrtQuestions.value.length;
   endConfirmOpen.value = false;
   const results = {
-    group_scores: groupScores.value,
-    group_stanines: groupStanines.value,
-    total_score: totalScore.value,
-    prozentrang: prValue.value,
-    total_time_seconds: totalTimeTaken.value,
-    answers: mrtQuestions.value.map((q, i) => ({
-      number: q.number,
-      user_answer: userAnswers.value[i],
-      correct_answers: q.correct,
-      time_seconds: questionTimes.value[i],
-      is_correct: isCorrectAnswer(userAnswers.value[i], q.correct)
-    }))
+    answers: [...userAnswers.value],
+    question_times: [...questionTimes.value],
   };
   emit('complete', results);
 };
@@ -429,11 +258,6 @@ const startTest = () => {
   questionStartTimestamps.value = Array(mrtQuestions.value.length).fill(null);
   startTime.value = null;
 };
-
-function isCorrectAnswer(userAnswer: string | null, validAnswers: string[]): boolean {
-  if (!userAnswer) return false;
-  return validAnswers.map(a => a.toUpperCase()).includes(userAnswer.toUpperCase());
-}
 
 
 </script>
@@ -498,128 +322,6 @@ function isCorrectAnswer(userAnswer: string | null, validAnswers: string[]): boo
           </div>
         </div>
         
-        <!-- Test Results -->
-        <div v-else-if="isTestComplete && showResults" class="p-6 bg-background border rounded-lg">
-          <h2 class="text-xl font-semibold mb-4">Test abgeschlossen!</h2>
-          <div class="mb-6 w-full max-w-md">
-            <table class="w-full text-sm border rounded-lg overflow-hidden shadow">
-              <tbody>
-                <tr class="bg-muted/40">
-                  <td class="font-semibold px-3 py-2 w-1/2">Rohwert</td>
-                  <td class="px-3 py-2">{{ totalScore }} von {{ mrtQuestions.length }}</td>
-                </tr>
-                <tr>
-                  <td class="font-semibold px-3 py-2">Benötigte Zeit</td>
-                  <td class="px-3 py-2">
-                    <span v-if="totalTimeTaken !== null" :class="totalTimeTaken > 1800 ? 'text-red-600 font-bold' : ''">
-                      {{ formatTime(totalTimeTaken) }}
-                    </span>
-                    <span v-else>–</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <Button v-if="!showDetails" @click="showDetails = true" class="mb-4 px-4 py-2 rounded-lg font-semibold">
-            Antwort- und Bearbeitungszeit je Aufgabe anzeigen
-          </Button>
-          <Button v-else @click="showDetails = false" class="mb-4 px-4 py-2 rounded-lg font-semibold">
-            Antwort- und Bearbeitungszeit je Aufgabe verbergen
-          </Button>
-          <div v-if="showDetails">
-            <h3 class="font-bold mb-2">Antwort- und Bearbeitungszeit je Aufgabe</h3>
-            <div class="overflow-x-auto">
-              <table class="min-w-full text-sm border rounded-lg shadow">
-                <thead class="bg-muted/40">
-                  <tr>
-                    <th class="px-2 py-1 text-left font-semibold">#</th>
-                    <th class="px-2 py-1 text-left font-semibold">Ihre Auswahl</th>
-                    <th class="px-2 py-1 text-left font-semibold">Richtige Antwort(en)</th>
-                    <th class="px-2 py-1 text-left font-semibold">Bearbeitungszeit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(q, idx) in mrtQuestions" :key="idx" :class="userAnswers[idx] && q.correct.map(a => a.toUpperCase()).includes(userAnswers[idx]?.toUpperCase())
-                    ? 'bg-green-50 dark:bg-green-900/50'
-                    : 'bg-red-50 dark:bg-red-900/50'">
-                    <td class="px-2 py-1 font-medium text-muted-foreground">{{ idx + 1 }}</td>
-                    <td class="px-2 py-1">
-                      <span class="font-mono">
-                        {{ userAnswers[idx] ? userAnswers[idx] : '–' }}
-                      </span>
-                    </td>
-                    <td class="px-2 py-1">
-                      <span class="font-mono">
-                        {{ q.correct.join(', ') }}
-                      </span>
-                    </td>
-                    <td class="px-2 py-1 text-right text-gray-500 dark:text-gray-400 font-mono min-w-[60px]">
-                      {{ formatTime(questionTimes[idx]) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-
-          <div v-if="isTestComplete">
-            <div class="flex flex-col items-center justify-center my-10 w-full">
-              <!-- RW Boxes Row -->
-              <div class="flex flex-row items-center gap-3 mb-8">
-                <!-- RW label -->
-                <span class="font-bold text-base mr-3">RW</span>
-                <template v-for="(score, i) in groupScores" :key="'rwbox' + i">
-                  <div class="flex flex-col items-center">
-                    <div class="w-10 h-10 border-2 border-black flex items-center justify-center text-base font-bold">
-                      {{ score }}
-                    </div>
-                    <span class="text-xs text-gray-700 dark:text-gray-300 mt-1">U{{ i + 1 }}</span>
-                  </div>
-                </template>
-                <!-- RW Total -->
-                <div class="flex flex-col items-center ml-6">
-                  <div
-                    class="w-10 h-10 border-2 border-black flex items-center justify-center text-base font-bold bg-blue-50 dark:bg-blue-900">
-                    {{ totalScore }}
-                  </div>
-                  <span class="text-xs text-gray-700 dark:text-gray-300 mt-1 font-bold">RW GS</span>
-                </div>
-                <!-- PR -->
-                <div class="flex flex-col items-center ml-6">
-                  <div
-                    class="w-10 h-10 border-2 border-black flex items-center justify-center text-base font-bold bg-yellow-50 dark:bg-yellow-900">
-                    {{ prValue }}
-                  </div>
-                  <span class="text-xs text-gray-700 dark:text-gray-300 mt-1 font-bold">PR</span>
-                </div>
-              </div>
-              <!-- Stepline Chart Centered -->
-              <div style="width: 480px; height: 320px;">
-                <Line :data="chartData" :options="chartOptions" />
-              </div>
-              <!-- PR Bar Chart -->
-              <div class="w-full flex justify-center mt-6">
-                <div class="w-[400px] h-8 rounded-full bg-gray-200 dark:bg-gray-700 relative overflow-hidden shadow-inner">
-                  <!-- The filled part -->
-                  <div class="h-full bg-red-600 transition-all duration-700 flex items-center justify-center"
-                    :style="{ width: (prValue || 0) + '%' }">
-                    <!-- Empty span just for flex alignment, no text here -->
-                    <span class="opacity-0">.</span>
-                  </div>
-                  <!-- The text is absolutely centered on top of the bar -->
-                  <span class="absolute left-0 w-full h-full flex items-center justify-center text-black font-bold"
-                    style="top: 0;" v-if="prValue !== null">
-                    {{ prValue }}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
         <div v-else></div>
       </div>
     </div>

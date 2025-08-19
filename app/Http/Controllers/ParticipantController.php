@@ -158,6 +158,12 @@ class ParticipantController extends Controller
           $answers = $results['answers'] ?? [];
           $times = $results['question_times'] ?? [];
           $resultData = \App\Services\BrtAScorer::score($answers, $times);
+        } elseif ($examStep->test->name === 'MRT-A') {
+          $answers = $results['answers'] ?? [];
+          $times = $results['question_times'] ?? [];
+          $profile = $user->participant_profile;
+          $age = $profile->age ?? null;
+          $resultData = \App\Services\MrtAScorer::score($answers, $times, $age);
         } elseif ($examStep->test->name === 'FPI-R') {
           $answers = $results['answers'] ?? [];
           $totalTime = $results['total_time_seconds'] ?? null;
@@ -174,6 +180,12 @@ class ParticipantController extends Controller
 
         if ($examStep->test->name === 'BRT-A') {
           $pdfPath = \App\Services\BrtAPdfService::generate($testResult);
+          if ($pdfPath) {
+            $testResult->update(['pdf_file_path' => $pdfPath]);
+          }
+        }
+        if ($examStep->test->name === 'MRT-A') {
+          $pdfPath = \App\Services\MrtAPdfService::generate($testResult);
           if ($pdfPath) {
             $testResult->update(['pdf_file_path' => $pdfPath]);
           }
