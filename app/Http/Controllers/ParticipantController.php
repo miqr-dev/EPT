@@ -195,6 +195,9 @@ class ParticipantController extends Controller
           'result_json' => $resultData,
         ]);
 
+        $pdfPath = \App\Services\BrowsershotPdfService::generate($testResult);
+        $testResult->update(['pdf_file_path' => $pdfPath]);
+
         if ($examStep->test->name === 'BRT-A') {
           $pdfPath = \App\Services\BrtAPdfService::generate($testResult);
           if ($pdfPath) {
@@ -245,6 +248,16 @@ class ParticipantController extends Controller
 
         return Inertia::render('Participants/List', [
             'participants' => $participants,
+        ]);
+    }
+
+    public function result(TestResult $testResult)
+    {
+        $testResult->load('assignment.test', 'assignment.participant');
+
+        return Inertia::render('Participants/Result', [
+            'assignment' => $testResult->assignment,
+            'result' => $testResult,
         ]);
     }
 }

@@ -51,6 +51,8 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::put('/test-results/{testResult}', [TestResultController::class, 'update'])->name('test-results.update');
 });
 
+Route::get('/participants/result/{testResult}', [ParticipantController::class, 'result'])->name('participants.result');
+
 Route::get('/login', function () {
     return Inertia::render('auth/Login', [
         'canResetPassword' => Route::has('password.request'),
