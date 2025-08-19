@@ -12,16 +12,16 @@ const props = defineProps<{
 }>();
 
 const isModalOpen = ref(false);
-const selectedTestResult = ref(null);
+const selectedAssignment = ref(null);
 
-function viewTestResult(result) {
-    selectedTestResult.value = result;
+function viewTestResult(assignment) {
+    selectedAssignment.value = assignment;
     isModalOpen.value = true;
 }
 
 function closeModal() {
     isModalOpen.value = false;
-    selectedTestResult.value = null;
+    selectedAssignment.value = null;
 }
 </script>
 
@@ -56,7 +56,7 @@ function closeModal() {
                                                     </Badge>
                                                 </div>
                                                 <div v-if="assignment.results.length > 0">
-                                                    <Button @click="viewTestResult(assignment.results[0])" size="sm">
+                                                    <Button @click="viewTestResult(assignment)" size="sm">
                                                         View Results
                                                     </Button>
                                                 </div>
@@ -73,6 +73,6 @@ function closeModal() {
                 </CardContent>
             </Card>
         </div>
-        <TestResultModal :isOpen="isModalOpen" :testResult="selectedTestResult" @close="closeModal" />
+        <TestResultModal :isOpen="isModalOpen" :assignment="selectedAssignment" @close="closeModal" />
     </AppLayout>
 </template>

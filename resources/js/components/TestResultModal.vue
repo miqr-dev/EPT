@@ -7,7 +7,7 @@ import TestResultViewer from '@/components/TestResultViewer.vue';
 
 const props = defineProps<{
   isOpen: boolean;
-  testResult: any;
+  assignment: any;
 }>();
 
 const emit = defineEmits(['close']);
@@ -19,16 +19,16 @@ const form = useForm({
 const editable = ref<any | null>(null);
 
 watch(
-  () => props.testResult,
+  () => props.assignment,
   (val) => {
-    editable.value = val ? JSON.parse(JSON.stringify(val.result_json)) : null;
+    editable.value = val && val.results.length > 0 ? JSON.parse(JSON.stringify(val.results[0].result_json)) : null;
   }
 );
 
 function submit() {
-  if (props.testResult && editable.value) {
+    if (props.assignment && props.assignment.results.length > 0 && editable.value) {
     form.result_json = JSON.stringify(editable.value);
-    form.put(route('test-results.update', { testResult: props.testResult.id }), {
+    form.put(route('test-results.update', { testResult: props.assignment.results[0].id }), {
       onSuccess: () => {
         closeModal();
       },
@@ -51,6 +51,7 @@ function closeModal() {
       </DialogHeader>
       <TestResultViewer
         v-if="editable"
+        :test="assignment.test"
         v-model="editable"
         class="flex-1 overflow-y-auto mb-4"
       />
