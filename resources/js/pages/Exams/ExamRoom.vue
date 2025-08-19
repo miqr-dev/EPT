@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, shallowRef } from 'vue'
 import { Head, router, usePage } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import {
@@ -46,7 +46,7 @@ const props = defineProps<{
   }>
 }>()
 
-const activeTestComponent = ref(null)
+const activeTestComponent = shallowRef(null)
 const isTestDialogOpen = ref(false)
 const activeStepId = ref<number | null>(null)
 const page = usePage()
@@ -87,9 +87,12 @@ function startTest(step: any) {
   })
 }
 
-function completeTest() {
+function completeTest(results: any) {
   if (!activeStepId.value) return;
-  router.post('/my-exam/complete-step', { exam_step_id: activeStepId.value }, {
+  router.post('/my-exam/complete-step', {
+    exam_step_id: activeStepId.value,
+    results: results
+  }, {
     onSuccess: () => {
       isTestDialogOpen.value = false
       window.removeEventListener('beforeunload', handleBeforeUnload)

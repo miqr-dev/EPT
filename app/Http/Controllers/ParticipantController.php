@@ -10,6 +10,8 @@ use App\Models\Employed;
 use App\Models\Exam;
 use App\Models\ExamParticipant;
 use App\Models\ExamStepStatus;
+use App\Models\TestAssignment;
+use App\Models\TestResult;
 use Inertia\Inertia;
 
 class ParticipantController extends Controller
@@ -125,7 +127,8 @@ class ParticipantController extends Controller
   public function completeStep(Request $request)
   {
     $user = Auth::user();
-    $examStepStatus = ExamStepStatus::where('participant_id', $user->id)
+    $examStepStatus = ExamStepStatus::with('step.test')
+      ->where('participant_id', $user->id)
       ->where('exam_step_id', $request->input('exam_step_id'))
       ->firstOrFail();
 
@@ -133,6 +136,61 @@ class ParticipantController extends Controller
       'status' => 'completed',
       'completed_at' => now(),
     ]);
+
+    $results = $request->input('results');
+
+    if ($results) {
+      $examStep = $examStepStatus->step;
+      if ($examStep && $examStep->test) {
+        $assignment = TestAssignment::firstOrCreate(
+          [
+            'participant_id' => $user->id,
+            'test_id' => $examStep->test->id,
+          ],
+          [
+            'status' => 'assigned',
+          ]
+        );
+
+        // Calculate score on backend for specific tests
+        $resultData = $results;
+        if ($examStep->test->name === 'BRT-A') {
+          $answers = $results['answers'] ?? [];
+          $times = $results['question_times'] ?? [];
+          $resultData = \App\Services\BrtAScorer::score($answers, $times);
+        } elseif ($examStep->test->name === 'FPI-R') {
+          $answers = $results['answers'] ?? [];
+          $totalTime = $results['total_time_seconds'] ?? null;
+          $profile = $user->participant_profile;
+          $sex = $profile->sex ?? null;
+          $age = $profile->age ?? null;
+          $resultData = \App\Services\FpiRScorer::score($answers, $sex, $age, $totalTime);
+        }
+
+        $testResult = TestResult::create([
+          'assignment_id' => $assignment->id,
+          'result_json' => $resultData,
+        ]);
+
+        if ($examStep->test->name === 'BRT-A') {
+          $pdfPath = \App\Services\BrtAPdfService::generate($testResult);
+          if ($pdfPath) {
+            $testResult->update(['pdf_file_path' => $pdfPath]);
+          }
+        }
+        if ($examStep->test->name === 'FPI-R') {
+          $pdfPath = \App\Services\FpiRPdfService::generate($testResult);
+          if ($pdfPath) {
+            $testResult->update(['pdf_file_path' => $pdfPath]);
+          }
+        }
+
+        $assignment->update([
+          'status' => 'completed',
+          'completed_at' => now(),
+        ]);
+      }
+    }
 
     return back(303);
   }
@@ -151,4 +209,19 @@ class ParticipantController extends Controller
 
     return back(303);
   }
+
+  public function list()
+    {
+        $user = Auth::user();
+        $cityId = $user->city_id;
+
+        $participants = \App\Models\User::where('role', 'participant')
+            ->where('city_id', $cityId)
+            ->with(['participantProfile', 'testAssignments.test', 'testAssignments.results'])
+            ->get();
+
+        return Inertia::render('Participants/List', [
+            'participants' => $participants,
+        ]);
+    }
 }

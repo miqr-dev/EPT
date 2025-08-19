@@ -383,7 +383,21 @@ const confirmEnd = () => {
   }
   currentQuestionIndex.value = mrtQuestions.value.length;
   endConfirmOpen.value = false;
-  emit('complete');
+  const results = {
+    group_scores: groupScores.value,
+    group_stanines: groupStanines.value,
+    total_score: totalScore.value,
+    prozentrang: prValue.value,
+    total_time_seconds: totalTimeTaken.value,
+    answers: mrtQuestions.value.map((q, i) => ({
+      number: q.number,
+      user_answer: userAnswers.value[i],
+      correct_answers: q.correct,
+      time_seconds: questionTimes.value[i],
+      is_correct: isCorrectAnswer(userAnswers.value[i], q.correct)
+    }))
+  };
+  emit('complete', results);
 };
 
 watch(currentQuestionIndex, async (newIndex, oldIndex) => {
@@ -415,6 +429,11 @@ const startTest = () => {
   questionStartTimestamps.value = Array(mrtQuestions.value.length).fill(null);
   startTime.value = null;
 };
+
+function isCorrectAnswer(userAnswer: string | null, validAnswers: string[]): boolean {
+  if (!userAnswer) return false;
+  return validAnswers.map(a => a.toUpperCase()).includes(userAnswer.toUpperCase());
+}
 
 
 </script>

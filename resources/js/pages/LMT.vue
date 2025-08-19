@@ -193,7 +193,28 @@ function finishTest() {
 function confirmEnd() {
   completeTest()
   endConfirmOpen.value = false
-  emit('complete')
+  const results = {
+    group_scores: groupScores.value,
+    group_t_values: {
+      L1: getTValue('L1'),
+      L2: getTValue('L2'),
+      'F+': getTValue('F+'),
+      'F-': getTValue('F-')
+    },
+    total_time_seconds: totalTimeTaken.value,
+    answers: questions.value.map((q, idx) => {
+      const selectedIdx = userAnswers.value[idx]
+      const opt = selectedIdx !== null ? q.options[selectedIdx] : null
+      return {
+        number: q.number,
+        selected_category: opt ? opt.category : null,
+        selected_group: opt ? opt.group ?? null : null,
+        points: opt ? opt.points : null,
+        time_seconds: questionTimes.value[idx]
+      }
+    })
+  }
+  emit('complete', results)
 }
 
 function cancelEnd() {

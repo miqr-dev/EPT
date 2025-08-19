@@ -1,17 +1,8 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { FPI_QUESTIONS } from '@/pages/Questions/FPIQuestions';
-import { norms_male_16_24 } from '@/pages/Scores/FPI/norms_male_16_24';
-import { norms_male_25_44 } from '@/pages/Scores/FPI/norms_male_25_44';
-import { norms_male_45_59 } from '@/pages/Scores/FPI/norms_male_45_59';
-import { norms_male_60up } from '@/pages/Scores/FPI/norms_male_60up';
-import { norms_female_16_24 } from '@/pages/Scores/FPI/norms_female_16_24';
-import { norms_female_25_44 } from '@/pages/Scores/FPI/norms_female_25_44';
-import { norms_female_45_59 } from '@/pages/Scores/FPI/norms_female_45_59';
-import { norms_female_60up } from '@/pages/Scores/FPI/norms_female_60up';
-import FPIResult from '@/pages/Scores/FPI/FPIResult.vue';
 import {
   Dialog,
   DialogContent,
@@ -21,48 +12,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
-const page = usePage<{
-  auth: {
-    user: {
-      name: string;
-      participant_profile?: {
-        sex?: string;
-        age?: number;
-      };
-    };
-  };
-}>();
-const userName = computed(() => page.props.auth?.user?.name ?? '');
 const emit = defineEmits(['complete']);
-
-const profile = computed(() => page.props.auth?.user?.participant_profile);
-const sex = computed<'male' | 'female' | null>(() => {
-  const s = profile.value?.sex;
-  if (s === 'm') return 'male';
-  if (s === 'f') return 'female';
-  return null;
-});
-const age = computed<number | null>(() => {
-  const a = profile.value?.age;
-  return typeof a === 'number' ? a : a ? Number(a) : null;
-});
-
-function getNormTable() {
-  if (!sex.value || !age.value) return null;
-  if (sex.value === 'male') {
-    if (age.value >= 16 && age.value <= 24) return norms_male_16_24;
-    if (age.value >= 25 && age.value <= 44) return norms_male_25_44;
-    if (age.value >= 45 && age.value <= 59) return norms_male_45_59;
-    if (age.value >= 60) return norms_male_60up;
-  }
-  if (sex.value === 'female') {
-    if (age.value >= 16 && age.value <= 24) return norms_female_16_24;
-    if (age.value >= 25 && age.value <= 44) return norms_female_25_44;
-    if (age.value >= 45 && age.value <= 59) return norms_female_45_59;
-    if (age.value >= 60) return norms_female_60up;
-  }
-  return null;
-}
 
 const instructions = `
 Sie werden auf den folgenden Seiten eine Reihe von Aussagen über bestimmte Verhaltensweisen, Einstellungen und Gewohnheiten finden. Sie können jede entweder mit „stimmt“ oder mit „stimmt nicht“ beantworten. Setzen Sie bitte ein Kreuz (X) in den dafür vorgesehenen Kreis. Es gibt keine richtigen oder falschen Antworten, weil jeder Mensch das Recht zu eigenen Anschauungen hat.
@@ -83,6 +33,7 @@ const answers = ref<Record<number, 'stimmt' | 'stimmtNicht' | null>>({});
 const missedQuestions = ref<number[]>([]);
 const finished = ref(false);
 const endConfirmOpen = ref(false);
+const startTime = ref<number | null>(null);
 const totalQuestions = FPI_QUESTIONS.length;
 const currentFrom = computed(() => blockIndex.value * QUESTIONS_PER_BLOCK + 1);
 const currentTo = computed(() => Math.min((blockIndex.value + 1) * QUESTIONS_PER_BLOCK, totalQuestions));
@@ -123,10 +74,8 @@ const missedSidebarQuestions = computed(() => {
   );
 });
 
-
 // Navigation
 function handleNextBlock() {
-  // Find unanswered in this block, add to missedQuestions
   currentBlockQuestions.value.forEach(q => {
     if (!answers.value[q.number] && !missedQuestions.value.includes(q.number)) {
       missedQuestions.value.push(q.number);
@@ -134,8 +83,6 @@ function handleNextBlock() {
   });
   if (blockIndex.value < totalBlocks.value - 1) {
     blockIndex.value++;
-  } else {
-    finished.value = true;
   }
 }
 function handlePrevBlock() {
@@ -145,74 +92,9 @@ function jumpToQuestion(num: number) {
   const idx = FPI_QUESTIONS.findIndex(q => q.number === num);
   if (idx !== -1) blockIndex.value = Math.floor(idx / QUESTIONS_PER_BLOCK);
 }
-
-// Scoring
-const categoryLabels = [
-  "Lebenszufriedenheit",        // 1
-  "Soziale",                    // 2
-  "Leistungsorientierung",      // 3
-  "Gehemmtheit",                // 4
-  "Erregbarkeit",               // 5
-  "Aggressivität",              // 6
-  "Beanspruchung",              // 7
-  "Körperliche",                // 8
-  "Gesundheitssorgen",          // 9
-  "Offenheit",                  // 10
-  "Extraversion",               // E
-  "Emotionalität"               // N
-];
-const categoryKeys = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'E', 'N'];
-const categoryScores = computed(() => {
-  const scores: Record<string, number> = {};
-  for (const key of categoryKeys) scores[key] = 0;
-  FPI_QUESTIONS.forEach(q => {
-    const ans = answers.value[q.number];
-    if (ans) {
-      const arr = q[ans];
-      for (const { category, points } of arr) {
-        scores[category] = (scores[category] || 0) + points;
-      }
-    }
-  });
-  return scores;
-});
-
-const categoryStanines = computed(() => {
-  const table = getNormTable();
-  if (!table) return {};
-
-  // key order: LEB, SOZ, LEI, GEH, ERR, AGGR, BEAN, KORP, GES, OFF, EXTR, EMOT
-  const keys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
-  const stanines: Record<string, number | null> = {};
-
-  keys.forEach((key, i) => {
-    const score = categoryScores.value[categoryKeys[i]];
-    stanines[key] = null;
-    if (!table[key]) return;
-    for (let st = 0; st < 9; ++st) {
-      const [min, max] = table[key][st];
-      if (score >= min && score <= max) {
-        stanines[key] = st + 1; // Stanine 1-9
-        break;
-      }
-    }
-  });
-  return stanines;
-});
-
 function startTest() {
+  startTime.value = Date.now();
   showTest.value = true;
-}
-
-function restart() {
-  showTest.value = false;
-  consentAnswer.value = null;
-  blockIndex.value = 0;
-  finished.value = false;
-  missedQuestions.value = [];
-  FPI_QUESTIONS.forEach(q => {
-    answers.value[q.number] = null;
-  });
 }
 
 function finishTest() {
@@ -221,64 +103,30 @@ function finishTest() {
 }
 
 function confirmEnd() {
-  handleNextBlock()
-  endConfirmOpen.value = false
-  emit('complete')
+  currentBlockQuestions.value.forEach(q => {
+    if (!answers.value[q.number] && !missedQuestions.value.includes(q.number)) {
+      missedQuestions.value.push(q.number);
+    }
+  });
+  endConfirmOpen.value = false;
+  finished.value = true;
+  const totalTimeSeconds = startTime.value
+    ? Math.round((Date.now() - startTime.value) / 1000)
+    : null;
+  const results = {
+    answers: FPI_QUESTIONS.map(q => ({
+      number: q.number,
+      answer: answers.value[q.number],
+    })),
+    total_time_seconds: totalTimeSeconds,
+  };
+  emit('complete', results);
 }
 
 function cancelEnd() {
   window.dispatchEvent(new Event('cancel-finish'))
   endConfirmOpen.value = false
 }
-
-function getStanineKey(idx: number) {
-  const keys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
-  return keys[idx];
-}
-
-const categoryStaninesArray = computed(() =>
-  categoryKeys.map((_, idx) => categoryStanines.value[getStanineKey(idx)] ?? 0)
-);
-
-const rohwerteArray = computed(() =>
-  categoryKeys.map(key => categoryScores.value[key] ?? 0)
-);
-// Chart
-const chartCategories = [
-  { label: "Lebenszufriedenheit", commentL: "lebenszufrieden, gute Laune, zuversichtlich", commentR: "unzufrieden, bedrückt, negative Lebenseinstellung" },
-  { label: "Soziale Orientierung", commentL: "sozial verantwortlich, hilfsbereit, mitmenschlich", commentR: "Eigenverantwortung in Notlagen betonend, selbstbezogen unsolidarisch" },
-  { label: "Leistungsorientierung", commentL: "leistungsorientiert, aktiv, schnell-handelnd, ehrgeizig-konkurrierend", commentR: "wenig leistungsorientiert oder energisch, wenig ehrgeizig-konkurrierend" },
-  { label: "Gehemmtheit", commentL: "gehemmt, unsicher, kontaktscheu", commentR: "ungezwungen, selbstsicher, kontaktbereit" },
-  { label: "Erregbarkeit", commentL: "erregbar, empfindlich, unbeherrscht", commentR: "ruhig, gelassen, selbstbeherrscht" },
-  { label: "Aggressivität", commentL: "aggressives Verhalten, spontan und reaktiv, sich durchsetzend", commentR: "wenig aggressiv, kontrolliert, zurückhaltend" },
-  { label: "Beanspruchung", commentL: "angespannt, überfordert, sich oft 'im Stress' fühlend", commentR: "wenig beansprucht, nicht überfordert, belastbar" },
-  { label: "Körperliche Beschwerden", commentL: "viele Beschwerden, psychosomatisch gestört", commentR: "wenig Beschwerden, psychosomatisch nicht gestört" },
-  { label: "Gesundheitssorgen", commentL: "furcht vor Erkrankung, gesundheitsbewusst, sich schonend", commentR: "wenig Gesundheitssorgen, gesundheitlich unbekümmert, robust" },
-  { label: "Offenheit", commentL: "Offenes Zugeben kleiner Schwächen und alltäglicher Normverletzungen, ungeniert, unkonventionell", commentR: "an Umgangsnormen orientiert, auf guten Eindruck bedacht, mangelnde Selbstkritik, verschlossen (Achtung bei Stanine 1–3)" },
-  { label: "Extraversion", commentL: "extravertiert, gesellig, impulsiv, unternehmungslustig", commentR: "introvertiert, zurückhaltend, überlegt, ernst" },
-  { label: "Emotionalität", commentL: "emotional, labil, empfindlich, ängstlich, viele Probleme und körperliche Beschwerden", commentR: "emotional stabil, gelassen, selbstvertrauend, lebenszuversichtlich" },
-];
-
-const rowHeight = 42;
-const stanineWidth = 42;
-const svgWidth = stanineWidth * 9;
-const svgHeight = rowHeight * 12;
-
-function stanineX(idx: number) {
-  return stanineWidth * idx + stanineWidth / 2;
-}
-function rowY(idx: number) {
-  return rowHeight * idx + rowHeight / 2;
-}
-
-const staninePoints = computed(() => {
-  // List of [x, y] for each category's Stanine
-  return chartCategories.map((_, idx) => {
-    const st = categoryStanines.value[getStanineKey(idx)];
-    if (!st) return null;
-    return `${stanineX(st - 1)},${rowY(idx)}`;
-  }).filter(Boolean).join(' ');
-});
 
 </script>
 
@@ -404,20 +252,7 @@ const staninePoints = computed(() => {
           </div>
         </div>
 
-        <!-- Results -->
-        <div v-else class="p-6 bg-background border rounded-lg">
-          <h2 class="text-xl font-semibold mb-4">Test abgeschlossen!</h2>
-          <div class="mb-6 w-full max-w-3xl">
-            <!-- SVG Auswertungsbogen -->
-            <div
-              class="relative fpi-auswertungsbogen bg-white dark:bg-gray-800 shadow border dark:border-gray-700 mx-auto">
-              <FPIResult :stanines="categoryStaninesArray" :rohwerte="rohwerteArray" />
-            </div>
-          </div>
-          <div class="flex gap-2">
-            <Button @click="restart" class="px-6 py-2 rounded font-bold">Test neu starten</Button>
-          </div>
-        </div>
+        <div v-else></div>
 
 
       </div>
