@@ -24,7 +24,7 @@ watch(
   () => [props.testResult, props.test],
   async ([result, test]) => {
     editable.value = result ? JSON.parse(JSON.stringify(result.result_json)) : null;
-    if (result && test?.code === 'mrt-a') {
+    if (result && test?.code?.toLowerCase() === 'mrt-a') {
       try {
         const res = await fetch(
           route('test-results.mrt-a-chart', { testResult: result.id })
