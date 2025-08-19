@@ -1,17 +1,14 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils'
 import { DialogTitle, type DialogTitleProps, useForwardProps } from 'reka-ui'
-import { computed, type HTMLAttributes } from 'vue'
+import { type HTMLAttributes } from 'vue'
 
 const props = defineProps<DialogTitleProps & { class?: HTMLAttributes['class'] }>()
 
-const delegatedProps = computed(() => {
-  const { class: _, ...delegated } = props
-
-  return delegated
-})
-
-const forwardedProps = useForwardProps(delegatedProps)
+// Forward props directly to the underlying primitive. Using the reactive `props`
+// object avoids calling `toRefs` on a plain object, which triggered console
+// warnings when this component rendered.
+const forwardedProps = useForwardProps(props)
 </script>
 
 <template>

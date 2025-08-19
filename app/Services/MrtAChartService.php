@@ -130,13 +130,17 @@ class MrtAChartService
             ],
         ];
 
-        $response = Http::timeout(15)->asForm()->post('https://quickchart.io/chart', [
-            'chart' => json_encode($config),
-            'encoding' => 'base64',
-            'format' => 'png',
-        ]);
+        try {
+            $response = Http::timeout(15)->asForm()->post('https://quickchart.io/chart', [
+                'chart' => json_encode($config),
+                'encoding' => 'base64',
+                'format' => 'png',
+            ]);
 
-        return $response->successful() ? $response->body() : null;
+            return $response->successful() ? $response->body() : null;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     /**

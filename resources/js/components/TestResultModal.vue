@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import TestResultViewer from '@/components/TestResultViewer.vue';
 
@@ -63,6 +63,7 @@ function closeModal() {
     >
       <DialogHeader>
         <DialogTitle>Edit Test Result</DialogTitle>
+        <DialogDescription class="sr-only">View result details</DialogDescription>
       </DialogHeader>
       <TestResultViewer
         v-if="editable"
