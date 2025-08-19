@@ -44,7 +44,7 @@ function closeModal() {
 <template>
   <Dialog :open="isOpen" @update:open="closeModal">
     <DialogContent
-      class="max-w-6xl max-h-[80vh] flex flex-col"
+      class="w-screen !h-screen !max-w-none !top-0 !left-0 !translate-x-0 !translate-y-0 !rounded-none"
     >
       <DialogHeader>
         <DialogTitle>Edit Test Result</DialogTitle>
