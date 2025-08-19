@@ -19,13 +19,4 @@ class TestResultController extends Controller
 
         return redirect()->back()->with('success', 'Test result updated successfully.');
     }
-
-    public function view(TestResult $testResult)
-    {
-        $testResult->load(['assignment.participant', 'assignment.test']);
-
-        return view('pdfs.result', [
-            'testResult' => $testResult,
-        ]);
-    }
 }
