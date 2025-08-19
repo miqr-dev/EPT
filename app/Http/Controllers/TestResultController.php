@@ -19,4 +19,13 @@ class TestResultController extends Controller
 
         return redirect()->back()->with('success', 'Test result updated successfully.');
     }
+
+    public function pdfView(TestResult $testResult)
+    {
+        $testResult->load(['assignment.participant', 'assignment.test']);
+
+        return \Inertia\Inertia::render('TestResultPdf', [
+            'testResult' => $testResult,
+        ]);
+    }
 }

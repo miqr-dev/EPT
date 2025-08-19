@@ -60,5 +60,9 @@ Route::get('/login', function () {
 Route::redirect('/', '/login');
 Route::get('/home', fn () => redirect()->route('dashboard'))->name('home');
 
+Route::get('/test-results/{testResult}/pdf-view', [TestResultController::class, 'pdfView'])
+    ->middleware('signed')
+    ->name('test-results.pdf-view');
+
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
