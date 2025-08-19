@@ -29,6 +29,7 @@ class MrtAPdfService
             'group_stanines' => $result->result_json['group_stanines'] ?? [],
             'total_score' => $result->result_json['total_score'] ?? null,
             'prozentrang' => $result->result_json['prozentrang'] ?? null,
+            'answers' => $result->result_json['answers'] ?? [],
         ];
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdfs.mrt-a-result', $data)->setPaper('a4');
