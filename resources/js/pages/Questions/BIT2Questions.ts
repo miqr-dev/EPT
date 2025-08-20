@@ -1,3 +1,5 @@
+import { Theater } from "lucide-vue-next";
+
 export interface BIT2Question {
     number: number;
     text: string;
