@@ -21,6 +21,7 @@ import FPI from '@/pages/FPI-R.vue'
 import LMT from '@/pages/LMT.vue'
 import MRTA from '@/pages/MRT-A.vue'
 import LMT2 from '@/pages/LMT2.vue'
+import BIT2 from '@/pages/BIT-2.vue'
 
 type StepStatus = 'not_started' | 'in_progress' | 'completed' | 'broken'
 type ExamStatus = 'not_started' | 'in_progress' | 'paused' | 'completed'
@@ -59,6 +60,7 @@ const testComponents = {
   'LMT': LMT,
   'MRT-A': MRTA,
   'LMT2': LMT2,
+  'BIT-2': BIT2,
 }
 
 function getStatusText(status: StepStatus) {
