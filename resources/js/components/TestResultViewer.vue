@@ -5,6 +5,7 @@ defineOptions({
 import { ref, watch } from 'vue';
 import { Input } from '@/components/ui/input';
 import MrtAResult from '@/components/MrtAResult.vue';
+const bit2Groups = ['TH', 'GH', 'TN', 'EH', 'LF', 'KB', 'VB', 'LG', 'SE'];
 
 interface Answer {
   question: string;
@@ -60,6 +61,28 @@ function formatTime(seconds?: number | null) {
 <template>
   <div v-if="local" v-bind="$attrs">
     <MrtAResult v-if="test.name === 'MRT-A'" :results="local" />
+    <div v-else-if="test.name === 'BIT-2'" class="overflow-x-auto">
+      <table class="w-full text-sm border rounded-lg overflow-hidden shadow mb-4">
+        <thead class="bg-muted/40 dark:bg-gray-700">
+          <tr>
+            <th
+              v-for="(code, idx) in bit2Groups"
+              :key="code"
+              class="px-3 py-2 font-semibold text-center"
+            >
+              {{ idx + 1 }} {{ code }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="dark:bg-gray-800">
+            <td v-for="code in bit2Groups" :key="code" class="px-3 py-2 text-center">
+              {{ local.group_totals?.[code] ?? 0 }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <template v-else>
       <table class="w-full text-sm border rounded-lg overflow-hidden shadow mb-4">
         <tbody>
