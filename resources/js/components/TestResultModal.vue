@@ -8,12 +8,13 @@ import TestResultViewer from '@/components/TestResultViewer.vue';
 const props = defineProps<{
   isOpen: boolean;
   assignment: any;
+  participant: any;
 }>();
 
 const emit = defineEmits(['close']);
 
 const form = useForm({
-  result_json: '',
+  answers: [] as any[],
 });
 
 const editable = ref<any | null>(null);
@@ -26,13 +27,23 @@ watch(
 );
 
 function submit() {
-    if (props.assignment && props.assignment.results.length > 0 && editable.value) {
-    form.result_json = JSON.stringify(editable.value);
-    form.put(route('test-results.update', { testResult: props.assignment.results[0].id }), {
-      onSuccess: () => {
+  if (props.assignment && props.assignment.results.length > 0 && editable.value) {
+    if (props.assignment.test.name === 'MRT-A') {
+      form.answers = editable.value.answers;
+      form.put(route('test-results.update', { testResult: props.assignment.results[0].id }), {
+        onSuccess: () => {
+          closeModal();
+        },
+      });
+    } else {
+      // Keep old behavior for other tests
+      const oldForm = useForm({ result_json: JSON.stringify(editable.value) });
+      oldForm.put(route('test-results.update', { testResult: props.assignment.results[0].id }), {
+        onSuccess: () => {
         closeModal();
       },
     });
+    }
   }
 }
 
@@ -53,6 +64,7 @@ function closeModal() {
         v-if="editable"
         :test="assignment.test"
         v-model="editable"
+        :participant-profile="participant?.participant_profile"
         class="flex-1 overflow-y-auto mb-4"
       />
       <DialogFooter>

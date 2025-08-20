@@ -20,11 +20,13 @@ interface ResultJson {
   twert?: number;
   total_time_seconds?: number;
   answers: Answer[];
+  [key: string]: any;
 }
 
 const props = defineProps<{
   modelValue: ResultJson | null;
   test: { name: string };
+  participantProfile?: { age: number } | null;
 }>();
 
 const emit = defineEmits(['update:modelValue']);
