@@ -9,7 +9,7 @@ class PdfController extends Controller
 {
     public function downloadMrtAPdf(Request $request)
     {
-        $results = json_decode($request->query('results'), true);
+        $results = $request->input('results');
 
         $html = view('pdfs.mrt-a-result-pdf', ['results' => $results])->render();
 
