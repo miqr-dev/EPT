@@ -13,6 +13,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
     Route::get('participant', [ParticipantController::class, 'showProfileForm'])->name('participant');
     Route::get('mrt-a', fn () => Inertia::render('MRT-A'))->name('mrt-a');
+    Route::get('mrt-a/result/pdf', [ParticipantController::class, 'downloadMrtAPdf'])->name('mrt-a.result.pdf');
     Route::get('brt-a', fn () => Inertia::render('BRT-A'))->name('brt-a');
     Route::get('brt-b', fn () => Inertia::render('BRT-B'))->name('brt-b');
     Route::get('fpi-r', fn () => Inertia::render('FPI-R'))->name('fpi-r');

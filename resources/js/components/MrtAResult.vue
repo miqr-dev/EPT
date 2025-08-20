@@ -197,6 +197,12 @@ const mrtQuestions = [
             </span>
           </div>
         </div>
+        <div class="w-full flex justify-center mt-4">
+          <a :href="route('mrt-a.result.pdf')" target="_blank"
+            class="px-4 py-2 rounded bg-blue-600 text-white font-semibold">
+            PDF herunterladen
+          </a>
+        </div>
       </div>
     </div>
   </div>

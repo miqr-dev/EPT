@@ -13,6 +13,7 @@ use App\Models\ExamStepStatus;
 use App\Models\TestAssignment;
 use App\Models\TestResult;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Storage;
 
 class ParticipantController extends Controller
 {
@@ -207,6 +208,12 @@ class ParticipantController extends Controller
             $testResult->update(['pdf_file_path' => $pdfPath]);
           }
         }
+        if ($examStep->test->name === 'MRT-A') {
+          $pdfPath = \App\Services\MrtAPdfService::generate($testResult);
+          if ($pdfPath) {
+            $testResult->update(['pdf_file_path' => $pdfPath]);
+          }
+        }
 
         $assignment->update([
           'status' => 'completed',
@@ -247,4 +254,44 @@ class ParticipantController extends Controller
             'participants' => $participants,
         ]);
     }
+
+  /**
+   * Download the MRT-A result PDF for the authenticated participant.
+   */
+  public function downloadMrtAPdf()
+  {
+    $user = Auth::user();
+    $mrtTest = \App\Models\Test::where('name', 'MRT-A')->first();
+    if (!$mrtTest) {
+      abort(404);
+    }
+
+    $assignment = TestAssignment::where('participant_id', $user->id)
+      ->where('test_id', $mrtTest->id)
+      ->first();
+
+    if (!$assignment) {
+      abort(404);
+    }
+
+    $result = TestResult::where('assignment_id', $assignment->id)
+      ->latest()
+      ->first();
+
+    if (!$result) {
+      abort(404);
+    }
+
+    $path = $result->pdf_file_path;
+    if (!$path || !Storage::exists($path)) {
+      $path = \App\Services\MrtAPdfService::generate($result);
+      if ($path) {
+        $result->update(['pdf_file_path' => $path]);
+      } else {
+        abort(500, 'PDF generation failed');
+      }
+    }
+
+    return Storage::download($path);
+  }
 }
