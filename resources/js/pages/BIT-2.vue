@@ -68,13 +68,14 @@ function confirmEnd() {
                 <div v-else-if="pageIndex === 0" class="rounded-lg border bg-background p-6">
                     <table class="mb-6 w-full border-separate text-base" style="border-spacing: 0">
                         <tbody>
-                            <tr v-for="q in firstPageQuestions" :key="q.number">
-                                <td class="w-8 pr-2 align-top">{{ q.number }}.</td>
-                                <td class="pr-4 align-top">{{ q.text }}</td>
-                                <td v-for="opt in [5, 4, 3, 2, 1]" :key="opt" class="px-1 text-center">
-                                    <label class="flex flex-col items-center">
-                                        <input type="radio" :name="'q' + q.number" :value="opt" v-model="answers[q.number]" />
-                                        <span class="text-xs">{{ opt }}</span>
+                            <tr v-for="q in firstPageQuestions" :key="q.number" :class="{ 'bg-gray-50 dark:bg-gray-700': answers[q.number] === null }">
+                                <td class="font-mono w-8 pr-2 align-top pt-2 text-right border-b-2 border-gray-200 dark:border-gray-700">{{ q.number }}.</td>
+                                <td class="pr-4 align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700">{{ q.text }}</td>
+                                <td v-for="opt in [5, 4, 3, 2, 1]" :key="opt" class="px-2 text-center align-top pt-1 border-b-2 border-gray-200 dark:border-gray-700">
+                                    <label class="w-8 h-8 relative flex items-center justify-center border border-gray-400 cursor-pointer">
+                                        <input class="sr-only" type="radio" :name="'q' + q.number" :value="opt" v-model="answers[q.number]" />
+                                        <span class="text-sm">{{ opt }}</span>
+                                        <span v-if="answers[q.number] === opt" class="absolute inset-0 flex items-center justify-center text-red-600 text-xl">X</span>
                                     </label>
                                 </td>
                             </tr>
@@ -89,13 +90,14 @@ function confirmEnd() {
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <table class="w-full border-separate text-base" style="border-spacing: 0">
                             <tbody>
-                                <tr v-for="q in secondPageLeft" :key="q.number">
-                                    <td class="w-8 pr-2 align-top">{{ q.number }}.</td>
-                                    <td class="pr-4 align-top">{{ q.text }}</td>
-                                    <td v-for="opt in [5, 4, 3, 2, 1]" :key="opt" class="px-1 text-center">
-                                        <label class="flex flex-col items-center">
-                                            <input type="radio" :name="'q' + q.number" :value="opt" v-model="answers[q.number]" />
-                                            <span class="text-xs">{{ opt }}</span>
+                                <tr v-for="q in secondPageLeft" :key="q.number" :class="{ 'bg-gray-50 dark:bg-gray-700': answers[q.number] === null }">
+                                    <td class="font-mono w-8 pr-2 align-top pt-2 text-right border-b-2 border-gray-200 dark:border-gray-700">{{ q.number }}.</td>
+                                    <td class="pr-4 align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700">{{ q.text }}</td>
+                                    <td v-for="opt in [5, 4, 3, 2, 1]" :key="opt" class="px-2 text-center align-top pt-1 border-b-2 border-gray-200 dark:border-gray-700">
+                                        <label class="w-8 h-8 relative flex items-center justify-center border border-gray-400 cursor-pointer">
+                                            <input class="sr-only" type="radio" :name="'q' + q.number" :value="opt" v-model="answers[q.number]" />
+                                            <span class="text-sm">{{ opt }}</span>
+                                            <span v-if="answers[q.number] === opt" class="absolute inset-0 flex items-center justify-center text-red-600 text-xl">X</span>
                                         </label>
                                     </td>
                                 </tr>
@@ -104,13 +106,14 @@ function confirmEnd() {
 
                         <table class="w-full border-separate text-base" style="border-spacing: 0">
                             <tbody>
-                                <tr v-for="q in secondPageRight" :key="q.number">
-                                    <td class="w-8 pr-2 align-top">{{ q.number }}.</td>
-                                    <td class="pr-4 align-top">{{ q.text }}</td>
-                                    <td v-for="opt in [5, 4, 3, 2, 1]" :key="opt" class="px-1 text-center">
-                                        <label class="flex flex-col items-center">
-                                            <input type="radio" :name="'q' + q.number" :value="opt" v-model="answers[q.number]" />
-                                            <span class="text-xs">{{ opt }}</span>
+                                <tr v-for="q in secondPageRight" :key="q.number" :class="{ 'bg-gray-50 dark:bg-gray-700': answers[q.number] === null }">
+                                    <td class="font-mono w-8 pr-2 align-top pt-2 text-right border-b-2 border-gray-200 dark:border-gray-700">{{ q.number }}.</td>
+                                    <td class="pr-4 align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700">{{ q.text }}</td>
+                                    <td v-for="opt in [5, 4, 3, 2, 1]" :key="opt" class="px-2 text-center align-top pt-1 border-b-2 border-gray-200 dark:border-gray-700">
+                                        <label class="w-8 h-8 relative flex items-center justify-center border border-gray-400 cursor-pointer">
+                                            <input class="sr-only" type="radio" :name="'q' + q.number" :value="opt" v-model="answers[q.number]" />
+                                            <span class="text-sm">{{ opt }}</span>
+                                            <span v-if="answers[q.number] === opt" class="absolute inset-0 flex items-center justify-center text-red-600 text-xl">X</span>
                                         </label>
                                     </td>
                                 </tr>
