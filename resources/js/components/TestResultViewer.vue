@@ -2,7 +2,7 @@
 defineOptions({
   inheritAttrs: false,
 });
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { Input } from '@/components/ui/input';
 import MrtAResult from '@/components/MrtAResult.vue';
 const bit2Groups = ['TH', 'GH', 'TN', 'EH', 'LF', 'KB', 'VB', 'LG', 'SE'];
@@ -27,7 +27,7 @@ interface ResultJson {
 const props = defineProps<{
   modelValue: ResultJson | null;
   test: { name: string };
-  participantProfile?: { age: number } | null;
+  participantProfile?: { age: number; sex?: string } | null;
 }>();
 
 const emit = defineEmits(['update:modelValue']);
@@ -56,6 +56,41 @@ function formatTime(seconds?: number | null) {
   const s = seconds % 60;
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
+
+// --- BIT‑2 percentile table (placeholder linear values) ---
+const bit2Percentiles = [
+  100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 30, 25, 20, 15, 10, 5, 0,
+];
+
+function buildNormTable() {
+  return bit2Percentiles.map((p) => {
+    const row: Record<string, number | string> = { percentile: p };
+    for (const code of bit2Groups) {
+      row[code] = Math.floor(9 + (36 * p) / 100);
+    }
+    return row;
+  });
+}
+
+const normTable = buildNormTable();
+
+const highlighted = computed(() => {
+  const map: Record<string, number | null> = {};
+  if (!local.value) return map;
+  for (const code of bit2Groups) {
+    const raw = local.value.group_totals?.[code] ?? 0;
+    let idx: number | null = null;
+    for (let i = 0; i < normTable.length; i++) {
+      const row = normTable[i];
+      if (raw >= (row[code] as number)) {
+        idx = i;
+        break;
+      }
+    }
+    map[code] = idx;
+  }
+  return map;
+});
 </script>
 
 <template>
@@ -78,6 +113,46 @@ function formatTime(seconds?: number | null) {
           <tr class="dark:bg-gray-800">
             <td v-for="code in bit2Groups" :key="code" class="px-3 py-2 text-center">
               {{ local.group_totals?.[code] ?? 0 }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- Norm table -->
+      <table class="min-w-full text-xs border">
+        <thead class="bg-muted/40 dark:bg-gray-700">
+          <tr>
+            <th class="px-2 py-1 font-semibold text-center">{{
+              props.participantProfile?.sex === 'f' ? '♀' : '♂'
+            }}</th>
+            <th
+              v-for="code in bit2Groups"
+              :key="code"
+              class="px-2 py-1 font-semibold"
+            >
+              {{ code }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="(row, rIdx) in normTable"
+            :key="rIdx"
+            :class="{
+              'border-b-2 border-blue-500': [85, 60, 35, 20].includes(
+                row.percentile as number
+              ),
+            }"
+          >
+            <td class="px-2 py-1 text-center">{{ row.percentile }}-</td>
+            <td
+              v-for="code in bit2Groups"
+              :key="code"
+              class="px-2 py-1 text-center"
+              :class="{
+                'text-red-600 underline decoration-2': highlighted[code] === rIdx,
+              }"
+            >
+              {{ row[code] }}
             </td>
           </tr>
         </tbody>

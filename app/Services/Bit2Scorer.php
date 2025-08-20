@@ -18,12 +18,24 @@ class Bit2Scorer
         73=>'TH',74=>'EH',75=>'VB',76=>'GH',77=>'LF',78=>'LG',79=>'TN',80=>'KB',81=>'SE',
     ];
 
-    // Norm tables mapping raw sums to percentile ranks.
-    // Actual values to be filled once official tables are available.
-    protected static array $normTables = [
-        'male' => [],
-        'female' => [],
-    ];
+    /**
+     * Generate a simple percentile lookup table. Real norm values should
+     * replace this approximation when the official tables are available.
+     */
+    protected static function normTable(): array
+    {
+        $percentiles = [100,95,90,85,80,75,70,65,60,55,50,45,40,35,30,25,20,15,10,5,0];
+        $rows = [];
+        foreach ($percentiles as $p) {
+            $row = ['percentile' => $p];
+            foreach (self::$groups as $g) {
+                // Linear interpolation between min 9 and max 45 points
+                $row[$g] = (int) floor(9 + 36 * ($p / 100));
+            }
+            $rows[] = $row;
+        }
+        return $rows;
+    }
 
     public static function score(array $answers, ?string $sex): array
     {
@@ -41,10 +53,16 @@ class Bit2Scorer
         }
 
         $percentiles = [];
-        $sexKey = strtolower($sex ?? '') === 'f' ? 'female' : 'male';
-        $table = self::$normTables[$sexKey] ?? [];
+        $table = self::normTable();
         foreach ($totals as $group => $raw) {
-            $percentiles[$group] = $table[$group][$raw] ?? null;
+            $percent = null;
+            foreach ($table as $row) {
+                if ($raw >= ($row[$group] ?? 0)) {
+                    $percent = $row['percentile'];
+                    break;
+                }
+            }
+            $percentiles[$group] = $percent;
         }
 
         return [
