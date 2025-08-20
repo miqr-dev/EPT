@@ -18,6 +18,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('fpi-r', fn () => Inertia::render('FPI-R'))->name('fpi-r');
     Route::get('lmt', fn () => Inertia::render('LMT'))->name('lmt');
     Route::get('lmt2', fn () => Inertia::render('LMT2'))->name('lmt2');
+    Route::get('bit-2', fn () => Inertia::render('BIT-2'))->name('bit-2');
     Route::post('assign-tests', [TeacherController::class, 'assignTests'])->name('assign.tests');
     Route::post('remove-tests', [TeacherController::class, 'removeTests'])->name('remove.tests');
     Route::get('/onboarding', [ParticipantController::class, 'showProfileForm'])->name('participant.onboarding');

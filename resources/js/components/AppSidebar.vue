@@ -49,6 +49,11 @@ const mainNavItems: NavItem[] = [
     href: '/lmt2', // The new route for the Tests page
     icon: LayoutGrid, // Placeholder icon, can be changed later
   },
+  {
+    title: 'BIT-2',
+    href: '/bit-2', // The new route for the Tests page
+    icon: LayoutGrid, // Placeholder icon, can be changed later
+  },
 ];
 
 const footerNavItems: NavItem[] = [

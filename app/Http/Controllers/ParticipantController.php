@@ -192,6 +192,12 @@ class ParticipantController extends Controller
           $profile = $user->participantProfile;
           $age = $profile->age ?? null;
           $resultData = \App\Services\MrtAScorer::score($userAnswers, $age, $questionTimes);
+        } elseif ($examStep->test->name === 'BIT-2') {
+          $answers = $results['answers'] ?? [];
+          $user->load('participantProfile');
+          $profile = $user->participantProfile;
+          $sex = $profile->sex ?? null;
+          $resultData = \App\Services\Bit2Scorer::score($answers, $sex);
         }
 
         $testResult = TestResult::create([
