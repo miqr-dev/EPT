@@ -185,6 +185,12 @@ const mrtQuestions = [
         <div style="width: 480px; height: 320px;">
           <Line :data="chartData" :options="chartOptions" />
         </div>
+        <div class="flex justify-center mt-4">
+            <a :href="`/mrt-a/pdf?results=${encodeURIComponent(JSON.stringify(results))}`"
+                 class="px-4 py-2 rounded-lg font-semibold bg-blue-500 text-white hover:bg-blue-600">
+                Download PDF
+            </a>
+        </div>
         <div class="w-full flex justify-center mt-6">
           <div class="w-[400px] h-8 rounded-full bg-gray-200 dark:bg-gray-700 relative overflow-hidden shadow-inner">
             <div class="h-full bg-red-600 transition-all duration-700 flex items-center justify-center"

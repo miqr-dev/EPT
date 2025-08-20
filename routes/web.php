@@ -3,6 +3,7 @@
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ExamController;
+use App\Http\Controllers\PdfController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\ExamStepStatusController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\TestResultController;
 Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     // All role-protected pages
     Route::get('dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
+    Route::get('mrt-a/pdf', [PdfController::class, 'downloadMrtAPdf'])->name('mrt-a.pdf');
     Route::get('participant', [ParticipantController::class, 'showProfileForm'])->name('participant');
     Route::get('mrt-a', fn () => Inertia::render('MRT-A'))->name('mrt-a');
     Route::get('brt-a', fn () => Inertia::render('BRT-A'))->name('brt-a');
