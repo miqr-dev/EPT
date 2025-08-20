@@ -2,7 +2,7 @@
 defineOptions({
   inheritAttrs: false,
 });
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { Input } from '@/components/ui/input';
 import MrtAResult from '@/components/MrtAResult.vue';
 
@@ -32,6 +32,18 @@ const props = defineProps<{
 const emit = defineEmits(['update:modelValue']);
 
 const local = ref<ResultJson | null>(null);
+const mrtARef = ref<any>(null);
+
+const chartEl = computed(() => mrtARef.value?.chartEl);
+const detailsEl = computed(() => mrtARef.value?.detailsEl);
+const showDetails = computed({
+  get: () => mrtARef.value?.showDetails,
+  set: (v) => {
+    if (mrtARef.value) mrtARef.value.showDetails = v;
+  },
+});
+
+defineExpose({ chartEl, detailsEl, showDetails });
 
 watch(
   () => props.modelValue,
@@ -59,7 +71,7 @@ function formatTime(seconds?: number | null) {
 
 <template>
   <div v-if="local" v-bind="$attrs">
-    <MrtAResult v-if="test.name === 'MRT-A'" :results="local" />
+    <MrtAResult v-if="test.name === 'MRT-A'" :results="local" ref="mrtARef" />
     <template v-else>
       <table class="w-full text-sm border rounded-lg overflow-hidden shadow mb-4">
         <tbody>
