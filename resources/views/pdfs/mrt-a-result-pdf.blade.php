@@ -51,6 +51,11 @@
                 legend: { display: false },
                 title: { display: false }
             },
+            animation: {
+                onComplete: () => {
+                    document.body.classList.add('chart-rendered');
+                }
+            },
             indexAxis: 'y',
             scales: {
                 x: {

@@ -16,6 +16,7 @@ class PdfController extends Controller
         $pdf = Browsershot::html($html)
             ->setNodeBinary(config('app.node_binary'))
             ->setNpmBinary(config('app.npm_binary'))
+            ->waitForSelector('body.chart-rendered')
             ->windowSize(1024, 768)
             ->pdf();
 
