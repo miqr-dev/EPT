@@ -4,8 +4,6 @@ import { useForm } from '@inertiajs/vue3';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import TestResultViewer from '@/components/TestResultViewer.vue';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -34,18 +32,13 @@ function submit() {
     if (props.assignment.test.name === 'MRT-A') {
       form.answers = editable.value.answers;
       form.put(route('test-results.update', { testResult: props.assignment.results[0].id }), {
-        onSuccess: () => {
-          closeModal();
-        },
+        onSuccess: closeModal,
       });
     } else {
-      // Keep old behavior for other tests
       const oldForm = useForm({ result_json: JSON.stringify(editable.value) });
       oldForm.put(route('test-results.update', { testResult: props.assignment.results[0].id }), {
-        onSuccess: () => {
-        closeModal();
-      },
-    });
+        onSuccess: closeModal,
+      });
     }
   }
 }
@@ -54,73 +47,41 @@ function closeModal() {
   emit('close');
 }
 
-function oklchToRgb(color: string): string {
-  const match = /oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:deg)?(?:\s*\/\s*([\d.]+))?\s*\)/i.exec(color);
-  if (!match) return color;
-  const l = parseFloat(match[1]);
-  const c = parseFloat(match[2]);
-  const h = (parseFloat(match[3]) * Math.PI) / 180;
-  const a = match[4] !== undefined ? parseFloat(match[4]) : 1;
-
-  const a_ = Math.cos(h) * c;
-  const b_ = Math.sin(h) * c;
-
-  let l_ = l + 0.3963377774 * a_ + 0.2158037573 * b_;
-  let m_ = l - 0.1055613458 * a_ - 0.0638541728 * b_;
-  let s_ = l - 0.0894841775 * a_ - 1.291485548 * b_;
-
-  l_ = l_ ** 3;
-  m_ = m_ ** 3;
-  s_ = s_ ** 3;
-
-  let r = 4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_;
-  let g = -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_;
-  let b = -0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_;
-
-  function toSRGB(x: number) {
-    const x0 = Math.max(0, Math.min(1, x));
-    return x0 <= 0.0031308 ? 12.92 * x0 : 1.055 * Math.pow(x0, 1 / 2.4) - 0.055;
-  }
-
-  r = Math.round(toSRGB(r) * 255);
-  g = Math.round(toSRGB(g) * 255);
-  b = Math.round(toSRGB(b) * 255);
-  return `rgba(${r}, ${g}, ${b}, ${a})`;
-}
-
-function replaceOklchColors(el: HTMLElement) {
+function inlineStyles(el: HTMLElement) {
   const style = window.getComputedStyle(el);
-  if (style.color.includes('oklch')) {
-    el.style.color = oklchToRgb(style.color);
-  }
-  if (style.backgroundColor.includes('oklch')) {
-    el.style.backgroundColor = oklchToRgb(style.backgroundColor);
-  }
-  Array.from(el.children).forEach((child) => replaceOklchColors(child as HTMLElement));
+  const css = Array.from(style)
+    .map((prop) => `${prop}:${style.getPropertyValue(prop)};`)
+    .join('');
+  el.setAttribute('style', css);
+  Array.from(el.children).forEach((child) => inlineStyles(child as HTMLElement));
 }
 
-async function canvasFromElement(el: HTMLElement) {
+async function exportPdf(type: string, el: HTMLElement, filename: string) {
   const clone = el.cloneNode(true) as HTMLElement;
-  clone.style.position = 'fixed';
-  clone.style.left = '-10000px';
-  clone.style.top = '-10000px';
-  document.body.appendChild(clone);
-  replaceOklchColors(clone);
-  const canvas = await html2canvas(clone, { scale: 2 });
-  document.body.removeChild(clone);
-  return canvas;
+  inlineStyles(clone);
+  const html = clone.outerHTML;
+  const token = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
+  const res = await fetch(route('mrt-a.export.pdf', { type }), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': token ?? '',
+    },
+    body: JSON.stringify({ html }),
+  });
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 async function exportChartPdf() {
   const el = viewerRef.value?.chartEl;
   if (!el) return;
-  const canvas = await canvasFromElement(el);
-  const img = canvas.toDataURL('image/png');
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-  pdf.addImage(img, 'PNG', 0, 0, pdfWidth, pdfHeight);
-  pdf.save('mrt-chart.pdf');
+  await exportPdf('chart', el, 'mrt-chart.pdf');
 }
 
 async function exportDetailsPdf() {
@@ -131,20 +92,7 @@ async function exportDetailsPdf() {
   }
   const el = viewerRef.value.detailsEl;
   if (!el) return;
-  const canvas = await canvasFromElement(el);
-  const img = canvas.toDataURL('image/png');
-  const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = pdf.internal.pageSize.getHeight();
-  let imgWidth = pdfWidth;
-  let imgHeight = (canvas.height * imgWidth) / canvas.width;
-  if (imgHeight > pdfHeight) {
-    imgHeight = pdfHeight;
-    imgWidth = (canvas.width * imgHeight) / canvas.height;
-  }
-  const marginX = (pdfWidth - imgWidth) / 2;
-  pdf.addImage(img, 'PNG', marginX, 0, imgWidth, imgHeight);
-  pdf.save('mrt-antworten.pdf');
+  await exportPdf('details', el, 'mrt-antworten.pdf');
 }
 </script>
 
@@ -176,3 +124,4 @@ async function exportDetailsPdf() {
     </DialogContent>
   </Dialog>
 </template>
+
