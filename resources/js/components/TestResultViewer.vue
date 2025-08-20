@@ -20,11 +20,13 @@ interface ResultJson {
   twert?: number;
   total_time_seconds?: number;
   answers: Answer[];
+  [key: string]: any;
 }
 
 const props = defineProps<{
   modelValue: ResultJson | null;
   test: { name: string };
+  participantProfile?: { age: number } | null;
 }>();
 
 const emit = defineEmits(['update:modelValue']);
@@ -46,6 +48,26 @@ watch(
   },
   { deep: true }
 );
+
+import { useMrtA } from '@/composables/useMrtA';
+
+const { calculateScores } = useMrtA();
+
+watch(
+  () => local.value?.answers,
+  (newAnswers) => {
+    if (props.test.name === 'MRT-A' && newAnswers && local.value) {
+      const userAge = props.participantProfile?.age ?? null;
+      const updatedScores = calculateScores(newAnswers, userAge);
+
+      // We need to merge the new scores into the local value without replacing it
+      // to avoid breaking the v-model reference.
+      Object.assign(local.value, updatedScores);
+    }
+  },
+  { deep: true }
+);
+
 
 function formatTime(seconds?: number | null) {
   if (seconds == null) return '–';

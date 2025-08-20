@@ -8,6 +8,7 @@ import TestResultViewer from '@/components/TestResultViewer.vue';
 const props = defineProps<{
   isOpen: boolean;
   assignment: any;
+  participant: any;
 }>();
 
 const emit = defineEmits(['close']);
@@ -53,6 +54,7 @@ function closeModal() {
         v-if="editable"
         :test="assignment.test"
         v-model="editable"
+        :participant-profile="participant?.participant_profile"
         class="flex-1 overflow-y-auto mb-4"
       />
       <DialogFooter>
