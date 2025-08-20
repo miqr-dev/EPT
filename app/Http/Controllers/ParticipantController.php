@@ -27,15 +27,15 @@ class ParticipantController extends Controller
     $mrtTest = \App\Models\Test::where('name', 'MRT-A')->first();
     $mrtResult = null;
     if ($mrtTest) {
-        $assignment = TestAssignment::where('participant_id', $user->id)
-            ->where('test_id', $mrtTest->id)
-            ->first();
+      $assignment = TestAssignment::where('participant_id', $user->id)
+        ->where('test_id', $mrtTest->id)
+        ->first();
 
-        if ($assignment) {
-            $mrtResult = TestResult::where('assignment_id', $assignment->id)
-                ->latest()
-                ->first();
-        }
+      if ($assignment) {
+        $mrtResult = TestResult::where('assignment_id', $assignment->id)
+          ->latest()
+          ->first();
+      }
     }
 
     return inertia('Participant', [
@@ -174,6 +174,10 @@ class ParticipantController extends Controller
           $answers = $results['answers'] ?? [];
           $times = $results['question_times'] ?? [];
           $resultData = \App\Services\BrtAScorer::score($answers, $times);
+        } elseif ($examStep->test->name === 'BRT-B') {
+          $answers = $results['answers'] ?? [];
+          $times = $results['question_times'] ?? [];
+          $resultData = \App\Services\BrtBScorer::score($answers, $times);
         } elseif ($examStep->test->name === 'FPI-R') {
           $answers = $results['answers'] ?? [];
           $totalTime = $results['total_time_seconds'] ?? null;
@@ -182,12 +186,12 @@ class ParticipantController extends Controller
           $age = $profile->age ?? null;
           $resultData = \App\Services\FpiRScorer::score($answers, $sex, $age, $totalTime);
         } elseif ($examStep->test->name === 'MRT-A') {
-            $userAnswers = array_column($results['answers'] ?? [], 'user_answer');
-            $questionTimes = array_column($results['answers'] ?? [], 'time_seconds');
-            $user->load('participantProfile');
-            $profile = $user->participantProfile;
-            $age = $profile->age ?? null;
-            $resultData = \App\Services\MrtAScorer::score($userAnswers, $age, $questionTimes);
+          $userAnswers = array_column($results['answers'] ?? [], 'user_answer');
+          $questionTimes = array_column($results['answers'] ?? [], 'time_seconds');
+          $user->load('participantProfile');
+          $profile = $user->participantProfile;
+          $age = $profile->age ?? null;
+          $resultData = \App\Services\MrtAScorer::score($userAnswers, $age, $questionTimes);
         }
 
         $testResult = TestResult::create([
@@ -234,19 +238,19 @@ class ParticipantController extends Controller
   }
 
   public function list()
-    {
-        $user = Auth::user();
-        $cityId = $user->city_id;
+  {
+    $user = Auth::user();
+    $cityId = $user->city_id;
 
-        $participants = \App\Models\User::where('role', 'participant')
-            ->where('city_id', $cityId)
-            ->with(['participantProfile', 'testAssignments.test', 'testAssignments.results' => function ($query) {
-                $query->orderBy('created_at', 'desc');
-            }])
-            ->get();
+    $participants = \App\Models\User::where('role', 'participant')
+      ->where('city_id', $cityId)
+      ->with(['participantProfile', 'testAssignments.test', 'testAssignments.results' => function ($query) {
+        $query->orderBy('created_at', 'desc');
+      }])
+      ->get();
 
-        return Inertia::render('Participants/List', [
-            'participants' => $participants,
-        ]);
-    }
+    return Inertia::render('Participants/List', [
+      'participants' => $participants,
+    ]);
+  }
 }
