@@ -240,7 +240,9 @@ class ParticipantController extends Controller
 
         $participants = \App\Models\User::where('role', 'participant')
             ->where('city_id', $cityId)
-            ->with(['participantProfile', 'testAssignments.test', 'testAssignments.results'])
+            ->with(['participantProfile', 'testAssignments.test', 'testAssignments.results' => function ($query) {
+                $query->orderBy('created_at', 'desc');
+            }])
             ->get();
 
         return Inertia::render('Participants/List', [
