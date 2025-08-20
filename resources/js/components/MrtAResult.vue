@@ -14,6 +14,14 @@ const props = defineProps<{
 }>();
 
 const showDetails = ref(false);
+const chartRef = ref<HTMLDivElement | null>(null);
+const tableRef = ref<HTMLDivElement | null>(null);
+
+defineExpose({
+  chartEl: chartRef,
+  detailsEl: tableRef,
+  showDetails,
+});
 
 function formatTime(sec: number | null): string {
   if (sec === null || isNaN(sec)) return "–";
@@ -123,7 +131,7 @@ const mrtQuestions = [
     </button>
     <div v-if="showDetails">
       <h3 class="font-bold mb-2">Antwort- und Bearbeitungszeit je Aufgabe</h3>
-      <div class="overflow-x-auto">
+      <div ref="tableRef" class="overflow-x-auto">
         <table class="min-w-full text-sm border rounded-lg shadow">
           <thead class="bg-muted/40">
             <tr>
@@ -182,7 +190,7 @@ const mrtQuestions = [
             <span class="text-xs text-gray-700 dark:text-gray-300 mt-1 font-bold">PR</span>
           </div>
         </div>
-        <div style="width: 480px; height: 320px;">
+        <div ref="chartRef" style="width: 480px; height: 320px;">
           <Line :data="chartData" :options="chartOptions" />
         </div>
         <div class="w-full flex justify-center mt-6">

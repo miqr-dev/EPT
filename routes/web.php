@@ -7,6 +7,7 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\ExamStepStatusController;
 use App\Http\Controllers\TestResultController;
+use App\Http\Controllers\MrtAPdfController;
 
 Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     // All role-protected pages
@@ -49,6 +50,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('/api/active-exams', [ExamController::class, 'getActiveExams'])->name('api.active-exams');
     Route::get('/participants', [ParticipantController::class, 'list'])->name('participants.list');
     Route::put('/test-results/{testResult}', [TestResultController::class, 'update'])->name('test-results.update');
+    Route::post('/mrt-a/pdf/{type}', MrtAPdfController::class)->name('mrt-a.export.pdf');
 });
 
 Route::get('/login', function () {
