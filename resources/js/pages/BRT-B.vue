@@ -30,22 +30,22 @@ const page = usePage<{ auth: { user: { name: string } } }>();
 const userName = computed(() => page.props.auth?.user?.name ?? '');
 const emit = defineEmits(['complete']);
 const questions = ref<Question[]>([
-  { text: "619020 – 541600 = ?", answers: ["77420"] },
-  { text: "619020 = 174309 + ?", answers: ["444711"] },
-  { text: "4 : 80 = ?", answers: ["0,05"] },
-  { text: "0,2 · ____ = 0,1", answers: ["0,5", "1/2"] },
-  { text: "1/3 : 1/2 = ?", answers: ["2/3"] },
-  { text: "Verwandle 0,4 in einen gewöhnlichen Bruch.", answers: ["2/5", "4/10"] },
-  { text: "Ein Mechaniker hat aus 3 Teilen ein Gerät hergestellt. Die Einzelteile wiegen: 50 g, 9,4 kg, 1050 g. Wie viel wiegt das gesamte Gerät?", answers: ["10500", "10500 g", "10500g", "10,5", "10,5Kg", "10,5kg", "10,5 Kg", "10,5 kg"] },
-  { text: "Rechne um: Wie viel g sind 9 kg und 1 g?", answers: ["9001","9001g", "9001 g", "9001 G", "9001G"] },
-  { text: "Wie viel Zinsen erbringen 1000 € zu 4 % in einem Jahr?", answers: ["40","40€", "40 €"] },
-  { text: "Rudi kauft sich ein neues Mofa. Es kostet 1390 €. Bei Barzahlung bekommt er 2 % Rabatt. Wie viel muss er bezahlen?", answers: ["1362,2","1362,20","1362,20 €", "1362,2 €", "1362,2€", "1362,20€"] },
-  { text: "Im Sägewerk können aus einem Baumstamm 20 Bretter von 3 cm Dicke geschnitten werden. Wie viele Bretter erhält man, wenn sie 2 cm dick sind?", answers: ["30"] },
-  { text: "Im Sägewerk können aus einem Baumstamm 20 Bretter von 3 cm Dicke geschnitten werden. Wie dick wird ein Brett, wenn man 15 Bretter aus dem Stamm schneidet?", answers: ["4", "4cm", "4 cm", "4 Cm", "4Cm"] },
-  { text: "Berechne die Grundstücksgröße in m².", answers: ["930" , "930 m²", "930m²", "930 m2"], image: "/images/Math/Mathe1.png" },
-  { text: "Das Rad hat einen Durchmesser von 0,6 m. Welche Strecke legt es zurück, wenn es sich 100 mal dreht?", answers: ["188,4","188,4 m","188,4m"], image: "/images/Math/Mathe2.png" },
-  { text: "√81 = ?", answers: ["9"] },
-  { text: "10³ = ?", answers: ["1000"] },
+  { text: "619020 – 540600 = ?", answers: ["78420"] },
+  { text: "619020 = 170309 + ?", answers: ["448.711"] },
+  { text: "4 : 50 = ?", answers: ["0,08"] },
+  { text: "0,4 · ____ = 0,1", answers: ["0,25", "1/4"] },
+  { text: "1/8 : 1/3 = ?", answers: ["3/8"] },
+  { text: "Verwandle 0,6 in einen gewöhnlichen Bruch.", answers: ["6/10", "3/5"] },
+  { text: "Ein Mechaniker hat aus 3 Teilen ein Gerät hergestellt. Die Einzelteile wiegen: 50 g, 6,4 kg, 1050 g. Wie viel wiegt das gesamte Gerät?", answers: ["7500", "7500 g", "7500g", "7,5", "7,5Kg", "7,5kg", "7,5 Kg", "7,5 kg"] },
+  { text: "Rechne um: Wie viel g sind 5 kg und 1 g?", answers: ["5001","5001g", "5001 g", "5001 G", "5001G"] },
+  { text: "Wie viel Zinsen erbringen 1000 € zu 2 % in einem Jahr?", answers: ["20","20€", "20 €"] },
+  { text: "Rudi kauft sich ein neues Mofa. Es kostet 1390 €. Bei Barzahlung bekommt er 3 % Rabatt. Wie viel muss er bezahlen?", answers: ["1348,3","1348,30","1348,30 €", "1348,3 €", "1348,3€", "1348,30€"] },
+  { text: "Im Sägewerk können aus einem Baumstamm 30 Bretter von 2 cm Dicke geschnitten werden. Wie viele Bretter erhält man, wenn sie 3 cm dick sind?", answers: ["20","20 Bretter"] },
+  { text: "Im Sägewerk können aus einem Baumstamm 30 Bretter von 2 cm Dicke geschnitten werden. Wie dick wird ein Brett, wenn man 10 Bretter aus dem Stamm schneidet?", answers: ["6", "6cm", "6 cm", "6 Cm", "6Cm"] },
+  { text: "Berechne die Grundstücksgröße in m².", answers: ["840" , "840 m²", "840m²", "840 m2"], image: "/images/Math/MatheB1.png" },
+  { text: "Das Rad hat einen Durchmesser von 0,3 m. Welche Strecke legt es zurück, wenn es sich 100 mal dreht?", answers: ["94,2","94,2 m","94,2m"], image: "/images/Math/Mathe2.png" },
+  { text: "√49 = ?", answers: ["7"] },
+  { text: "10⁴ = ?", answers: ["10000"] },
 ]);
 
 const showTest = ref(false);
@@ -285,7 +285,7 @@ function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[])
   <Head title="Tests" />
   <div class="p-4">
     <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold">Tests</h1>
+      <h1 class="text-2xl font-bold">BRT-B</h1>
       <span class="font-medium">{{ userName }}</span>
     </div>
     <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20">

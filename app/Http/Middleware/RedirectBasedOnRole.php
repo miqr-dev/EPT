@@ -50,6 +50,7 @@ class RedirectBasedOnRole
         'participant.onboarding.save',
         'mrt-a',
         'brt-a',
+        'brt-b',
         'fpi-r',
         'lmt',
         'lmt2',

@@ -25,6 +25,11 @@ const mainNavItems: NavItem[] = [
     icon: LayoutGrid, // Placeholder icon, can be changed later
   },
   {
+    title: 'BRT-B',
+    href: '/brt-b', // The new route for the Tests page
+    icon: LayoutGrid, // Placeholder icon, can be changed later
+  },
+  {
     title: 'MRT-A',
     href: '/mrt-a', // The new route for the Tests page
     icon: LayoutGrid, // Placeholder icon, can be changed later
