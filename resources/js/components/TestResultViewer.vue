@@ -2,9 +2,10 @@
 defineOptions({
   inheritAttrs: false,
 });
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { Input } from '@/components/ui/input';
 import MrtAResult from '@/components/MrtAResult.vue';
+const bit2Groups = ['TH', 'GH', 'TN', 'EH', 'LF', 'KB', 'VB', 'LG', 'SE'];
 
 interface Answer {
   question: string;
@@ -26,7 +27,7 @@ interface ResultJson {
 const props = defineProps<{
   modelValue: ResultJson | null;
   test: { name: string };
-  participantProfile?: { age: number } | null;
+  participantProfile?: { age: number; sex?: string } | null;
 }>();
 
 const emit = defineEmits(['update:modelValue']);
@@ -55,11 +56,131 @@ function formatTime(seconds?: number | null) {
   const s = seconds % 60;
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
+
+// --- BIT‑2 percentile table (real values) ---
+interface NormRow {
+  percentile: string;
+  [key: string]: string | number | null;
+}
+
+const bit2NormTables: Record<'m' | 'f', NormRow[]> = {
+  m: [
+    { percentile: '100', TH: 43, GH: 45, TN: 45, EH: 44, LF: 45, KB: 42, VB: 45, LG: 44, SE: 45 },
+    { percentile: '95-', TH: 27, GH: 41, TN: 36, EH: 38, LF: 39, KB: 34, VB: 34, LG: 37, SE: 42 },
+    { percentile: '90-', TH: 24, GH: 38, TN: 34, EH: 35, LF: 36, KB: 31, VB: 31, LG: 35, SE: 41 },
+    { percentile: '85-', TH: 22, GH: 37, TN: 31, EH: 34, LF: 34, KB: 29, VB: 29, LG: 32, SE: 39 },
+    { percentile: '80-', TH: 20, GH: 36, TN: 28, EH: 32, LF: 32, KB: 28, VB: 27, LG: 31, SE: 38 },
+    { percentile: '75-', TH: null, GH: 35, TN: 26, EH: 30, LF: 31, KB: 27, VB: 26, LG: 29, SE: 37 },
+    { percentile: '70-', TH: 19, GH: 33, TN: 25, EH: 29, LF: 29, KB: 26, VB: 25, LG: 27, SE: 36 },
+    { percentile: '65-', TH: 18, GH: 32, TN: 24, EH: 28, LF: 28, KB: 25, VB: null, LG: 26, SE: null },
+    { percentile: '60-', TH: 17, GH: 31, TN: 23, EH: 27, LF: 27, KB: 24, VB: 24, LG: 25, SE: 35 },
+    { percentile: '55-', TH: 16, GH: 29, TN: 22, EH: 26, LF: 26, KB: null, VB: 23, LG: 24, SE: 34 },
+    { percentile: '50-', TH: 15, GH: 28, TN: 21, EH: null, LF: 25, KB: 23, VB: 22, LG: 23, SE: 33 },
+    { percentile: '45-', TH: 14, GH: 27, TN: 20, EH: 25, LF: 24, KB: null, VB: 21, LG: 22, SE: 32 },
+    { percentile: '40-', TH: 13, GH: null, TN: 19, EH: 24, LF: 23, KB: 22, VB: 20, LG: 21, SE: 31 },
+    { percentile: '35-', TH: 12, GH: 26, TN: 18, EH: 23, LF: 22, KB: 21, VB: 19, LG: 20, SE: 30 },
+    { percentile: '30-', TH: null, GH: 24, TN: 17, EH: 22, LF: 21, KB: 20, VB: 18, LG: 18, SE: 29 },
+    { percentile: '25-', TH: 11, GH: 23, TN: 16, EH: 21, LF: 20, KB: 19, VB: 16, LG: 17, SE: 27 },
+    { percentile: '20-', TH: 10, GH: 21, TN: 15, EH: 20, LF: 18, KB: 18, VB: 15, LG: 16, SE: 26 },
+    { percentile: '15-', TH: 9, GH: 20, TN: 14, EH: 19, LF: 17, KB: 17, VB: 13, LG: 15, SE: 24 },
+    { percentile: '10-', TH: null, GH: 17, TN: 12, EH: 17, LF: 16, KB: 15, VB: 11, LG: 14, SE: 22 },
+    { percentile: '5-', TH: null, GH: 15, TN: 11, EH: 14, LF: 14, KB: 13, VB: 9, LG: 12, SE: 18 },
+    { percentile: '>0-', TH: null, GH: 9, TN: 9, EH: 9, LF: 9, KB: 9, VB: null, LG: 9, SE: 10 },
+  ],
+  f: [],
+};
+bit2NormTables.f = bit2NormTables.m;
+
+const normTable = computed(() =>
+  bit2NormTables[props.participantProfile?.sex === 'f' ? 'f' : 'm']
+);
+
+const highlighted = computed(() => {
+  const map: Record<string, number | null> = {};
+  if (!local.value) return map;
+  for (const code of bit2Groups) {
+    const raw = local.value.group_totals?.[code] ?? 0;
+    let idx: number | null = null;
+    const rows = normTable.value;
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const threshold = row[code] as number | null;
+      if (threshold != null && raw >= threshold) {
+        idx = i;
+        break;
+      }
+    }
+    map[code] = idx;
+  }
+  return map;
+});
 </script>
 
 <template>
   <div v-if="local" v-bind="$attrs">
     <MrtAResult v-if="test.name === 'MRT-A'" :results="local" />
+    <div v-else-if="test.name === 'BIT-2'" class="overflow-x-auto">
+      <table class="w-full text-sm border rounded-lg overflow-hidden shadow mb-4">
+        <thead class="bg-muted/40 dark:bg-gray-700">
+          <tr>
+            <th
+              v-for="(code, idx) in bit2Groups"
+              :key="code"
+              class="px-3 py-2 font-semibold text-center"
+            >
+              {{ idx + 1 }} {{ code }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="dark:bg-gray-800">
+            <td v-for="code in bit2Groups" :key="code" class="px-3 py-2 text-center">
+              {{ local.group_totals?.[code] ?? 0 }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- Norm table -->
+      <table class="min-w-full text-xs border">
+        <thead class="bg-muted/40 dark:bg-gray-700">
+          <tr>
+            <th class="px-2 py-1 font-semibold text-center">{{
+              props.participantProfile?.sex === 'f' ? '♀' : '♂'
+            }}</th>
+            <th
+              v-for="code in bit2Groups"
+              :key="code"
+              class="px-2 py-1 font-semibold"
+            >
+              {{ code }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="(row, rIdx) in normTable"
+            :key="rIdx"
+            :class="{
+              'border-b-2 border-blue-500': ['85-', '60-', '35-', '20-'].includes(
+                row.percentile as string
+              ),
+            }"
+          >
+            <td class="px-2 py-1 text-center">{{ row.percentile }}</td>
+            <td
+              v-for="code in bit2Groups"
+              :key="code"
+              class="px-2 py-1 text-center"
+              :class="{
+                'text-red-600 underline decoration-2': highlighted[code] === rIdx,
+              }"
+            >
+              {{ row[code] }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <template v-else>
       <table class="w-full text-sm border rounded-lg overflow-hidden shadow mb-4">
         <tbody>

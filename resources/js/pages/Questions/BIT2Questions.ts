@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 import { Theater } from "lucide-vue-next";
 
+=======
+>>>>>>> codex/create-bit-2-test-interface-and-structure-dmssyt
 export interface BIT2Question {
     number: number;
     text: string;
@@ -88,4 +91,8 @@ export const BIT2_QUESTIONS: BIT2Question[] = [
     { number: 79, text: 'In meteorologischem Institut arbeiten', group: 'TN' },
     { number: 80, text: 'Versteigerungen leiten', group: 'KB' },
     { number: 81, text: 'Schwererziehbare Kinder betreuen', group: 'SE' },
+<<<<<<< HEAD
 ];
+=======
+];
+>>>>>>> codex/create-bit-2-test-interface-and-structure-dmssyt
