@@ -97,6 +97,9 @@ return [
 
     'cipher' => 'AES-256-CBC',
 
+    'node_binary' => env('NODE_BINARY_PATH', '/usr/bin/node'),
+    'npm_binary' => env('NPM_BINARY_PATH', '/usr/bin/npm'),
+
     'key' => env('APP_KEY'),
 
     'previous_keys' => [

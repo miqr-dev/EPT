@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { Line } from 'vue-chartjs';
+import axios from 'axios';
 import {
   Chart, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title, registerables
 } from 'chart.js';
@@ -90,6 +91,21 @@ const mrtQuestions = [
   { number: 58, correct: ["C"] }, { number: 59, correct: ["D"] }, { number: 60, correct: ["D"] }
 ];
 
+const downloadPdf = () => {
+    axios.post('/mrt-a/pdf', { results: props.results }, { responseType: 'blob' })
+        .then(response => {
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'mrt-a-results.pdf');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        })
+        .catch(error => {
+            console.error('Error downloading PDF:', error);
+        });
+};
 </script>
 
 <template>
@@ -184,6 +200,12 @@ const mrtQuestions = [
         </div>
         <div style="width: 480px; height: 320px;">
           <Line :data="chartData" :options="chartOptions" />
+        </div>
+        <div class="flex justify-center mt-4">
+            <button @click="downloadPdf"
+                 class="px-4 py-2 rounded-lg font-semibold bg-blue-500 text-white hover:bg-blue-600">
+                Download PDF
+            </button>
         </div>
         <div class="w-full flex justify-center mt-6">
           <div class="w-[400px] h-8 rounded-full bg-gray-200 dark:bg-gray-700 relative overflow-hidden shadow-inner">
