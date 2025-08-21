@@ -5,6 +5,14 @@ defineOptions({
 import MrtAResult from '@/components/MrtAResult.vue';
 import LmtResult from '@/components/LmtResult.vue';
 import FpiResult from '@/pages/Scores/FPI/FPIResult.vue';
+import { norms_male_16_24 } from '@/pages/Scores/FPI/norms_male_16_24';
+import { norms_male_25_44 } from '@/pages/Scores/FPI/norms_male_25_44';
+import { norms_male_45_59 } from '@/pages/Scores/FPI/norms_male_45_59';
+import { norms_male_60up } from '@/pages/Scores/FPI/norms_male_60up';
+import { norms_female_16_24 } from '@/pages/Scores/FPI/norms_female_16_24';
+import { norms_female_25_44 } from '@/pages/Scores/FPI/norms_female_25_44';
+import { norms_female_45_59 } from '@/pages/Scores/FPI/norms_female_45_59';
+import { norms_female_60up } from '@/pages/Scores/FPI/norms_female_60up';
 import { Input } from '@/components/ui/input';
 import { computed, ref, watch } from 'vue';
 const bit2Groups = ['TH', 'GH', 'TN', 'EH', 'LF', 'KB', 'VB', 'LG', 'SE'];
@@ -57,6 +65,21 @@ function formatTime(seconds?: number | null) {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function getFpiNormTable(sex?: string, age?: number) {
+    if (!sex || !age) return null;
+    const isFemale = sex === 'f';
+    if (age >= 16 && age <= 24) {
+        return isFemale ? norms_female_16_24 : norms_male_16_24;
+    }
+    if (age >= 25 && age <= 44) {
+        return isFemale ? norms_female_25_44 : norms_male_25_44;
+    }
+    if (age >= 45 && age <= 59) {
+        return isFemale ? norms_female_45_59 : norms_male_45_59;
+    }
+    return isFemale ? norms_female_60up : norms_male_60up;
 }
 
 // --- BIT‑2 percentile table (real values) ---
@@ -139,9 +162,23 @@ const highlighted = computed(() => {
 const fpiStanines = computed(() => {
     if (!local.value) return [];
     if (Array.isArray(local.value.stanines)) return local.value.stanines;
+    const stanineKeys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
     if (local.value.category_stanines) {
-        const keys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
-        return keys.map((k) => local.value?.category_stanines?.[k] ?? null);
+        return stanineKeys.map((k) => local.value?.category_stanines?.[k] ?? null);
+    }
+    if (local.value.category_scores) {
+        const scoreKeys: (number | string)[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'E', 'N'];
+        const table = getFpiNormTable(props.participantProfile?.sex, props.participantProfile?.age);
+        return stanineKeys.map((key, idx) => {
+            const raw = local.value?.category_scores?.[scoreKeys[idx]] ?? null;
+            if (!table || raw == null) return null;
+            const ranges: [number, number][] = (table as any)[key] ?? [];
+            for (let i = 0; i < ranges.length; i++) {
+                const [min, max] = ranges[i];
+                if (raw >= min && raw <= max) return i + 1;
+            }
+            return null;
+        });
     }
     return [];
 });
