@@ -111,7 +111,6 @@ const bit2NormTables: Record<'m' | 'f', NormRow[]> = {
         { percentile: '>0', TH: null, GH: 9, TN: 9, EH: 9, LF: 9, KB: 9, VB: null, LG: 9, SE: 10 },
     ],
 };
-bit2NormTables.f = bit2NormTables.m;
 
 const normTable = computed(() => bit2NormTables[props.participantProfile?.sex === 'f' ? 'f' : 'm']);
 
