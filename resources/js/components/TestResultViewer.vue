@@ -3,6 +3,7 @@ defineOptions({
     inheritAttrs: false,
 });
 import MrtAResult from '@/components/MrtAResult.vue';
+import LmtResult from '@/components/LmtResult.vue';
 import { Input } from '@/components/ui/input';
 import { computed, ref, watch } from 'vue';
 const bit2Groups = ['TH', 'GH', 'TN', 'EH', 'LF', 'KB', 'VB', 'LG', 'SE'];
@@ -138,6 +139,7 @@ const highlighted = computed(() => {
 <template>
     <div v-if="local" v-bind="$attrs">
         <MrtAResult v-if="test.name === 'MRT-A'" :results="local" />
+        <LmtResult v-else-if="test.name === 'LMT'" :results="local" />
         <div v-else-if="test.name === 'BIT-2'" class="overflow-x-auto">
             <table class="mb-4 w-full overflow-hidden rounded-lg border text-sm shadow">
                 <thead class="bg-muted/40 dark:bg-gray-700">
