@@ -250,24 +250,31 @@ class ParticipantController extends Controller
 
     $participants = \App\Models\User::where('role', 'participant')
       ->where('city_id', $cityId)
-      ->with(['participantProfile', 'testAssignments.test', 'testAssignments.results' => function ($query) {
-        $query->orderBy('created_at', 'desc');
-      }])
+      ->with([
+        'participantProfile',
+        'testAssignments.test',
+        'testAssignments.results' => function ($query) {
+          $query->orderBy('created_at', 'desc');
+        },
+        'tests',
+      ])
       ->get();
 
-    $examTestIdsByParticipant = ExamStepStatus::whereIn('participant_id', $participants->pluck('id'))
-      ->join('exam_steps', 'exam_step_statuses.exam_step_id', '=', 'exam_steps.id')
-      ->select('exam_step_statuses.participant_id', 'exam_steps.test_id')
+    $examTestIdsByParticipant = ExamParticipant::whereIn('participant_id', $participants->pluck('id'))
+      ->join('exam_steps', 'exam_participants.exam_id', '=', 'exam_steps.exam_id')
+      ->select('exam_participants.participant_id', 'exam_steps.test_id')
       ->get()
       ->groupBy('participant_id')
       ->map(function ($rows) {
-        return $rows->pluck('test_id')->unique();
+        return $rows->pluck('test_id')->filter()->unique();
       });
 
     $participants->transform(function ($participant) use ($examTestIdsByParticipant) {
       $allowedTestIds = $examTestIdsByParticipant->get($participant->id, collect());
       $filteredAssignments = $participant->testAssignments->whereIn('test_id', $allowedTestIds);
       $participant->setRelation('testAssignments', $filteredAssignments->values());
+      $filteredTests = $participant->tests->whereIn('id', $allowedTestIds);
+      $participant->setRelation('tests', $filteredTests->values());
       return $participant;
     });
 
