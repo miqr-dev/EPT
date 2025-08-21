@@ -4,6 +4,7 @@ defineOptions({
 });
 import MrtAResult from '@/components/MrtAResult.vue';
 import LmtResult from '@/components/LmtResult.vue';
+import FpiResult from '@/pages/Scores/FPI/FPIResult.vue';
 import { Input } from '@/components/ui/input';
 import { computed, ref, watch } from 'vue';
 const bit2Groups = ['TH', 'GH', 'TN', 'EH', 'LF', 'KB', 'VB', 'LG', 'SE'];
@@ -134,12 +135,33 @@ const highlighted = computed(() => {
     }
     return map;
 });
+
+const fpiStanines = computed(() => {
+    if (!local.value) return [];
+    if (Array.isArray(local.value.stanines)) return local.value.stanines;
+    if (local.value.category_stanines) {
+        const keys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
+        return keys.map((k) => local.value?.category_stanines?.[k] ?? null);
+    }
+    return [];
+});
+
+const fpiRohwerte = computed(() => {
+    if (!local.value) return [];
+    if (Array.isArray(local.value.rohwerte)) return local.value.rohwerte;
+    if (local.value.category_scores) {
+        const keys: (string | number)[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'E', 'N'];
+        return keys.map((k) => local.value?.category_scores?.[k] ?? null);
+    }
+    return [];
+});
 </script>
 
 <template>
     <div v-if="local" v-bind="$attrs">
         <MrtAResult v-if="test.name === 'MRT-A'" :results="local" />
         <LmtResult v-else-if="test.name === 'LMT'" :results="local" />
+        <FpiResult v-else-if="test.name === 'FPI-R'" :stanines="fpiStanines" :rohwerte="fpiRohwerte" />
         <div v-else-if="test.name === 'BIT-2'" class="overflow-x-auto">
             <table class="mb-4 w-full overflow-hidden rounded-lg border text-sm shadow">
                 <thead class="bg-muted/40 dark:bg-gray-700">
