@@ -42,19 +42,25 @@ const getCatNum = (index: number): string => {
 
 interface Point { x: number; y: number }
 
-const stanineCoords = computed<Point[]>(() => {
-  return props.stanines
+function stanineX(idx: number) {
+  return cellWidth * idx + cellWidth / 2;
+}
+
+function rowY(idx: number) {
+  return rowHeight * idx + rowHeight / 2;
+}
+
+const stanineCoords = computed<Point[]>(() =>
+  props.stanines
     .map((s, idx) => {
       if (!s || s < 1 || s > 9) return null;
-      const x = (9 - s) * cellWidth + cellWidth / 2;
-      const y = idx * rowHeight + rowHeight / 2;
-      return { x, y } as Point;
+      return { x: stanineX(s - 1), y: rowY(idx) } as Point;
     })
-    .filter((p): p is Point => p !== null);
-});
+    .filter((p): p is Point => p !== null),
+);
 
 const staninePoints = computed(() =>
-  stanineCoords.value.map(({ x, y }) => `${x},${y}`).join(' '),
+  stanineCoords.value.map((pt) => `${pt.x},${pt.y}`).join(' '),
 );
 </script>
 
