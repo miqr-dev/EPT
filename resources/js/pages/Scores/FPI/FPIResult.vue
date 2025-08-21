@@ -31,6 +31,8 @@ const cellWidth = 37.5;
 const rowHeight = 65; // Generous height for clear spacing
 const gridWidth = cellWidth * 9;
 const gridHeight = rowHeight * 12;
+const headerHeight = 48;
+const graphOffset = 85 + 230;
 
 const getCatNum = (index: number): string => {
   if (index < 10) return (index + 1).toString();
@@ -91,27 +93,41 @@ const staninePoints = computed(() => {
       </template>
 
       <!-- Graph Overlays -->
-      <div class="graph-overlay-container">
-          <!-- CORRECTED v-for loop with :key -->
-          <div
-            v-for="(pos, index) in [2.5, 6.5]"
-            :key="'blue-line-' + index"
-            class="blue-line"
-            :style="{ left: `${cellWidth * pos}px` }"
-          ></div>
-          <svg :width="gridWidth" :height="gridHeight" class="polyline-svg">
-              <polyline :points="staninePoints" fill="none" stroke="black" stroke-width="1.5"/>
-          </svg>
-          <div class="average-box" :style="{ top: 0, height: `${rowHeight * 10}px`, left: `${cellWidth * 3}px`, width: `${cellWidth * 3}px` }">
-             <div class="percent-label top">
-                54% <div class="percent-connector"></div>
-             </div>
+      <div
+        class="graph-overlay-container"
+        :style="{
+          top: `${headerHeight}px`,
+          left: `${graphOffset}px`,
+          width: `${gridWidth}px`,
+          height: `${gridHeight}px`,
+        }"
+      >
+        <div
+          v-for="(pos, index) in [2.5, 6.5]"
+          :key="`blue-line-${index}`"
+          class="blue-line"
+          :style="{ left: `${cellWidth * pos}px` }"
+        ></div>
+        <svg :width="gridWidth" :height="gridHeight" class="polyline-svg">
+          <polyline :points="staninePoints" fill="none" stroke="black" stroke-width="1.5" />
+        </svg>
+        <div
+          class="average-box"
+          :style="{ top: 0, height: `${rowHeight * 10}px`, left: `${cellWidth * 3}px`, width: `${cellWidth * 3}px` }
+          "
+        >
+          <div class="percent-label top">
+            54%
+            <div class="percent-connector"></div>
           </div>
-          <div class="average-box" :style="{ top: `${rowHeight * 10}px`, height: `${rowHeight * 2}px`, left: `${cellWidth * 3}px`, width: `${cellWidth * 3}px` }">
-             <div class="percent-label bottom">
-                54%
-             </div>
-          </div>
+        </div>
+        <div
+          class="average-box"
+          :style="{ top: `${rowHeight * 10}px`, height: `${rowHeight * 2}px`, left: `${cellWidth * 3}px`, width: `${cellWidth * 3}px` }
+          "
+        >
+          <div class="percent-label bottom">54%</div>
+        </div>
       </div>
 
       <!-- Footer Row -->
@@ -201,8 +217,8 @@ const staninePoints = computed(() => {
 .graph-dots { display: flex; justify-content: space-around; align-items: center; height: 100%; width: 100%;}
 .dot { width: 4px; height: 4px; background-color: #000; border-radius: 50%; }
 .graph-overlay-container {
-  grid-column: 3 / 4; grid-row: 2 / 14;
-  position: absolute; pointer-events: none;
+  position: absolute;
+  pointer-events: none;
 }
 .blue-line {
   position: absolute;
