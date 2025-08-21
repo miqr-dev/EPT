@@ -40,14 +40,22 @@ const getCatNum = (index: number): string => {
   return 'N';
 };
 
-const staninePoints = computed(() => {
-  return props.stanines.map((s, idx) => {
-    if (!s || s < 1 || s > 9) return null;
-    const x = (9 - s) * cellWidth + cellWidth / 2;
-    const y = idx * rowHeight + rowHeight / 2;
-    return `${x},${y}`;
-  }).filter(Boolean).join(' ');
+interface Point { x: number; y: number }
+
+const stanineCoords = computed<Point[]>(() => {
+  return props.stanines
+    .map((s, idx) => {
+      if (!s || s < 1 || s > 9) return null;
+      const x = (9 - s) * cellWidth + cellWidth / 2;
+      const y = idx * rowHeight + rowHeight / 2;
+      return { x, y } as Point;
+    })
+    .filter((p): p is Point => p !== null);
 });
+
+const staninePoints = computed(() =>
+  stanineCoords.value.map(({ x, y }) => `${x},${y}`).join(' '),
+);
 </script>
 
 <template>
@@ -110,6 +118,16 @@ const staninePoints = computed(() => {
         ></div>
         <svg :width="gridWidth" :height="gridHeight" class="polyline-svg">
           <polyline :points="staninePoints" fill="none" stroke="black" stroke-width="1.5" />
+          <circle
+            v-for="(pt, idx) in stanineCoords"
+            :key="idx"
+            :cx="pt.x"
+            :cy="pt.y"
+            r="4"
+            fill="white"
+            stroke="black"
+            stroke-width="1.5"
+          />
         </svg>
         <div
           class="average-box"
