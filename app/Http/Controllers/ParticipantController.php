@@ -255,6 +255,22 @@ class ParticipantController extends Controller
       }])
       ->get();
 
+    $examTestIdsByParticipant = ExamStepStatus::whereIn('participant_id', $participants->pluck('id'))
+      ->join('exam_steps', 'exam_step_statuses.exam_step_id', '=', 'exam_steps.id')
+      ->select('exam_step_statuses.participant_id', 'exam_steps.test_id')
+      ->get()
+      ->groupBy('participant_id')
+      ->map(function ($rows) {
+        return $rows->pluck('test_id')->unique();
+      });
+
+    $participants->transform(function ($participant) use ($examTestIdsByParticipant) {
+      $allowedTestIds = $examTestIdsByParticipant->get($participant->id, collect());
+      $filteredAssignments = $participant->testAssignments->whereIn('test_id', $allowedTestIds);
+      $participant->setRelation('testAssignments', $filteredAssignments->values());
+      return $participant;
+    });
+
     return Inertia::render('Participants/List', [
       'participants' => $participants,
     ]);
