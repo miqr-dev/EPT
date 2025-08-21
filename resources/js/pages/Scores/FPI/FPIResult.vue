@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-// Props with default values to replicate the target PDF image exactly
-const props = withDefaults(defineProps<{
-  stanines?: number[],
-  rohwerte?: (number | string)[],
-}>(), {
-  stanines: () => [5, 6, 6, 5, 5, 5, 5, 5, 5, 4, 5, 4],
-  rohwerte: () => ['9', '8', '12', '10', '6', '12', '12', '12', '11', '', '12', '14'],
-});
+// Stanine positions and raw scores are provided by the parent component.
+// No defaults are supplied so a missing value simply renders an empty graph.
+const props = defineProps<{
+  stanines?: (number | null)[];
+  rohwerte?: (number | string | null)[];
+}>();
 
 // Category labels and descriptions
 const chartCategories = [
@@ -31,6 +29,8 @@ const cellWidth = 37.5;
 const rowHeight = 65; // Generous height for clear spacing
 const gridWidth = cellWidth * 9;
 const gridHeight = rowHeight * 12;
+const headerHeight = 48;
+const graphOffset = 85 + 230;
 
 const getCatNum = (index: number): string => {
   if (index < 10) return (index + 1).toString();
@@ -38,14 +38,30 @@ const getCatNum = (index: number): string => {
   return 'N';
 };
 
-const staninePoints = computed(() => {
-  return props.stanines.map((s, idx) => {
-    if (!s || s < 1 || s > 9) return null;
-    const x = (9 - s) * cellWidth + cellWidth / 2;
-    const y = idx * rowHeight + rowHeight / 2;
-    return `${x},${y}`;
-  }).filter(Boolean).join(' ');
+interface Point { x: number; y: number }
+
+function stanineX(idx: number) {
+  return cellWidth * idx + cellWidth / 2;
+}
+
+function rowY(idx: number) {
+  return rowHeight * idx + rowHeight / 2;
+}
+
+const stanineCoords = computed<Point[]>(() => {
+  const values = props.stanines ?? [];
+  return values
+    .map((s, idx) => {
+      const val = typeof s === 'string' ? Number(s) : s;
+      if (!val || val < 1 || val > 9) return null;
+      return { x: stanineX(val - 1), y: rowY(idx) } as Point;
+    })
+    .filter((p): p is Point => p !== null);
 });
+
+const staninePoints = computed(() =>
+  stanineCoords.value.map((pt) => `${pt.x},${pt.y}`).join(' '),
+);
 </script>
 
 <template>
@@ -91,27 +107,51 @@ const staninePoints = computed(() => {
       </template>
 
       <!-- Graph Overlays -->
-      <div class="graph-overlay-container">
-          <!-- CORRECTED v-for loop with :key -->
-          <div
-            v-for="(pos, index) in [2.5, 6.5]"
-            :key="'blue-line-' + index"
-            class="blue-line"
-            :style="{ left: `${cellWidth * pos}px` }"
-          ></div>
-          <svg :width="gridWidth" :height="gridHeight" class="polyline-svg">
-              <polyline :points="staninePoints" fill="none" stroke="black" stroke-width="1.5"/>
-          </svg>
-          <div class="average-box" :style="{ top: 0, height: `${rowHeight * 10}px`, left: `${cellWidth * 3}px`, width: `${cellWidth * 3}px` }">
-             <div class="percent-label top">
-                54% <div class="percent-connector"></div>
-             </div>
+      <div
+        class="graph-overlay-container"
+        :style="{
+          top: `${headerHeight}px`,
+          left: `${graphOffset}px`,
+          width: `${gridWidth}px`,
+          height: `${gridHeight}px`,
+        }"
+      >
+        <div
+          v-for="(pos, index) in [3, 6]"
+          :key="`blue-line-${index}`"
+          class="blue-line"
+          :style="{ left: `${cellWidth * pos - 0.75}px` }"
+        ></div>
+        <svg :width="gridWidth" :height="gridHeight" class="polyline-svg">
+          <polyline :points="staninePoints" fill="none" stroke="black" stroke-width="1.5" />
+          <circle
+            v-for="(pt, idx) in stanineCoords"
+            :key="idx"
+            :cx="pt.x"
+            :cy="pt.y"
+            r="4"
+            fill="white"
+            stroke="black"
+            stroke-width="1.5"
+          />
+        </svg>
+        <div
+          class="average-box"
+          :style="{ top: 0, height: `${rowHeight * 10}px`, left: `${cellWidth * 3}px`, width: `${cellWidth * 3}px` }
+          "
+        >
+          <div class="percent-label top">
+            54%
+            <div class="percent-connector"></div>
           </div>
-          <div class="average-box" :style="{ top: `${rowHeight * 10}px`, height: `${rowHeight * 2}px`, left: `${cellWidth * 3}px`, width: `${cellWidth * 3}px` }">
-             <div class="percent-label bottom">
-                54%
-             </div>
-          </div>
+        </div>
+        <div
+          class="average-box"
+          :style="{ top: `${rowHeight * 10}px`, height: `${rowHeight * 2}px`, left: `${cellWidth * 3}px`, width: `${cellWidth * 3}px` }
+          "
+        >
+          <div class="percent-label bottom">54%</div>
+        </div>
       </div>
 
       <!-- Footer Row -->
@@ -161,7 +201,7 @@ const staninePoints = computed(() => {
 }
 .standardwert-title, .right-desc-title { align-items: flex-start; padding-left: 8px;}
 .cell {
-  height: v-bind(rowHeight + 'px'); /* CRITICAL: v-bind for dynamic height */
+  height: v-bind('rowHeight + "px"'); /* dynamic height per row */
   border-bottom: 1px solid #e0e0e0;
 }
 .section-divider-bottom {
@@ -201,8 +241,8 @@ const staninePoints = computed(() => {
 .graph-dots { display: flex; justify-content: space-around; align-items: center; height: 100%; width: 100%;}
 .dot { width: 4px; height: 4px; background-color: #000; border-radius: 50%; }
 .graph-overlay-container {
-  grid-column: 3 / 4; grid-row: 2 / 14;
-  position: absolute; pointer-events: none;
+  position: absolute;
+  pointer-events: none;
 }
 .blue-line {
   position: absolute;

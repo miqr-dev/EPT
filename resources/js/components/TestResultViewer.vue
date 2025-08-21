@@ -4,6 +4,15 @@ defineOptions({
 });
 import MrtAResult from '@/components/MrtAResult.vue';
 import LmtResult from '@/components/LmtResult.vue';
+import FpiResult from '@/pages/Scores/FPI/FPIResult.vue';
+import { norms_male_16_24 } from '@/pages/Scores/FPI/norms_male_16_24';
+import { norms_male_25_44 } from '@/pages/Scores/FPI/norms_male_25_44';
+import { norms_male_45_59 } from '@/pages/Scores/FPI/norms_male_45_59';
+import { norms_male_60up } from '@/pages/Scores/FPI/norms_male_60up';
+import { norms_female_16_24 } from '@/pages/Scores/FPI/norms_female_16_24';
+import { norms_female_25_44 } from '@/pages/Scores/FPI/norms_female_25_44';
+import { norms_female_45_59 } from '@/pages/Scores/FPI/norms_female_45_59';
+import { norms_female_60up } from '@/pages/Scores/FPI/norms_female_60up';
 import { Input } from '@/components/ui/input';
 import { computed, ref, watch } from 'vue';
 const bit2Groups = ['TH', 'GH', 'TN', 'EH', 'LF', 'KB', 'VB', 'LG', 'SE'];
@@ -56,6 +65,22 @@ function formatTime(seconds?: number | null) {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function getFpiNormTable(sex?: string, age?: number) {
+    if (!sex || !age) return null;
+    const s = sex.toLowerCase();
+    const isFemale = s === 'f' || s === 'female' || s === 'w' || s === 'weiblich';
+    if (age >= 16 && age <= 24) {
+        return isFemale ? norms_female_16_24 : norms_male_16_24;
+    }
+    if (age >= 25 && age <= 44) {
+        return isFemale ? norms_female_25_44 : norms_male_25_44;
+    }
+    if (age >= 45 && age <= 59) {
+        return isFemale ? norms_female_45_59 : norms_male_45_59;
+    }
+    return isFemale ? norms_female_60up : norms_male_60up;
 }
 
 // --- BIT‑2 percentile table (real values) ---
@@ -134,12 +159,64 @@ const highlighted = computed(() => {
     }
     return map;
 });
+
+const fpiStanines = computed(() => {
+    if (!local.value) return [];
+    const stanineKeys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
+    const scoreKeys: (number | string)[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'E', 'N'];
+    const src: any = local.value;
+
+    // Direct arrays
+    const direct = src.stanines || src.categoryStanines;
+    if (Array.isArray(direct) && direct.some((v: any) => v != null)) {
+        return direct.map((v: any) => (v != null ? Number(v) : null));
+    }
+
+    // Object with keys
+    const obj = src.category_stanines || src.categoryStanines || src.stanines;
+    if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+        const arr = stanineKeys.map((k) => (obj[k] != null ? Number(obj[k]) : null));
+        if (arr.some((v) => v != null)) return arr;
+    }
+
+    // Derive from raw scores
+    const scores = src.category_scores || src.categoryScores;
+    if (scores) {
+        const table = getFpiNormTable(props.participantProfile?.sex, props.participantProfile?.age);
+        if (!table) return [];
+        return stanineKeys.map((key, idx) => {
+            const raw = scores[scoreKeys[idx]];
+            if (raw == null) return null;
+            const ranges: [number, number][] = (table as any)[key] ?? [];
+            for (let i = 0; i < ranges.length; i++) {
+                const [min, max] = ranges[i];
+                if (raw >= min && raw <= max) return i + 1;
+            }
+            return null;
+        });
+    }
+    return [];
+});
+
+const fpiRohwerte = computed(() => {
+    if (!local.value) return [];
+    const src: any = local.value;
+    if (Array.isArray(src.rohwerte)) return src.rohwerte;
+    if (Array.isArray(src.categoryScores)) return src.categoryScores;
+    const scores = src.category_scores || src.categoryScores;
+    if (scores) {
+        const keys: (string | number)[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'E', 'N'];
+        return keys.map((k) => scores[k] ?? null);
+    }
+    return [];
+});
 </script>
 
 <template>
     <div v-if="local" v-bind="$attrs">
         <MrtAResult v-if="test.name === 'MRT-A'" :results="local" />
         <LmtResult v-else-if="test.name === 'LMT'" :results="local" />
+        <FpiResult v-else-if="test.name === 'FPI-R'" :stanines="fpiStanines" :rohwerte="fpiRohwerte" />
         <div v-else-if="test.name === 'BIT-2'" class="overflow-x-auto">
             <table class="mb-4 w-full overflow-hidden rounded-lg border text-sm shadow">
                 <thead class="bg-muted/40 dark:bg-gray-700">
