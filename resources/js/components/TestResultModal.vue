@@ -124,14 +124,14 @@ async function exportDetailsPdf() {
 </script>
 
 <template>
-  <Dialog :open="isOpen" @update:open="closeModal">
+  <Dialog :open="isOpen" @update:open="(open) => { if (!open) closeModal(); }">
     <DialogContent
       class="w-screen !h-screen !max-w-none !top-0 !left-0 !translate-x-0 !translate-y-0 !rounded-none"
     >
       <DialogHeader>
         <div class="flex items-center justify-between w-full">
           <DialogTitle>Edit Test Result</DialogTitle>
-          <div v-if="assignment.test.name === 'MRT-A'" class="flex gap-2">
+          <div v-if="assignment && assignment.test && assignment.test.name === 'MRT-A'" class="flex gap-2">
             <Button variant="outline" size="sm" @click="exportChartPdf">Chart PDF</Button>
             <Button variant="outline" size="sm" @click="exportDetailsPdf">Antworten PDF</Button>
           </div>
@@ -140,7 +140,7 @@ async function exportDetailsPdf() {
       <TestResultViewer
         v-if="editable"
         ref="viewerRef"
-        :test="assignment.test"
+        :test="assignment?.test"
         v-model="editable"
         :participant-profile="participant?.participant_profile"
         class="flex-1 overflow-y-auto mb-4"
