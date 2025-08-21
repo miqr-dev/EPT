@@ -69,7 +69,8 @@ function formatTime(seconds?: number | null) {
 
 function getFpiNormTable(sex?: string, age?: number) {
     if (!sex || !age) return null;
-    const isFemale = sex === 'f';
+    const s = sex.toLowerCase();
+    const isFemale = s === 'f' || s === 'female' || s === 'w' || s === 'weiblich';
     if (age >= 16 && age <= 24) {
         return isFemale ? norms_female_16_24 : norms_male_16_24;
     }
@@ -161,17 +162,25 @@ const highlighted = computed(() => {
 
 const fpiStanines = computed(() => {
     if (!local.value) return [];
-    if (Array.isArray(local.value.stanines)) return local.value.stanines;
     const stanineKeys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
-    if (local.value.category_stanines) {
-        return stanineKeys.map((k) => local.value?.category_stanines?.[k] ?? null);
+
+    // Already-calculated arrays from backend
+    if (Array.isArray(local.value.stanines) && local.value.stanines.some((v) => v != null)) {
+        return local.value.stanines;
     }
+    if (local.value.category_stanines) {
+        const arr = stanineKeys.map((k) => local.value?.category_stanines?.[k] ?? null);
+        if (arr.some((v) => v != null)) return arr;
+    }
+
+    // Derive from raw scores if no stanines provided
     if (local.value.category_scores) {
         const scoreKeys: (number | string)[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'E', 'N'];
         const table = getFpiNormTable(props.participantProfile?.sex, props.participantProfile?.age);
+        if (!table) return [];
         return stanineKeys.map((key, idx) => {
             const raw = local.value?.category_scores?.[scoreKeys[idx]] ?? null;
-            if (!table || raw == null) return null;
+            if (raw == null) return null;
             const ranges: [number, number][] = (table as any)[key] ?? [];
             for (let i = 0; i < ranges.length; i++) {
                 const [min, max] = ranges[i];
