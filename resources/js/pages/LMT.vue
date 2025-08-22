@@ -252,10 +252,9 @@ const totalTimeTaken = computed(() => {
 
       <!-- Start Screen -->
       <div v-if="!showTest && !isTestComplete" class="text-center space-y-6">
-        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Willkommen zum LMT-Test</h2>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Willkommen zum L-M-T</h2>
         <p class="text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-          Dieser Test besteht aus {{ questions.length }} Fragen, aufgeteilt auf {{ totalPages }} Seiten.
-        </p>
+In diesem Verfahren geht es um ganz allgemeine Verhaltensweisen. Sie finden eine Anzahl von Fragen. Bei jeder Frage stehen mehrere mögliche Antworten. Beantworten Sie bitte jede Frage nur mit einem Kreuz. Überlegen Sie nicht lange, sondern gehen Sie nach Ihrem ersten Eindruck. Es gibt keine richtigen und falschen Antworten.        </p>
         <Button @click="startTest" class="px-8 py-3 text-lg font-semibold rounded">
           Test starten
         </Button>

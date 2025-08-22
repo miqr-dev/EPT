@@ -168,21 +168,21 @@ const confirmEnd = () => {
 };
 
 const calculatedResults = computed(() => {
-    if (!isTestComplete.value) return null;
+  if (!isTestComplete.value) return null;
 
-    const scoreData = calculateScores(
-        userAnswers.value.map(ans => ({ user_answer: ans })),
-        userAge.value
-    );
+  const scoreData = calculateScores(
+    userAnswers.value.map(ans => ({ user_answer: ans })),
+    userAge.value
+  );
 
-    return {
-        ...scoreData,
-        total_time_seconds: totalTimeTaken.value,
-        answers: scoreData.answers.map((ans, i) => ({
-            ...ans,
-            time_seconds: questionTimes.value[i],
-        })),
-    };
+  return {
+    ...scoreData,
+    total_time_seconds: totalTimeTaken.value,
+    answers: scoreData.answers.map((ans, i) => ({
+      ...ans,
+      time_seconds: questionTimes.value[i],
+    })),
+  };
 });
 
 watch(currentQuestionIndex, async (newIndex, oldIndex) => {
@@ -218,6 +218,7 @@ const startTest = () => {
 </script>
 
 <template>
+
   <Head title="Tests" />
   <div class="p-4">
     <div class="flex justify-between items-center mb-4">
@@ -227,13 +228,15 @@ const startTest = () => {
       <div class="flex-1 flex flex-col gap-4">
         <!-- Start Test Screen -->
         <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
-          <h2 class="text-2xl font-bold mb-4">Willkommen zum MRT-A Deutsch-Test</h2>
+          <h2 class="text-2xl font-bold mb-4">Willkommen zum Mannheimer Rechtschreibtest</h2>
           <p class="mb-6 text-base text-center max-w-xl">
-            Dieser Test besteht aus {{ mrtQuestions.length }} Aufgaben. Wählen Sie jeweils die richtige Schreibweise.
-            Die benötigte Zeit pro Aufgabe wird automatisch gemessen.
+            Mit diesem Verfahren wollen wir wissen, wie Ihre Rechtschreibkenntnisse sind. Jede Aufgabe enthält 4 Wörter.
+            Sie entscheiden, welches richtig geschrieben ist. </p>
+          <p> Beispielaufgabe: </p>
+          <p> Wörther:</p>
+          <p> Dieses klicken Sie ab und bestätigen diese mit einem weiteren. Es gilt die alte und neue Rechtschreibung.
           </p>
-          <Button @click="startTest" class="px-8 py-3 text-lg font-semibold rounded-xl shadow"
-            :disabled="!userAge">
+          <Button @click="startTest" class="px-8 py-3 mt-6 text-lg font-semibold rounded-xl shadow" :disabled="!userAge">
             Test starten
           </Button>
         </div>
@@ -268,7 +271,8 @@ const startTest = () => {
             <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline">
               Zurück
             </Button>
-            <Button v-if="isLastQuestion" @click="finishTest" :disabled="!userAnswers[currentQuestionIndex]" variant="destructive">
+            <Button v-if="isLastQuestion" @click="finishTest" :disabled="!userAnswers[currentQuestionIndex]"
+              variant="destructive">
               Test beenden
             </Button>
             <Button v-else @click="handleNextClick" :disabled="!userAnswers[currentQuestionIndex]">
@@ -276,7 +280,7 @@ const startTest = () => {
             </Button>
           </div>
         </div>
-        
+
         <!-- Test Results -->
         <div v-else-if="isTestComplete && showResults">
           <MrtAResult :results="calculatedResults" />

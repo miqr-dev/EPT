@@ -258,13 +258,17 @@ const startTest = () => {
       <div class="flex-1 flex flex-col gap-4">
         <!-- Start Test Screen -->
         <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
-          <h2 class="text-2xl font-bold mb-4">Willkommen zum Mathematik-Test</h2>
+          <h2 class="text-2xl font-bold mb-4">Willkommen zum Berufsbezogenen Rechentest</h2>
           <p class="mb-6 text-base text-center max-w-xl">
-            Dieser Test besteht aus {{ questions.length }} Fragen. Sie können während des Tests jederzeit zwischen den
-            Fragen navigieren.
-            Die benötigte Zeit pro Frage wird automatisch gemessen.
-          </p>
-          <Button @click="startTest" class="px-8 py-3 text-lg font-semibold rounded-xl shadow">
+            In diesem Verfahren finden Sie insgesamt {{ questions.length }} Rechenaufgaben, die zu lösen sind. Hierfür haben Sie 35 Minuten Zeit. Halten Sie sich nicht zu lange an einer Aufgabe auf, wenn Sie sie nicht lösen können. Gehen Sie zur nächsten weiter.</p>
+            <p> Wir wollen wissen, auf welcher Ebene Sie mit Ihren Kenntnissen stehen und wo wir Sie individuell fördern können. </p>
+            <br>
+            <p>
+            Für Nebenrechnungen haben Sie ein zusätzlichen Block.</p> 
+            <p>Bitte notieren Sie vor Abgabe Ihres Blattes Ihren Namen und das heutige Datum darauf.
+            </p>
+            
+          <Button @click="startTest" class="px-8 py-3 text-lg mt-6 font-semibold rounded-xl shadow">
             Test starten
           </Button>
         </div>

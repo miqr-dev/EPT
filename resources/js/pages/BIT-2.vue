@@ -18,7 +18,9 @@ const firstPageQuestions = computed(() => BIT2_QUESTIONS.slice(0, 27));
 const secondPageLeft = computed(() => BIT2_QUESTIONS.slice(27, 54));
 const secondPageRight = computed(() => BIT2_QUESTIONS.slice(54));
 
-const instructions = `B – I – T. II    Form BA\n\nHinweise zur Bearbeitung\n\nDiese Untersuchung soll ein Bild Ihrer Interessen an verschiedenen beruflichen Arbeiten vermitteln. Sie finden im Innern dieses Fragebogens 81 solcher Tätigkeiten aufgeführt. Der Reihe nach, von 1–81, sollen Sie Ihr Interesse an jeder Tätigkeit beurteilen. Sie haben dafür die Ziffern\n\n5  sehr gern\n4  gern\n3  weder gern noch ungern\n2  ungern\n1  sehr ungern\n\nWenn Sie eine Tätigkeit sehr gern ausüben würden, dann geben Sie ihr 5 Punkte, indem Sie das Kästchen mit der "5" ankreuzen und so weiter. Wenn Sie eine Tätigkeit ungern ausüben würden, geben Sie ihr 2 Punkte, indem Sie das Kästchen mit der "2" ankreuzen. Wenn Sie eine Tätigkeit weder gern noch ungern ausüben würden, geben Sie ihr 3 Punkte.\n\nBenutzen Sie bitte keine Wischmethode, sondern kreuzen Sie jedes Kästchen sauber an. Beginnen Sie links oben und arbeiten Sie der Reihe nach. Wenn Sie die 81. Tätigkeit beurteilt haben, ist diese Bearbeitung abgeschlossen.`;
+const instructions = `Dieser Fragebogen soll ein Bild Ihrer Interessen an verschiedenen beruflichen Arbeiten vermitteln. Dafür werden Ihnen 81 Tätigkeiten aufgeführt. Beurteilen Sie diese der Reihe nach. Sie haben dafür die Ziffern\n\n5  sehr gern\n4  gern\n3  weder gern noch ungern\n2  ungern\n1  sehr ungern\n\n zur Verfügung. 
+
+Wenn Sie eine Tätigkeit sehr gern ausüben würden, dann geben Sie ihr 5 Punkte, indem Sie das Kästchen mit der "5" ankreuzen und so weiter. Wenn Sie eine Tätigkeit ungern ausüben würden, geben Sie ihr 2 Punkte, indem Sie das Kästchen mit der "2" ankreuzen. Wenn Sie eine Tätigkeit weder gern noch ungern ausüben würden, geben Sie ihr 3 Punkte.\n\nBenutzen Sie bitte keine Wischmethode, sondern kreuzen Sie jedes Kästchen sauber an. Beginnen Sie links oben und arbeiten Sie der Reihe nach. Wenn Sie die 81. Tätigkeit beurteilt haben, ist diese Bearbeitung abgeschlossen.`;
 
 function startTest() {
     showTest.value = true;
@@ -56,7 +58,7 @@ function confirmEnd() {
         <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4">
             <div class="flex flex-1 flex-col gap-4">
                 <div v-if="!showTest" class="flex h-full flex-col items-center justify-center">
-                    <h2 class="mb-4 text-2xl font-bold">B – I – T. II Form BA</h2>
+                    <h2 class="mb-4 text-2xl font-bold">B – I – T. II</h2>
                     <div
                         class="mb-6 w-full max-w-2xl rounded-lg border bg-yellow-50 p-4 text-base whitespace-pre-line text-foreground dark:bg-yellow-900"
                     >

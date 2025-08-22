@@ -15,11 +15,8 @@ import {
 const emit = defineEmits(['complete']);
 
 const instructions = `
-Sie werden auf den folgenden Seiten eine Reihe von Aussagen über bestimmte Verhaltensweisen, Einstellungen und Gewohnheiten finden. Sie können jede entweder mit „stimmt“ oder mit „stimmt nicht“ beantworten. Setzen Sie bitte ein Kreuz (X) in den dafür vorgesehenen Kreis. Es gibt keine richtigen oder falschen Antworten, weil jeder Mensch das Recht zu eigenen Anschauungen hat.
-Antworten Sie bitte so, wie es für Sie zutrifft.
-Beachten Sie folgende Punkte:
-• Überlegen Sie bitte nicht erst, welche Antwort vielleicht den „besten Eindruck“ machen könnte, sondern antworten Sie so, wie es für Sie persönlich gilt. Manche Fragen kommen Ihnen vielleicht sehr persönlich vor. Bedenken Sie aber, dass Ihre Antworten unbedingt vertraulich behandelt werden.
-• Denken Sie nicht lange über einen Satz nach, sondern geben Sie die Antwort, die Ihnen unmittelbar in den Sinn kommt. Natürlich können mit diesen kurzen Fragen nicht alle Besonderheiten berücksichtigt werden. Vielleicht passen deshalb einige nicht gut auf Sie. Kreuzen Sie aber trotzdem immer eine Antwort an, und zwar die, welche noch am ehesten für Sie zutrifft.
+Willkommen zum FPI-R-Fragebogen
+In diesem Fragebogen geht um eine Reihe von Aussagen über bestimmte Verhaltensweisen, Einstellungen, Gewohnheiten, die auch für den Berufskontext wichtig sind. Bitte beantworten Sie jede Aussage mit ‘stimmt‘ oder ‘stimmt nicht‘. Kreuzen Sie an, was auf Sie zu trifft. Es gibt keine richtigen und falschen Antworten. Überlegen Sie bitte nicht erst, welche Antwort vielleicht den „besten Eindruck“ machen könnte, sondern antworten Sie so, wie es für Sie persönlich gilt.
 `;
 
 // Settings
