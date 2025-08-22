@@ -123,22 +123,22 @@ const setStatus = (status: string) => {
       <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ exam.name }}</h2>
       <div class="flex space-x-2">
         <Button v-if="exam.status === 'not_started'" @click="startExam">
-          Start Exam
+          Prüfung starten
         </Button>
         <template v-if="exam.status === 'in_progress'">
-          <Button v-for="step in exam.steps" :key="step.id" @click="setStep(step.id)"
+            <Button v-for="step in exam.steps" :key="step.id" @click="setStep(step.id)"
             :disabled="exam.current_exam_step_id === step.id">
-            Start {{ step.test.name }}
+            {{ step.test.name }} starten
           </Button>
         </template>
         <Button v-if="exam.status === 'in_progress'" @click="setStatus('paused')">
-          Pause Exam
+          Prüfung pausieren
         </Button>
         <Button v-else-if="exam.status === 'paused'" @click="setStatus('in_progress')">
-          Resume Exam
+          Prüfung fortsetzen
         </Button>
         <Button v-if="exam.status !== 'completed'" @click="setStatus('completed')">
-          End Exam
+          Prüfung beenden
         </Button>
       </div>
     </div>
@@ -148,11 +148,11 @@ const setStatus = (status: string) => {
           <tr>
             <th scope="col"
               class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-              Participant
+              Teilnehmer:in
             </th>
             <th scope="col"
               class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-              Current Test
+              Aktueller Test
             </th>
             <th scope="col"
               class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -160,7 +160,7 @@ const setStatus = (status: string) => {
             </th>
             <th scope="col"
               class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-              Time Remaining
+              Verbleibende Zeit
             </th>
           </tr>
         </thead>
@@ -171,7 +171,7 @@ const setStatus = (status: string) => {
               {{ participant.user.name }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-              {{ localExam.current_step?.test.name || 'N/A' }}
+              {{ localExam.current_step?.test.name || '–' }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
               <span v-if="getParticipantStatus(participant)"
@@ -184,7 +184,7 @@ const setStatus = (status: string) => {
               </span>
               <span v-else
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                N/A
+                –
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue'; // Assuming a main layout
 import Heading from '@/components/Heading.vue'; // Assuming a Heading component
@@ -42,10 +42,8 @@ const form = useForm({
 // Function to open a modal/form for creating a new question (placeholder)
 const openCreateModal = () => {
   form.reset();
-  // Logic to show a modal, for now, we can navigate to a create page if one exists
-  // For simplicity, let's assume a create route `questions.create` exists
-  // router.visit(route('questions.create'));
-  console.log('Open create modal/form');
+  // TODO: Modal für das Erstellen einer Frage öffnen
+  console.log('Modalerstellungsformular öffnen');
 };
 
 // Function to open a modal/form for editing a question (placeholder)
@@ -62,7 +60,7 @@ const openEditModal = (question: any) => {
 
 // Function to delete a question
 const deleteQuestion = (id: number) => {
-  if (confirm('Are you sure you want to delete this question?')) {
+  if (confirm('Sind Sie sicher, dass Sie diese Frage löschen möchten?')) {
     router.delete(route('questions.destroy', id), {
       preserveScroll: true,
       onSuccess: () => {
@@ -75,14 +73,14 @@ const deleteQuestion = (id: number) => {
 </script>
 
 <template>
-  <Head title="Manage Questions" />
+  <Head title="Fragen verwalten" />
   <AppLayout>
     <div class="container mx-auto px-4 py-8">
       <div class="flex justify-between items-center mb-6">
-        <Heading level="1">Manage Questions</Heading>
+        <Heading level="1">Fragen verwalten</Heading>
         <Button @click="openCreateModal">
           <PlusCircle class="h-5 w-5 mr-2" />
-          Add Question
+          Frage hinzufügen
         </Button>
       </div>
 
@@ -92,7 +90,7 @@ const deleteQuestion = (id: number) => {
           <input
             type="text"
             v-model="searchQuery"
-            placeholder="Search questions..."
+            placeholder="Fragen suchen..."
             class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           />
         </form>
@@ -104,19 +102,19 @@ const deleteQuestion = (id: number) => {
           <TableHeader>
             <TableRow>
               <TableHead>Text</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Assigned Test</TableHead>
-              <TableHead class="text-right">Actions</TableHead>
+              <TableHead>Typ</TableHead>
+              <TableHead>Zugeordneter Test</TableHead>
+              <TableHead class="text-right">Aktionen</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow v-if="questions.data.length === 0">
-              <TableCell colspan="4" class="text-center text-gray-500 py-4">No questions found.</TableCell>
+              <TableCell colspan="4" class="text-center text-gray-500 py-4">Keine Fragen gefunden.</TableCell>
             </TableRow>
             <TableRow v-for="question in questions.data" :key="question.id">
               <TableCell>{{ question.text }}</TableCell>
               <TableCell>{{ question.type }}</TableCell>
-              <TableCell>{{ question.test?.name || 'N/A' }}</TableCell>
+              <TableCell>{{ question.test?.name || '–' }}</TableCell>
               <TableCell class="text-right">
                 <Button variant="ghost" size="icon" @click="openEditModal(question)" class="mr-2">
                   <Edit class="h-4 w-4" />
@@ -136,7 +134,6 @@ const deleteQuestion = (id: number) => {
           <template v-for="(link, key) in questions.links" :key="key">
             <Link
               :href="link.url!"
-              v-html="link.label"
               class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
               :class="{
                 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600': link.active,
@@ -146,7 +143,9 @@ const deleteQuestion = (id: number) => {
                 'hidden md:inline-flex': !(link.active || key === 0 || key === questions.links.length - 1 || (link.label.includes('Previous') || link.label.includes('Next'))) // Basic responsive pagination
               }"
               :disabled="!link.url"
-            />
+            >
+              <span v-html="link.label" />
+            </Link>
           </template>
         </nav>
       </div>

@@ -130,9 +130,9 @@ async function exportDetailsPdf() {
     >
       <DialogHeader>
         <div class="flex items-center justify-between w-full">
-          <DialogTitle>Edit Test Result</DialogTitle>
+          <DialogTitle>Testergebnis bearbeiten</DialogTitle>
           <div v-if="assignment && assignment.test && assignment.test.name === 'MRT-A'" class="flex gap-2">
-            <Button variant="outline" size="sm" @click="exportChartPdf">Chart PDF</Button>
+            <Button variant="outline" size="sm" @click="exportChartPdf">Diagramm PDF</Button>
             <Button variant="outline" size="sm" @click="exportDetailsPdf">Antworten PDF</Button>
           </div>
         </div>
@@ -146,7 +146,7 @@ async function exportDetailsPdf() {
         class="flex-1 overflow-y-auto mb-4"
       />
       <DialogFooter>
-        <Button type="submit" @click="submit">Save changes</Button>
+        <Button type="submit" @click="submit">Änderungen speichern</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>

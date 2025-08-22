@@ -12,20 +12,20 @@ import { ArrowRight } from 'lucide-vue-next';   // Example icon
 </script>
 
 <template>
-  <Head title="Settings" />
+  <Head title="Einstellungen" />
   <AppLayout>
     <div class="container mx-auto px-4 py-8">
-      <Heading level="1" class="mb-6">Settings</Heading>
+      <Heading level="1" class="mb-6">Einstellungen</Heading>
 
       <div class="space-y-4">
         <div class="bg-white shadow-sm rounded-lg p-6">
-          <Heading level="2" class="mb-2">Question Management</Heading>
+          <Heading level="2" class="mb-2">Fragenverwaltung</Heading>
           <p class="text-gray-600 mb-4">
-            Create, edit, delete, and manage questions for your tests.
+            Erstellen, bearbeiten und verwalten Sie Fragen für Ihre Tests.
           </p>
           <Link :href="route('settings.questions')">
             <Button variant="outline">
-              Go to Questions
+              Zu den Fragen
               <ArrowRight class="ml-2 h-4 w-4" />
             </Button>
           </Link>

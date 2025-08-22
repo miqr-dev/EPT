@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import TestResultModal from '@/components/TestResultModal.vue';
 
-const props = defineProps<{
+defineProps<{
     participants: any[];
 }>();
 
@@ -33,14 +33,14 @@ function closeModal() {
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <Card>
                 <CardHeader>
-                    <CardTitle>Participants</CardTitle>
+                    <CardTitle>Teilnehmende</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Name</TableHead>
-                                <TableHead>Email</TableHead>
+                                <TableHead>E-Mail</TableHead>
                                 <TableHead>Tests</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -60,14 +60,14 @@ function closeModal() {
                                                 </div>
                                                 <div v-if="assignment.results.length > 0">
                                                     <Button @click="viewTestResult(assignment, participant)" size="sm">
-                                                        View Results
+                                                        Ergebnisse anzeigen
                                                     </Button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div v-else>
-                                        No tests assigned.
+                                        Keine Tests zugewiesen.
                                     </div>
                                 </TableCell>
                             </TableRow>

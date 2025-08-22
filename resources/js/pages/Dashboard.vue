@@ -201,7 +201,7 @@ function addTests() {
 
 <template>
 
-  <Head title="Dashboard" />
+  <Head title="Übersicht" />
   <AppLayout>
     <div
       class="flex min-h-screen flex-col items-center bg-[#f6f7f9] py-4 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -216,7 +216,7 @@ function addTests() {
           <div
             class="flex h-full flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow dark:border-gray-700 dark:bg-gray-800">
             <div class="flex items-center border-b border-gray-100 px-4 py-3 dark:border-gray-700">
-              <h2 class="flex-1 text-base font-semibold text-gray-800 dark:text-gray-200">Recent Users (6h)</h2>
+              <h2 class="flex-1 text-base font-semibold text-gray-800 dark:text-gray-200">Aktuelle Benutzer (6h)</h2>
               <span class="text-xs text-gray-500 dark:text-gray-400">{{ availableRecentUsers.length }}</span>
             </div>
             <div class="flex-1 overflow-auto">
@@ -241,8 +241,7 @@ function addTests() {
                     <td class="px-2 py-1">{{ user.firstname }}</td>
                   </tr>
                   <tr v-if="!availableRecentUsers.length">
-                    <td colspan="3" class="py-4 text-center text-gray-400 dark:text-gray-500">No recent users found.
-                    </td>
+                    <td colspan="3" class="py-4 text-center text-gray-400 dark:text-gray-500">Keine aktuellen Benutzer gefunden.</td>
                   </tr>
                 </tbody>
               </table>
@@ -254,20 +253,19 @@ function addTests() {
         <div class="flex flex-1 flex-col">
           <div
             class="h-full rounded-xl border border-gray-100 bg-white p-4 shadow dark:border-gray-700 dark:bg-gray-800">
-            <h2 class="mb-3 text-base font-semibold text-gray-800 dark:text-gray-200">Create New Exam</h2>
+            <h2 class="mb-3 text-base font-semibold text-gray-800 dark:text-gray-200">Neue Prüfung erstellen</h2>
             <div v-if="!showCreateExamForm">
               <button @click="showCreateExamForm = true"
                 class="w-full rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700">
-                Create New Exam
+                Neue Prüfung erstellen
               </button>
             </div>
             <div v-else>
               <div class="mb-4">
-                <label for="exam-title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Exam
-                  Title</label>
+                <label for="exam-title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Prüfungstitel</label>
                 <input type="text" id="exam-title" v-model="newExamTitle"
                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
-                  placeholder="e.g. Final Exam Summer 2025" />
+                  placeholder="z. B. Abschlussprüfung Sommer 2025" />
               </div>
               <div class="flex items-center gap-4">
                 <button @click="addSelectedUsersToStage" :disabled="!selectedRecentUserIds.length"
@@ -275,7 +273,7 @@ function addTests() {
                   &rarr;
                 </button>
                 <div class="h-24 flex-1 overflow-y-auto rounded-md border p-2 dark:border-gray-600">
-                  <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">Staged Participants:</p>
+                  <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">Ausgewählte Teilnehmer:innen:</p>
                   <ul>
                     <li v-for="userId in stagedUserIds" :key="userId" class="flex items-center justify-between text-sm">
                       <span>
@@ -285,11 +283,11 @@ function addTests() {
                       <button @click="removeStagedUser(userId)" class="text-red-500 hover:text-red-700">&times;</button>
                     </li>
                   </ul>
-                  <p v-if="!stagedUserIds.length" class="text-xs text-gray-400 dark:text-gray-500">No users staged.</p>
+                  <p v-if="!stagedUserIds.length" class="text-xs text-gray-400 dark:text-gray-500">Keine Teilnehmer:innen ausgewählt.</p>
                 </div>
               </div>
               <div class="mt-4">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Exam Steps</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Prüfungsschritte</label>
                 <div class="mt-2 grid grid-cols-2 gap-2">
                   <div v-for="test in props.tests" :key="test.id" class="flex items-center">
                     <input type="checkbox" :id="`test-${test.id}`" :value="test.id" v-model="newExamSteps"
@@ -303,11 +301,11 @@ function addTests() {
               <div class="mt-4 flex justify-end gap-2">
                 <button @click="showCreateExamForm = false"
                   class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200">
-                  Cancel
+                  Abbrechen
                 </button>
                 <button @click="saveExam" :disabled="!newExamTitle || !stagedUserIds.length"
                   class="rounded bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 disabled:opacity-50">
-                  Save Exam
+                  Prüfung speichern
                 </button>
               </div>
             </div>
@@ -319,7 +317,7 @@ function addTests() {
           <div
             class="flex h-full flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow dark:border-gray-700 dark:bg-gray-800">
             <div class="flex items-center border-b border-gray-100 px-4 py-3 dark:border-gray-700">
-              <h2 class="flex-1 text-base font-semibold text-gray-800 dark:text-gray-200">All Exams</h2>
+              <h2 class="flex-1 text-base font-semibold text-gray-800 dark:text-gray-200">Alle Prüfungen</h2>
               <span class="text-xs text-gray-500 dark:text-gray-400">{{ props.exams.length }}</span>
             </div>
             <div class="flex-1 overflow-auto">
@@ -327,7 +325,7 @@ function addTests() {
                 <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
                   <tr>
                     <th class="px-2 py-2 text-left font-medium">Name</th>
-                    <th class="px-2 py-2 text-left font-medium">City</th>
+                    <th class="px-2 py-2 text-left font-medium">Stadt</th>
                     <th class="px-2 py-2 text-left font-medium">Status</th>
                     <th class="px-2 py-2"></th>
                   </tr>
@@ -344,7 +342,7 @@ function addTests() {
                     </td>
                   </tr>
                   <tr v-if="!props.exams.length">
-                    <td colspan="4" class="py-4 text-center text-gray-400 dark:text-gray-500">No exams found.</td>
+                    <td colspan="4" class="py-4 text-center text-gray-400 dark:text-gray-500">Keine Prüfungen gefunden.</td>
                   </tr>
                 </tbody>
               </table>

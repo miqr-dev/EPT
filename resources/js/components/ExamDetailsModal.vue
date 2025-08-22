@@ -49,13 +49,13 @@ function startExam() {
         <button @click="closeModal" class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">&times;</button>
       </div>
       <div>
-        <h3 class="font-semibold mb-2 text-gray-800 dark:text-gray-200">Participants</h3>
+        <h3 class="font-semibold mb-2 text-gray-800 dark:text-gray-200">Teilnehmer:innen</h3>
         <ul class="text-gray-700 dark:text-gray-300">
           <li v-for="p in exam.participants" :key="p.id">{{ p.user.name }}, {{ p.user.firstname }}</li>
         </ul>
       </div>
       <div class="mt-4">
-        <h3 class="font-semibold mb-2 text-gray-800 dark:text-gray-200">Steps (Drag to re-order)</h3>
+        <h3 class="font-semibold mb-2 text-gray-800 dark:text-gray-200">Schritte (zum Neuordnen ziehen)</h3>
         <draggable v-model="localSteps" item-key="id" class="space-y-2">
           <template #item="{ element }">
             <div class="flex items-center justify-between p-2 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 cursor-move text-ray-800 dark:text-gray-200">
@@ -66,10 +66,10 @@ function startExam() {
         </draggable>
       </div>
       <div class="mt-6 flex justify-end gap-2">
-        <button @click="closeModal" class="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded hover:bg-ray-300 dark:hover:bg-gray-500">Close</button>
-        <button @click="saveChanges" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save Changes</button>
+        <button @click="closeModal" class="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded hover:bg-ray-300 dark:hover:bg-gray-500">Schließen</button>
+        <button @click="saveChanges" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Änderungen speichern</button>
         <button v-if="exam && exam.status === 'not_started'" @click="startExam" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-          Start Exam
+          Prüfung starten
         </button>
       </div>
     </div>

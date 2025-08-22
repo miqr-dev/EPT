@@ -5,7 +5,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -162,13 +162,14 @@ const deleteQuestion = (id: number) => {
           <Link
             v-if="link.url"
             :href="link.url"
-            v-html="link.label"
             class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
             :class="{
               'z-10 bg-indigo-50 border-indigo-500 text-indigo-600': link.active,
               'bg-white border-gray-300 text-gray-500 hover:bg-gray-50': !link.active,
             }"
-          />
+          >
+            <span v-html="link.label" />
+          </Link>
           <span v-else v-html="link.label" class="relative inline-flex items-center px-4 py-2 border text-sm font-medium text-gray-400"/>
         </template>
       </div>

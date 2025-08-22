@@ -46,7 +46,7 @@ onUnmounted(() => {
 <template>
   <div>
     <div class="mb-6 flex items-center gap-3">
-      <button @click="emit('back')" class="text-blue-600 hover:underline">&larr; Back to List</button>
+      <button @click="emit('back')" class="text-blue-600 hover:underline">&larr; Zurück zur Liste</button>
       <h1 class="text-2xl font-bold text-gray-800 flex-1">{{ props.exam.name }}</h1>
     </div>
     <div class="bg-white shadow rounded-xl border border-gray-100 p-6 flex flex-col gap-6">

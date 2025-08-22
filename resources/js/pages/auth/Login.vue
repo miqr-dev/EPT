@@ -22,9 +22,9 @@ const submit = () => {
 </script>
 
 <template>
-  <AuthBase title="Log in to your account" description="Enter your username and password below to log in">
+  <AuthBase title="Melden Sie sich an" description="Geben Sie unten Benutzername und Passwort ein, um sich anzumelden">
 
-    <Head title="Log in" />
+    <Head title="Anmelden" />
 
     <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
       {{ status }}
@@ -33,24 +33,24 @@ const submit = () => {
     <form @submit.prevent="submit" class="flex flex-col gap-6">
       <div class="grid gap-6">
         <div class="grid gap-2">
-          <Label for="username">Username</Label>
+          <Label for="username">Benutzername</Label>
           <Input id="username" type="text" required autofocus :tabindex="1" autocomplete="username"
-            v-model="form.username" placeholder="Username" />
+            v-model="form.username" placeholder="Benutzername" />
           <InputError :message="form.errors.username" />
         </div>
 
         <div class="grid gap-2">
           <div class="flex items-center justify-between">
-            <Label for="password">Password</Label>
+            <Label for="password">Passwort</Label>
           </div>
           <Input id="password" type="password" required :tabindex="2" autocomplete="current-password"
-            v-model="form.password" placeholder="Password" />
+            v-model="form.password" placeholder="Passwort" />
           <InputError :message="form.errors.password" />
         </div>
 
         <Button type="submit" class="mt-4 w-full" :tabindex="4" :disabled="form.processing">
           <LoaderCircle v-if="form.processing" class="h-4 w-4 animate-spin" />
-          Log in
+          Anmelden
         </Button>
       </div>
     </form>

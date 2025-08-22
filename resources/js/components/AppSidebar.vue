@@ -15,7 +15,7 @@ const mainNavItems: NavItem[] = [
     icon: LayoutGrid,
   },
   {
-    title: 'Participants',
+    title: 'Teilnehmende',
     href: '/participants',
     icon: Users,
   },
@@ -63,12 +63,12 @@ const footerNavItems: NavItem[] = [
     icon: Settings, // Using the Settings icon
   },
   {
-    title: 'Github Repo',
+    title: 'GitHub-Repo',
     href: 'https://github.com/laravel/vue-starter-kit',
     icon: Folder,
   },
   {
-    title: 'Documentation',
+    title: 'Dokumentation',
     href: 'https://laravel.com/docs/starter-kits#vue',
     icon: BookOpen,
   },

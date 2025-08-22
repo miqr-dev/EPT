@@ -12,7 +12,7 @@ const handleLogout = () => {
 
 <template>
 
-  <Head title="No Exam..." />
+  <Head title="Keine Prüfung" />
   <div class="flex items-center justify-center min-h-screen bg-gray-100">
     <div class="absolute top-4 right-4">
       <Link
@@ -27,7 +27,7 @@ const handleLogout = () => {
       </Link>
     </div>
     <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md text-center">
-      <h1 class="text-2xl font-bold text-gray-800">No Exam</h1>
+      <h1 class="text-2xl font-bold text-gray-800">Keine Prüfung</h1>
       <Link :href="route('my-exam')" class="block mt-4">
         <Button class="w-full">Zur Prüfung</Button>
       </Link>

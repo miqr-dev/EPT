@@ -18,12 +18,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <Head title="Launching Exam..." />
+  <Head title="Prüfung wird gestartet..." />
   <div class="flex items-center justify-center min-h-screen bg-gray-100">
     <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md text-center">
-      <h1 class="text-2xl font-bold text-gray-800">Launching Exam</h1>
-      <p class="text-gray-600">Your exam is opening in a new window. If it doesn't open automatically, please click the button below.</p>
-      <Button size="lg" @click="launchExam">Launch Exam</Button>
+      <h1 class="text-2xl font-bold text-gray-800">Prüfung wird gestartet</h1>
+      <p class="text-gray-600">Ihre Prüfung öffnet sich in einem neuen Fenster. Wenn sie sich nicht automatisch öffnet, klicken Sie bitte auf den untenstehenden Button.</p>
+      <Button size="lg" @click="launchExam">Prüfung starten</Button>
     </div>
   </div>
 </template>
