@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import TestResultModal from '@/components/TestResultModal.vue';
 
 defineProps<{
-    participants: any[];
+  participants: any[];
 }>();
 
 const isModalOpen = ref(false);
@@ -16,66 +16,67 @@ const selectedAssignment = ref(null);
 const selectedParticipant = ref(null);
 
 function viewTestResult(assignment, participant) {
-    selectedAssignment.value = assignment;
-    selectedParticipant.value = participant;
-    isModalOpen.value = true;
+  selectedAssignment.value = assignment;
+  selectedParticipant.value = participant;
+  isModalOpen.value = true;
 }
 
 function closeModal() {
-    isModalOpen.value = false;
-    selectedAssignment.value = null;
-    selectedParticipant.value = null;
+  isModalOpen.value = false;
+  selectedAssignment.value = null;
+  selectedParticipant.value = null;
 }
 </script>
 
 <template>
-    <AppLayout>
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Teilnehmende</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>E-Mail</TableHead>
-                                <TableHead>Tests</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow v-for="participant in participants" :key="participant.id">
-                                <TableCell>{{ participant.name }}</TableCell>
-                                <TableCell>{{ participant.email }}</TableCell>
-                                <TableCell>
-                                    <div v-if="participant.test_assignments.length > 0">
-                                        <div v-for="assignment in participant.test_assignments" :key="assignment.id" class="mb-2">
-                                            <div class="flex items-center justify-between">
-                                                <div>
-                                                    <p class="font-semibold">{{ assignment.test.name }}</p>
-                                                    <Badge :variant="assignment.status === 'completed' ? 'default' : 'secondary'">
-                                                        {{ assignment.status }}
-                                                    </Badge>
-                                                </div>
-                                                <div v-if="assignment.results.length > 0">
-                                                    <Button @click="viewTestResult(assignment, participant)" size="sm">
-                                                        Ergebnisse anzeigen
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div v-else>
-                                        Keine Tests zugewiesen.
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </div>
-        <TestResultModal :isOpen="isModalOpen" :assignment="selectedAssignment" :participant="selectedParticipant" @close="closeModal" />
-    </AppLayout>
+  <AppLayout>
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Teilnehmer</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>E-Mail</TableHead>
+                <TableHead>Tests</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="participant in participants" :key="participant.id">
+                <TableCell>{{ participant.name }}</TableCell>
+                <TableCell>{{ participant.email }}</TableCell>
+                <TableCell>
+                  <div v-if="participant.test_assignments.length > 0">
+                    <div v-for="assignment in participant.test_assignments" :key="assignment.id" class="mb-2">
+                      <div class="flex items-center justify-between">
+                        <div>
+                          <p class="font-semibold">{{ assignment.test.name }}</p>
+                          <Badge :variant="assignment.status === 'completed' ? 'default' : 'secondary'">
+                            {{ assignment.status }}
+                          </Badge>
+                        </div>
+                        <div v-if="assignment.results.length > 0">
+                          <Button @click="viewTestResult(assignment, participant)" size="sm">
+                            Ergebnisse anzeigen
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else>
+                    Keine Tests zugewiesen.
+                  </div>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+    <TestResultModal :isOpen="isModalOpen" :assignment="selectedAssignment" :participant="selectedParticipant"
+      @close="closeModal" />
+  </AppLayout>
 </template>
