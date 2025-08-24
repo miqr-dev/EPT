@@ -2,10 +2,36 @@
 import { Head, Link, router } from '@inertiajs/vue3'
 import { LogOut } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
+import axios from 'axios'
+import { onMounted, onUnmounted } from 'vue'
 
 const handleLogout = () => {
   router.flushAll()
 }
+
+let polling: any = null
+
+const checkExamStatus = async () => {
+  try {
+    const response = await axios.get(route('api.exam-status'))
+    if (response.data?.status === 'in_progress') {
+      router.get(route('my-exam'))
+    }
+  } catch (error) {
+    console.error('Error checking exam status:', error)
+  }
+}
+
+onMounted(() => {
+  polling = setInterval(checkExamStatus, 5000)
+  checkExamStatus()
+})
+
+onUnmounted(() => {
+  if (polling) {
+    clearInterval(polling)
+  }
+})
 </script>
 
 
