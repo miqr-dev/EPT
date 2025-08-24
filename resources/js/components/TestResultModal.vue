@@ -31,7 +31,7 @@ watch(
 
 function submit() {
   if (props.assignment && props.assignment.results.length > 0 && editable.value) {
-    if (props.assignment.test.name === 'MRT-A') {
+    if (['MRT-A', 'MRT-B'].includes(props.assignment.test.name)) {
       form.answers = editable.value.answers;
       form.put(route('test-results.update', { testResult: props.assignment.results[0].id }), {
         onSuccess: () => {
@@ -43,9 +43,9 @@ function submit() {
       const oldForm = useForm({ result_json: JSON.stringify(editable.value) });
       oldForm.put(route('test-results.update', { testResult: props.assignment.results[0].id }), {
         onSuccess: () => {
-        closeModal();
-      },
-    });
+          closeModal();
+        },
+      });
     }
   }
 }
@@ -125,30 +125,22 @@ async function exportDetailsPdf() {
 
 <template>
   <Dialog :open="isOpen" @update:open="(open) => { if (!open) closeModal(); }">
-    <DialogContent
-      class="w-screen !h-screen !max-w-none !top-0 !left-0 !translate-x-0 !translate-y-0 !rounded-none"
-    >
+    <DialogContent class="w-screen !h-screen !max-w-none !top-0 !left-0 !translate-x-0 !translate-y-0 !rounded-none">
       <DialogHeader>
         <div class="flex items-center justify-between w-full">
           <DialogTitle>Testergebnis bearbeiten</DialogTitle>
-          <div v-if="assignment && assignment.test && assignment.test.name === 'MRT-A'" class="flex gap-2">
+          <div v-if="assignment && assignment.test && ['MRT-A', 'MRT-B'].includes(assignment.test.name)"
+            class="flex gap-2">
             <Button variant="outline" size="sm" @click="exportChartPdf">Diagramm PDF</Button>
             <Button variant="outline" size="sm" @click="exportDetailsPdf">Antworten PDF</Button>
           </div>
         </div>
       </DialogHeader>
-      <TestResultViewer
-        v-if="editable"
-        ref="viewerRef"
-        :test="assignment?.test"
-        v-model="editable"
-        :participant-profile="participant?.participant_profile"
-        class="flex-1 overflow-y-auto mb-4"
-      />
+      <TestResultViewer v-if="editable" ref="viewerRef" :test="assignment?.test" v-model="editable"
+        :participant-profile="participant?.participant_profile" class="flex-1 overflow-y-auto mb-4" />
       <DialogFooter>
         <Button type="submit" @click="submit">Änderungen speichern</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>
-

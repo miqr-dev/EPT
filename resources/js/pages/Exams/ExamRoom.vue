@@ -20,6 +20,7 @@ import BRTB from '@/pages/BRT-B.vue'
 import FPI from '@/pages/FPI-R.vue'
 import LMT from '@/pages/LMT.vue'
 import MRTA from '@/pages/MRT-A.vue'
+import MRTB from '@/pages/MRT-B.vue'
 import LMT2 from '@/pages/LMT2.vue'
 import BIT2 from '@/pages/BIT-2.vue'
 
@@ -59,6 +60,7 @@ const testComponents = {
   'FPI-R': FPI,
   'LMT': LMT,
   'MRT-A': MRTA,
+  'MRT-B': MRTB,
   'LMT2': LMT2,
   'BIT-2': BIT2,
 }
@@ -268,7 +270,8 @@ onUnmounted(() => {
         <DialogHeader>
           <DialogTitle>Vollbildmodus verlassen</DialogTitle>
           <DialogDescription>
-            Sie haben den Vollbildmodus verlassen. Der Test wird jetzt beendet. Klicken Sie auf „Ja“, um den Test zu beenden, oder auf „Abbrechen“, um fortzufahren.
+            Sie haben den Vollbildmodus verlassen. Der Test wird jetzt beendet. Klicken Sie auf „Ja“, um den Test zu
+            beenden, oder auf „Abbrechen“, um fortzufahren.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter class="gap-2">
