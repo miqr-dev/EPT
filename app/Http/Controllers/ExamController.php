@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class ExamController extends Controller
@@ -176,7 +177,7 @@ class ExamController extends Controller
 
     if ($incompleteParticipants->isNotEmpty()) {
       $names = $incompleteParticipants->map(fn($p) => $p->user->name)->toArray();
-      return response()->json(['participants' => $names], 422);
+      throw ValidationException::withMessages(['participants' => $names]);
     }
 
     $firstStep = $exam->steps()->orderBy('step_order')->first();
