@@ -69,11 +69,14 @@ class ParticipantController extends Controller
 
     $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
     if ($examParticipant) {
+      $examParticipant->update(['status' => 'waiting']);
+
       $exam = Exam::find($examParticipant->exam_id);
       if ($exam && $exam->status === 'in_progress') {
         return redirect()->route('my-exam');
       }
     }
+
     return redirect()->route('participant.no-exam');
   }
 

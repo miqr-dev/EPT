@@ -169,6 +169,16 @@ class ExamController extends Controller
       return back(303)->with('error', 'Exam has no steps.');
     }
 
+    $incompleteParticipants = $exam->participants()
+      ->where('status', '!=', 'waiting')
+      ->with('user')
+      ->get();
+
+    if ($incompleteParticipants->isNotEmpty()) {
+      $names = $incompleteParticipants->map(fn($p) => $p->user->name)->toArray();
+      return response()->json(['participants' => $names], 422);
+    }
+
     $firstStep = $exam->steps()->orderBy('step_order')->first();
 
     $exam->update([
