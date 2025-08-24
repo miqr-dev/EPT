@@ -1,62 +1,59 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3'
-import { LogOut } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
-import axios from 'axios'
-import { onMounted, onUnmounted } from 'vue'
+import AppLogo from '@/components/AppLogo.vue'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import AuthSplitLayout from '@/layouts/auth/AuthSplitLayout.vue'
+import { onMounted } from 'vue'
+import { router } from '@inertiajs/vue3'
 
-const handleLogout = () => {
-  router.flushAll()
-}
-
-let polling: any = null
-
-const checkExamStatus = async () => {
-  try {
-    const response = await axios.get(route('api.exam-status'))
-    if (response.data?.status === 'in_progress') {
-      router.get(route('my-exam'))
-    }
-  } catch (error) {
-    console.error('Error checking exam status:', error)
-  }
-}
+const props = defineProps<{
+  next_exam: {
+    id: number
+    start_time: string
+  } | null
+}>()
 
 onMounted(() => {
-  polling = setInterval(checkExamStatus, 5000)
-  checkExamStatus()
-})
+  if (props.next_exam) {
+    const examStartTime = new Date(props.next_exam.start_time).getTime()
+    const now = new Date().getTime()
+    const delay = examStartTime - now
 
-onUnmounted(() => {
-  if (polling) {
-    clearInterval(polling)
+    if (delay > 0) {
+      setTimeout(() => {
+        router.visit(route('my-exam'))
+      }, delay)
+    } else {
+      router.visit(route('my-exam'))
+    }
   }
 })
 </script>
 
-
-
 <template>
+  <AuthSplitLayout>
+    <div class="grid gap-2 text-center">
+      <AppLogo class="mb-4" />
+      <h1 class="text-3xl font-bold">
+        Willkommen
+      </h1>
+      <p class="text-balance text-muted-foreground">
+        Es ist derzeit keine Prüfung für Sie freigeschaltet.
+      </p>
 
-  <Head title="Keine Prüfung" />
-  <div class="flex items-center justify-center min-h-screen bg-gray-100">
-    <div class="absolute top-4 right-4">
-      <Link
-        :href="route('logout')"
-        method="post"
-        as="button"
-        @click="handleLogout"
-        class="flex items-center space-x-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition"
+      <Card
+        v-if="props.next_exam"
+        class="mt-8"
       >
-        <LogOut class="h-5 w-5" />
-        <span>Abmelden</span>
-      </Link>
+        <CardHeader>
+          <CardTitle> Nächste Prüfung </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Die nächste Prüfung beginnt am:</p>
+          <p class="text-2xl font-bold">
+            {{ new Date(props.next_exam.start_time).toLocaleString('de-DE') }}
+          </p>
+        </CardContent>
+      </Card>
     </div>
-    <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md text-center">
-      <h1 class="text-2xl font-bold text-gray-800">Keine Prüfung</h1>
-      <Link :href="route('my-exam')" class="block mt-4">
-        <Button class="w-full">Zur Prüfung</Button>
-      </Link>
-    </div>
-  </div>
+  </AuthSplitLayout>
 </template>

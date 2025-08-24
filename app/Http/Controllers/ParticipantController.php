@@ -140,7 +140,26 @@ class ParticipantController extends Controller
 
   public function noExam()
   {
-    return Inertia::render('Exams/NoExam');
+    $user = Auth::user();
+    $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
+    $nextExam = null;
+
+    if ($examParticipant) {
+      $nextExam = Exam::where('id', $examParticipant->exam_id)
+        ->where('status', 'scheduled')
+        ->where('start_time', '>', now())
+        ->orderBy('start_time', 'asc')
+        ->first();
+    }
+
+    return Inertia::render('Exams/NoExam', [
+      'next_exam' => $nextExam
+        ? [
+          'id' => $nextExam->id,
+          'start_time' => $nextExam->start_time->toIso8601String(),
+        ]
+        : null,
+    ]);
   }
 
   public function startStep(Request $request)
