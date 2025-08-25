@@ -121,24 +121,35 @@ async function exportDetailsPdf() {
   pdf.save('mrt-antworten.pdf');
 }
 
+function canvasFromElement(el: HTMLElement) {
+  return html2canvas(el);
+}
+
 </script>
 
 <template>
   <Dialog :open="isOpen" @update:open="(open) => { if (!open) closeModal(); }">
-    <DialogContent class="w-screen !h-screen !max-w-none !top-0 !left-0 !translate-x-0 !translate-y-0 !rounded-none">
-      <DialogHeader>
+    <DialogContent
+      class="sm:max-w-4xl w-full max-h-[90vh] !flex flex-col overflow-hidden p-0">
+      <DialogHeader class="flex-shrink-0 p-6 pb-4">
         <div class="flex items-center justify-between w-full">
           <DialogTitle>Testergebnis bearbeiten</DialogTitle>
-          <div v-if="assignment && assignment.test && ['MRT-A', 'MRT-B'].includes(assignment.test.name)"
+          <div
+            v-if="assignment && assignment.test && ['MRT-A', 'MRT-B'].includes(assignment.test.name)"
             class="flex gap-2">
             <Button variant="outline" size="sm" @click="exportChartPdf">Diagramm PDF</Button>
             <Button variant="outline" size="sm" @click="exportDetailsPdf">Antworten PDF</Button>
           </div>
         </div>
       </DialogHeader>
-      <TestResultViewer v-if="editable" ref="viewerRef" :test="assignment?.test" v-model="editable"
-        :participant-profile="participant?.participant_profile" class="flex-1 overflow-y-auto mb-4" />
-      <DialogFooter>
+      <TestResultViewer
+        v-if="editable"
+        ref="viewerRef"
+        :test="assignment?.test"
+        v-model="editable"
+        :participant-profile="participant?.participant_profile"
+        class="flex-1 overflow-y-auto px-6" />
+      <DialogFooter class="flex-shrink-0 p-6 pt-4">
         <Button type="submit" @click="submit">Änderungen speichern</Button>
       </DialogFooter>
     </DialogContent>
