@@ -222,7 +222,7 @@ const startTest = () => {
   <Head title="Tests" />
   <div class="p-4">
     <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold">Tests</h1>
+      <h1 class="text-2xl font-bold">MRT-B</h1>
     </div>
     <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
       <div class="flex-1 flex flex-col gap-4">
@@ -231,11 +231,22 @@ const startTest = () => {
           <h2 class="text-2xl font-bold mb-4">Willkommen zum Mannheimer Rechtschreibtest</h2>
           <p class="mb-6 text-base text-center max-w-xl">
             Mit diesem Verfahren wollen wir wissen, wie Ihre Rechtschreibkenntnisse sind. Jede Aufgabe enthält 4 Wörter.
-            Sie entscheiden, welches richtig geschrieben ist. </p>
-          <p> Beispielaufgabe: </p>
-          <p> Wörther:</p>
-          <p> Dieses klicken Sie ab und bestätigen diese mit einem weiteren. Es gilt die alte und neue Rechtschreibung.
+            Sie entscheiden, welches richtig geschrieben ist.
           </p>
+
+          <p class="font-semibold">Beispielaufgabe:</p>
+
+          <!-- Images column -->
+          <div class="flex flex-col items-center gap-6 my-6">
+            <img src="/images/MRT/woerter_empty.PNG" alt="Beispiel falsch"
+              class="w-[600px] h-[150px] object-contain rounded shadow" />
+            <img src="/images/MRT/woerter_selectedPNG.PNG" alt="Beispiel richtig"
+              class="w-[600px] h-[150px] object-contain rounded shadow" />
+          </div>
+
+          <p>Dieses klicken Sie ab und bestätigen diese mit einem weiteren. Es gilt die alte und neue Rechtschreibung.
+          </p>
+
           <Button @click="startTest" class="px-8 py-3 mt-6 text-lg font-semibold rounded-xl shadow"
             :disabled="!userAge">
             Test starten
@@ -283,7 +294,7 @@ const startTest = () => {
 
         <!-- Test Results -->
         <div v-else-if="isTestComplete && showResults">
-          <MrtBResult :results="calculatedResults" />
+          <MrtBResult class="invisible" :results="calculatedResults" />
         </div>
 
         <div v-else></div>

@@ -171,11 +171,19 @@ function cancelEnd() {
 
         <!-- Consent screen -->
         <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
-          <h2 class="text-2xl font-bold mb-4">Willkommen zum FPI-R-Test</h2>
-          <div
-            class="mb-6 whitespace-pre-line text-base text-foreground border p-4 rounded-lg shadow-sm bg-yellow-50 dark:bg-yellow-900 dark:border-yellow-700 w-full max-w-2xl">
-            {{ instructions }}
-          </div>
+          <h2 class="text-2xl font-bold mb-4">Willkommen zum FPI-R-Fragebogen</h2>
+          <p class="mb-6 text-base text-center max-w-xl">
+            In diesem Fragebogen geht es um eine Reihe von Aussagen über bestimmte
+            Verhaltensweisen, Einstellungen und Gewohnheiten, die auch für den Berufskontext wichtig sind.
+          </p>
+          <p class="mb-6 text-base text-center max-w-xl">
+            Bitte beantworten Sie jede Aussage mit <strong>„stimmt“</strong> oder <strong>„stimmt nicht“</strong>.
+            Kreuzen Sie an, was auf Sie zutrifft. Es gibt keine richtigen und falschen Antworten.
+          </p>
+          <p class="mb-6 text-base text-center max-w-xl">
+            Überlegen Sie bitte nicht erst, welche Antwort vielleicht den „besten Eindruck“ machen könnte,
+            sondern antworten Sie so, wie es für Sie persönlich gilt.
+          </p>
           <div
             class="mb-8 mt-4 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg border dark:border-blue-700 font-semibold w-full max-w-xl">
             <div class="mb-3">Ich habe die Anleitung gelesen und bin bereit, jeden Satz offen zu beantworten.</div>
@@ -270,4 +278,3 @@ function cancelEnd() {
     </Dialog>
   </div>
 </template>
-

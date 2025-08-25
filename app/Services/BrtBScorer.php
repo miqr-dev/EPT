@@ -4,23 +4,23 @@ namespace App\Services;
 
 class BrtBScorer
 {
-  protected static array $questions = [
-    ['text' => '819020 – 541600 = ?', 'answers' => ['277420']],
-    ['text' => '719020 = 174309 + ?', 'answers' => ['544711']],
-    ['text' => '4 : 90 = ?', 'answers' => ['0,044']],
-    ['text' => '0,3 · ____ = 0,1', 'answers' => ['0,33', '1/3']],
-    ['text' => '1/4 : 1/2 = ?', 'answers' => ['1/2']],
-    ['text' => 'Verwandle 0,8 in einen gewöhnlichen Bruch.', 'answers' => ['4/5', '8/10']],
-    ['text' => 'Ein Mechaniker hat aus 3 Teilen ein Gerät hergestellt. Die Einzelteile wiegen: 50 g, 9,4 kg, 1050 g. Wie viel wiegt das gesamte Gerät?', 'answers' => ['10500', '10500 g', '10500g', '10,5', '10,5Kg', '10,5kg', '10,5 Kg', '10,5 kg']],
-    ['text' => 'Rechne um: Wie viel g sind 9 kg und 1 g?', 'answers' => ['9001', '9001g', '9001 g', '9001 G', '9001G']],
-    ['text' => 'Wie viel Zinsen erbringen 2000 € zu 4 % in einem Jahr?', 'answers' => ['80', '80€', '80 €']],
+ protected static array $questions = [
+    ['text' => '619020 – 540600 = ?', 'answers' => ['78420']],
+    ['text' => '619020 = 170309 + ?', 'answers' => ['448.711']],
+    ['text' => '4 : 50 = ?', 'answers' => ['0,08']],
+    ['text' => '0,4 · ____ = 0,1', 'answers' => ['0,25', '1/4']],
+    ['text' => '1/8 : 1/3 = ?', 'answers' => ['3/8']],
+    ['text' => 'Verwandle 0,6 in einen gewöhnlichen Bruch.', 'answers' => ['6/10', '3/5']],
+    ['text' => 'Ein Mechaniker hat aus 3 Teilen ein Gerät hergestellt. Die Einzelteile wiegen: 50 g, 6,4 kg, 1050 g. Wie viel wiegt das gesamte Gerät?', 'answers' => ['7500', '7500 g', '7500g', '7,5', '7,5Kg', '7,5kg', '7,5 Kg', '7,5 kg']],
+    ['text' => 'Rechne um: Wie viel g sind 5 kg und 1 g?', 'answers' => ['5001', '5001g', '5001 g', '5001 G', '5001G']],
+    ['text' => 'Wie viel Zinsen erbringen 1000 € zu 2 % in einem Jahr?', 'answers' => ['20', '20€', '20 €']],
     ['text' => 'Rudi kauft sich ein neues Mofa. Es kostet 1390 €. Bei Barzahlung bekommt er 3 % Rabatt. Wie viel muss er bezahlen?', 'answers' => ['1348,3', '1348,30', '1348,30 €', '1348,3 €', '1348,3€', '1348,30€']],
-    ['text' => 'Im Sägewerk können aus einem Baumstamm 20 Bretter von 3 cm Dicke geschnitten werden. Wie viele Bretter erhält man, wenn sie 2 cm dick sind?', 'answers' => ['30']],
-    ['text' => 'Im Sägewerk können aus einem Baumstamm 20 Bretter von 3 cm Dicke geschnitten werden. Wie dick wird ein Brett, wenn man 15 Bretter aus dem Stamm schneidet?', 'answers' => ['4', '4cm', '4 cm', '4 Cm', '4Cm']],
-    ['text' => 'Berechne die Grundstücksgröße in m².', 'answers' => ['930', '930 m²', '930m²', '930 m2']],
-    ['text' => 'Das Rad hat einen Durchmesser von 0,7 m. Welche Strecke legt es zurück, wenn es sich 100 mal dreht?', 'answers' => ['219,8', '219,8 m', '219,8m']],
-    ['text' => '√64 = ?', 'answers' => ['8']],
-    ['text' => '10² = ?', 'answers' => ['100']],
+    ['text' => 'Im Sägewerk können aus einem Baumstamm 30 Bretter von 2 cm Dicke geschnitten werden. Wie viele Bretter erhält man, wenn sie 3 cm dick sind?', 'answers' => ['20', '20 Bretter']],
+    ['text' => 'Im Sägewerk können aus einem Baumstamm 30 Bretter von 2 cm Dicke geschnitten werden. Wie dick wird ein Brett, wenn man 10 Bretter aus dem Stamm schneidet?', 'answers' => ['6', '6cm', '6 cm', '6 Cm', '6Cm']],
+    ['text' => 'Berechne die Grundstücksgröße in m².', 'answers' => ['840', '840 m²', '840m²', '840 m2']],
+    ['text' => 'Das Rad hat einen Durchmesser von 0,3 m. Welche Strecke legt es zurück, wenn es sich 100 mal dreht?', 'answers' => ['94,2', '94,2 m', '94,2m']],
+    ['text' => '√49 = ?', 'answers' => ['7']],
+    ['text' => '10⁴ = ?', 'answers' => ['10000']],
   ];
 
   protected static array $rohwertToPR = [
