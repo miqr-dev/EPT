@@ -205,7 +205,11 @@ const confirmEnd = () => {
   currentQuestionIndex.value = questions.value.length;
   nextButtonClickCount.value = 0;
   endConfirmOpen.value = false;
-  emit('complete');
+  const results = {
+    answers: [...userAnswers.value],
+    question_times: [...questionTimes.value],
+  };
+  emit('complete', results);
 };
 
 const cancelEnd = () => {
