@@ -117,10 +117,10 @@ const staninePoints = computed(() =>
         }"
       >
         <div
-          v-for="(pos, index) in [3, 6]"
-          :key="`blue-line-${index}`"
-          class="blue-line"
-          :style="{ left: `${cellWidth * pos - 0.75}px` }"
+          v-for="(pos, index) in [3, 5]"
+          :key="`guide-${index}`"
+          class="guide-line"
+          :style="{ left: `${stanineX(pos) - 0.5}px` }"
         ></div>
         <svg :width="gridWidth" :height="gridHeight" class="polyline-svg">
           <polyline :points="staninePoints" fill="none" stroke="black" stroke-width="1.5" />
@@ -137,8 +137,12 @@ const staninePoints = computed(() =>
         </svg>
         <div
           class="average-box"
-          :style="{ top: 0, height: `${rowHeight * 10}px`, left: `${cellWidth * 3}px`, width: `${cellWidth * 3}px` }
-          "
+          :style="{
+            top: 0,
+            height: `${rowHeight * 10}px`,
+            left: `${stanineX(3)}px`,
+            width: `${stanineX(5) - stanineX(3)}px`
+          }"
         >
           <div class="percent-label top">
             54%
@@ -147,8 +151,12 @@ const staninePoints = computed(() =>
         </div>
         <div
           class="average-box"
-          :style="{ top: `${rowHeight * 10}px`, height: `${rowHeight * 2}px`, left: `${cellWidth * 3}px`, width: `${cellWidth * 3}px` }
-          "
+          :style="{
+            top: `${rowHeight * 10}px`,
+            height: `${rowHeight * 2}px`,
+            left: `${stanineX(3)}px`,
+            width: `${stanineX(5) - stanineX(3)}px`
+          }"
         >
           <div class="percent-label bottom">54%</div>
         </div>
@@ -244,14 +252,13 @@ const staninePoints = computed(() =>
   position: absolute;
   pointer-events: none;
 }
-.blue-line {
+.guide-line {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 1.5px;
-  background-color: #4a90e2; /* Vibrant blue */
-  opacity: 0.7;
-  z-index: 1; /* Ensures it's visible but behind other elements */
+  width: 1px;
+  background-color: #000;
+  z-index: 1;
 }
 .polyline-svg { position: absolute; top: 0; left: 0; z-index: 5; }
 .average-box { position: absolute; border: 1px solid black; box-sizing: border-box; z-index: 2;}
