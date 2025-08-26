@@ -13,12 +13,6 @@ import {
 } from '@/components/ui/dialog';
 
 const emit = defineEmits(['complete']);
-
-const instructions = `
-Willkommen zum FPI-R-Fragebogen
-In diesem Fragebogen geht um eine Reihe von Aussagen über bestimmte Verhaltensweisen, Einstellungen, Gewohnheiten, die auch für den Berufskontext wichtig sind. Bitte beantworten Sie jede Aussage mit ‘stimmt‘ oder ‘stimmt nicht‘. Kreuzen Sie an, was auf Sie zu trifft. Es gibt keine richtigen und falschen Antworten. Überlegen Sie bitte nicht erst, welche Antwort vielleicht den „besten Eindruck“ machen könnte, sondern antworten Sie so, wie es für Sie persönlich gilt.
-`;
-
 // Settings
 const QUESTIONS_PER_BLOCK = 24;
 
@@ -94,10 +88,10 @@ function startTest() {
   showTest.value = true;
 }
 
-function finishTest() {
-  window.dispatchEvent(new Event('start-finish'))
-  endConfirmOpen.value = true
-}
+// function finishTest() {
+//   window.dispatchEvent(new Event('start-finish'))
+//   endConfirmOpen.value = true
+// }
 
 function confirmEnd() {
   currentBlockQuestions.value.forEach(q => {
@@ -123,6 +117,29 @@ function confirmEnd() {
 function cancelEnd() {
   window.dispatchEvent(new Event('cancel-finish'))
   endConfirmOpen.value = false
+}
+
+// --- additions in <script setup> ---
+const isComplete = computed(() =>
+  FPI_QUESTIONS.every(q => 
+  q.number === 131 || answers.value[q.number] !== null)
+)
+const remaining = computed(() =>
+  FPI_QUESTIONS.filter(q => answers.value[q.number] === null).length
+)
+
+function finishTest() {
+  // hard guard
+  if (!isComplete.value) {
+    missedQuestions.value = FPI_QUESTIONS
+      .filter(q => answers.value[q.number] === null)
+      .map(q => q.number)
+    // jump to first missing to help the user
+    if (missedQuestions.value.length) jumpToQuestion(missedQuestions.value[0])
+    return
+  }
+  window.dispatchEvent(new Event('start-finish'))
+  endConfirmOpen.value = true
 }
 
 </script>
@@ -234,6 +251,9 @@ function cancelEnd() {
                 </td>
                 <td class="align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700 pl-2">
                   {{ q.text }}
+                  <div v-if="q.number === 131" class="text-xs text-gray-500 italic">
+                    gegebenenfalls freilassen
+                  </div>
                 </td>
                 <td class="text-center align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700">
                   <input type="radio" :name="'q' + q.number" v-model="answers[q.number]" value="stimmt" />
@@ -251,7 +271,8 @@ function cancelEnd() {
             <Button v-if="blockIndex < totalBlocks - 1" @click="handleNextBlock">
               Weiter
             </Button>
-            <Button v-else @click="finishTest" variant="destructive">
+            <Button v-else @click="finishTest" variant="destructive" :disabled="!isComplete"
+              :title="!isComplete ? `Bitte alle Fragen beantworten (${remaining} offen)` : ''">
               Test beenden
             </Button>
           </div>

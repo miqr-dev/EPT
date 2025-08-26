@@ -242,7 +242,7 @@ export const LMT_QUESTIONS: LMTQuestion[] = [
   },
   {
     number: 25,
-    text: "Wenn ich nicht auf eine Aufgabe nicht so gut vorbereitet hatte und befürchten mußte, in der Schule dranzukommen, fühlte ich mich",
+    text: "Wenn ich mich auf eine Aufgabe nicht so gut vorbereitet hatte und befürchten mußte, in der Schule dranzukommen, fühlte ich mich",
     options: [
       { category: "ziemlich ruhig", points: 0 },
       { category: "ziemlich unruhig", points: 0 },

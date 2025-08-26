@@ -242,11 +242,10 @@ const totalTimeTaken = computed(() => {
 
 <template>
 
-  <Head title="Tests" />
+  <Head title="LMT" />
   <div class="p-4">
     <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold">Tests</h1>
-      <span class="font-medium">{{ userName }}</span>
+      <h1 class="text-2xl font-bold">L-M-T</h1>
     </div>
     <div class="max-w-5xl mx-auto p-6 bg-background border border-border rounded shadow space-y-8 text-foreground">
 
