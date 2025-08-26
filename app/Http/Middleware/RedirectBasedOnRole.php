@@ -63,7 +63,8 @@ class RedirectBasedOnRole
         'logout',
         'api.active-exams',
         'exams.updateSteps',
-        'participants.list'
+        'participants.list',
+        'test-results.download',
       ];
 
       if ($user->role === 'participant') {
