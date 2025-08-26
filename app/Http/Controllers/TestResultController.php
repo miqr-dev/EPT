@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\TestResult;
+use App\Services\BrtPdfService;
+use App\Services\FpiRPdfService;
+use App\Services\LmtPdfService;
 use Illuminate\Http\Request;
 use App\Services\MrtAScorer;
 use Illuminate\Support\Facades\Storage;
@@ -61,9 +64,29 @@ class TestResultController extends Controller
     public function download(TestResult $testResult)
     {
         $path = $testResult->pdf_file_path;
+
         if (!$path || !Storage::exists($path)) {
-            abort(404);
+            $testName = $testResult->assignment->test->name;
+            $service = null;
+
+            if ($testName === 'BRT-A' || $testName === 'BRT-B') {
+                $service = BrtPdfService::class;
+            } elseif ($testName === 'LMT') {
+                $service = LmtPdfService::class;
+            } elseif ($testName === 'FPI-R') {
+                $service = FpiRPdfService::class;
+            }
+
+            if ($service) {
+                $path = $service::generate($testResult);
+                $testResult->update(['pdf_file_path' => $path]);
+            }
         }
+
+        if (!$path || !Storage::exists($path)) {
+            abort(404, 'PDF could not be generated or found.');
+        }
+
         return Storage::download($path);
     }
 }
