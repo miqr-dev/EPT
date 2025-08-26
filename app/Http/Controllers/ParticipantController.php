@@ -211,6 +211,12 @@ class ParticipantController extends Controller
             $testResult->update(['pdf_file_path' => $pdfPath]);
           }
         }
+        if ($examStep->test->name === 'LMT') {
+          $pdfPath = \App\Services\LmtPdfService::generate($testResult);
+          if ($pdfPath) {
+            $testResult->update(['pdf_file_path' => $pdfPath]);
+          }
+        }
         if ($examStep->test->name === 'FPI-R') {
           $pdfPath = \App\Services\FpiRPdfService::generate($testResult);
           if ($pdfPath) {
