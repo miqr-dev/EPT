@@ -115,7 +115,6 @@ const householdOptions = [
               <option value="" disabled>Bitte wählen</option>
               <option value="m">Männlich</option>
               <option value="f">Weiblich</option>
-              <option value="d">Divers</option>
             </select>
             <p v-if="form.errors.sex" class="text-sm text-red-600 dark:text-red-400">{{ form.errors.sex }}</p>
           </div>

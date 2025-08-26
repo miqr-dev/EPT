@@ -6,7 +6,7 @@ class BrtBScorer
 {
  protected static array $questions = [
     ['text' => '619020 – 540600 = ?', 'answers' => ['78420']],
-    ['text' => '619020 = 170309 + ?', 'answers' => ['448.711']],
+    ['text' => '619020 = 170309 + ?', 'answers' => ['448711']],
     ['text' => '4 : 50 = ?', 'answers' => ['0,08']],
     ['text' => '0,4 · ____ = 0,1', 'answers' => ['0,25', '1/4']],
     ['text' => '1/8 : 1/3 = ?', 'answers' => ['3/8']],
