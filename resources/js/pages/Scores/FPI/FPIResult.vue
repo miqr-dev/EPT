@@ -29,7 +29,7 @@ const cellWidth = 37.5;
 const rowHeight = 65; // Generous height for clear spacing
 const gridWidth = cellWidth * 9;
 const gridHeight = rowHeight * 12;
-const headerHeight = 48;
+const headerHeight = 64;
 const graphOffset = 85 + 230;
 
 const getCatNum = (index: number): string => {
@@ -40,10 +40,14 @@ const getCatNum = (index: number): string => {
 
 interface Point { x: number; y: number }
 
-function stanineX(idx: number) {
-  return cellWidth * idx + cellWidth / 2;
+// replace both functions with a single value→x helper
+function xForStanine(val: number) {
+  // columns are labeled [9,8,7,6,5,4,3,2,1] from left to right
+  const colIndexFromLeft = 9 - val; // 9→0, 8→1, …, 1→8
+  return colIndexFromLeft * cellWidth + cellWidth / 2;
 }
 
+// keep rowY as-is
 function rowY(idx: number) {
   return rowHeight * idx + rowHeight / 2;
 }
@@ -54,14 +58,56 @@ const stanineCoords = computed<Point[]>(() => {
     .map((s, idx) => {
       const val = typeof s === 'string' ? Number(s) : s;
       if (!val || val < 1 || val > 9) return null;
-      return { x: stanineX(val - 1), y: rowY(idx) } as Point;
+      return { x: xForStanine(val), y: rowY(idx) } as Point;
     })
     .filter((p): p is Point => p !== null);
 });
 
+
 const staninePoints = computed(() =>
   stanineCoords.value.map((pt) => `${pt.x},${pt.y}`).join(' '),
 );
+
+const splitAfterRows = [9]; // after Offenheit
+
+interface Pt { x: number; y: number; row: number }
+
+const pointsByRow = computed<(Pt | null)[]>(() => {
+  const values = props.stanines ?? [];
+  return values.map((s, idx) => {
+    const val = typeof s === 'string' ? Number(s) : s;
+    if (!val || val < 1 || val > 9) return null;
+    // use your existing x helper (xForStanine or stanineX(val-1))
+    const x = typeof xForStanine === 'function' ? xForStanine(val) : (cellWidth * (val - 1) + cellWidth / 2);
+    return { x, y: rowY(idx), row: idx };
+  });
+});
+
+const polySegments = computed<{ x: number; y: number }[][]>(() => {
+  const segs: { x: number; y: number }[][] = [];
+  let cur: { x: number; y: number }[] = [];
+  pointsByRow.value.forEach((pt, idx) => {
+    if (pt) cur.push({ x: pt.x, y: pt.y });
+    if (splitAfterRows.includes(idx) || pt === null) {
+      if (cur.length) segs.push(cur);
+      cur = [];
+    }
+  });
+  if (cur.length) segs.push(cur);
+  return segs;
+});
+
+const LINE_W = 2;          // same as CSS .blue-line width
+const blueStanines = [7, 3]; // the two stanine columns you want to cross
+const MARKER_R = 6        // was 4
+const MARKER_SW = 1.75    // thicker outline
+
+const snap = (x: number) => Math.round(x) + 0.5
+
+// Inner bracket should span stanines 6..4
+const innerLeft = computed(() => snap(xForStanine(6))) // left border at center of 6
+const innerRight = computed(() => snap(xForStanine(4))) // right border at center of 4
+const innerWidth = computed(() => innerRight.value - innerLeft.value)
 </script>
 
 <template>
@@ -73,10 +119,11 @@ const staninePoints = computed(() =>
       <div class="header-cell graph-title">
         <div class="normstichprobe-label">Normstichprobe</div>
         <div class="prozent-numbers">
-          <span v-for="p in [4, 7, 12, 17, 20, 17, 12, 7, 4]" :key="'p'+p">{{ p }}</span>
+          <span v-for="p in [4, 7, 12, 17, 20, 17, 12, 7, 4]" :key="'p' + p">{{ p }}</span>
         </div>
+
         <div class="stanine-numbers">
-          <span v-for="s in [9, 8, 7, 6, 5, 4, 3, 2, 1]" :key="'s'+s">{{ s }}</span>
+          <span v-for="s in [9, 8, 7, 6, 5, 4, 3, 2, 1]" :key="'s' + s">{{ s }}</span>
         </div>
       </div>
       <div class="header-cell right-desc-title">
@@ -86,70 +133,65 @@ const staninePoints = computed(() =>
 
       <!-- Content Rows -->
       <template v-for="(cat, i) in chartCategories" :key="i">
-        <div class="cell rohwert-cell" :class="{'section-divider-bottom': i === 9 || i === 11}">
+        <div class="cell rohwert-cell" :class="{ 'section-divider-bottom': i === 9 || i === 11 }">
           <div class="rohwert-box">{{ props.rohwerte[i] }}</div>
         </div>
-        <div class="cell standardwert-cell" :class="{'section-divider-bottom': i === 9 || i === 11}">
+        <div class="cell standardwert-cell" :class="{ 'section-divider-bottom': i === 9 || i === 11 }">
           <div class="cat-title">
             <span class="cat-num">{{ getCatNum(i) }}.</span>
             <span class="cat-label">{{ cat.label }}</span>
           </div>
           <div class="cat-desc" v-html="cat.commentL"></div>
         </div>
-        <div class="cell graph-cell" :class="{'section-divider-bottom': i === 9 || i === 11}">
+        <div class="cell graph-cell" :class="{ 'section-divider-bottom': i === 9 || i === 11 }">
           <div class="graph-dots">
             <span v-for="n in 9" :key="n" class="dot"></span>
           </div>
         </div>
-        <div class="cell right-desc-cell" :class="{'section-divider-bottom': i === 9 || i === 11}">
+        <div class="cell right-desc-cell" :class="{ 'section-divider-bottom': i === 9 || i === 11 }">
           <div class="cat-desc right" v-html="cat.commentR"></div>
         </div>
       </template>
 
       <!-- Graph Overlays -->
-      <div
-        class="graph-overlay-container"
-        :style="{
-          top: `${headerHeight}px`,
-          left: `${graphOffset}px`,
-          width: `${gridWidth}px`,
-          height: `${gridHeight}px`,
-        }"
-      >
-        <div
-          v-for="(pos, index) in [3, 6]"
-          :key="`blue-line-${index}`"
-          class="blue-line"
-          :style="{ left: `${cellWidth * pos - 0.75}px` }"
-        ></div>
+      <div class="graph-overlay-container" :style="{
+        top: `${headerHeight}px`,
+        left: `${graphOffset}px`,
+        width: `${gridWidth}px`,
+        height: `${gridHeight}px`,
+      }">
+        <div v-for="s in blueStanines" :key="`blue-${s}`" class="blue-line"
+          :style="{ left: `${xForStanine(s) - LINE_W / 2}px`, width: `${LINE_W}px` }" />
+        <!-- overlay markers -->
+        <circle v-for="(pt, idx) in pointsByRow" v-if="pt" :key="'dot-' + idx" :cx="pt.x" :cy="pt.y" :r="MARKER_R"
+          fill="var(--overlay-fill)" stroke="var(--overlay-stroke)" :stroke-width="MARKER_SW" />
         <svg :width="gridWidth" :height="gridHeight" class="polyline-svg">
-          <polyline :points="staninePoints" fill="none" stroke="black" stroke-width="1.5" />
-          <circle
-            v-for="(pt, idx) in stanineCoords"
-            :key="idx"
-            :cx="pt.x"
-            :cy="pt.y"
-            r="4"
-            fill="white"
-            stroke="black"
-            stroke-width="1.5"
-          />
+          <template v-for="(seg, sIdx) in polySegments" :key="'seg-'+sIdx">
+            <polyline :points="seg.map(p => `${p.x},${p.y}`).join(' ')" fill="none" stroke="black" stroke-width="1.5" />
+          </template>
+
+          <!-- keep the dots -->
+          <circle v-for="(pt, idx) in pointsByRow" v-if="pt" :key="'dot-' + idx" :cx="pt.x" :cy="pt.y" r="4"
+            fill="white" stroke="black" stroke-width="1.5" />
         </svg>
-        <div
-          class="average-box"
-          :style="{ top: 0, height: `${rowHeight * 10}px`, left: `${cellWidth * 3}px`, width: `${cellWidth * 3}px` }
-          "
-        >
+        <div class="average-box" :style="{
+          top: 0,
+          height: `${rowHeight * 10}px`,
+          left: `${innerLeft}px`,
+          width: `${innerWidth}px`
+        }">
           <div class="percent-label top">
             54%
             <div class="percent-connector"></div>
           </div>
         </div>
-        <div
-          class="average-box"
-          :style="{ top: `${rowHeight * 10}px`, height: `${rowHeight * 2}px`, left: `${cellWidth * 3}px`, width: `${cellWidth * 3}px` }
-          "
-        >
+
+        <div class="average-box" :style="{
+          top: `${rowHeight * 10}px`,
+          height: `${rowHeight * 2}px`,
+          left: `${innerLeft}px`,
+          width: `${innerWidth}px`
+        }">
           <div class="percent-label bottom">54%</div>
         </div>
       </div>
@@ -164,144 +206,111 @@ const staninePoints = computed(() =>
 </template>
 
 <style scoped>
-.fpi-sheet {
-  border: 1.5px solid #000;
-  font-family: Arial, sans-serif;
-  background: #fff;
-  width: 950px;
-  margin: 2rem auto;
-  font-size: 11px;
-  line-height: 1.25;
+/* =========================
+   SVG overlay styling
+   ========================= */
+.polyline-svg{position:absolute;top:0;left:0;z-index:5;shape-rendering:geometricPrecision}
+.polyline-svg polyline{stroke:var(--overlay-stroke);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;fill:none;vector-effect:non-scaling-stroke}
+.polyline-svg circle{paint-order:stroke fill}
+
+/* =========================
+   Base container + tokens
+   ========================= */
+.fpi-sheet{
+  /* Light theme defaults */
+  --bg:#ffffff;--fg:#111111;--muted-fg:#444444;--grid:#e0e0e0;--border:#000000;--blue:#2f7dd6;
+  --overlay-stroke:#000000;--overlay-fill:#ffffff;--dot-size:4px;
+  /* header label row height (where the mid-line sits) */
+  --label-row-h:22px;
+
+  border:1.5px solid var(--border);background:var(--bg);color:var(--fg);
+  font-family:Arial,sans-serif;width:950px;margin:2rem auto;font-size:11px;line-height:1.25;
 }
 
-/* Main Grid Layout */
-.main-grid {
-  display: grid;
-  grid-template-columns: 85px 230px 337.5px auto;
-  position: relative;
+/* Dark mode */
+@media (prefers-color-scheme:dark){
+  .fpi-sheet{--bg:#0f1115;--fg:#f1f5f9;--muted-fg:#cbd5e1;--grid:#3a3f4b;--border:#e2e8f0;--blue:#8ab4ff;
+    --overlay-stroke:#f8fafc;--overlay-fill:#0f1115;--dot-size:5px}
 }
-.header-cell, .cell, .footer-cell {
-  padding: 4px;
-  box-sizing: border-box;
-}
+.dark .fpi-sheet{--bg:#0f1115;--fg:#f1f5f9;--muted-fg:#cbd5e1;--grid:#3a3f4b;--border:#e2e8f0;--blue:#8ab4ff;
+  --overlay-stroke:#f8fafc;--overlay-fill:#0f1115;--dot-size:5px}
+
+/* =========================
+   Grid layout
+   ========================= */
+.main-grid{display:grid;grid-template-columns:85px 230px 337.5px auto;position:relative}
+.header-cell,.cell,.footer-cell{padding:4px;box-sizing:border-box}
 
 /* Borders */
-.standardwert-title, .standardwert-cell, .graph-title, .graph-cell, .right-desc-title, .right-desc-cell {
-  border-left: 1.5px solid #000;
+.standardwert-title,.standardwert-cell,.graph-title,.graph-cell,.right-desc-title,.right-desc-cell{border-left:1.5px solid var(--border)}
+.header-cell{border-bottom:1.5px solid var(--border)}
+.cell{border-bottom:1px solid var(--grid)}
+.section-divider-bottom{border-bottom:1.5px solid var(--border)}
+
+/* Heights */
+.header-cell{height:v-bind('headerHeight + "px"');display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch}
+.cell{height:v-bind('rowHeight + "px"')}
+
+/* =========================
+   Header content (TOP)
+   ========================= */
+.standardwert-title{align-items:flex-start;padding-left:8px}
+
+/* Center header: label + two number rows */
+.graph-title{display:grid;width:100%;grid-template-columns:1fr;grid-template-rows:var(--label-row-h) 1fr 1fr;align-content:stretch;justify-content:stretch;padding:0}
+.normstichprobe-label{
+  grid-row:1;display:block;width:100%;text-align:center;padding:0 8px 2px;
+  /* remove per-cell underline; we'll draw a single line across the whole header */
+  border-bottom:none;font-weight:600;
 }
-.header-cell {
-  border-bottom: 1.5px solid #000;
-  font-weight: bold;
-  font-size: 12px;
-  height: 48px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
-}
-.standardwert-title, .right-desc-title { align-items: flex-start; padding-left: 8px;}
-.cell {
-  height: v-bind('rowHeight + "px"'); /* dynamic height per row */
-  border-bottom: 1px solid #e0e0e0;
-}
-.section-divider-bottom {
-  border-bottom: 1.5px solid #000;
+.prozent-numbers,.stanine-numbers{grid-row:auto;display:flex;justify-content:space-around;width:100%;line-height:1;padding-top:0}
+
+/* Right header mirrors the 3-row layout */
+.right-desc-title{display:grid;width:100%;grid-template-columns:1fr;grid-template-rows:var(--label-row-h) 1fr 1fr;align-content:stretch;justify-content:stretch;justify-items:end;padding:0 8px}
+.right-desc-title>div:first-child{grid-row:2} /* Prozent */
+.right-desc-title>div:last-child{grid-row:3}  /* Stanine */
+
+/* Remove the old per-cell mid-lines (if present) */
+.standardwert-title::before,.right-desc-title::before{content:none}
+
+/* One global mid-line across the whole header row */
+.header-midline{
+  position:absolute;left:0;right:0;top:var(--label-row-h);height:1.5px;background:var(--border);z-index:2
 }
 
-/* Header Specifics */
-.graph-title { text-align: center; padding: 0; }
-.normstichprobe-label { border-bottom: 1.5px solid #000; width: 100%; padding-bottom: 2px; }
-.prozent-numbers, .stanine-numbers { display: flex; justify-content: space-around; width: 100%; padding-top: 2px; }
+/* =========================
+   Body columns
+   ========================= */
+.rohwert-cell{display:flex;align-items:center;justify-content:center}
+.rohwert-box{width:48px;height:30px;border:1px solid var(--border);border-radius:15px;background:var(--bg);color:var(--fg);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;flex-shrink:0}
 
-/* Column-specific cells */
-.rohwert-cell { display: flex; align-items: center; justify-content: center; }
-.rohwert-box {
-  width: 48px; height: 30px;
-  border: 1px solid #000;
-  border-radius: 15px; /* Oval shape */
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: bold;
-  flex-shrink: 0;
-}
+.standardwert-cell{padding:4px 12px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
+.cat-title{font-weight:bold;font-size:12.5px;margin-bottom:2px}
+.cat-num{display:inline-block;width:20px;text-align:right;margin-right:4px}
+.cat-desc{color:var(--muted-fg)}
+.right-desc-cell{display:flex;align-items:center;padding:4px 12px}
 
-.standardwert-cell {
-  padding: 4px 12px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-}
-.cat-title { font-weight: bold; font-size: 12.5px; margin-bottom: 2px; }
-.cat-num { display: inline-block; width: 20px; text-align: right; margin-right: 4px; }
-.right-desc-cell { display: flex; align-items: center; padding: 4px 12px; }
-.cat-desc { color: #333; }
+/* Graph column */
+.graph-cell{padding:0;display:flex;align-items:center}
+.graph-dots{display:flex;justify-content:space-around;align-items:center;height:100%;width:100%}
+.dot{width:var(--dot-size);height:var(--dot-size);background-color:var(--fg);border-radius:50%}
 
-/* Graph Cell and Overlays */
-.graph-cell { padding: 0; display: flex; align-items: center; }
-.graph-dots { display: flex; justify-content: space-around; align-items: center; height: 100%; width: 100%;}
-.dot { width: 4px; height: 4px; background-color: #000; border-radius: 50%; }
-.graph-overlay-container {
-  position: absolute;
-  pointer-events: none;
-}
-.blue-line {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1.5px;
-  background-color: #4a90e2; /* Vibrant blue */
-  opacity: 0.7;
-  z-index: 1; /* Ensures it's visible but behind other elements */
-}
-.polyline-svg { position: absolute; top: 0; left: 0; z-index: 5; }
-.average-box { position: absolute; border: 1px solid black; box-sizing: border-box; z-index: 2;}
+/* =========================
+   Overlays (lines, markers, bracket)
+   ========================= */
+.graph-overlay-container{position:absolute;pointer-events:none}
+.blue-line{position:absolute;top:0;bottom:0;width:1.5px;background-color:var(--blue);opacity:.7;z-index:4}
+.average-box{position:absolute;border:1px solid var(--overlay-stroke);box-sizing:border-box;z-index:2}
+.percent-label{position:absolute;left:50%;transform:translateX(-50%);font-size:11px;font-weight:bold;background:var(--bg);padding:0 2px;color:var(--fg);z-index:10}
+.percent-label.top{top:-18px}
+.percent-label.bottom{bottom:5px;width:100%;text-align:center}
+.percent-connector{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:1px;height:6px;background-color:var(--fg)}
+.percent-connector::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:15px;height:1px;background-color:var(--fg)}
 
-.percent-label {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 11px;
-  font-weight: bold;
-  background: white;
-  padding: 0 2px;
-  color: black;
-  z-index: 10;
-}
-.percent-label.top {
-  top: -18px;
-}
-.percent-label.bottom {
-  position: absolute;
-  bottom: 5px;
-  width: 100%;
-  text-align: center;
-}
-.percent-connector {
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 1px;
-  height: 6px;
-  background-color: black;
-}
-.percent-connector::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 15px;
-  height: 1px;
-  background-color: black;
-}
-
-/* Footer */
-.footer-cell {
-  height: 48px;
-  display: flex;
-  align-items: center;
-  font-size: 12px;
-}
-.footer-cell.standardwert-cell { padding-left: 8px; }
+/* =========================
+   Footer
+   ========================= */
+.footer-cell{height:48px;display:flex;align-items:center;font-size:12px}
+.footer-cell.standardwert-cell{padding-left:8px}
 </style>
+
