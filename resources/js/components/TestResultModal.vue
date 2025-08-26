@@ -121,6 +121,13 @@ async function exportDetailsPdf() {
   pdf.save('mrt-antworten.pdf');
 }
 
+function downloadPdf() {
+  const id = props.assignment?.results?.[0]?.id;
+  if (id) {
+    window.open(route('test-results.download', { testResult: id }), '_blank');
+  }
+}
+
 </script>
 
 <template>
@@ -129,10 +136,14 @@ async function exportDetailsPdf() {
       <DialogHeader>
         <div class="flex items-center justify-between w-full">
           <DialogTitle>Testergebnis bearbeiten</DialogTitle>
-          <div v-if="assignment && assignment.test && ['MRT-A', 'MRT-B'].includes(assignment.test.name)"
-            class="flex gap-2">
-            <Button variant="outline" size="sm" @click="exportChartPdf">Diagramm PDF</Button>
-            <Button variant="outline" size="sm" @click="exportDetailsPdf">Antworten PDF</Button>
+          <div v-if="assignment" class="flex gap-2">
+            <template v-if="assignment.test && ['MRT-A', 'MRT-B'].includes(assignment.test.name)">
+              <Button variant="outline" size="sm" @click="exportChartPdf">Diagramm PDF</Button>
+              <Button variant="outline" size="sm" @click="exportDetailsPdf">Antworten PDF</Button>
+            </template>
+            <Button v-if="assignment.results?.[0]?.pdf_file_path" variant="outline" size="sm" @click="downloadPdf">
+              Ergebnis PDF
+            </Button>
           </div>
         </div>
       </DialogHeader>

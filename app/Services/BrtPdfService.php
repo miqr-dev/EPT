@@ -6,7 +6,7 @@ use App\Models\TestResult;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class BrtAPdfService
+class BrtPdfService
 {
     public static function generate(TestResult $result): ?string
     {
@@ -30,7 +30,7 @@ class BrtAPdfService
             'twert' => $result->result_json['twert'] ?? null,
         ];
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdfs.brt-a-result', $data)->setPaper('a4');
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdfs.brt-result', $data)->setPaper('a4');
         $fileName = Str::slug($participantName, '_') . '_' . Str::slug($testName, '_') . '.pdf';
         $path = 'test_results/' . $fileName;
         Storage::put($path, $pdf->output());
