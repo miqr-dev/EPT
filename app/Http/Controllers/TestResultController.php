@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\TestResult;
 use Illuminate\Http\Request;
 use App\Services\MrtAScorer;
+use Illuminate\Support\Facades\Storage;
 
 class TestResultController extends Controller
 {
@@ -55,5 +56,14 @@ class TestResultController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Test result updated successfully.');
+    }
+
+    public function download(TestResult $testResult)
+    {
+        $path = $testResult->pdf_file_path;
+        if (!$path || !Storage::exists($path)) {
+            abort(404);
+        }
+        return Storage::download($path);
     }
 }

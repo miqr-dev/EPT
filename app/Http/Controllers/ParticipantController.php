@@ -205,8 +205,8 @@ class ParticipantController extends Controller
           'result_json' => $resultData,
         ]);
 
-        if ($examStep->test->name === 'BRT-A') {
-          $pdfPath = \App\Services\BrtAPdfService::generate($testResult);
+        if (in_array($examStep->test->name, ['BRT-A', 'BRT-B'])) {
+          $pdfPath = \App\Services\BrtPdfService::generate($testResult);
           if ($pdfPath) {
             $testResult->update(['pdf_file_path' => $pdfPath]);
           }

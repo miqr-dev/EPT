@@ -58,9 +58,19 @@ function closeModal() {
                             {{ assignment.status }}
                           </Badge>
                         </div>
-                        <div v-if="assignment.results.length > 0">
+                        <div v-if="assignment.results.length > 0" class="flex gap-2">
                           <Button @click="viewTestResult(assignment, participant)" size="sm">
                             Ergebnisse anzeigen
+                          </Button>
+                          <Button
+                            v-if="assignment.results[0].pdf_file_path"
+                            as="a"
+                            :href="route('test-results.download', { testResult: assignment.results[0].id })"
+                            size="sm"
+                            variant="secondary"
+                            target="_blank"
+                          >
+                            Download
                           </Button>
                         </div>
                       </div>
