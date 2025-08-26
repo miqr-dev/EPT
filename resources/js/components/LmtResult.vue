@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { Button } from '@/components/ui/button'
+import { route } from 'ziggy-js'
+
 const { results } = defineProps<{ results: any }>()
 
 function formatTime(sec: number | null | undefined): string {
@@ -20,7 +23,12 @@ const scales = [
 
 <template>
   <div class="p-6 bg-background border rounded-lg">
-    <h2 class="text-xl font-semibold mb-4">Test abgeschlossen!</h2>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-semibold">Test abgeschlossen!</h2>
+      <Button as="a" :href="route('test-results.download', { testResult: results.id })" target="_blank">
+        Drucken
+      </Button>
+    </div>
     <div class="mb-6 w-full max-w-md">
       <table class="w-full text-sm border rounded-lg overflow-hidden shadow">
         <tbody>
