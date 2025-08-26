@@ -260,7 +260,9 @@ class ParticipantController extends Controller
         'participantProfile',
         'testAssignments.test',
         'testAssignments.results' => function ($query) {
-          $query->orderBy('created_at', 'desc');
+          $query
+            ->select('id', 'assignment_id', 'result_json', 'pdf_file_path', 'created_at')
+            ->orderBy('created_at', 'desc');
         },
         'tests',
       ])
