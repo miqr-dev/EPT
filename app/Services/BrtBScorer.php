@@ -91,6 +91,16 @@ class BrtBScorer
     ];
   }
 
+  public static function addCorrectAnswers(array $result): array
+  {
+    foreach (self::$questions as $index => $question) {
+      if (isset($result['answers'][$index])) {
+        $result['answers'][$index]['correct_answers'] = $question['answers'];
+      }
+    }
+    return $result;
+  }
+
   protected static function getTwertFromPR(float $pr): float
   {
     $best = self::$prToTwert[0];
