@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\TestResult;
 use Illuminate\Http\Request;
 use App\Services\MrtAScorer;
+use App\Services\MrtPdfService;
 use Illuminate\Support\Facades\Storage;
 
 class TestResultController extends Controller
@@ -65,5 +66,26 @@ class TestResultController extends Controller
             abort(404);
         }
         return Storage::download($path);
+    }
+
+    public function pdf(Request $request, TestResult $testResult)
+    {
+        $testResult->load('assignment.test', 'assignment.participant');
+        $testName = $testResult->assignment->test->name;
+
+        if (!in_array($testName, ['MRT-A', 'MRT-B'])) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'chart' => 'required|string',
+        ]);
+
+        $response = MrtPdfService::download($testResult, $validated['chart']);
+        if ($response) {
+            return $response;
+        }
+
+        abort(500, 'PDF generation failed');
     }
 }
