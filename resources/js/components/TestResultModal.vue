@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import TestResultViewer from '@/components/TestResultViewer.vue';
 import html2canvas from 'html2canvas-pro';
 import jsPDF from 'jspdf';
+import axios from 'axios';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -24,6 +25,16 @@ const viewerRef = ref<any>(null);
 
 function canvasFromElement(el: HTMLElement) {
   return html2canvas(el, { scale: 2 });
+}
+
+function downloadBlob(data: BlobPart, filename: string, type: string) {
+  const blob = new Blob([data], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 watch(
@@ -131,6 +142,18 @@ async function exportResultPdf() {
   const el = (viewerRef.value.$el as HTMLElement) ?? (viewerRef.value as HTMLElement);
   const canvas = await canvasFromElement(el);
   const img = canvas.toDataURL('image/png');
+  const testName = props.assignment?.test?.name;
+  const resultId = props.assignment?.results?.[0]?.id;
+
+  if (testName && ['MRT-A', 'MRT-B'].includes(testName) && resultId) {
+    const { data } = await axios.post(
+      route('test-results.pdf', { testResult: resultId }),
+      { chart: img },
+      { responseType: 'blob' }
+    );
+    downloadBlob(data, `${testName.toLowerCase()}-result.pdf`, 'application/pdf');
+    return;
+  }
 
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
   const pdfW = pdf.internal.pageSize.getWidth();
@@ -145,7 +168,7 @@ async function exportResultPdf() {
 
   const marginX = (pdfW - imgW) / 2;
   pdf.addImage(img, 'PNG', marginX, 0, imgW, imgH);
-  const fileName = `${props.assignment?.test?.name ?? 'test'}-result.pdf`;
+  const fileName = `${testName ?? 'test'}-result.pdf`;
   pdf.save(fileName);
 }
 

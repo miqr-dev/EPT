@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <style>
         body { font-family: DejaVu Sans, sans-serif; }
+        .chart { text-align: center; margin: 40px 0; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #000; padding: 8px; text-align: left; }
     </style>
@@ -13,6 +14,11 @@
     <p>Datum: {{ $date }}</p>
     <p>Teilnehmer: {{ $participant_name }}</p>
     <p>Dauer: {{ $duration }}</p>
+    @if($chart)
+    <div class="chart">
+        <img src="{{ $chart }}" alt="MRT chart" style="max-width: 400px; height: auto;">
+    </div>
+    @endif
     <table>
         <thead>
             <tr>
