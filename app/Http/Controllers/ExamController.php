@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class ExamController extends Controller
@@ -167,6 +168,16 @@ class ExamController extends Controller
 
     if (!$exam->steps()->exists()) {
       return back(303)->with('error', 'Exam has no steps.');
+    }
+
+    $incompleteParticipants = $exam->participants()
+      ->where('status', '!=', 'waiting')
+      ->with('user')
+      ->get();
+
+    if ($incompleteParticipants->isNotEmpty()) {
+      $names = $incompleteParticipants->map(fn($p) => $p->user->name)->toArray();
+      throw ValidationException::withMessages(['participants' => $names]);
     }
 
     $firstStep = $exam->steps()->orderBy('step_order')->first();
