@@ -73,6 +73,7 @@ class BrtBScorer
       $details[] = [
         'question' => $question['text'],
         'user_answer' => $user,
+        'correct_answers' => $question['answers'],
         'time_seconds' => $times[$index] ?? 0,
         'is_correct' => $isCorrect,
       ];

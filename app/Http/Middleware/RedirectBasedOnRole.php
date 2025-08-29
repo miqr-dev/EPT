@@ -65,6 +65,7 @@ class RedirectBasedOnRole
         'exams.updateSteps',
         'participants.list',
         'test-results.download',
+        'test-results.pdf',
       ];
 
       if ($user->role === 'participant') {
@@ -107,3 +108,6 @@ class RedirectBasedOnRole
     return $next($request);
   }
 }
+
+
+
