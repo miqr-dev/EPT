@@ -211,6 +211,12 @@ class ParticipantController extends Controller
             $testResult->update(['pdf_file_path' => $pdfPath]);
           }
         }
+        if ($examStep->test->name === 'LMT') {
+          $pdfPath = \App\Services\LmtPdfService::generate($testResult);
+          if ($pdfPath) {
+            $testResult->update(['pdf_file_path' => $pdfPath]);
+          }
+        }
         if ($examStep->test->name === 'FPI-R') {
           $pdfPath = \App\Services\FpiRPdfService::generate($testResult);
           if ($pdfPath) {
@@ -254,7 +260,9 @@ class ParticipantController extends Controller
         'participantProfile',
         'testAssignments.test',
         'testAssignments.results' => function ($query) {
-          $query->orderBy('created_at', 'desc');
+          $query
+            ->select('id', 'assignment_id', 'result_json', 'pdf_file_path', 'created_at')
+            ->orderBy('created_at', 'desc');
         },
         'tests',
       ])
