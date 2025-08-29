@@ -4,7 +4,7 @@ namespace App\Services;
 
 class BrtBScorer
 {
- protected static array $questions = [
+  protected static array $questions = [
     ['text' => '619020 – 540600 = ?', 'answers' => ['78420']],
     ['text' => '619020 = 170309 + ?', 'answers' => ['448711']],
     ['text' => '4 : 50 = ?', 'answers' => ['0,08']],
@@ -105,8 +105,24 @@ class BrtBScorer
 
   protected static function normalize(string $answer): string
   {
-    $normalized = trim(strtolower(str_replace([',', '€', '%', '$', ' '], ['.', '', '', '', ''], $answer)));
-    return $normalized;
+    $answer = strtolower(trim($answer));
+    return preg_replace('/[^0-9.,\/\-]/', '', $answer);
+  }
+
+  protected static function parseNumber(string $answer): ?float
+  {
+    $answer = str_replace(',', '.', $answer);
+    if ($answer === '') {
+      return null;
+    }
+    if (str_contains($answer, '/')) {
+      [$num, $den] = array_map('trim', explode('/', $answer, 2));
+      if ($num === '' || $den === '' || !is_numeric($num) || !is_numeric($den) || (float)$den == 0.0) {
+        return null;
+      }
+      return (float)$num / (float)$den;
+    }
+    return is_numeric($answer) ? (float)$answer : null;
   }
 
   protected static function isCorrectAnswer(?string $userAnswer, array $validAnswers): bool
@@ -115,11 +131,11 @@ class BrtBScorer
       return false;
     }
     $normalizedUser = self::normalize($userAnswer);
-    $userNumber = is_numeric($normalizedUser) ? (float)$normalizedUser : null;
+    $userNumber = self::parseNumber($normalizedUser);
 
     foreach ($validAnswers as $valid) {
       $normalizedValid = self::normalize($valid);
-      $validNumber = is_numeric($normalizedValid) ? (float)$normalizedValid : null;
+      $validNumber = self::parseNumber($normalizedValid);
       if ($userNumber !== null && $validNumber !== null) {
         if (abs($userNumber - $validNumber) < 0.001) {
           return true;
