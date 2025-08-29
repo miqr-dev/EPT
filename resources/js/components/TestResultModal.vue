@@ -22,6 +22,10 @@ const form = useForm({
 const editable = ref<any | null>(null);
 const viewerRef = ref<any>(null);
 
+function canvasFromElement(el: HTMLElement) {
+  return html2canvas(el, { scale: 2 });
+}
+
 watch(
   () => props.assignment,
   (val) => {
@@ -121,11 +125,28 @@ async function exportDetailsPdf() {
   pdf.save('mrt-antworten.pdf');
 }
 
-function downloadPdf() {
-  const id = props.assignment?.results?.[0]?.id;
-  if (id) {
-    window.open(route('test-results.download', { testResult: id }), '_blank');
+async function exportResultPdf() {
+  if (!viewerRef.value) return;
+  await nextTick();
+  const el = (viewerRef.value.$el as HTMLElement) ?? (viewerRef.value as HTMLElement);
+  const canvas = await canvasFromElement(el);
+  const img = canvas.toDataURL('image/png');
+
+  const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+  const pdfW = pdf.internal.pageSize.getWidth();
+  const pdfH = pdf.internal.pageSize.getHeight();
+
+  let imgW = pdfW;
+  let imgH = (canvas.height * imgW) / canvas.width;
+  if (imgH > pdfH) {
+    imgH = pdfH;
+    imgW = (canvas.width * imgH) / canvas.height;
   }
+
+  const marginX = (pdfW - imgW) / 2;
+  pdf.addImage(img, 'PNG', marginX, 0, imgW, imgH);
+  const fileName = `${props.assignment?.test?.name ?? 'test'}-result.pdf`;
+  pdf.save(fileName);
 }
 
 </script>
@@ -141,9 +162,7 @@ function downloadPdf() {
               <Button variant="outline" size="sm" @click="exportChartPdf">Diagramm PDF</Button>
               <Button variant="outline" size="sm" @click="exportDetailsPdf">Antworten PDF</Button>
             </template>
-            <Button v-if="assignment.results?.[0]?.pdf_file_path" variant="outline" size="sm" @click="downloadPdf">
-              Ergebnis PDF
-            </Button>
+            <Button variant="outline" size="sm" @click="exportResultPdf">Ergebnis PDF</Button>
           </div>
         </div>
       </DialogHeader>
