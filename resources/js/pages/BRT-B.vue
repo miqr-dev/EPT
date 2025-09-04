@@ -12,13 +12,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
-function formatTime(sec: number | null): string {
-  if (sec === null || isNaN(sec)) return "–";
-  if (sec < 60) return `${sec} Sekunden`;
-  const min = Math.round(sec / 60);
-  return `${min} Minuten`;
-}
-
+const emit = defineEmits(['complete']);
 
 interface Question {
   text: string;
@@ -26,24 +20,21 @@ interface Question {
   image?: string;
 }
 
-const page = usePage<{ auth: { user: { name: string } } }>();
-const userName = computed(() => page.props.auth?.user?.name ?? '');
-const emit = defineEmits(['complete']);
 const questions = ref<Question[]>([
   { text: "619020 – 540600 = ?", answers: ["78420"] },
-  { text: "619020 = 170309 + ?", answers: ["448711"] },
+  { text: "619020 = 170309 + ?", answers: ["448.711"] },
   { text: "4 : 50 = ?", answers: ["0,08"] },
   { text: "0,4 · ____ = 0,1", answers: ["0,25", "1/4"] },
   { text: "1/8 : 1/3 = ?", answers: ["3/8"] },
   { text: "Verwandle 0,6 in einen gewöhnlichen Bruch.", answers: ["6/10", "3/5"] },
   { text: "Ein Mechaniker hat aus 3 Teilen ein Gerät hergestellt. Die Einzelteile wiegen: 50 g, 6,4 kg, 1050 g. Wie viel wiegt das gesamte Gerät?", answers: ["7500", "7500 g", "7500g", "7,5", "7,5Kg", "7,5kg", "7,5 Kg", "7,5 kg"] },
-  { text: "Rechne um: Wie viel g sind 5 kg und 1 g?", answers: ["5001", "5001g", "5001 g", "5001 G", "5001G"] },
-  { text: "Wie viel Zinsen erbringen 1000 € zu 2 % in einem Jahr?", answers: ["20", "20€", "20 €"] },
-  { text: "Rudi kauft sich ein neues Mofa. Es kostet 1390 €. Bei Barzahlung bekommt er 3 % Rabatt. Wie viel muss er bezahlen?", answers: ["1348,3", "1348,30", "1348,30 €", "1348,3 €", "1348,3€", "1348,30€"] },
-  { text: "Im Sägewerk können aus einem Baumstamm 30 Bretter von 2 cm Dicke geschnitten werden. Wie viele Bretter erhält man, wenn sie 3 cm dick sind?", answers: ["20", "20 Bretter"] },
+  { text: "Rechne um: Wie viel g sind 5 kg und 1 g?", answers: ["5001","5001g", "5001 g", "5001 G", "5001G"] },
+  { text: "Wie viel Zinsen erbringen 1000 € zu 2 % in einem Jahr?", answers: ["20","20€", "20 €"] },
+  { text: "Rudi kauft sich ein neues Mofa. Es kostet 1390 €. Bei Barzahlung bekommt er 3 % Rabatt. Wie viel muss er bezahlen?", answers: ["1348,3","1348,30","1348,30 €", "1348,3 €", "1348,3€", "1348,30€"] },
+  { text: "Im Sägewerk können aus einem Baumstamm 30 Bretter von 2 cm Dicke geschnitten werden. Wie viele Bretter erhält man, wenn sie 3 cm dick sind?", answers: ["20","20 Bretter"] },
   { text: "Im Sägewerk können aus einem Baumstamm 30 Bretter von 2 cm Dicke geschnitten werden. Wie dick wird ein Brett, wenn man 10 Bretter aus dem Stamm schneidet?", answers: ["6", "6cm", "6 cm", "6 Cm", "6Cm"] },
-  { text: "Berechne die Grundstücksgröße in m².", answers: ["840", "840 m²", "840m²", "840 m2"], image: "/images/Math/MatheB1.png" },
-  { text: "Das Rad hat einen Durchmesser von 0,3 m. Welche Strecke legt es zurück, wenn es sich 100 mal dreht?", answers: ["94,2", "94,2 m", "94,2m"], image: "/images/Math/Mathe2.png" },
+  { text: "Berechne die Grundstücksgröße in m².", answers: ["840" , "840 m²", "840m²", "840 m2"], image: "/images/Math/MatheB1.png" },
+  { text: "Das Rad hat einen Durchmesser von 0,3 m. Welche Strecke legt es zurück, wenn es sich 100 mal dreht?", answers: ["94,2","94,2 m","94,2m"], image: "/images/Math/Mathe2.png" },
   { text: "√49 = ?", answers: ["7"] },
   { text: "10⁴ = ?", answers: ["10000"] },
 ]);
@@ -68,49 +59,7 @@ function formatQuestionMark(text: string): string {
   return text;
 }
 
-// Normtables
-const rohwertToPR: Record<number, number> = {
-  1: 0, 2: 0, 3: 2.5, 4: 2.5, 5: 5, 6: 8.5, 7: 16,
-  8: 27, 9: 34, 10: 53, 11: 62, 12: 75, 13: 85, 14: 95, 15: 99, 16: 100,
-};
-const prToTwert = [
-  { pr: 0, t: 30 }, { pr: 2, t: 30 }, { pr: 5, t: 34 }, { pr: 7, t: 35 }, { pr: 8, t: 36 },
-  { pr: 16, t: 40 }, { pr: 27, t: 44 }, { pr: 34, t: 46 }, { pr: 53, t: 50 },
-  { pr: 62, t: 53 }, { pr: 75, t: 56 }, { pr: 85, t: 60 }, { pr: 95, t: 66 },
-  { pr: 99, t: 73 }, { pr: 100, t: 80 },
-];
-function getPRFromRohwert(rohwert: number): number {
-  return rohwertToPR[rohwert] ?? 0;
-}
-function getTwertFromPR(pr: number): number {
-  let best = prToTwert[0];
-  for (const entry of prToTwert) {
-    if (pr >= entry.pr) best = entry;
-  }
-  return best.t;
-}
-
 const isTestComplete = computed(() => currentQuestionIndex.value >= questions.value.length);
-
-const finalScore = computed(() => {
-  let correct = 0;
-  questions.value.forEach((q, i) => {
-    const user = (userAnswers.value[i] ?? "").trim().replace(",", ".").toLowerCase();
-    const validAnswers = q.answers.map(a => a.trim().replace(",", ".").toLowerCase());
-    if (validAnswers.includes(user)) {
-      correct++;
-    }
-  });
-  return correct;
-});
-
-const userPR = computed(() => getPRFromRohwert(finalScore.value));
-const userTwert = computed(() => getTwertFromPR(userPR.value));
-const totalTimeTaken = computed(() =>
-  isTestComplete.value
-    ? questionTimes.value.reduce((a, b) => a + b, 0)
-    : null
-);
 
 const currentQuestion = computed(() =>
   currentQuestionIndex.value < questions.value.length
@@ -212,7 +161,6 @@ const confirmEnd = () => {
   emit('complete', results);
 };
 
-
 const cancelEnd = () => {
   window.dispatchEvent(new Event('cancel-finish'));
   endConfirmOpen.value = false;
@@ -255,34 +203,6 @@ const startTest = () => {
   startTime.value = null;
 };
 
-function normalizeAnswer(answer: string): string {
-  return answer
-    .trim()
-    .replace(",", ".")
-    .replace(/[€%$]/g, "")
-    .replace(/\s+/g, "")
-    .toLowerCase();
-}
-
-function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[]): boolean {
-  if (!userAnswer) return false;
-
-  const normalizedUser = normalizeAnswer(userAnswer);
-  const normalizedCorrectAnswers = validAnswers.map(normalizeAnswer);
-
-  const userAsNumber = parseFloat(normalizedUser);
-  const isNumeric = !isNaN(userAsNumber);
-
-  return normalizedCorrectAnswers.some(correct => {
-    const correctAsNumber = parseFloat(correct);
-    if (isNumeric && !isNaN(correctAsNumber)) {
-      // Numeric comparison with tolerance
-      return Math.abs(userAsNumber - correctAsNumber) < 0.001;
-    }
-    // Fallback to string compare
-    return normalizedUser === correct;
-  });
-}
 </script>
 
 <template>
@@ -302,12 +222,12 @@ function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[])
                hover:bg-blue-50 focus:outline-none text-base" :class="{
                 'bg-blue-600 text-white border-blue-600': idx === currentQuestionIndex,
                 'hover:bg-blue-500': idx === currentQuestionIndex,
-                'bg-green-200 border-green-400 text-green-900': userAnswers[idx] && idx !== currentQuestionIndex,
+                'bg-gray-300 border-gray-400 text-gray-900': userAnswers[idx] && idx !== currentQuestionIndex,
                 'bg-gray-100 border-gray-300 text-gray-900': !userAnswers[idx] && idx !== currentQuestionIndex,
               }" @click="jumpToQuestion(idx)" :disabled="isTestComplete || !showTest">
               <span class="w-8 h-8 flex items-center justify-center rounded-full border mr-2" :class="{
                 'bg-blue-600 text-white border-blue-600': idx === currentQuestionIndex,
-                'bg-green-400 text-white border-green-400': userAnswers[idx] && idx !== currentQuestionIndex,
+                'bg-gray-400 text-white border-gray-400': userAnswers[idx] && idx !== currentQuestionIndex,
                 'bg-gray-300 text-gray-600 border-gray-400': !userAnswers[idx] && idx !== currentQuestionIndex,
               }">
                 {{ idx + 1 }}
@@ -326,20 +246,14 @@ function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[])
         <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
           <h2 class="text-2xl font-bold mb-4">Willkommen zum Berufsbezogenen Rechentest</h2>
           <p class="mb-6 text-base text-center max-w-xl">
-            In diesem Verfahren finden Sie insgesamt {{ questions.length }} Rechenaufgaben, die zu lösen sind. Hierfür
-            haben
-            Sie 35 Minuten Zeit. Halten Sie sich nicht zu lange an einer Aufgabe auf, wenn Sie sie nicht lösen können.
-            Gehen
-            Sie zur nächsten weiter.</p>
-          <p> Wir wollen wissen, auf welcher Ebene Sie mit Ihren Kenntnissen stehen und wo wir Sie individuell fördern
-            können.
-          </p>
-          <br>
-          <p>
-            Für Nebenrechnungen haben Sie ein zusätzlichen Block.</p>
-          <p>Bitte notieren Sie vor Abgabe Ihres Blattes Ihren Namen und das heutige Datum darauf.
-          </p>
-
+            In diesem Verfahren finden Sie insgesamt {{ questions.length }} Rechenaufgaben, die zu lösen sind. Hierfür haben Sie 35 Minuten Zeit. Halten Sie sich nicht zu lange an einer Aufgabe auf, wenn Sie sie nicht lösen können. Gehen Sie zur nächsten weiter.</p>
+            <p> Wir wollen wissen, auf welcher Ebene Sie mit Ihren Kenntnissen stehen und wo wir Sie individuell fördern können. </p>
+            <br>
+            <p>
+            Für Nebenrechnungen haben Sie ein zusätzlichen Block.</p> 
+            <p>Bitte notieren Sie vor Abgabe Ihres Blattes Ihren Namen und das heutige Datum darauf.
+            </p>
+            
           <Button @click="startTest" class="px-8 py-3 text-lg mt-6 font-semibold rounded-xl shadow">
             Test starten
           </Button>
@@ -373,95 +287,27 @@ function isCorrectAnswer(userAnswer: string | undefined, validAnswers: string[])
           </p>
         </div>
         <!-- Test Results -->
-        <div v-else-if="isTestComplete" class="p-6 bg-background border rounded-lg">
-          <h2 class="text-xl font-semibold mb-4">Test abgeschlossen!</h2>
-          <div class="mb-6 w-full max-w-md">
-            <table class="w-full text-sm border rounded-lg overflow-hidden shadow">
-              <tbody>
-                <tr class="bg-muted/40">
-                  <td class="font-semibold px-3 py-2 w-1/2">Rohwert</td>
-                  <td class="px-3 py-2">{{ finalScore }} von {{ questions.length }}</td>
-                </tr>
-                <tr>
-                  <td class="font-semibold px-3 py-2">Prozentrang (PR)</td>
-                  <td class="px-3 py-2">{{ userPR }}</td>
-                </tr>
-                <tr class="bg-muted/40">
-                  <td class="font-semibold px-3 py-2">T-Wert (Normwert)</td>
-                  <td class="px-3 py-2">{{ userTwert }}</td>
-                </tr>
-                <tr>
-                  <td class="font-semibold px-3 py-2">Benötigte Zeit</td>
-                  <td class="px-3 py-2">
-                    <span v-if="totalTimeTaken !== null" :class="totalTimeTaken > 1800 ? 'text-red-600 font-bold' : ''">
-                      {{ formatTime(totalTimeTaken) }}
-                    </span>
-                    <span v-else>–</span>
-                  </td>
+        <div v-else-if="isTestComplete"></div>
 
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div>
-            <h3 class="font-bold mb-2">Antwort- und Bearbeitungszeit je Frage</h3>
-            <div class="overflow-x-auto">
-              <table class="min-w-full text-sm border rounded-lg shadow">
-                <thead class="bg-muted/40">
-                  <tr>
-                    <th class="px-2 py-1 text-left font-semibold">#</th>
-                    <th class="px-2 py-1 text-left font-semibold">Frage</th>
-                    <th class="px-2 py-1 text-left font-semibold">Ihre Antwort</th>
-                    <th class="px-2 py-1 text-left font-semibold">Richtige Antwort</th>
-                    <th class="px-2 py-1 text-left font-semibold">Bearbeitungszeit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(q, idx) in questions" :key="idx"
-                    :class="isCorrectAnswer(userAnswers[idx], q.answers) ? 'bg-green-50' : 'bg-red-50'">
-                    <td class="px-2 py-1 font-medium text-muted-foreground">{{ idx + 1 }}</td>
-                    <td class="px-2 py-1 align-top">
-                      <span v-html="formatQuestionMark(q.text)"></span>
-                      <div v-if="q.image" class="mt-1">
-                        <img :src="q.image" alt="Fragebild" class="max-w-[90px] border rounded shadow" />
-                      </div>
-                    </td>
-                    <td class="px-2 py-1">
-                      <span class="font-mono">{{ userAnswers[idx] || '–' }}</span>
-                    </td>
-                    <td class="px-2 py-1">
-                      <span class="font-mono">{{ q.answers.join(', ') }}</span>
-                    </td>
-                    <td class="px-2 py-1 text-right text-gray-500 font-mono min-w-[60px]">
-                      {{ formatTime(questionTimes[idx]) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </div>
-
-        <div v-else>
-          <p>Fragen werden geladen...</p>
-        </div>
+      <div v-else>
+        <p>Fragen werden geladen...</p>
       </div>
     </div>
-    <Dialog v-model:open="endConfirmOpen">
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Test beenden</DialogTitle>
-          <DialogDescription>
-            Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter class="gap-2">
-          <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
-          <Button variant="destructive" @click="confirmEnd">Ja</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   </div>
+  <Dialog v-model:open="endConfirmOpen">
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Test beenden</DialogTitle>
+        <DialogDescription>
+          Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
+        </DialogDescription>
+      </DialogHeader>
+      <DialogFooter class="gap-2">
+        <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
+        <Button variant="destructive" @click="confirmEnd">Ja</Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+</div>
 </template>
+

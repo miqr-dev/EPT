@@ -12,24 +12,14 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
-const page = usePage<{ auth: { user: { name: string } } }>();
-const userName = computed(() => page.props.auth?.user?.name ?? '');
-
 const emit = defineEmits(['complete']);
-
-function formatTime(sec: number | null): string {
-  if (sec === null || isNaN(sec)) return "–";
-  if (sec < 60) return `${sec} Sekunden`;
-  const min = Math.round(sec / 60);
-  return `${min} Minuten`;
-}
-
 
 interface Question {
   text: string;
   answers: string[];
   image?: string;
 }
+
 const questions = ref<Question[]>([
   { text: "619020 – 541600 = ?", answers: ["77420"] },
   { text: "619020 = 174309 + ?", answers: ["444711"] },
@@ -71,9 +61,6 @@ function formatQuestionMark(text: string): string {
 
 const isTestComplete = computed(() => currentQuestionIndex.value >= questions.value.length);
 
-const totalTimeTaken = computed(() =>
-  questionTimes.value.reduce((a, b) => a + b, 0)
-);
 
 const currentQuestion = computed(() =>
   currentQuestionIndex.value < questions.value.length
@@ -236,12 +223,12 @@ const startTest = () => {
                hover:bg-blue-50 focus:outline-none text-base" :class="{
                 'bg-blue-600 text-white border-blue-600': idx === currentQuestionIndex,
                 'hover:bg-blue-500': idx === currentQuestionIndex,
-                'bg-green-200 border-green-400 text-green-900': userAnswers[idx] && idx !== currentQuestionIndex,
+                'bg-gray-300 border-gray-400 text-gray-900': userAnswers[idx] && idx !== currentQuestionIndex,
                 'bg-gray-100 border-gray-300 text-gray-900': !userAnswers[idx] && idx !== currentQuestionIndex,
               }" @click="jumpToQuestion(idx)" :disabled="isTestComplete || !showTest">
               <span class="w-8 h-8 flex items-center justify-center rounded-full border mr-2" :class="{
                 'bg-blue-600 text-white border-blue-600': idx === currentQuestionIndex,
-                'bg-green-400 text-white border-green-400': userAnswers[idx] && idx !== currentQuestionIndex,
+                'bg-gray-400 text-white border-gray-400': userAnswers[idx] && idx !== currentQuestionIndex,
                 'bg-gray-300 text-gray-600 border-gray-400': !userAnswers[idx] && idx !== currentQuestionIndex,
               }">
                 {{ idx + 1 }}
