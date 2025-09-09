@@ -55,8 +55,8 @@ class ParticipantController extends Controller
       'profile' => $user->participantProfile,
       'professionGroups' => $professionGroups,
       'employeds' => $employeds,
-      'mrtAResult' => $mrtAResult,
-      'mrtBResult' => $mrtBResult,
+      'mrtAResult' => $mrtAResult ? $mrtAResult->result_json : null,
+      'mrtBResult' => $mrtBResult ? $mrtBResult->result_json : null,
     ]);
   }
 

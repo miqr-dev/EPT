@@ -194,11 +194,11 @@ const householdOptions = [
 
       <div v-if="props.mrtAResult" class="w-full max-w-4xl">
         <h2 class="text-2xl font-bold text-center mb-4">MRT-A Ergebnisse</h2>
-        <MrtAResult :results="props.mrtAResult.result_json" />
+        <MrtAResult :results="props.mrtAResult" />
       </div>
       <div v-if="props.mrtBResult" class="w-full max-w-4xl mt-8">
         <h2 class="text-2xl font-bold text-center mb-4">MRT-B Ergebnisse</h2>
-        <MrtBResult :results="props.mrtBResult.result_json" />
+        <MrtBResult :results="props.mrtBResult" />
       </div>
     </div>
   </div>
