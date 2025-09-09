@@ -23,16 +23,28 @@ class ParticipantController extends Controller
     $professionGroups = ProfessionGroup::all();
     $employeds = Employed::all();
 
-    // Fetch MRT-A results
-    $mrtTest = \App\Models\Test::where('name', 'MRT-A')->first();
-    $mrtResult = null;
-    if ($mrtTest) {
+    // Fetch MRT-A and MRT-B results
+    $mrtATest = \App\Models\Test::where('name', 'MRT-A')->first();
+    $mrtAResult = null;
+    if ($mrtATest) {
       $assignment = TestAssignment::where('participant_id', $user->id)
-        ->where('test_id', $mrtTest->id)
+        ->where('test_id', $mrtATest->id)
         ->first();
-
       if ($assignment) {
-        $mrtResult = TestResult::where('assignment_id', $assignment->id)
+        $mrtAResult = TestResult::where('assignment_id', $assignment->id)
+          ->latest()
+          ->first();
+      }
+    }
+
+    $mrtBTest = \App\Models\Test::where('name', 'MRT-B')->first();
+    $mrtBResult = null;
+    if ($mrtBTest) {
+      $assignment = TestAssignment::where('participant_id', $user->id)
+        ->where('test_id', $mrtBTest->id)
+        ->first();
+      if ($assignment) {
+        $mrtBResult = TestResult::where('assignment_id', $assignment->id)
           ->latest()
           ->first();
       }
@@ -43,7 +55,8 @@ class ParticipantController extends Controller
       'profile' => $user->participantProfile,
       'professionGroups' => $professionGroups,
       'employeds' => $employeds,
-      'mrtResult' => $mrtResult ? $mrtResult->result_json : null,
+      'mrtAResult' => $mrtAResult,
+      'mrtBResult' => $mrtBResult,
     ]);
   }
 
@@ -207,6 +220,12 @@ class ParticipantController extends Controller
 
         if (in_array($examStep->test->name, ['BRT-A', 'BRT-B'])) {
           $pdfPath = \App\Services\BrtPdfService::generate($testResult);
+          if ($pdfPath) {
+            $testResult->update(['pdf_file_path' => $pdfPath]);
+          }
+        }
+        if (in_array($examStep->test->name, ['MRT-A', 'MRT-B'])) {
+          $pdfPath = \App\Services\MrtPdfService::generate($testResult);
           if ($pdfPath) {
             $testResult->update(['pdf_file_path' => $pdfPath]);
           }

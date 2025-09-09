@@ -44,6 +44,12 @@ function submit() {
   form.post('/onboarding')
 }
 
+function downloadPdf(id: number) {
+  if (id) {
+    window.open(route('test-results.download', { testResult: id }), '_blank')
+  }
+}
+
 const handleLogout = () => {
   router.flushAll();
 };
@@ -194,11 +200,17 @@ const householdOptions = [
 
       <div v-if="props.mrtAResult" class="w-full max-w-4xl">
         <h2 class="text-2xl font-bold text-center mb-4">MRT-A Ergebnisse</h2>
-        <MrtAResult :results="props.mrtAResult" />
+        <div class="flex justify-end mb-2">
+          <button class="text-sm underline" @click="downloadPdf(props.mrtAResult.id)">PDF herunterladen</button>
+        </div>
+        <MrtAResult :results="props.mrtAResult.result_json" />
       </div>
       <div v-if="props.mrtBResult" class="w-full max-w-4xl mt-8">
         <h2 class="text-2xl font-bold text-center mb-4">MRT-B Ergebnisse</h2>
-        <MrtBResult :results="props.mrtBResult" />
+        <div class="flex justify-end mb-2">
+          <button class="text-sm underline" @click="downloadPdf(props.mrtBResult.id)">PDF herunterladen</button>
+        </div>
+        <MrtBResult :results="props.mrtBResult.result_json" />
       </div>
     </div>
   </div>
