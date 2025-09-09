@@ -68,7 +68,7 @@ function downloadPdf() {
         <div class="flex items-center justify-between w-full">
           <DialogTitle>Testergebnis bearbeiten</DialogTitle>
           <div v-if="assignment" class="flex gap-2">
-            <Button v-if="assignment.results?.[0]?.pdf_file_path" variant="outline" size="sm" @click="downloadPdf">
+            <Button v-if="assignment.results?.length" variant="outline" size="sm" @click="downloadPdf">
               Ergebnis PDF
             </Button>
           </div>
