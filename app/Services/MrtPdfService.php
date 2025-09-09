@@ -65,23 +65,44 @@ class MrtPdfService
         $config = [
             'type' => 'line',
             'data' => [
-                'labels' => ['U1','U2','U3','U4','U5','U6'],
+                'labels' => ['U1', 'U2', 'U3', 'U4', 'U5', 'U6'],
                 'datasets' => [[
                     'label' => 'SN',
                     'data' => array_values($stanines),
                     'borderColor' => '#1d4ed8',
                     'backgroundColor' => '#1d4ed8',
-                    'fill' => false,
                     'tension' => 0,
-                    'pointRadius' => 3,
+                    'pointRadius' => 6,
+                    'pointBackgroundColor' => '#1d4ed8',
+                    'fill' => false,
                 ]],
             ],
             'options' => [
-                'plugins' => ['legend' => ['display' => false]],
+                'plugins' => [
+                    'legend' => ['display' => false],
+                    'title' => ['display' => false],
+                    'annotation' => [
+                        'annotations' => [
+                            'rangeBox' => [
+                                'type' => 'box',
+                                'xMin' => 4,
+                                'xMax' => 6,
+                                'backgroundColor' => 'rgba(144,238,144,0.3)',
+                                'borderWidth' => 0,
+                            ],
+                        ],
+                    ],
+                ],
+                'indexAxis' => 'y',
                 'scales' => [
-                    'y' => ['min' => 1, 'max' => 9]
+                    'x' => [
+                        'min' => 1,
+                        'max' => 9,
+                        'ticks' => ['stepSize' => 1],
+                    ],
                 ],
             ],
+            'plugins' => ['chartjs-plugin-annotation'],
         ];
         $url = 'https://quickchart.io/chart?width=480&height=320&c=' . urlencode(json_encode($config));
         try {
