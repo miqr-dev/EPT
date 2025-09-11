@@ -24,6 +24,8 @@ function formatTime(sec: number | null): string {
 
 const groupLabels = ['U1', 'U2', 'U3', 'U4', 'U5', 'U6'];
 
+const chartRef = ref<any>(null);
+
 const chartData = computed(() => ({
   labels: groupLabels,
   datasets: [
@@ -130,6 +132,13 @@ const mrtBQuestions = [
     { number: 60, correct: ["D"] }
 ];
 
+function getChartImage() {
+  const src = chartRef.value?.chart?.toBase64Image();
+  return src ? src.split(',')[1] : null;
+}
+
+defineExpose({ getChartImage });
+
 </script>
 
 <template>
@@ -223,7 +232,7 @@ const mrtBQuestions = [
           </div>
         </div>
         <div style="width: 480px; height: 320px;">
-          <Line :data="chartData" :options="chartOptions" />
+          <Line ref="chartRef" :data="chartData" :options="chartOptions" />
         </div>
         <div class="w-full flex justify-center mt-6">
           <div class="w-[400px] h-8 rounded-full bg-gray-200 dark:bg-gray-700 relative overflow-hidden shadow-inner">

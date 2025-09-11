@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, watch, ref } from 'vue'
 import { useForm, Link, router, usePage } from '@inertiajs/vue3'
 import { LogOut } from 'lucide-vue-next'
 import MrtAResult from '@/components/MrtAResult.vue';
@@ -12,8 +12,8 @@ const props = defineProps<{
   profile?: any
   professionGroups: any[]
   employeds: any[]
-  mrtAResult?: any
-  mrtBResult?: any
+  mrtAResult?: { id: number; result_json: any; pdf_file_path?: string } | null
+  mrtBResult?: { id: number; result_json: any; pdf_file_path?: string } | null
 }>()
 
 const today = new Date()
@@ -47,6 +47,36 @@ function submit() {
 const handleLogout = () => {
   router.flushAll();
 };
+
+const mrtARef = ref<any>(null);
+const mrtBRef = ref<any>(null);
+
+function downloadMrt(result: any, componentRef: any) {
+  if (!result) return;
+  const id = result.id;
+  const chart = componentRef?.getChartImage?.();
+  const token = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
+  fetch(route('test-results.download', { testResult: id }), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': token,
+      'Accept': 'application/pdf',
+    },
+    body: JSON.stringify({ chart_image: chart }),
+  })
+    .then((res) => res.blob())
+    .then((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ergebnis.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+}
 
 // Dropdown options
 const educationOptions = [
@@ -194,11 +224,21 @@ const householdOptions = [
 
       <div v-if="props.mrtAResult" class="w-full max-w-4xl">
         <h2 class="text-2xl font-bold text-center mb-4">MRT-A Ergebnisse</h2>
-        <MrtAResult :results="props.mrtAResult" />
+        <MrtAResult :results="props.mrtAResult.result_json" ref="mrtARef" />
+        <div class="flex justify-end mt-4">
+          <button @click="downloadMrt(props.mrtAResult, mrtARef)" class="px-4 py-2 border rounded">
+            Ergebnis PDF
+          </button>
+        </div>
       </div>
       <div v-if="props.mrtBResult" class="w-full max-w-4xl mt-8">
         <h2 class="text-2xl font-bold text-center mb-4">MRT-B Ergebnisse</h2>
-        <MrtBResult :results="props.mrtBResult" />
+        <MrtBResult :results="props.mrtBResult.result_json" ref="mrtBRef" />
+        <div class="flex justify-end mt-4">
+          <button @click="downloadMrt(props.mrtBResult, mrtBRef)" class="px-4 py-2 border rounded">
+            Ergebnis PDF
+          </button>
+        </div>
       </div>
     </div>
   </div>

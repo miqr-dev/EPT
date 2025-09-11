@@ -23,16 +23,28 @@ class ParticipantController extends Controller
     $professionGroups = ProfessionGroup::all();
     $employeds = Employed::all();
 
-    // Fetch MRT-A results
-    $mrtTest = \App\Models\Test::where('name', 'MRT-A')->first();
-    $mrtResult = null;
-    if ($mrtTest) {
+    // Fetch MRT-A and MRT-B results
+    $mrtATest = \App\Models\Test::where('name', 'MRT-A')->first();
+    $mrtAResult = null;
+    if ($mrtATest) {
       $assignment = TestAssignment::where('participant_id', $user->id)
-        ->where('test_id', $mrtTest->id)
+        ->where('test_id', $mrtATest->id)
         ->first();
-
       if ($assignment) {
-        $mrtResult = TestResult::where('assignment_id', $assignment->id)
+        $mrtAResult = TestResult::where('assignment_id', $assignment->id)
+          ->latest()
+          ->first();
+      }
+    }
+
+    $mrtBTest = \App\Models\Test::where('name', 'MRT-B')->first();
+    $mrtBResult = null;
+    if ($mrtBTest) {
+      $assignment = TestAssignment::where('participant_id', $user->id)
+        ->where('test_id', $mrtBTest->id)
+        ->first();
+      if ($assignment) {
+        $mrtBResult = TestResult::where('assignment_id', $assignment->id)
           ->latest()
           ->first();
       }
@@ -43,7 +55,16 @@ class ParticipantController extends Controller
       'profile' => $user->participantProfile,
       'professionGroups' => $professionGroups,
       'employeds' => $employeds,
-      'mrtResult' => $mrtResult ? $mrtResult->result_json : null,
+      'mrtAResult' => $mrtAResult ? [
+        'id' => $mrtAResult->id,
+        'result_json' => $mrtAResult->result_json,
+        'pdf_file_path' => $mrtAResult->pdf_file_path,
+      ] : null,
+      'mrtBResult' => $mrtBResult ? [
+        'id' => $mrtBResult->id,
+        'result_json' => $mrtBResult->result_json,
+        'pdf_file_path' => $mrtBResult->pdf_file_path,
+      ] : null,
     ]);
   }
 
