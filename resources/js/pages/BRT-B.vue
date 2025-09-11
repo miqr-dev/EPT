@@ -250,7 +250,7 @@ const startTest = () => {
             <p> Wir wollen wissen, auf welcher Ebene Sie mit Ihren Kenntnissen stehen und wo wir Sie individuell fördern können. </p>
             <br>
             <p>
-            Für Nebenrechnungen haben Sie ein zusätzlichen Block.</p> 
+            Für Nebenrechnungen haben Sie einen zusätzlichen Block.</p>
             <p>Bitte notieren Sie vor Abgabe Ihres Blattes Ihren Namen und das heutige Datum darauf.
             </p>
             

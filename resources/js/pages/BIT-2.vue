@@ -18,9 +18,8 @@ const firstPageQuestions = computed(() => BIT2_QUESTIONS.slice(0, 27));
 const secondPageLeft = computed(() => BIT2_QUESTIONS.slice(27, 54));
 const secondPageRight = computed(() => BIT2_QUESTIONS.slice(54));
 
-const instructions = `Dieser Fragebogen soll ein Bild Ihrer Interessen an verschiedenen beruflichen Arbeiten vermitteln. Dafür werden Ihnen 81 Tätigkeiten aufgeführt. Beurteilen Sie diese der Reihe nach. Sie haben dafür die Ziffern\n\n5  sehr gern\n4  gern\n3  weder gern noch ungern\n2  ungern\n1  sehr ungern\n\n zur Verfügung. 
+const instructions = `Dieser Fragebogen soll ein Bild Ihrer Interessen an verschiedenen beruflichen Arbeiten vermitteln. Dafür werden Ihnen 81 Tätigkeiten aufgeführt. Beurteilen Sie diese der Reihe nach. Sie haben dafür die Ziffern\n\n5  sehr gern\n4  gern\n3  weder gern noch ungern\n2  ungern\n1  sehr ungern\n\n zur Verfügung. `;
 
-Wenn Sie eine Tätigkeit sehr gern ausüben würden, dann geben Sie ihr 5 Punkte, indem Sie das Kästchen mit der "5" ankreuzen und so weiter. Wenn Sie eine Tätigkeit ungern ausüben würden, geben Sie ihr 2 Punkte, indem Sie das Kästchen mit der "2" ankreuzen. Wenn Sie eine Tätigkeit weder gern noch ungern ausüben würden, geben Sie ihr 3 Punkte.\n\nBenutzen Sie bitte keine Wischmethode, sondern kreuzen Sie jedes Kästchen sauber an. Beginnen Sie links oben und arbeiten Sie der Reihe nach. Wenn Sie die 81. Tätigkeit beurteilt haben, ist diese Bearbeitung abgeschlossen.`;
 
 function startTest() {
     showTest.value = true;
