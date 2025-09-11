@@ -55,8 +55,16 @@ class ParticipantController extends Controller
       'profile' => $user->participantProfile,
       'professionGroups' => $professionGroups,
       'employeds' => $employeds,
-      'mrtAResult' => $mrtAResult ? $mrtAResult->result_json : null,
-      'mrtBResult' => $mrtBResult ? $mrtBResult->result_json : null,
+      'mrtAResult' => $mrtAResult ? [
+        'id' => $mrtAResult->id,
+        'result_json' => $mrtAResult->result_json,
+        'pdf_file_path' => $mrtAResult->pdf_file_path,
+      ] : null,
+      'mrtBResult' => $mrtBResult ? [
+        'id' => $mrtBResult->id,
+        'result_json' => $mrtBResult->result_json,
+        'pdf_file_path' => $mrtBResult->pdf_file_path,
+      ] : null,
     ]);
   }
 
@@ -220,12 +228,6 @@ class ParticipantController extends Controller
 
         if (in_array($examStep->test->name, ['BRT-A', 'BRT-B'])) {
           $pdfPath = \App\Services\BrtPdfService::generate($testResult);
-          if ($pdfPath) {
-            $testResult->update(['pdf_file_path' => $pdfPath]);
-          }
-        }
-        if (in_array($examStep->test->name, ['MRT-A', 'MRT-B'])) {
-          $pdfPath = \App\Services\MrtPdfService::generate($testResult);
           if ($pdfPath) {
             $testResult->update(['pdf_file_path' => $pdfPath]);
           }

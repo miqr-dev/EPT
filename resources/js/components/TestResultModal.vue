@@ -54,7 +54,32 @@ function closeModal() {
 
 function downloadPdf() {
   const id = props.assignment?.results?.[0]?.id;
-  if (id) {
+  if (!id) return;
+  const testName = props.assignment?.test?.name;
+  if (['MRT-A', 'MRT-B'].includes(testName)) {
+    const chart = viewerRef.value?.getChartImage?.();
+    const token = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
+    fetch(route('test-results.download', { testResult: id }), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': token,
+        'Accept': 'application/pdf',
+      },
+      body: JSON.stringify({ chart_image: chart }),
+    })
+      .then((res) => res.blob())
+      .then((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ergebnis.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      });
+  } else {
     window.open(route('test-results.download', { testResult: id }), '_blank');
   }
 }

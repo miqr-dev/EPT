@@ -44,6 +44,7 @@ const props = defineProps<{
 const emit = defineEmits(['update:modelValue']);
 
 const local = ref<ResultJson | null>(null);
+const mrtRef = ref<any>(null);
 
 watch(
   () => props.modelValue,
@@ -83,6 +84,12 @@ function getFpiNormTable(sex?: string, age?: number) {
   }
   return isFemale ? norms_female_60up : norms_male_60up;
 }
+
+function getChartImage() {
+  return mrtRef.value?.getChartImage?.() || null;
+}
+
+defineExpose({ getChartImage });
 
 // --- BIT‑2 percentile table (real values) ---
 interface NormRow {
@@ -215,8 +222,8 @@ const fpiRohwerte = computed(() => {
 
 <template>
   <div v-if="local" v-bind="$attrs">
-    <MrtAResult v-if="test.name === 'MRT-A'" :results="local" />
-    <MrtBResult v-else-if="test.name === 'MRT-B'" :results="local" />
+    <MrtAResult v-if="test.name === 'MRT-A'" :results="local" ref="mrtRef" />
+    <MrtBResult v-else-if="test.name === 'MRT-B'" :results="local" ref="mrtRef" />
     <LmtResult v-else-if="test.name === 'LMT'" :results="local" />
     <FpiResult v-else-if="test.name === 'FPI-R'" :stanines="fpiStanines" :rohwerte="fpiRohwerte" />
     <div v-else-if="test.name === 'BIT-2'" class="overflow-x-auto">

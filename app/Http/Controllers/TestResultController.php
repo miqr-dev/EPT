@@ -61,7 +61,7 @@ class TestResultController extends Controller
         return redirect()->back()->with('success', 'Test result updated successfully.');
     }
 
-    public function download(TestResult $testResult)
+    public function download(Request $request, TestResult $testResult)
     {
         $testResult->load('assignment.test');
         $path = $testResult->pdf_file_path;
@@ -72,7 +72,8 @@ class TestResultController extends Controller
             if (in_array($testName, ['BRT-A', 'BRT-B'])) {
                 $path = BrtPdfService::generate($testResult);
             } elseif (in_array($testName, ['MRT-A', 'MRT-B'])) {
-                $path = MrtPdfService::generate($testResult);
+                $chart = $request->input('chart_image');
+                $path = MrtPdfService::generate($testResult, $chart);
             } elseif ($testName === 'FPI-R') {
                 $path = FpiRPdfService::generate($testResult);
             }
