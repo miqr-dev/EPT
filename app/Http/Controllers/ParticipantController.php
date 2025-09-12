@@ -198,6 +198,9 @@ class ParticipantController extends Controller
           $profile = $user->participantProfile;
           $sex = $profile->sex ?? null;
           $resultData = \App\Services\Bit2Scorer::score($answers, $sex);
+        } elseif ($examStep->test->name === 'AVEM') {
+          $answers = $results['answers'] ?? [];
+          $resultData = \App\Services\AvemScorer::score($answers);
         }
 
         $testResult = TestResult::create([

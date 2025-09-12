@@ -17,6 +17,19 @@ import { norms_male_45_59 } from '@/pages/Scores/FPI/norms_male_45_59';
 import { norms_male_60up } from '@/pages/Scores/FPI/norms_male_60up';
 import { computed, ref, watch } from 'vue';
 const bit2Groups = ['TH', 'GH', 'TN', 'EH', 'LF', 'KB', 'VB', 'LG', 'SE'];
+const avemCategories = [
+    { key: 'SBA', label: 'Subjektive Bedeutsamkeit der Arbeit' },
+    { key: 'BE', label: 'Beruflicher Ehrgeiz' },
+    { key: 'VB', label: 'Verausgabungsbereitschaft' },
+    { key: 'PS', label: 'Perfektionsstreben' },
+    { key: 'DF', label: 'Distanzierungsfähigkeit' },
+    { key: 'RT', label: 'Resignationstendenz (bei Misserfolg)' },
+    { key: 'OP', label: 'Offensive Problembewältigung' },
+    { key: 'IR', label: 'Innere Ruhe/Ausgeglichenheit' },
+    { key: 'EB', label: 'Erfolgserleben im Beruf' },
+    { key: 'LZ', label: 'Lebenszufriedenheit' },
+    { key: 'SU', label: 'Erleben sozialer Unterstützung' },
+];
 
 interface Answer {
     question: string;
@@ -268,6 +281,20 @@ const fpiRohwerte = computed(() => {
             </table>
         </div>
         <div v-else-if="test.name === 'AVEM'" class="overflow-x-auto">
+            <table class="mb-4 w-full overflow-hidden rounded-lg border text-sm shadow">
+                <thead class="bg-muted/40 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-3 py-2 text-left font-semibold">Kategorie</th>
+                        <th class="px-3 py-2 text-center font-semibold">Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="cat in avemCategories" :key="cat.key" class="dark:bg-gray-800">
+                        <td class="px-3 py-2">{{ cat.label }}</td>
+                        <td class="px-3 py-2 text-center">{{ local.category_scores?.[cat.key] ?? 0 }}</td>
+                    </tr>
+                </tbody>
+            </table>
             <table class="min-w-full border text-sm">
                 <thead class="bg-muted/40 dark:bg-gray-700">
                     <tr>
