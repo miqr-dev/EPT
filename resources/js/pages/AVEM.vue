@@ -51,23 +51,23 @@ function confirmEnd() {
                         <table class="mt-4 text-base">
                             <tbody>
                                 <tr>
-                                    <td class="pr-2 font-mono">1</td>
+                                    <td class="pr-3"><span class="rating-circle opt-1"></span></td>
                                     <td>trifft überhaupt nicht zu</td>
                                 </tr>
                                 <tr>
-                                    <td class="pr-2 font-mono">2</td>
+                                    <td class="pr-3"><span class="rating-circle opt-2"></span></td>
                                     <td>trifft überwiegend nicht zu</td>
                                 </tr>
                                 <tr>
-                                    <td class="pr-2 font-mono">3</td>
+                                    <td class="pr-3"><span class="rating-circle opt-3"></span></td>
                                     <td>teils/teils</td>
                                 </tr>
                                 <tr>
-                                    <td class="pr-2 font-mono">4</td>
+                                    <td class="pr-3"><span class="rating-circle opt-4"></span></td>
                                     <td>trifft überwiegend zu</td>
                                 </tr>
                                 <tr>
-                                    <td class="pr-2 font-mono">5</td>
+                                    <td class="pr-3"><span class="rating-circle opt-5"></span></td>
                                     <td>trifft völlig zu</td>
                                 </tr>
                             </tbody>
@@ -89,9 +89,10 @@ function confirmEnd() {
                                     :key="opt"
                                     class="border-b-2 border-gray-200 px-2 pt-1 text-center align-top dark:border-gray-700"
                                 >
-                                    <label class="relative flex h-8 w-8 cursor-pointer items-center justify-center border border-gray-400">
+                                    <label class="relative flex h-8 w-8 cursor-pointer items-center justify-center">
                                         <input class="sr-only" type="radio" :name="'q' + q.number" :value="opt" v-model="answers[q.number]" />
-                                        <span class="text-sm">{{ opt }}</span>
+                                        <span class="sr-only">{{ opt }}</span>
+                                        <span :class="['rating-circle', 'opt-' + opt]"></span>
                                         <span
                                             v-if="answers[q.number] === opt"
                                             class="absolute inset-0 flex items-center justify-center text-xl text-red-600"
@@ -122,3 +123,24 @@ function confirmEnd() {
         </Dialog>
     </div>
 </template>
+
+<style scoped>
+.rating-circle {
+    @apply inline-block h-5 w-5 rounded-full border-2;
+    border-color: hsl(var(--foreground));
+    background: transparent;
+}
+
+.rating-circle.opt-2 {
+    background: conic-gradient(hsl(var(--foreground)) 0deg 90deg, transparent 90deg 360deg);
+}
+.rating-circle.opt-3 {
+    background: conic-gradient(hsl(var(--foreground)) 0deg 180deg, transparent 180deg 360deg);
+}
+.rating-circle.opt-4 {
+    background: conic-gradient(hsl(var(--foreground)) 0deg 270deg, transparent 270deg 360deg);
+}
+.rating-circle.opt-5 {
+    background: hsl(var(--foreground));
+}
+</style>
