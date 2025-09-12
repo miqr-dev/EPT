@@ -5,6 +5,7 @@ defineOptions({
 import LmtResult from '@/components/LmtResult.vue';
 import MrtAResult from '@/components/MrtAResult.vue';
 import MrtBResult from '@/components/MrtBResult.vue';
+import AvemResult from '@/components/AvemResult.vue';
 import { Input } from '@/components/ui/input';
 import FpiResult from '@/pages/Scores/FPI/FPIResult.vue';
 import { norms_female_16_24 } from '@/pages/Scores/FPI/norms_female_16_24';
@@ -267,22 +268,7 @@ const fpiRohwerte = computed(() => {
                 </tbody>
             </table>
         </div>
-        <div v-else-if="test.name === 'AVEM'" class="overflow-x-auto">
-            <table class="min-w-full border text-sm">
-                <thead class="bg-muted/40 dark:bg-gray-700">
-                    <tr>
-                        <th class="px-2 py-1 text-left font-semibold">#</th>
-                        <th class="px-2 py-1 text-left font-semibold">Antwort</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(ans, idx) in local.answers" :key="idx">
-                        <td class="px-2 py-1">{{ ans.number ?? idx + 1 }}</td>
-                        <td class="px-2 py-1">{{ ans.answer }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <AvemResult v-else-if="test.name === 'AVEM'" :results="local" />
         <template v-else>
             <table class="mb-4 w-full overflow-hidden rounded-lg border text-sm shadow">
                 <tbody>
