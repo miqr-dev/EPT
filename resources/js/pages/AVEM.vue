@@ -1,6 +1,4 @@
-Here’s a full **AVEM.vue** that adds the intro page exactly like your scan: a left “Bitte beachten Sie” box and a right legend with down-arrows, plus the small German tip about hovering the icons. It keeps the blue-highlighted selection, clearer answered/unanswered row styling (also in dark mode), and the true pie-slice icons.
 
-```vue
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -276,4 +274,3 @@ const borderClass = (qnum: number) =>
     </Dialog>
   </div>
 </template>
-```
