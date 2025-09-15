@@ -16,6 +16,7 @@ import LMT from '@/pages/LMT.vue';
 import LMT2 from '@/pages/LMT2.vue';
 import MRTA from '@/pages/MRT-A.vue';
 import MRTB from '@/pages/MRT-B.vue';
+import KONZ from '@/pages/Konzentrationstest.vue';
 
 type StepStatus = 'not_started' | 'in_progress' | 'completed' | 'broken';
 type ExamStatus = 'not_started' | 'in_progress' | 'paused' | 'completed';
@@ -60,6 +61,7 @@ const testComponents = {
     LMT2: LMT2,
     'BIT-2': BIT2,
     AVEM: AVEM,
+    Konzentrationstest: KONZ,
 };
 
 function getStatusText(status: StepStatus) {

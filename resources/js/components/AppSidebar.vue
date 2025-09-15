@@ -59,6 +59,11 @@ const mainNavItems: NavItem[] = [
         href: '/avem', // The new route for the Tests page
         icon: LayoutGrid, // Placeholder icon, can be changed later
     },
+    {
+        title: 'Konzentrationstest',
+        href: '/konzentrationstest',
+        icon: LayoutGrid,
+    },
 ];
 
 const footerNavItems: NavItem[] = [
