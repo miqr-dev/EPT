@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import MrtAResult from '@/components/MrtAResult.vue';
 import { useMrtA } from '@/composables/useMrtA';
+import { deepClone } from '@/lib/deepClone';
 
 const { mrtQuestions, calculateScores } = useMrtA();
 
@@ -25,7 +26,6 @@ const page = usePage<{
     };
   };
 }>();
-const userName = computed(() => page.props.auth?.user?.name ?? '');
 const profile = computed(() => page.props.auth?.user?.participant_profile);
 const userAge = computed<number | null>(() => {
   const age = profile.value?.age;
@@ -40,11 +40,38 @@ const showTest = ref(false);
 const currentQuestionIndex = ref(0);
 const isLastQuestion = computed(() => currentQuestionIndex.value === mrtQuestions.length - 1);
 
+interface MrtAProgressState {
+  started: boolean;
+  currentQuestionIndex: number;
+  userAnswers: (string | null)[];
+  questionTimes: number[];
+  tempSelected: (string | null)[];
+  tempClickState: boolean[];
+  startTime: number | null;
+  showResults: boolean;
+}
+
+const props = defineProps<{ initialState?: MrtAProgressState | null }>();
+
 // --- For per-question state:
 const userAnswers = ref<(string | null)[]>(Array(mrtQuestions.length).fill(null));
 const questionTimes = ref<number[]>(Array(mrtQuestions.length).fill(0));
 const questionStartTimestamps = ref<(number | null)[]>(Array(mrtQuestions.length).fill(null));
 const startTime = ref<number | null>(null);
+
+const commitQuestionTime = (index: number) => {
+  if (
+    index >= 0 &&
+    index < mrtQuestions.length &&
+    questionStartTimestamps.value[index]
+  ) {
+    const now = Date.now();
+    questionTimes.value[index] += Math.round(
+      (now - (questionStartTimestamps.value[index] as number)) / 1000
+    );
+    questionStartTimestamps.value[index] = null;
+  }
+};
 
 const isTestComplete = computed(() => currentQuestionIndex.value >= mrtQuestions.length);
 
@@ -80,17 +107,7 @@ const handleOptionClick = (optIdx: number) => {
     tempSelected.value[qidx] = null;
 
     // --- After confirming, record time and auto-jump ---
-    const now = Date.now();
-    if (
-      qidx >= 0 &&
-      qidx < mrtQuestions.length &&
-      questionStartTimestamps.value[qidx]
-    ) {
-      questionTimes.value[qidx] += Math.round(
-        (now - (questionStartTimestamps.value[qidx] as number)) / 1000
-      );
-      questionStartTimestamps.value[qidx] = null;
-    }
+    commitQuestionTime(qidx);
     if (currentQuestionIndex.value < mrtQuestions.length - 1) {
       currentQuestionIndex.value++;
     }
@@ -103,36 +120,16 @@ const handleOptionClick = (optIdx: number) => {
 
 
 const handleNextClick = () => {
-  const now = Date.now();
   const qidx = currentQuestionIndex.value;
-  if (
-    qidx >= 0 &&
-    qidx < mrtQuestions.length &&
-    questionStartTimestamps.value[qidx]
-  ) {
-    questionTimes.value[qidx] += Math.round(
-      (now - (questionStartTimestamps.value[qidx] as number)) / 1000
-    );
-    questionStartTimestamps.value[qidx] = null;
-  }
+  commitQuestionTime(qidx);
   if (currentQuestionIndex.value < mrtQuestions.length - 1) {
     currentQuestionIndex.value++;
   }
 };
 
 const handlePrevClick = () => {
-  const now = Date.now();
   const qidx = currentQuestionIndex.value;
-  if (
-    qidx >= 0 &&
-    qidx < mrtQuestions.length &&
-    questionStartTimestamps.value[qidx]
-  ) {
-    questionTimes.value[qidx] += Math.round(
-      (now - (questionStartTimestamps.value[qidx] as number)) / 1000
-    );
-    questionStartTimestamps.value[qidx] = null;
-  }
+  commitQuestionTime(qidx);
   if (currentQuestionIndex.value > 0) {
     currentQuestionIndex.value--;
   }
@@ -148,19 +145,86 @@ const cancelEnd = () => {
   endConfirmOpen.value = false;
 };
 
-const confirmEnd = () => {
-  const now = Date.now();
-  const qidx = currentQuestionIndex.value;
-  if (
-    qidx >= 0 &&
-    qidx < mrtQuestions.length &&
-    questionStartTimestamps.value[qidx]
-  ) {
-    questionTimes.value[qidx] += Math.round(
-      (now - (questionStartTimestamps.value[qidx] as number)) / 1000
-    );
-    questionStartTimestamps.value[qidx] = null;
+function loadProgress(state?: MrtAProgressState | null) {
+  if (!state) return;
+
+  const totalQuestions = mrtQuestions.length;
+
+  const restoredAnswers = Array(totalQuestions).fill(null);
+  if (Array.isArray(state.userAnswers)) {
+    state.userAnswers.slice(0, totalQuestions).forEach((answer, index) => {
+      restoredAnswers[index] = typeof answer === 'string' ? answer : null;
+    });
   }
+  userAnswers.value = restoredAnswers;
+
+  const restoredTimes = Array(totalQuestions).fill(0);
+  if (Array.isArray(state.questionTimes)) {
+    state.questionTimes.slice(0, totalQuestions).forEach((time, index) => {
+      restoredTimes[index] = typeof time === 'number' ? time : 0;
+    });
+  }
+  questionTimes.value = restoredTimes;
+  questionStartTimestamps.value = Array(totalQuestions).fill(null);
+
+  const restoredTempSelected = Array(totalQuestions).fill(null);
+  if (Array.isArray(state.tempSelected)) {
+    state.tempSelected.slice(0, totalQuestions).forEach((value, index) => {
+      restoredTempSelected[index] = typeof value === 'string' ? value : null;
+    });
+  }
+  tempSelected.value = restoredTempSelected;
+
+  const restoredTempClickState = Array(totalQuestions).fill(false);
+  if (Array.isArray(state.tempClickState)) {
+    state.tempClickState.slice(0, totalQuestions).forEach((value, index) => {
+      restoredTempClickState[index] = !!value;
+    });
+  }
+  tempClickState.value = restoredTempClickState;
+
+  startTime.value = typeof state.startTime === 'number' ? state.startTime : null;
+
+  showResults.value = !!state.showResults;
+  showTest.value = !!state.started && !showResults.value;
+
+  const index = typeof state.currentQuestionIndex === 'number'
+    ? Math.min(Math.max(state.currentQuestionIndex, 0), totalQuestions)
+    : 0;
+  currentQuestionIndex.value = index;
+}
+
+function getProgress(): MrtAProgressState {
+  commitQuestionTime(currentQuestionIndex.value);
+
+  return {
+    started: showTest.value,
+    currentQuestionIndex: currentQuestionIndex.value,
+    userAnswers: deepClone(userAnswers.value),
+    questionTimes: deepClone(questionTimes.value),
+    tempSelected: deepClone(tempSelected.value),
+    tempClickState: deepClone(tempClickState.value),
+    startTime: startTime.value,
+    showResults: showResults.value,
+  };
+}
+
+watch(
+  () => props.initialState,
+  (state) => {
+    loadProgress(state ?? null);
+  },
+  { immediate: true, deep: true },
+);
+
+defineExpose({
+  getProgress,
+  loadProgress,
+});
+
+const confirmEnd = () => {
+  const qidx = currentQuestionIndex.value;
+  commitQuestionTime(qidx);
   currentQuestionIndex.value = mrtQuestions.length;
   endConfirmOpen.value = false;
   showResults.value = true;
@@ -185,7 +249,7 @@ const calculatedResults = computed(() => {
   };
 });
 
-watch(currentQuestionIndex, async (newIndex, oldIndex) => {
+watch(currentQuestionIndex, async (newIndex) => {
   const now = Date.now();
   if (
     typeof newIndex === 'number' &&
@@ -218,9 +282,8 @@ const startTest = () => {
 </script>
 
 <template>
-
-  <Head title="Tests" />
-  <div class="p-4">
+  <div v-bind="$attrs" class="p-4">
+    <Head title="Tests" />
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">MRT-A</h1>
     </div>
