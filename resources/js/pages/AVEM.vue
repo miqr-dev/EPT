@@ -4,9 +4,17 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AVEM_QUESTIONS } from '@/pages/Questions/AVEMQuestions'
 import { Head } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { deepClone } from '@/lib/deepClone'
 
 const emit = defineEmits(['complete'])
+
+interface AvemProgressState {
+  started: boolean
+  answers: Record<number, number | null>
+}
+
+const props = defineProps<{ initialState?: AvemProgressState | null }>()
 
 const showTest = ref(false)
 const answers = ref<Record<number, number | null>>({})
@@ -55,6 +63,34 @@ function confirmEnd() {
   emit('complete', results)
 }
 
+function loadProgress(state?: AvemProgressState | null) {
+  if (!state) return
+  showTest.value = !!state.started
+  if (state.answers) {
+    answers.value = { ...answers.value, ...state.answers }
+  }
+}
+
+function getProgress(): AvemProgressState {
+  return {
+    started: showTest.value,
+    answers: deepClone(answers.value),
+  }
+}
+
+watch(
+  () => props.initialState,
+  (state) => {
+    loadProgress(state ?? null)
+  },
+  { immediate: true, deep: true },
+)
+
+defineExpose({
+  getProgress,
+  loadProgress,
+})
+
 // UI helpers for answered/unanswered styling
 const isAnswered = (qnum: number) => answers.value[qnum] !== null
 const rowBgClass = (qnum: number) =>
@@ -66,8 +102,8 @@ const borderClass = (qnum: number) =>
 </script>
 
 <template>
-  <Head title="AVEM" />
-  <div class="p-4">
+  <div v-bind="$attrs" class="p-4">
+    <Head title="AVEM" />
     <div class="mb-4 flex items-center justify-between">
       <h1 class="text-2xl font-bold">AVEM</h1>
     </div>

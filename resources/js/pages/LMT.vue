@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3'
-import { ref, computed } from 'vue'
+import { Head } from '@inertiajs/vue3'
+import { ref, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 
 import { LMT_QUESTIONS, LMTQuestion } from '@/pages/Questions/LMTQuestions'
+import { deepClone } from '@/lib/deepClone'
 
 const normTable = {
   L1: [22, 29, 34, 37, 41, 45, 47.5, 50, 54, 58, 62, 66, 70, 76, 81],
@@ -105,12 +106,21 @@ const totalPages = computed(() =>
 
 const isTestComplete = ref(false)
 
-const page = usePage<{ auth: { user: { name: string } } }>()
-const userName = computed(() => page.props.auth?.user?.name ?? '')
 
 const emit = defineEmits(['complete'])
 
 const endConfirmOpen = ref(false)
+
+interface LmtProgressState {
+  started: boolean
+  currentPage: number
+  userAnswers: (number | null)[]
+  questionTimes: number[]
+  startTime: number | null
+  isTestComplete: boolean
+}
+
+const props = defineProps<{ initialState?: LmtProgressState | null }>()
 
 const questionsOnPage = computed(() => {
   const start = (currentPage.value - 1) * questionsPerPage
@@ -238,12 +248,75 @@ const totalTimeTaken = computed(() => {
     ? questionTimes.value.reduce((a, b) => a + b, 0)
     : null
 })
+
+function loadProgress(state?: LmtProgressState | null) {
+  if (!state) return
+
+  const totalQuestions = questions.value.length
+
+  const restoredAnswers = Array(totalQuestions).fill(null)
+  if (Array.isArray(state.userAnswers)) {
+    state.userAnswers.slice(0, totalQuestions).forEach((answer, index) => {
+      restoredAnswers[index] = typeof answer === 'number' ? answer : null
+    })
+  }
+  userAnswers.value = restoredAnswers
+
+  const restoredTimes = Array(totalQuestions).fill(0)
+  if (Array.isArray(state.questionTimes)) {
+    state.questionTimes.slice(0, totalQuestions).forEach((time, index) => {
+      restoredTimes[index] = typeof time === 'number' ? time : 0
+    })
+  }
+  questionTimes.value = restoredTimes
+  questionStartTimestamps.value = Array(totalQuestions).fill(null)
+
+  isTestComplete.value = !!state.isTestComplete
+  showTest.value = !!state.started && !isTestComplete.value
+
+  const maxPage = totalPages.value || 1
+  const page = typeof state.currentPage === 'number' ? state.currentPage : 1
+  currentPage.value = Math.min(Math.max(page, 1), maxPage)
+
+  startTime.value = typeof state.startTime === 'number' ? state.startTime : null
+
+  if (showTest.value && !isTestComplete.value) {
+    startTimingCurrentPage()
+  }
+}
+
+function getProgress(): LmtProgressState {
+  if (showTest.value && !isTestComplete.value) {
+    stopTimingCurrentPage()
+  }
+
+  return {
+    started: showTest.value,
+    currentPage: currentPage.value,
+    userAnswers: deepClone(userAnswers.value),
+    questionTimes: deepClone(questionTimes.value),
+    startTime: startTime.value,
+    isTestComplete: isTestComplete.value,
+  }
+}
+
+watch(
+  () => props.initialState,
+  (state) => {
+    loadProgress(state ?? null)
+  },
+  { immediate: true, deep: true },
+)
+
+defineExpose({
+  getProgress,
+  loadProgress,
+})
 </script>
 
 <template>
-
-  <Head title="LMT" />
-  <div class="p-4">
+  <div v-bind="$attrs" class="p-4">
+    <Head title="LMT" />
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">L-M-T</h1>
     </div>

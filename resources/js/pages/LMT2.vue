@@ -5,6 +5,7 @@ import { ref, computed, watch, nextTick } from 'vue'
 import { Button } from '@/components/ui/button'
 
 import { LMT_QUESTIONS, LMTQuestion } from '@/pages/Questions/LMTQuestions'
+import { deepClone } from '@/lib/deepClone'
 
 const breadcrumbs = [
   { title: 'Tests', href: '/tests' },
@@ -22,6 +23,17 @@ const questionStartTimestamps = ref<(number | null)[]>(Array(questions.value.len
 const startTime = ref<number | null>(null)
 
 const isTestComplete = computed(() => currentQuestionIndex.value >= questions.value.length)
+
+interface Lmt2ProgressState {
+  started: boolean
+  currentQuestionIndex: number
+  userAnswers: (number | null)[]
+  questionTimes: number[]
+  startTime: number | null
+  isTestComplete: boolean
+}
+
+const props = defineProps<{ initialState?: Lmt2ProgressState | null }>()
 
 const currentQuestion = computed(() =>
   currentQuestionIndex.value < questions.value.length
@@ -84,6 +96,67 @@ function selectAnswerAndAdvance(optionIndex: number) {
   scrollToTop()
 }
 
+function loadProgress(state?: Lmt2ProgressState | null) {
+  if (!state) return
+
+  const totalQuestions = questions.value.length
+
+  const restoredAnswers = Array(totalQuestions).fill(null)
+  if (Array.isArray(state.userAnswers)) {
+    state.userAnswers.slice(0, totalQuestions).forEach((answer, index) => {
+      restoredAnswers[index] = typeof answer === 'number' ? answer : null
+    })
+  }
+  userAnswers.value = restoredAnswers
+
+  const restoredTimes = Array(totalQuestions).fill(0)
+  if (Array.isArray(state.questionTimes)) {
+    state.questionTimes.slice(0, totalQuestions).forEach((time, index) => {
+      restoredTimes[index] = typeof time === 'number' ? time : 0
+    })
+  }
+  questionTimes.value = restoredTimes
+  questionStartTimestamps.value = Array(totalQuestions).fill(null)
+
+  isTestComplete.value = !!state.isTestComplete
+  showTest.value = !!state.started && !isTestComplete.value
+
+  startTime.value = typeof state.startTime === 'number' ? state.startTime : null
+
+  const index = typeof state.currentQuestionIndex === 'number'
+    ? Math.min(Math.max(state.currentQuestionIndex, 0), totalQuestions)
+    : 0
+  currentQuestionIndex.value = index
+}
+
+function getProgress(): Lmt2ProgressState {
+  if (showTest.value && !isTestComplete.value) {
+    stopTiming(currentQuestionIndex.value)
+  }
+
+  return {
+    started: showTest.value,
+    currentQuestionIndex: currentQuestionIndex.value,
+    userAnswers: deepClone(userAnswers.value),
+    questionTimes: deepClone(questionTimes.value),
+    startTime: startTime.value,
+    isTestComplete: isTestComplete.value,
+  }
+}
+
+watch(
+  () => props.initialState,
+  (state) => {
+    loadProgress(state ?? null)
+  },
+  { immediate: true, deep: true },
+)
+
+defineExpose({
+  getProgress,
+  loadProgress,
+})
+
 watch(currentQuestionIndex, async (newIndex, oldIndex) => {
   const now = Date.now()
   if (newIndex >= 0 && newIndex < questions.value.length) {
@@ -114,9 +187,8 @@ function formatTime(sec: number | null): string {
 </script>
 
 <template>
-
-  <Head title="LMT" />
-  <AppLayout :breadcrumbs="breadcrumbs">
+  <AppLayout v-bind="$attrs" :breadcrumbs="breadcrumbs">
+    <Head title="LMT" />
     <div class="max-w-3xl mx-auto p-6 bg-white border rounded-lg shadow space-y-8">
 
       <!-- Start Screen -->
