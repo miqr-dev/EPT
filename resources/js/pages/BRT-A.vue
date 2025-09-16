@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
+import { deepClone } from '@/lib/deepClone';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -13,6 +14,17 @@ import {
 } from '@/components/ui/dialog';
 
 const emit = defineEmits(['complete']);
+
+interface BrtAProgressState {
+  started: boolean;
+  currentQuestionIndex: number;
+  nextButtonClickCount: number;
+  userAnswers: string[];
+  questionTimes: number[];
+  startTime: number | null;
+}
+
+const props = defineProps<{ initialState?: BrtAProgressState | null }>();
 
 interface Question {
   text: string;
@@ -75,18 +87,23 @@ const isLastQuestion = computed(
   () => currentQuestionIndex.value === questions.value.length - 1
 );
 
-const jumpToQuestion = (index: number) => {
-  const now = Date.now();
+const commitCurrentQuestionTime = () => {
+  const index = currentQuestionIndex.value;
   if (
-    currentQuestionIndex.value >= 0 &&
-    currentQuestionIndex.value < questions.value.length &&
-    questionStartTimestamps.value[currentQuestionIndex.value]
+    index >= 0 &&
+    index < questions.value.length &&
+    questionStartTimestamps.value[index]
   ) {
-    questionTimes.value[currentQuestionIndex.value] += Math.round(
-      (now - (questionStartTimestamps.value[currentQuestionIndex.value] as number)) / 1000
+    const now = Date.now();
+    questionTimes.value[index] += Math.round(
+      (now - (questionStartTimestamps.value[index] as number)) / 1000
     );
-    questionStartTimestamps.value[currentQuestionIndex.value] = null;
+    questionStartTimestamps.value[index] = null;
   }
+};
+
+const jumpToQuestion = (index: number) => {
+  commitCurrentQuestionTime();
   currentQuestionIndex.value = index;
   nextButtonClickCount.value = 0;
 };
@@ -94,17 +111,7 @@ const jumpToQuestion = (index: number) => {
 const handleNextClick = () => {
   nextButtonClickCount.value++;
   if (nextButtonClickCount.value >= 2) {
-    const now = Date.now();
-    if (
-      currentQuestionIndex.value >= 0 &&
-      currentQuestionIndex.value < questions.value.length &&
-      questionStartTimestamps.value[currentQuestionIndex.value]
-    ) {
-      questionTimes.value[currentQuestionIndex.value] += Math.round(
-        (now - (questionStartTimestamps.value[currentQuestionIndex.value] as number)) / 1000
-      );
-      questionStartTimestamps.value[currentQuestionIndex.value] = null;
-    }
+    commitCurrentQuestionTime();
     if (currentQuestionIndex.value < questions.value.length - 1) {
       currentQuestionIndex.value++;
       nextButtonClickCount.value = 0;
@@ -117,17 +124,7 @@ const handleNextClick = () => {
 };
 
 const handlePrevClick = () => {
-  const now = Date.now();
-  if (
-    currentQuestionIndex.value >= 0 &&
-    currentQuestionIndex.value < questions.value.length &&
-    questionStartTimestamps.value[currentQuestionIndex.value]
-  ) {
-    questionTimes.value[currentQuestionIndex.value] += Math.round(
-      (now - (questionStartTimestamps.value[currentQuestionIndex.value] as number)) / 1000
-    );
-    questionStartTimestamps.value[currentQuestionIndex.value] = null;
-  }
+  commitCurrentQuestionTime();
   if (currentQuestionIndex.value > 0) {
     currentQuestionIndex.value--;
     nextButtonClickCount.value = 0;
@@ -140,17 +137,7 @@ const finishTest = () => {
 };
 
 const confirmEnd = () => {
-  const now = Date.now();
-  if (
-    currentQuestionIndex.value >= 0 &&
-    currentQuestionIndex.value < questions.value.length &&
-    questionStartTimestamps.value[currentQuestionIndex.value]
-  ) {
-    questionTimes.value[currentQuestionIndex.value] += Math.round(
-      (now - (questionStartTimestamps.value[currentQuestionIndex.value] as number)) / 1000
-    );
-    questionStartTimestamps.value[currentQuestionIndex.value] = null;
-  }
+  commitCurrentQuestionTime();
   currentQuestionIndex.value = questions.value.length;
   nextButtonClickCount.value = 0;
   endConfirmOpen.value = false;
@@ -166,6 +153,65 @@ const cancelEnd = () => {
   window.dispatchEvent(new Event('cancel-finish'));
   endConfirmOpen.value = false;
 };
+
+function loadProgress(state?: BrtAProgressState | null) {
+  if (!state) return;
+
+  showTest.value = !!state.started;
+
+  const totalQuestions = questions.value.length;
+
+  const restoredAnswers = Array(totalQuestions).fill('');
+  if (Array.isArray(state.userAnswers)) {
+    state.userAnswers.slice(0, totalQuestions).forEach((answer, index) => {
+      restoredAnswers[index] = answer ?? '';
+    });
+  }
+  userAnswers.value = restoredAnswers;
+
+  const restoredTimes = Array(totalQuestions).fill(0);
+  if (Array.isArray(state.questionTimes)) {
+    state.questionTimes.slice(0, totalQuestions).forEach((time, index) => {
+      restoredTimes[index] = typeof time === 'number' ? time : 0;
+    });
+  }
+  questionTimes.value = restoredTimes;
+  questionStartTimestamps.value = Array(totalQuestions).fill(null);
+
+  nextButtonClickCount.value = state.nextButtonClickCount ?? 0;
+  startTime.value = typeof state.startTime === 'number' ? state.startTime : null;
+
+  const index = typeof state.currentQuestionIndex === 'number'
+    ? Math.min(Math.max(state.currentQuestionIndex, 0), totalQuestions)
+    : 0;
+  currentQuestionIndex.value = index;
+}
+
+function getProgress(): BrtAProgressState {
+  commitCurrentQuestionTime();
+
+  return {
+    started: showTest.value,
+    currentQuestionIndex: currentQuestionIndex.value,
+    nextButtonClickCount: nextButtonClickCount.value,
+    userAnswers: deepClone(userAnswers.value),
+    questionTimes: deepClone(questionTimes.value),
+    startTime: startTime.value,
+  };
+}
+
+watch(
+  () => props.initialState,
+  (state) => {
+    loadProgress(state ?? null);
+  },
+  { immediate: true, deep: true },
+);
+
+defineExpose({
+  getProgress,
+  loadProgress,
+});
 
 // Per-question timer starter
 watch(currentQuestionIndex, async (newIndex, oldIndex) => {

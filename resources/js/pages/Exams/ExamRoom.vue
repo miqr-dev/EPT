@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { deepClone } from '@/lib/deepClone';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue';
 
@@ -17,7 +18,7 @@ import LMT2 from '@/pages/LMT2.vue';
 import MRTA from '@/pages/MRT-A.vue';
 import MRTB from '@/pages/MRT-B.vue';
 
-type StepStatus = 'not_started' | 'in_progress' | 'completed' | 'broken';
+type StepStatus = 'not_started' | 'in_progress' | 'completed' | 'broken' | 'paused';
 type ExamStatus = 'not_started' | 'in_progress' | 'paused' | 'completed';
 
 const props = defineProps<{
@@ -47,8 +48,13 @@ const props = defineProps<{
 const activeTestComponent = shallowRef(null);
 const isTestDialogOpen = ref(false);
 const activeStepId = ref<number | null>(null);
+const testComponentRef = ref<any>(null);
+const activeTestInitialState = ref<any>(null);
+const activeTestKey = ref(0);
 const page = usePage();
 const userName = computed(() => page.props.auth?.user?.name);
+const csrfToken = computed(() => page.props.csrfToken as string | undefined);
+const stepStatuses = computed(() => props.stepStatuses);
 
 const testComponents = {
     'BRT-A': BRTA,
@@ -62,24 +68,133 @@ const testComponents = {
     AVEM: AVEM,
 };
 
-function getStatusText(status: StepStatus) {
+function cleanupTestEnvironment() {
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    window.removeEventListener('start-finish', beginFinish as EventListener);
+    window.removeEventListener('cancel-finish', cancelFinish as EventListener);
+}
+
+function resetActiveTestState() {
+    cleanupTestEnvironment();
+    finishing.value = false;
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    }
+    isTestDialogOpen.value = false;
+    activeStepId.value = null;
+    activeTestComponent.value = null;
+    activeTestInitialState.value = null;
+    testComponentRef.value = null;
+}
+
+function resolveProgress() {
+    if (!activeStepId.value) {
+        return null;
+    }
+
+    const instance = testComponentRef.value as any;
+    if (!instance || typeof instance.getProgress !== 'function') {
+        return null;
+    }
+
+    const rawProgress = instance.getProgress();
+    if (rawProgress === undefined) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(JSON.stringify(rawProgress));
+    } catch (error) {
+        console.error('Unable to serialize test progress', error);
+        return null;
+    }
+}
+
+function persistProgress(options: { status?: 'paused' | 'in_progress'; useBeacon?: boolean } = {}) {
+    if (!activeStepId.value) {
+        return;
+    }
+
+    const serialized = resolveProgress();
+    const payloadProgress = serialized ?? null;
+
+    if (options.useBeacon && navigator.sendBeacon) {
+        const token = csrfToken.value;
+        if (!token) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('exam_step_id', String(activeStepId.value));
+        formData.append('_token', token);
+        formData.append('progress', JSON.stringify(payloadProgress));
+        if (options.status) {
+            formData.append('status', options.status);
+        }
+
+        navigator.sendBeacon('/my-exam/save-progress', formData);
+        return;
+    }
+
+    router.post(
+        '/my-exam/save-progress',
+        {
+            exam_step_id: activeStepId.value,
+            progress: payloadProgress,
+            ...(options.status ? { status: options.status } : {}),
+        },
+        {
+            preserveScroll: true,
+            preserveState: true,
+        },
+    );
+}
+
+function canStartStep(step: any) {
+    const status = stepStatuses.value?.[step.id]?.status as StepStatus | undefined;
+    return (
+        props.exam.status === 'in_progress' &&
+        props.exam.current_step?.id === step.id &&
+        status !== 'completed'
+    );
+}
+
+function getActionLabel(status: StepStatus | undefined) {
+    if (status === 'paused' || status === 'in_progress' || status === 'broken') {
+        return 'Fortsetzen';
+    }
+
+    return 'Test starten';
+}
+
+function getStatusText(status?: StepStatus) {
     const map = {
         not_started: 'Nicht gestartet',
         in_progress: 'In Bearbeitung',
         completed: 'Abgeschlossen',
         broken: 'Abgebrochen',
+        paused: 'Pausiert',
     } as const;
-    return map[status];
+    return status ? map[status] : 'Unbekannt';
 }
 
 function startTest(step: any) {
+    cleanupTestEnvironment();
+    finishing.value = false;
     activeStepId.value = step.id;
-    activeTestComponent.value = testComponents[step.test.name];
+    activeTestComponent.value = testComponents[step.test.name] ?? null;
+    activeTestKey.value += 1;
+    testComponentRef.value = null;
+
+    const status = stepStatuses.value?.[step.id];
+    activeTestInitialState.value = status?.progress ? deepClone(status.progress) : null;
 
     router.post(
         '/my-exam/start-step',
         { exam_step_id: step.id },
         {
+            preserveScroll: true,
             onSuccess: () => {
                 isTestDialogOpen.value = true;
                 requestFullscreen();
@@ -102,15 +217,7 @@ function completeTest(results: any) {
         },
         {
             onSuccess: () => {
-                isTestDialogOpen.value = false;
-                window.removeEventListener('beforeunload', handleBeforeUnload);
-                document.removeEventListener('fullscreenchange', handleFullscreenChange);
-                window.removeEventListener('start-finish', beginFinish as EventListener);
-                window.removeEventListener('cancel-finish', cancelFinish as EventListener);
-                finishing.value = false;
-                if (document.fullscreenElement) document.exitFullscreen();
-                activeStepId.value = null;
-                activeTestComponent.value = null;
+                resetActiveTestState();
             },
         },
     );
@@ -118,20 +225,13 @@ function completeTest(results: any) {
 
 function breakTest() {
     if (!activeStepId.value) return;
+    const progress = resolveProgress();
     router.post(
         '/my-exam/break-step',
-        { exam_step_id: activeStepId.value },
+        { exam_step_id: activeStepId.value, progress },
         {
             onSuccess: () => {
-                isTestDialogOpen.value = false;
-                window.removeEventListener('beforeunload', handleBeforeUnload);
-                document.removeEventListener('fullscreenchange', handleFullscreenChange);
-                window.removeEventListener('start-finish', beginFinish as EventListener);
-                window.removeEventListener('cancel-finish', cancelFinish as EventListener);
-                finishing.value = false;
-                if (document.fullscreenElement) document.exitFullscreen();
-                activeStepId.value = null;
-                activeTestComponent.value = null;
+                resetActiveTestState();
             },
         },
     );
@@ -173,6 +273,9 @@ function cancelFinish() {
 }
 
 function handleBeforeUnload(event: BeforeUnloadEvent) {
+    if (activeStepId.value) {
+        persistProgress({ status: 'paused', useBeacon: true });
+    }
     event.preventDefault();
     event.returnValue = '';
 }
@@ -187,6 +290,10 @@ onMounted(() => {
 
 onUnmounted(() => {
     if (polling) clearInterval(polling);
+    if (activeStepId.value) {
+        persistProgress({ status: 'paused', useBeacon: true });
+    }
+    cleanupTestEnvironment();
 });
 </script>
 
@@ -242,6 +349,10 @@ onUnmounted(() => {
                                                     'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
                                                 stepStatuses[step.id]?.status === 'in_progress' &&
                                                     'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                                                stepStatuses[step.id]?.status === 'paused' &&
+                                                    'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                                                stepStatuses[step.id]?.status === 'broken' &&
+                                                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
                                                 stepStatuses[step.id]?.status === 'not_started' &&
                                                     'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200',
                                             )
@@ -255,14 +366,10 @@ onUnmounted(() => {
                                         <DialogTrigger as-child>
                                             <Button
                                                 size="sm"
-                                                :disabled="
-                                                    exam.current_step?.id !== step.id ||
-                                                    stepStatuses[step.id]?.status !== 'not_started' ||
-                                                    exam.status !== 'in_progress'
-                                                "
+                                                :disabled="!canStartStep(step)"
                                                 @click="startTest(step)"
                                             >
-                                                Test starten
+                                                {{ getActionLabel(stepStatuses[step.id]?.status) }}
                                             </Button>
                                         </DialogTrigger>
                                         <DialogContent
@@ -271,7 +378,14 @@ onUnmounted(() => {
                                             <template #top-right>
                                                 <div class="absolute top-4 right-4 font-semibold">{{ userName }}</div>
                                             </template>
-                                            <component :is="activeTestComponent" class="h-full w-full" @complete="completeTest" />
+                                            <component
+                                                :is="activeTestComponent"
+                                                :key="activeTestKey"
+                                                ref="testComponentRef"
+                                                class="h-full w-full"
+                                                :initial-state="activeTestInitialState"
+                                                @complete="completeTest"
+                                            />
                                         </DialogContent>
                                     </Dialog>
                                 </td>

@@ -3,9 +3,18 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BIT2_QUESTIONS } from '@/pages/Questions/BIT2Questions';
 import { Head } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { deepClone } from '@/lib/deepClone';
 
 const emit = defineEmits(['complete']);
+
+interface Bit2ProgressState {
+    started: boolean;
+    pageIndex: number;
+    answers: Record<number, number | null>;
+}
+
+const props = defineProps<{ initialState?: Bit2ProgressState | null }>();
 
 const showTest = ref(false);
 const pageIndex = ref(0); // 0 first 27, 1 remaining
@@ -46,6 +55,38 @@ function confirmEnd() {
     };
     emit('complete', results);
 }
+
+function loadProgress(state?: Bit2ProgressState | null) {
+    if (!state) return;
+    showTest.value = !!state.started;
+    if (typeof state.pageIndex === 'number') {
+        pageIndex.value = state.pageIndex;
+    }
+    if (state.answers) {
+        answers.value = { ...answers.value, ...state.answers };
+    }
+}
+
+function getProgress(): Bit2ProgressState {
+    return {
+        started: showTest.value,
+        pageIndex: pageIndex.value,
+        answers: deepClone(answers.value),
+    };
+}
+
+watch(
+    () => props.initialState,
+    (state) => {
+        loadProgress(state ?? null);
+    },
+    { immediate: true, deep: true },
+);
+
+defineExpose({
+    getProgress,
+    loadProgress,
+});
 </script>
 
 <template>

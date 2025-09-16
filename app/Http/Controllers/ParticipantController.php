@@ -113,10 +113,20 @@ class ParticipantController extends Controller
       }
     }
 
+    $stepStatuses = $stepStatuses->map(function (ExamStepStatus $status) {
+      return [
+        'id' => $status->id,
+        'status' => $status->status,
+        'progress' => $status->progress,
+        'started_at' => $status->started_at,
+        'completed_at' => $status->completed_at,
+        'last_saved_at' => $status->last_saved_at,
+      ];
+    })->toArray();
 
     return Inertia::render('Exams/ExamRoom', [
       'exam' => $exam,
-      'stepStatuses' => $stepStatuses, // Pass all statuses to the view.
+      'stepStatuses' => $stepStatuses,
     ]);
   }
 
@@ -132,10 +142,19 @@ class ParticipantController extends Controller
       ->where('exam_step_id', $request->input('exam_step_id'))
       ->firstOrFail();
 
-    $examStepStatus->update([
+    if ($examStepStatus->status === 'completed') {
+      return back(303);
+    }
+
+    $update = [
       'status' => 'in_progress',
-      'started_at' => now(),
-    ]);
+    ];
+
+    if (!$examStepStatus->started_at) {
+      $update['started_at'] = now();
+    }
+
+    $examStepStatus->update($update);
 
     return back(303);
   }
@@ -151,6 +170,8 @@ class ParticipantController extends Controller
     $examStepStatus->update([
       'status' => 'completed',
       'completed_at' => now(),
+      'progress' => null,
+      'last_saved_at' => null,
     ]);
 
     $results = $request->input('results');
@@ -235,12 +256,76 @@ class ParticipantController extends Controller
       ->where('exam_step_id', $request->input('exam_step_id'))
       ->firstOrFail();
 
+    if ($examStepStatus->status === 'completed') {
+      return back(303);
+    }
+
+    $progress = $this->normalizeProgress($request->input('progress'));
+
     $examStepStatus->update([
-      'status' => 'broken',
-      'completed_at' => now(),
+      'status' => 'paused',
+      'completed_at' => null,
+      'progress' => $progress,
+      'last_saved_at' => now(),
     ]);
 
     return back(303);
+  }
+
+  public function saveProgress(Request $request)
+  {
+    $user = Auth::user();
+
+    $data = $request->validate([
+      'exam_step_id' => 'required|integer',
+      'progress' => 'nullable',
+      'status' => 'nullable|string|in:paused,in_progress',
+    ]);
+
+    $examStepStatus = ExamStepStatus::where('participant_id', $user->id)
+      ->where('exam_step_id', $data['exam_step_id'])
+      ->firstOrFail();
+
+    if ($examStepStatus->status === 'completed') {
+      return response()->noContent();
+    }
+
+    $updates = [
+      'last_saved_at' => now(),
+    ];
+
+    if ($request->exists('progress')) {
+      $updates['progress'] = $this->normalizeProgress($data['progress'] ?? null);
+    }
+
+    $status = $data['status'] ?? null;
+    if ($status && in_array($status, ['paused', 'in_progress'], true)) {
+      $updates['status'] = $status;
+      if ($status === 'paused') {
+        $updates['completed_at'] = null;
+      }
+    }
+
+    $examStepStatus->update($updates);
+
+    return response()->noContent();
+  }
+
+  private function normalizeProgress(mixed $progress): ?array
+  {
+    if ($progress === null || $progress === '') {
+      return null;
+    }
+
+    if (is_string($progress)) {
+      $decoded = json_decode($progress, true);
+      if (json_last_error() !== JSON_ERROR_NONE) {
+        return null;
+      }
+      $progress = $decoded;
+    }
+
+    return is_array($progress) ? $progress : null;
   }
 
   public function list()

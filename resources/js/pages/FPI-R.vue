@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { FPI_QUESTIONS } from '@/pages/Questions/FPIQuestions';
 import {
@@ -11,10 +11,23 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { deepClone } from '@/lib/deepClone';
 
 const emit = defineEmits(['complete']);
 // Settings
 const QUESTIONS_PER_BLOCK = 24;
+
+interface FpiRProgressState {
+  started: boolean;
+  consentAnswer: 'stimmt' | 'stimmtNicht' | null;
+  blockIndex: number;
+  answers: Record<number, 'stimmt' | 'stimmtNicht' | null>;
+  missedQuestions: number[];
+  finished: boolean;
+  startTime: number | null;
+}
+
+const props = defineProps<{ initialState?: FpiRProgressState | null }>();
 
 // State
 const showTest = ref(false);
@@ -119,9 +132,53 @@ function cancelEnd() {
   endConfirmOpen.value = false
 }
 
+function loadProgress(state?: FpiRProgressState | null) {
+  if (!state) return
+
+  showTest.value = !!state.started
+  consentAnswer.value = state.consentAnswer ?? null
+  blockIndex.value = typeof state.blockIndex === 'number' ? state.blockIndex : 0
+
+  if (state.answers) {
+    answers.value = { ...answers.value, ...state.answers }
+  }
+
+  missedQuestions.value = Array.isArray(state.missedQuestions)
+    ? [...state.missedQuestions]
+    : []
+
+  finished.value = !!state.finished
+  startTime.value = typeof state.startTime === 'number' ? state.startTime : null
+}
+
+function getProgress(): FpiRProgressState {
+  return {
+    started: showTest.value,
+    consentAnswer: consentAnswer.value,
+    blockIndex: blockIndex.value,
+    answers: deepClone(answers.value),
+    missedQuestions: deepClone(missedQuestions.value),
+    finished: finished.value,
+    startTime: startTime.value,
+  }
+}
+
+watch(
+  () => props.initialState,
+  (state) => {
+    loadProgress(state ?? null)
+  },
+  { immediate: true, deep: true },
+)
+
+defineExpose({
+  getProgress,
+  loadProgress,
+})
+
 // --- additions in <script setup> ---
 const isComplete = computed(() =>
-  FPI_QUESTIONS.every(q => 
+  FPI_QUESTIONS.every(q =>
   q.number === 131 || answers.value[q.number] !== null)
 )
 const remaining = computed(() =>
