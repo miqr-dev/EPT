@@ -11,8 +11,10 @@ class ExamStepStatus extends Model
     'participant_id',
     'exam_step_id',
     'status',
+    'paused_from_status',
     'duration',
     'extra_time',
+    'time_remaining_seconds',
     'started_at',
     'completed_at'
   ];
