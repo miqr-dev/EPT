@@ -63,6 +63,7 @@ class RedirectBasedOnRole
         'appearance',
         'logout',
         'avem',
+        'konzentrationstest',
         'api.active-exams',
         'exams.updateSteps',
         'participants.list',

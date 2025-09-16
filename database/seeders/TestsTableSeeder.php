@@ -12,10 +12,10 @@ class TestsTableSeeder extends Seeder
   public function run(): void
   {
     $tests = [
-      ['name' => 'BRT-A', 'code' => 'BRT-A', 'duration' => 30],
-      ['name' => 'BRT-B', 'code' => 'BRT-B', 'duration' => 30],
-      ['name' => 'MRT-A', 'code' => 'MRT-A', 'duration' => 60],
-      ['name' => 'MRT-B', 'code' => 'MRT-B', 'duration' => 60],
+      ['name' => 'BRT-A', 'code' => 'BRT-A', 'duration' => 35],
+      ['name' => 'BRT-B', 'code' => 'BRT-B', 'duration' => 35],
+      ['name' => 'MRT-A', 'code' => 'MRT-A', 'duration' => 30],
+      ['name' => 'MRT-B', 'code' => 'MRT-B', 'duration' => 30],
       ['name' => 'FPI-R', 'code' => 'FPI-R', 'duration' => 60],
       ['name' => 'LMT',   'code' => 'LMT', 'duration' => 60],
       ['name' => 'BIT-2', 'code' => 'BIT-2', 'duration' => 60],
