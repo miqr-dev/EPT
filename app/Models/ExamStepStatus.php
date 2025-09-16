@@ -14,7 +14,16 @@ class ExamStepStatus extends Model
     'duration',
     'extra_time',
     'started_at',
-    'completed_at'
+    'completed_at',
+    'progress',
+    'last_saved_at'
+  ];
+
+  protected $casts = [
+    'progress' => 'array',
+    'started_at' => 'datetime',
+    'completed_at' => 'datetime',
+    'last_saved_at' => 'datetime',
   ];
 
   public function exam()
