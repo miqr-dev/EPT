@@ -113,14 +113,16 @@ class ParticipantController extends Controller
       }
     }
 
-    $stepStatuses = $stepStatuses->map(function (ExamStepStatus $status) {
+    $stepStatuses = $stepStatuses->mapWithKeys(function (ExamStepStatus $status) {
       return [
-        'id' => $status->id,
-        'status' => $status->status,
-        'progress' => $status->progress,
-        'started_at' => $status->started_at,
-        'completed_at' => $status->completed_at,
-        'last_saved_at' => $status->last_saved_at,
+        $status->exam_step_id => [
+          'id' => $status->id,
+          'status' => $status->status,
+          'progress' => $status->progress,
+          'started_at' => $status->started_at,
+          'completed_at' => $status->completed_at,
+          'last_saved_at' => $status->last_saved_at,
+        ],
       ];
     })->toArray();
 

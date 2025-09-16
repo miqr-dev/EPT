@@ -41,6 +41,10 @@ const props = defineProps<{
         {
             id: number;
             status: StepStatus;
+            progress: unknown | null;
+            started_at?: string | null;
+            completed_at?: string | null;
+            last_saved_at?: string | null;
         }
     >;
 }>();
@@ -59,6 +63,34 @@ const stepStatuses = computed(() => props.stepStatuses);
 let skipDialogCloseHandling = false;
 let progressAutosave: ReturnType<typeof setInterval> | null = null;
 let autosaveInFlight = false;
+let lastProgressSnapshot: unknown = null;
+
+function setLastProgressSnapshot(progress: unknown) {
+    if (progress === null || progress === undefined) {
+        lastProgressSnapshot = null;
+        return;
+    }
+
+    try {
+        lastProgressSnapshot = deepClone(progress);
+    } catch (error) {
+        console.error('Unable to store test progress snapshot', error);
+        lastProgressSnapshot = null;
+    }
+}
+
+function getLastProgressSnapshot() {
+    if (lastProgressSnapshot === null || lastProgressSnapshot === undefined) {
+        return null;
+    }
+
+    try {
+        return deepClone(lastProgressSnapshot);
+    } catch (error) {
+        console.error('Unable to clone stored test progress snapshot', error);
+        return null;
+    }
+}
 
 const testComponents = {
     'BRT-A': BRTA,
@@ -96,32 +128,28 @@ function resetActiveTestState() {
     activeTestComponent.value = null;
     activeTestInitialState.value = null;
     testComponentRef.value = null;
+    setLastProgressSnapshot(null);
     nextTick(() => {
         skipDialogCloseHandling = false;
     });
 }
 
 function resolveProgress() {
-    if (!activeStepId.value) {
-        return null;
+    if (activeStepId.value) {
+        const instance = testComponentRef.value as any;
+        if (instance && typeof instance.getProgress === 'function') {
+            try {
+                const rawProgress = instance.getProgress();
+                if (rawProgress !== undefined) {
+                    setLastProgressSnapshot(rawProgress);
+                }
+            } catch (error) {
+                console.error('Unable to read test progress', error);
+            }
+        }
     }
 
-    const instance = testComponentRef.value as any;
-    if (!instance || typeof instance.getProgress !== 'function') {
-        return null;
-    }
-
-    const rawProgress = instance.getProgress();
-    if (rawProgress === undefined) {
-        return null;
-    }
-
-    try {
-        return JSON.parse(JSON.stringify(rawProgress));
-    } catch (error) {
-        console.error('Unable to serialize test progress', error);
-        return null;
-    }
+    return getLastProgressSnapshot();
 }
 
 function persistProgress(options: {
@@ -216,7 +244,9 @@ function startTest(step: any) {
     testComponentRef.value = null;
 
     const status = stepStatuses.value?.[step.id];
-    activeTestInitialState.value = status?.progress ? deepClone(status.progress) : null;
+    const restoredProgress = status?.progress ? deepClone(status.progress) : null;
+    activeTestInitialState.value = restoredProgress;
+    setLastProgressSnapshot(restoredProgress);
 
     router.post(
         '/my-exam/start-step',
@@ -351,7 +381,12 @@ watch(
                             autosaveInFlight = false;
                         },
                     });
-                }, 15000);
+                }, 5000);
+            }
+            if (activeStepId.value) {
+                nextTick(() => {
+                    resolveProgress();
+                });
             }
             return;
         }
