@@ -18,7 +18,7 @@ import MRTA from '@/pages/MRT-A.vue';
 import MRTB from '@/pages/MRT-B.vue';
 import KONZ from '@/pages/Konzentrationstest.vue';
 
-type StepStatus = 'not_started' | 'in_progress' | 'completed' | 'broken';
+type StepStatus = 'not_started' | 'in_progress' | 'completed' | 'broken' | 'paused';
 type ExamStatus = 'not_started' | 'in_progress' | 'paused' | 'completed';
 
 const props = defineProps<{
@@ -50,6 +50,9 @@ const isTestDialogOpen = ref(false);
 const activeStepId = ref<number | null>(null);
 const page = usePage();
 const userName = computed(() => page.props.auth?.user?.name);
+const hasPausedStep = computed(() =>
+    Object.values(props.stepStatuses || {}).some((status) => status?.status === 'paused'),
+);
 
 const testComponents = {
     'BRT-A': BRTA,
@@ -70,6 +73,7 @@ function getStatusText(status: StepStatus) {
         in_progress: 'In Bearbeitung',
         completed: 'Abgeschlossen',
         broken: 'Abgebrochen',
+        paused: 'Pausiert',
     } as const;
     return map[status];
 }
@@ -212,6 +216,12 @@ onUnmounted(() => {
             <!-- Exam Steps Table -->
             <div v-else class="space-y-4">
                 <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">Testübersicht</h2>
+                <div
+                    v-if="hasPausedStep"
+                    class="rounded-md border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-700 dark:border-yellow-400/40 dark:bg-yellow-950/40 dark:text-yellow-100"
+                >
+                    Der Prüfer hat Ihren aktuellen Test pausiert. Bitte warten Sie auf weitere Anweisungen.
+                </div>
                 <div class="mt-4 overflow-hidden rounded-lg bg-white shadow-sm dark:bg-gray-800">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-gray-700">
@@ -246,6 +256,10 @@ onUnmounted(() => {
                                                     'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
                                                 stepStatuses[step.id]?.status === 'not_started' &&
                                                     'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200',
+                                                stepStatuses[step.id]?.status === 'paused' &&
+                                                    'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+                                                stepStatuses[step.id]?.status === 'broken' &&
+                                                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
                                             )
                                         "
                                     >

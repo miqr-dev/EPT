@@ -42,6 +42,8 @@ onMounted(() => {
         if (status) {
           if (status.status === 'in_progress' && status.time_remaining > 0) {
             status.time_remaining = Math.max(0, Math.floor(status.time_remaining) - 1)
+          } else if (status.status === 'paused') {
+            status.time_remaining = Math.max(0, Math.floor(status.time_remaining ?? 0))
           } else if (status.status !== 'in_progress') {
             status.time_remaining = 0
           }
@@ -84,7 +86,12 @@ watch(
                   ? Math.min(newTime, existingStatus.time_remaining)
                   : newTime
             }
-            if (updatedStatus.status !== 'in_progress') {
+            if (updatedStatus.status === 'paused') {
+              updatedStatus.time_remaining =
+                typeof updatedStatus.time_remaining === 'number'
+                  ? Math.max(0, Math.floor(updatedStatus.time_remaining))
+                  : existingStatus.time_remaining
+            } else if (updatedStatus.status !== 'in_progress') {
               updatedStatus.time_remaining = 0
             }
           }
@@ -113,6 +120,36 @@ const setStatus = (status: string) => {
   router.post(route('exams.set-status', { exam: props.exam.id }), { status }, {
     preserveScroll: true,
   })
+}
+
+const getParticipantUserId = (participant: any) =>
+  participant.participant_id ?? participant.user?.id
+
+const setParticipantAction = (participant: any, action: 'pause' | 'resume') => {
+  const participantId = getParticipantUserId(participant)
+  if (!participantId) return
+  router.post(
+    route('exams.participants.set-step-status', {
+      exam: props.exam.id,
+      participant: participantId,
+    }),
+    { action },
+    { preserveScroll: true, preserveState: true },
+  )
+}
+
+const canPauseParticipant = (participant: any) => {
+  const status = getParticipantStatus(participant)
+  if (!status) return false
+  if (localExam.value?.status !== 'in_progress') return false
+  return !['paused', 'completed', 'broken'].includes(status.status)
+}
+
+const canResumeParticipant = (participant: any) => {
+  const status = getParticipantStatus(participant)
+  if (!status) return false
+  if (localExam.value?.status !== 'in_progress') return false
+  return status.status === 'paused'
 }
 
 </script>
@@ -158,15 +195,19 @@ const setStatus = (status: string) => {
               class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
               Status
             </th>
-            <th scope="col"
-              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-              Verbleibende Zeit
-            </th>
-          </tr>
-        </thead>
-        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-          <tr v-if="localExam && localExam.participants" v-for="participant in localExam.participants"
-            :key="participant.id">
+          <th scope="col"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+            Verbleibende Zeit
+          </th>
+          <th scope="col"
+            class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+            Aktion
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+        <tr v-if="localExam && localExam.participants" v-for="participant in localExam.participants"
+          :key="participant.id">
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
               {{ participant.user.name }}
             </td>
@@ -179,6 +220,8 @@ const setStatus = (status: string) => {
                   'bg-green-100 text-green-800': getParticipantStatus(participant)?.status === 'completed',
                   'bg-yellow-100 text-yellow-800': getParticipantStatus(participant)?.status === 'in_progress',
                   'bg-blue-100 text-blue-800': getParticipantStatus(participant)?.status === 'not_started',
+                  'bg-purple-100 text-purple-800': getParticipantStatus(participant)?.status === 'paused',
+                  'bg-red-100 text-red-800': getParticipantStatus(participant)?.status === 'broken',
                 }">
                 {{ getParticipantStatus(participant)?.status?.replace('_', ' ') }}
               </span>
@@ -189,6 +232,18 @@ const setStatus = (status: string) => {
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
               {{ formatTime(getParticipantStatus(participant)?.time_remaining) }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+              <div class="flex justify-end gap-2">
+                <Button v-if="canPauseParticipant(participant)"
+                  variant="secondary" size="sm" @click="setParticipantAction(participant, 'pause')">
+                  Pausieren
+                </Button>
+                <Button v-if="canResumeParticipant(participant)"
+                  size="sm" @click="setParticipantAction(participant, 'resume')">
+                  Fortsetzen
+                </Button>
+              </div>
             </td>
           </tr>
         </tbody>

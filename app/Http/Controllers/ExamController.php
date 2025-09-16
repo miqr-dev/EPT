@@ -280,12 +280,22 @@ class ExamController extends Controller
             $participant->stepStatuses->push($status);
           }
 
-          if ($status->status === 'not_started') {
-            $status->time_remaining = $duration * 60;
+          $totalDurationSeconds = max(0, ($duration ?? 0) * 60
+            + (int) $status->extra_time * 60
+            + (int) $status->grace_period_seconds);
+
+          if ($status->status === 'paused') {
+            $status->time_remaining = $status->time_remaining_seconds ?? $totalDurationSeconds;
+          } elseif ($status->status === 'not_started') {
+            $status->time_remaining = $totalDurationSeconds;
           } elseif ($status->started_at) {
             $startTime = Carbon::parse($status->started_at);
-            $endTime = $startTime->copy()->addMinutes($duration);
+            $endTime = $startTime->copy()->addSeconds($totalDurationSeconds);
             $status->time_remaining = now()->diffInSeconds($endTime, false);
+          }
+
+          if (isset($status->time_remaining)) {
+            $status->time_remaining = max(0, (int) $status->time_remaining);
           }
         }
       }
@@ -293,6 +303,86 @@ class ExamController extends Controller
 
     return response()->json($activeExams);
   }
+  public function setParticipantStepStatus(Request $request, Exam $exam, User $participant)
+  {
+    $data = $request->validate([
+      'action' => 'required|in:pause,resume',
+    ]);
+
+    if (!$exam->current_exam_step_id) {
+      return back(303)->with('error', 'Prüfung hat keinen aktiven Test.');
+    }
+
+    $status = ExamStepStatus::firstOrCreate([
+      'exam_id' => $exam->id,
+      'participant_id' => $participant->id,
+      'exam_step_id' => $exam->current_exam_step_id,
+    ], [
+      'status' => 'not_started',
+    ]);
+
+    $status->loadMissing('step');
+    $stepDurationMinutes = $status->step->duration ?? $exam->currentStep?->duration ?? 0;
+    $totalDurationSeconds = max(0, (int) $stepDurationMinutes * 60
+      + (int) $status->extra_time * 60
+      + (int) $status->grace_period_seconds);
+
+    if ($data['action'] === 'pause') {
+      if (in_array($status->status, ['completed', 'broken'], true)) {
+        return back(303)->with('error', 'Dieser Test kann nicht pausiert werden.');
+      }
+
+      if ($status->status === 'paused') {
+        return back(303);
+      }
+
+      $timeRemaining = $totalDurationSeconds;
+
+      if ($status->status === 'in_progress' && $status->started_at) {
+        $startTime = Carbon::parse($status->started_at);
+        $endTime = $startTime->copy()->addSeconds($totalDurationSeconds);
+        $timeRemaining = now()->diffInSeconds($endTime, false);
+      }
+
+      $timeRemaining = max(0, (int) $timeRemaining);
+
+      $status->update([
+        'status' => 'paused',
+        'paused_from_status' => $status->status,
+        'time_remaining_seconds' => $timeRemaining,
+      ]);
+
+      return back(303)->with('success', 'Teilnehmer wurde pausiert.');
+    }
+
+    if ($status->status !== 'paused') {
+      return back(303)->with('error', 'Teilnehmer ist aktuell nicht pausiert.');
+    }
+
+    $resumeStatus = $status->paused_from_status ?: 'not_started';
+    $timeRemaining = max(0, (int) ($status->time_remaining_seconds ?? $totalDurationSeconds));
+    $updates = [
+      'paused_from_status' => null,
+      'time_remaining_seconds' => null,
+    ];
+
+    if ($resumeStatus === 'in_progress') {
+      $elapsed = max(0, $totalDurationSeconds - $timeRemaining);
+      $updates['status'] = 'in_progress';
+      $updates['started_at'] = $totalDurationSeconds > 0 ? now()->subSeconds($elapsed) : now();
+    } elseif ($resumeStatus === 'completed') {
+      $updates['status'] = 'completed';
+    } else {
+      $updates['status'] = 'not_started';
+      $updates['started_at'] = null;
+      $updates['completed_at'] = null;
+    }
+
+    $status->update($updates);
+
+    return back(303)->with('success', 'Teilnehmer wurde fortgesetzt.');
+  }
+
   public function updateSteps(Request $request, Exam $exam): RedirectResponse
   {
     $data = $request->validate([
