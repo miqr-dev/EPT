@@ -90,8 +90,8 @@ defineExpose({
 </script>
 
 <template>
-    <Head title="BIT-2" />
-    <div class="p-4">
+    <div v-bind="$attrs" class="p-4">
+        <Head title="BIT-2" />
         <div class="mb-4 flex items-center justify-between">
             <h1 class="text-2xl font-bold">BIT-2</h1>
         </div>

@@ -102,8 +102,8 @@ const borderClass = (qnum: number) =>
 </script>
 
 <template>
-  <Head title="AVEM" />
-  <div class="p-4">
+  <div v-bind="$attrs" class="p-4">
+    <Head title="AVEM" />
     <div class="mb-4 flex items-center justify-between">
       <h1 class="text-2xl font-bold">AVEM</h1>
     </div>

@@ -187,9 +187,8 @@ function formatTime(sec: number | null): string {
 </script>
 
 <template>
-
-  <Head title="LMT" />
-  <AppLayout :breadcrumbs="breadcrumbs">
+  <AppLayout v-bind="$attrs" :breadcrumbs="breadcrumbs">
+    <Head title="LMT" />
     <div class="max-w-3xl mx-auto p-6 bg-white border rounded-lg shadow space-y-8">
 
       <!-- Start Screen -->

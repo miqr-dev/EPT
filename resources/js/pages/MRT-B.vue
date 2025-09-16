@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -26,7 +26,6 @@ const page = usePage<{
     };
   };
 }>();
-const userName = computed(() => page.props.auth?.user?.name ?? '');
 const profile = computed(() => page.props.auth?.user?.participant_profile);
 const userAge = computed<number | null>(() => {
   const age = profile.value?.age;
@@ -236,7 +235,7 @@ const calculatedResults = computed(() => {
   };
 });
 
-watch(currentQuestionIndex, async (newIndex, oldIndex) => {
+watch(currentQuestionIndex, async (newIndex) => {
   const now = Date.now();
   if (
     typeof newIndex === 'number' &&
@@ -269,9 +268,8 @@ const startTest = () => {
 </script>
 
 <template>
-
-  <Head title="Tests" />
-  <div class="p-4">
+  <div v-bind="$attrs" class="p-4">
+    <Head title="Tests" />
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">MRT-B</h1>
     </div>

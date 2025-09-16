@@ -202,9 +202,8 @@ function finishTest() {
 </script>
 
 <template>
-
-  <Head title="FPI-R" />
-  <div class="p-4">
+  <div v-bind="$attrs" class="p-4">
+    <Head title="FPI-R" />
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">FPI-R</h1>
     </div>

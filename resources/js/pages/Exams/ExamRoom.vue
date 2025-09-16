@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { cn } from '@/lib/utils';
 import { deepClone } from '@/lib/deepClone';
 import { Head, router, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 
 // Import test components
 import AVEM from '@/pages/AVEM.vue';
@@ -56,6 +56,10 @@ const userName = computed(() => page.props.auth?.user?.name);
 const csrfToken = computed(() => page.props.csrfToken as string | undefined);
 const stepStatuses = computed(() => props.stepStatuses);
 
+let skipDialogCloseHandling = false;
+let progressAutosave: ReturnType<typeof setInterval> | null = null;
+let autosaveInFlight = false;
+
 const testComponents = {
     'BRT-A': BRTA,
     'BRT-B': BRTB,
@@ -73,6 +77,11 @@ function cleanupTestEnvironment() {
     document.removeEventListener('fullscreenchange', handleFullscreenChange);
     window.removeEventListener('start-finish', beginFinish as EventListener);
     window.removeEventListener('cancel-finish', cancelFinish as EventListener);
+    if (progressAutosave) {
+        clearInterval(progressAutosave);
+        progressAutosave = null;
+    }
+    autosaveInFlight = false;
 }
 
 function resetActiveTestState() {
@@ -81,11 +90,15 @@ function resetActiveTestState() {
     if (document.fullscreenElement) {
         document.exitFullscreen();
     }
+    skipDialogCloseHandling = true;
     isTestDialogOpen.value = false;
     activeStepId.value = null;
     activeTestComponent.value = null;
     activeTestInitialState.value = null;
     testComponentRef.value = null;
+    nextTick(() => {
+        skipDialogCloseHandling = false;
+    });
 }
 
 function resolveProgress() {
@@ -111,17 +124,28 @@ function resolveProgress() {
     }
 }
 
-function persistProgress(options: { status?: 'paused' | 'in_progress'; useBeacon?: boolean } = {}) {
+function persistProgress(options: {
+    status?: 'paused' | 'in_progress';
+    useBeacon?: boolean;
+    onFinish?: () => void;
+} = {}) {
     if (!activeStepId.value) {
+        options.onFinish?.();
         return;
     }
 
     const serialized = resolveProgress();
+    if (serialized === null && options.status === 'in_progress') {
+        options.onFinish?.();
+        return;
+    }
+
     const payloadProgress = serialized ?? null;
 
     if (options.useBeacon && navigator.sendBeacon) {
         const token = csrfToken.value;
         if (!token) {
+            options.onFinish?.();
             return;
         }
 
@@ -134,6 +158,7 @@ function persistProgress(options: { status?: 'paused' | 'in_progress'; useBeacon
         }
 
         navigator.sendBeacon('/my-exam/save-progress', formData);
+        options.onFinish?.();
         return;
     }
 
@@ -147,6 +172,9 @@ function persistProgress(options: { status?: 'paused' | 'in_progress'; useBeacon
         {
             preserveScroll: true,
             preserveState: true,
+            onFinish: () => {
+                options.onFinish?.();
+            },
         },
     );
 }
@@ -225,13 +253,24 @@ function completeTest(results: any) {
 
 function breakTest() {
     if (!activeStepId.value) return;
+    skipDialogCloseHandling = true;
     const progress = resolveProgress();
     router.post(
         '/my-exam/break-step',
         { exam_step_id: activeStepId.value, progress },
         {
+            preserveScroll: true,
             onSuccess: () => {
                 resetActiveTestState();
+            },
+            onError: () => {
+                isTestDialogOpen.value = true;
+                requestFullscreen();
+            },
+            onFinish: () => {
+                nextTick(() => {
+                    skipDialogCloseHandling = false;
+                });
             },
         },
     );
@@ -295,6 +334,39 @@ onUnmounted(() => {
     }
     cleanupTestEnvironment();
 });
+
+watch(
+    isTestDialogOpen,
+    (open, wasOpen) => {
+        if (open) {
+            if (!progressAutosave && activeStepId.value) {
+                progressAutosave = setInterval(() => {
+                    if (autosaveInFlight) {
+                        return;
+                    }
+                    autosaveInFlight = true;
+                    persistProgress({
+                        status: 'in_progress',
+                        onFinish: () => {
+                            autosaveInFlight = false;
+                        },
+                    });
+                }, 15000);
+            }
+            return;
+        }
+
+        if (progressAutosave) {
+            clearInterval(progressAutosave);
+            progressAutosave = null;
+        }
+
+        if (wasOpen && activeStepId.value && !skipDialogCloseHandling) {
+            skipDialogCloseHandling = true;
+            breakTest();
+        }
+    },
+);
 </script>
 
 <template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3'
+import { Head } from '@inertiajs/vue3'
 import { ref, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import {
@@ -106,8 +106,6 @@ const totalPages = computed(() =>
 
 const isTestComplete = ref(false)
 
-const page = usePage<{ auth: { user: { name: string } } }>()
-const userName = computed(() => page.props.auth?.user?.name ?? '')
 
 const emit = defineEmits(['complete'])
 
@@ -317,9 +315,8 @@ defineExpose({
 </script>
 
 <template>
-
-  <Head title="LMT" />
-  <div class="p-4">
+  <div v-bind="$attrs" class="p-4">
+    <Head title="LMT" />
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">L-M-T</h1>
     </div>
