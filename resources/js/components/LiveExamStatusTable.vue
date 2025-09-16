@@ -97,9 +97,23 @@ watch(
   { deep: true },
 )
 
+const pendingParticipants = ref(
+  props.exam.participants
+    .filter((p: any) => p.status !== 'waiting')
+    .map((p: any) => p.user.name),
+)
+
 const startExam = () => {
+  pendingParticipants.value = []
   router.post(route('exams.start', { exam: props.exam.id }), {}, {
     preserveScroll: true,
+    onError: (errors: any) => {
+      if (errors.participants) {
+        pendingParticipants.value = Array.isArray(errors.participants)
+          ? errors.participants
+          : [errors.participants]
+      }
+    },
   })
 }
 
@@ -122,7 +136,11 @@ const setStatus = (status: string) => {
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ exam.name }}</h2>
       <div class="flex space-x-2">
-        <Button v-if="exam.status === 'not_started'" @click="startExam">
+        <Button
+          v-if="exam.status === 'not_started'"
+          @click="startExam"
+          :disabled="pendingParticipants.length > 0"
+        >
           Prüfung starten
         </Button>
         <template v-if="exam.status === 'in_progress'">
@@ -141,6 +159,12 @@ const setStatus = (status: string) => {
           Prüfung beenden
         </Button>
       </div>
+    </div>
+    <div v-if="pendingParticipants.length" class="mb-4 text-red-600">
+      <p>Folgende Teilnehmer:innen sind noch nicht bereit:</p>
+      <ul class="list-disc list-inside">
+        <li v-for="name in pendingParticipants" :key="name">{{ name }}</li>
+      </ul>
     </div>
     <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg">
       <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
