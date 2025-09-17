@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,10 @@ interface BrtProgress {
   userAnswers: string[];
   questionTimes: number[];
   nextButtonClickCount?: number;
+}
+
+interface GetProgressOptions {
+  finalize?: boolean;
 }
 
 const props = defineProps<{
@@ -269,11 +273,14 @@ const startTest = () => {
   startTime.value = null;
 };
 
-const getProgress = (): Record<string, unknown> | null => {
+const getProgress = (
+  options: GetProgressOptions = {},
+): Record<string, unknown> | null => {
   if (!showTest.value || isTestComplete.value) {
     return null;
   }
 
+  const { finalize = true } = options;
   const totalQuestions = questions.value.length;
   const index = currentQuestionIndex.value;
 
@@ -282,11 +289,22 @@ const getProgress = (): Record<string, unknown> | null => {
     index < totalQuestions &&
     questionStartTimestamps.value[index]
   ) {
+    const start = questionStartTimestamps.value[index] as number;
     const now = Date.now();
-    questionTimes.value[index] += Math.round(
-      (now - (questionStartTimestamps.value[index] as number)) / 1000,
-    );
-    questionStartTimestamps.value[index] = null;
+    const elapsedSeconds = finalize
+      ? Math.round((now - start) / 1000)
+      : Math.floor((now - start) / 1000);
+
+    if (elapsedSeconds > 0) {
+      questionTimes.value[index] += elapsedSeconds;
+      if (finalize) {
+        questionStartTimestamps.value[index] = null;
+      } else {
+        questionStartTimestamps.value[index] = start + elapsedSeconds * 1000;
+      }
+    } else if (finalize) {
+      questionStartTimestamps.value[index] = null;
+    }
   }
 
   return {
