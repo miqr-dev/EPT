@@ -124,9 +124,9 @@ class ExamController extends Controller
     $exam->load(['city', 'teacher', 'participants.user', 'steps.test', 'currentStep']);
 
     if ($exam->currentStep) {
-      $exam->load(['participants.stepStatuses' => function ($query) use ($exam) {
-        $query->where('exam_step_id', $exam->current_exam_step_id);
-      }]);
+        $exam->load(['participants.stepStatuses' => function ($query) use ($exam) {
+            $query->where('exam_step_id', $exam->current_exam_step_id)->with('pausedTest');
+        }]);
     }
 
     $existingParticipantIds = $exam->participants->pluck('participant_id');

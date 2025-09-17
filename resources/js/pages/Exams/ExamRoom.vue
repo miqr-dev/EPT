@@ -476,6 +476,7 @@ watch(
                                                     :key="activeStepId ?? 'inactive'"
                                                     class="h-full w-full"
                                                     @complete="completeTest"
+                                                    :paused-state="stepStatuses[activeStepId]?.pausedTest"
                                                 />
                                             </KeepAlive>
                                         </DialogContent>

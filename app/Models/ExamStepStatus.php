@@ -31,4 +31,9 @@ class ExamStepStatus extends Model
   {
     return $this->belongsTo(ExamStep::class, 'exam_step_id');
   }
+
+  public function pausedTest()
+  {
+    return $this->hasOne(PausedTest::class);
+  }
 }
