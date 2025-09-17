@@ -99,6 +99,19 @@ function getStoredProgress(stepId: number, testName: string) {
         return cloneProgress(local);
     }
 
+    const key = `test-progress-${props.exam.id}-${stepId}`;
+    const fromStorage = localStorage.getItem(key);
+    if (fromStorage) {
+        try {
+            const progress = JSON.parse(fromStorage);
+            pausedProgressCache.value[stepId] = progress;
+            return progress;
+        } catch (e) {
+            console.error("Could not parse progress from local storage", e);
+            localStorage.removeItem(key);
+        }
+    }
+
     const status = stepStatuses.value[stepId];
     const serverProgress = status?.paused_test?.progress_json;
 
@@ -235,6 +248,9 @@ function completeTest(results: any) {
     if (!activeStepId.value) return;
 
     const stepId = activeStepId.value;
+    const key = `test-progress-${props.exam.id}-${stepId}`;
+    localStorage.removeItem(key);
+
     router.post(
         '/my-exam/complete-step',
         {
@@ -256,6 +272,9 @@ function breakTest() {
     if (!activeStepId.value) return;
 
     const stepId = activeStepId.value;
+    const key = `test-progress-${props.exam.id}-${stepId}`;
+    localStorage.removeItem(key);
+
     router.post(
         '/my-exam/break-step',
         { exam_step_id: activeStepId.value },
@@ -301,42 +320,41 @@ function cleanupAfterTest() {
 
 function handleRemotePause(stepId: number) {
     remotelyPausedStepIds.add(stepId);
-    if (activeStepId.value !== stepId) {
+
+    const step = props.exam.steps.find((candidate) => candidate.id === stepId);
+    if (!step || !isProgressSupported(step.test.name)) {
+        if (activeStepId.value === stepId) {
+            closeTestDialog();
+        }
         return;
     }
 
-    const step = props.exam.steps.find((candidate) => candidate.id === stepId);
     let progress: Record<string, unknown> | null = null;
 
-    if (step && isProgressSupported(step.test.name)) {
+    if (activeStepId.value === stepId && testComponentRef.value) {
         const instance = testComponentRef.value as { getProgress?: () => Record<string, unknown> | null } | null;
         if (instance && typeof instance.getProgress === 'function') {
             progress = instance.getProgress() ?? null;
         }
     }
 
-    if (progress && step) {
-        storePausedProgress(stepId, progress);
-        if (isProgressSupported(step.test.name)) {
-            router.post(
-                '/my-exam/save-progress',
-                { exam_step_id: stepId, progress },
-                { preserveScroll: true, preserveState: true },
-            );
-        }
-    } else if (step && isProgressSupported(step.test.name)) {
-        const cached = pausedProgressCache.value[stepId];
-        if (cached) {
-            router.post(
-                '/my-exam/save-progress',
-                { exam_step_id: stepId, progress: cloneProgress(cached) },
-                { preserveScroll: true, preserveState: true },
-            );
-        }
+    if (!progress) {
+        progress = getStoredProgress(stepId, step.test.name);
     }
 
-    componentSessionId.value += 1;
-    closeTestDialog();
+    if (progress) {
+        storePausedProgress(stepId, progress);
+        router.post(
+            '/my-exam/save-progress',
+            { exam_step_id: stepId, progress: cloneProgress(progress) },
+            { preserveScroll: true, preserveState: true },
+        );
+    }
+
+    if (activeStepId.value === stepId) {
+        componentSessionId.value += 1;
+        closeTestDialog();
+    }
 }
 
 function handleRemoteResume(stepId: number, status: StepStatus) {
@@ -360,6 +378,31 @@ function handleRemoteResume(stepId: number, status: StepStatus) {
     }
 
     startTest(step, { skipServerStart: true, resume: true });
+}
+
+function saveProgressToCache() {
+    if (!activeStepId.value || !isTestDialogOpen.value) {
+        return;
+    }
+
+    const stepId = activeStepId.value;
+    const step = props.exam.steps.find((candidate) => candidate.id === stepId);
+
+    if (!step || !isProgressSupported(step.test.name)) {
+        return;
+    }
+
+    const instance = testComponentRef.value as { getProgress?: () => Record<string, unknown> | null } | null;
+    if (!instance || typeof instance.getProgress !== 'function') {
+        return;
+    }
+
+    const progress = instance.getProgress() ?? null;
+
+    if (progress) {
+        const key = `test-progress-${props.exam.id}-${stepId}`;
+        localStorage.setItem(key, JSON.stringify(progress));
+    }
 }
 
 // --- Fullscreen and Anti-Cheating ---
@@ -408,6 +451,7 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
 let polling: NodeJS.Timeout | null = null;
 onMounted(() => {
     polling = setInterval(() => {
+        saveProgressToCache();
         router.reload({ only: ['exam', 'stepStatuses'] });
     }, 5000);
 });
