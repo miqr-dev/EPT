@@ -51,6 +51,19 @@ const userName = computed(() => page.props.auth?.user?.name);
 const activeTestComponent = shallowRef<unknown>(null);
 const isTestDialogOpen = ref(false);
 const activeStepId = ref<number | null>(null);
+const activeStep = computed(() => {
+    if (activeStepId.value === null) {
+        return null;
+    }
+
+    return props.exam.steps.find((step) => step.id === activeStepId.value) ?? null;
+});
+const activeTestTitle = computed(() => activeStep.value?.test.name ?? 'Aktiver Test');
+const activeTestDescription = computed(() =>
+    activeStep.value
+        ? `In diesem Dialog bearbeiten Sie den Test ${activeStep.value.test.name}.`
+        : 'In diesem Dialog bearbeiten Sie den aktuellen Test.',
+);
 
 const testComponents: Record<string, unknown> = {
     'BRT-A': BRTA,
@@ -469,6 +482,10 @@ watch(
                                             <template #top-right>
                                                 <div class="absolute top-4 right-4 font-semibold">{{ userName }}</div>
                                             </template>
+                                            <DialogHeader class="sr-only">
+                                                <DialogTitle>{{ activeTestTitle }}</DialogTitle>
+                                                <DialogDescription>{{ activeTestDescription }}</DialogDescription>
+                                            </DialogHeader>
                                             <KeepAlive>
                                                 <component
                                                     v-if="activeTestComponent"
