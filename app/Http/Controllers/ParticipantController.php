@@ -97,6 +97,7 @@ class ParticipantController extends Controller
     // Eager load all step statuses for this participant in this exam.
     $stepStatuses = ExamStepStatus::where('exam_id', $exam->id)
       ->where('participant_id', $user->id)
+      ->with('pausedTest')
       ->get()
       ->keyBy('exam_step_id');
 

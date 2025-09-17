@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, usePage, router } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+
+const props = defineProps<{
+  pausedState?: {
+    state_json: {
+      currentQuestionIndex: number;
+      userAnswers: string[];
+      questionTimes: number[];
+    }
+  }
+}>();
 
 const emit = defineEmits(['complete']);
 
@@ -196,12 +206,38 @@ watch(currentQuestionIndex, async (newIndex, oldIndex) => {
 
 const startTest = () => {
   showTest.value = true;
-  currentQuestionIndex.value = 0;
+  if (props.pausedState) {
+    currentQuestionIndex.value = props.pausedState.state_json.currentQuestionIndex;
+    userAnswers.value = props.pausedState.state_json.userAnswers;
+    questionTimes.value = props.pausedState.state_json.questionTimes;
+  } else {
+    currentQuestionIndex.value = 0;
+    userAnswers.value = Array(questions.value.length).fill('');
+    questionTimes.value = Array(questions.value.length).fill(0);
+  }
   nextButtonClickCount.value = 0;
-  userAnswers.value = Array(questions.value.length).fill('');
-  questionTimes.value = Array(questions.value.length).fill(0);
   questionStartTimestamps.value = Array(questions.value.length).fill(null);
   startTime.value = null;
+};
+
+const pauseTest = async () => {
+  const { exam_step_status_id } = usePage().props;
+  const state = {
+    currentQuestionIndex: currentQuestionIndex.value,
+    userAnswers: userAnswers.value,
+    questionTimes: questionTimes.value,
+  };
+
+  try {
+    await axios.post(route('paused-tests.store'), {
+      exam_step_status_id: exam_step_status_id,
+      state_json: JSON.stringify(state),
+    });
+    router.visit('/dashboard');
+  } catch (error) {
+    console.error('Failed to save test state:', error);
+    // Handle error appropriately
+  }
 };
 
 </script>
@@ -274,6 +310,9 @@ const startTest = () => {
             <div class="flex flex-row justify-between mt-2">
               <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline">
                 Zurück
+              </Button>
+              <Button @click="pauseTest" variant="secondary">
+                Pause
               </Button>
               <Button v-if="isLastQuestion" @click="finishTest" variant="destructive">
                 Test beenden
