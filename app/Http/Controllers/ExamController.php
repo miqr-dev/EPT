@@ -6,6 +6,7 @@ use App\Models\Exam;
 use App\Models\ExamParticipant;
 use App\Models\ExamStep;
 use App\Models\ExamStepStatus;
+use App\Models\ExamPauseResult;
 use App\Models\User;
 use App\Models\Test;
 use App\Models\City;
@@ -346,13 +347,39 @@ class ExamController extends Controller
 
       $timeRemaining = max(0, (int) $timeRemaining);
 
+      $previousPauseResult = ExamPauseResult::where('exam_id', $exam->id)
+        ->where('exam_step_id', $status->exam_step_id)
+        ->where('participant_id', $participant->id)
+        ->first();
+      $previousUpdatedAt = $previousPauseResult?->updated_at;
+
       $status->update([
         'status' => 'paused',
         'paused_from_status' => $status->status,
         'time_remaining_seconds' => $timeRemaining,
       ]);
 
-      return back(303)->with('success', 'Teilnehmer wurde pausiert.');
+      $pauseResultCaptured = false;
+
+      for ($attempt = 0; $attempt < 10; $attempt++) {
+        $latestResult = ExamPauseResult::where('exam_id', $exam->id)
+          ->where('exam_step_id', $status->exam_step_id)
+          ->where('participant_id', $participant->id)
+          ->first();
+
+        if ($latestResult && (!$previousUpdatedAt || $latestResult->updated_at->gt($previousUpdatedAt))) {
+          $pauseResultCaptured = true;
+          break;
+        }
+
+        usleep(200000);
+      }
+
+      $message = $pauseResultCaptured
+        ? 'Teilnehmer wurde pausiert und Fortschritt gespeichert.'
+        : 'Teilnehmer wurde pausiert. Fortschritt wird synchronisiert.';
+
+      return back(303)->with('success', $message);
     }
 
     if ($status->status !== 'paused') {

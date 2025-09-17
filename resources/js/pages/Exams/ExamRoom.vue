@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { cn } from '@/lib/utils';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import type { ComponentPublicInstance } from 'vue';
 
 // Import test components
 import AVEM from '@/pages/AVEM.vue';
@@ -31,6 +32,16 @@ type StepStatusEntry = {
     [key: string]: any;
 };
 
+type ProgressProvider = {
+    getProgress?: () => unknown | Promise<unknown>;
+};
+
+type TestComponentPublicInstance = ComponentPublicInstance &
+    ProgressProvider & {
+        exposed?: ProgressProvider;
+        $?: { exposed?: ProgressProvider };
+    };
+
 const props = defineProps<{
     exam: {
         id: number;
@@ -49,6 +60,7 @@ const page = usePage();
 const userName = computed(() => page.props.auth?.user?.name);
 
 const activeTestComponent = shallowRef<unknown>(null);
+const activeTestInstance = ref<TestComponentPublicInstance | null>(null);
 const isTestDialogOpen = ref(false);
 const activeStepId = ref<number | null>(null);
 
@@ -68,6 +80,7 @@ const testComponents: Record<string, unknown> = {
 const stepStatuses = ref<Record<number, StepStatusEntry>>(normalizeStepStatuses(props.stepStatuses));
 const previousStatusByStep = ref<Record<number, StepStatus | undefined>>({});
 const remotelyPausedStepIds = new Set<number>();
+let pendingPauseSync: Promise<boolean> | null = null;
 
 const hasPausedStep = computed(() =>
     Object.values(stepStatuses.value || {}).some((status) => status?.status === 'paused'),
@@ -225,6 +238,7 @@ function closeTestDialog({ resetActive = false }: { resetActive?: boolean } = {}
         }
         activeStepId.value = null;
         activeTestComponent.value = null;
+        activeTestInstance.value = null;
     }
 }
 
@@ -239,10 +253,14 @@ function cleanupAfterTest() {
     finishing.value = false;
 }
 
-function handleRemotePause(stepId: number) {
+async function handleRemotePause(stepId: number) {
     remotelyPausedStepIds.add(stepId);
     if (activeStepId.value === stepId) {
-        closeTestDialog();
+        try {
+            await syncPauseProgress(stepId);
+        } finally {
+            closeTestDialog();
+        }
     }
 }
 
@@ -267,6 +285,119 @@ function handleRemoteResume(stepId: number, status: StepStatus) {
     }
 
     startTest(step, { skipServerStart: true });
+}
+
+async function syncPauseProgress(stepId: number) {
+    if (!props.exam?.id) {
+        return false;
+    }
+
+    if (pendingPauseSync) {
+        return pendingPauseSync;
+    }
+
+    const pauseSync = (async () => {
+        const progress = await collectActiveTestProgress();
+        const step = props.exam.steps.find((candidate) => candidate.id === stepId);
+        const payload = {
+            capturedAt: new Date().toISOString(),
+            examId: props.exam.id,
+            examStepId: stepId,
+            testName: step?.test?.name ?? null,
+            progress: progress ?? null,
+        };
+
+        const success = await sendPauseProgressPayload(stepId, payload);
+        if (!success) {
+            console.warn('Übermittlung des Pausenfortschritts fehlgeschlagen.', {
+                examId: props.exam.id,
+                stepId,
+            });
+        }
+
+        return success;
+    })();
+
+    pendingPauseSync = pauseSync;
+
+    try {
+        return await pauseSync;
+    } finally {
+        pendingPauseSync = null;
+    }
+}
+
+function sendPauseProgressPayload(stepId: number, payload: unknown): Promise<boolean> {
+    return new Promise((resolve) => {
+        let hasErrors = false;
+
+        router.post(
+            '/my-exam/pause-progress',
+            {
+                exam_id: props.exam.id,
+                exam_step_id: stepId,
+                payload,
+            },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onError: (errors) => {
+                    hasErrors = true;
+                    console.error('Fehler beim Speichern des Pausenfortschritts.', errors);
+                },
+                onCancel: () => {
+                    hasErrors = true;
+                    console.warn('Übermittlung des Pausenfortschritts abgebrochen.');
+                },
+                onFinish: () => {
+                    resolve(!hasErrors);
+                },
+            },
+        );
+    });
+}
+
+async function collectActiveTestProgress() {
+    const instance = activeTestInstance.value;
+    if (!instance) {
+        return null;
+    }
+
+    const accessor = resolveProgressAccessor(instance);
+    if (!accessor) {
+        return null;
+    }
+
+    try {
+        const result = accessor();
+        return result instanceof Promise ? await result : result;
+    } catch (error) {
+        console.error('Fehler beim Abrufen des Testfortschritts.', error);
+        return null;
+    }
+}
+
+function resolveProgressAccessor(
+    instance: TestComponentPublicInstance | null,
+): (() => unknown | Promise<unknown>) | null {
+    if (!instance) {
+        return null;
+    }
+
+    if (typeof instance.getProgress === 'function') {
+        return instance.getProgress.bind(instance);
+    }
+
+    if (instance.exposed && typeof instance.exposed.getProgress === 'function') {
+        return instance.exposed.getProgress.bind(instance);
+    }
+
+    const exposed = instance.$?.exposed;
+    if (exposed && typeof exposed.getProgress === 'function') {
+        return exposed.getProgress.bind(instance);
+    }
+
+    return null;
 }
 
 // --- Fullscreen and Anti-Cheating ---
@@ -474,6 +605,7 @@ watch(
                                                     v-if="activeTestComponent"
                                                     :is="activeTestComponent"
                                                     :key="activeStepId ?? 'inactive'"
+                                                    ref="activeTestInstance"
                                                     class="h-full w-full"
                                                     @complete="completeTest"
                                                 />

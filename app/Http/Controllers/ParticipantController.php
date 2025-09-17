@@ -10,6 +10,7 @@ use App\Models\Employed;
 use App\Models\Exam;
 use App\Models\ExamParticipant;
 use App\Models\ExamStepStatus;
+use App\Models\ExamPauseResult;
 use App\Models\TestAssignment;
 use App\Models\TestResult;
 use Inertia\Inertia;
@@ -239,6 +240,35 @@ class ParticipantController extends Controller
       'status' => 'broken',
       'completed_at' => now(),
     ]);
+
+    return back(303);
+  }
+
+  public function storePauseProgress(Request $request)
+  {
+    $user = Auth::user();
+
+    $data = $request->validate([
+      'exam_id' => 'required|exists:exams,id',
+      'exam_step_id' => 'required|exists:exam_steps,id',
+      'payload' => 'nullable|array',
+    ]);
+
+    $status = ExamStepStatus::where('exam_id', $data['exam_id'])
+      ->where('exam_step_id', $data['exam_step_id'])
+      ->where('participant_id', $user->id)
+      ->firstOrFail();
+
+    ExamPauseResult::updateOrCreate(
+      [
+        'exam_id' => $status->exam_id,
+        'exam_step_id' => $status->exam_step_id,
+        'participant_id' => $user->id,
+      ],
+      [
+        'payload' => $data['payload'] ?? [],
+      ],
+    );
 
     return back(303);
   }
