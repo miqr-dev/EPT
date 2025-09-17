@@ -86,6 +86,8 @@ class RedirectBasedOnRole
             'exam-room',
             'my-exam.start-step',
             'my-exam.complete-step',
+            'my-exam.save-progress',
+            'my-exam.break-step',
             'participant.no-exam',
           ]);
         }
