@@ -11,6 +11,7 @@ const handleLogout = () => {
 
 
 <template>
+<div>
 
   <Head title="Bitte warten …" />
   <div class="flex items-center justify-center min-h-screen bg-gray-100">
@@ -33,4 +34,5 @@ const handleLogout = () => {
       </Link>
     </div>
   </div>
+</div>
 </template>

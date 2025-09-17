@@ -28,13 +28,13 @@ const questions = ref<Question[]>([
   { text: "1/3 : 1/2 = ?", answers: ["2/3"] },
   { text: "Verwandle 0,4 in einen gewöhnlichen Bruch.", answers: ["2/5", "4/10"] },
   { text: "Ein Mechaniker hat aus 3 Teilen ein Gerät hergestellt. Die Einzelteile wiegen: 50 g, 9,4 kg, 1050 g. Wie viel wiegt das gesamte Gerät?", answers: ["10500", "10500 g", "10500g", "10,5", "10,5Kg", "10,5kg", "10,5 Kg", "10,5 kg"] },
-  { text: "Rechne um: Wie viel g sind 9 kg und 1 g?", answers: ["9001","9001g", "9001 g", "9001 G", "9001G"] },
-  { text: "Wie viel Zinsen erbringen 1000 € zu 4 % in einem Jahr?", answers: ["40","40€", "40 €"] },
-  { text: "Rudi kauft sich ein neues Mofa. Es kostet 1390 €. Bei Barzahlung bekommt er 2 % Rabatt. Wie viel muss er bezahlen?", answers: ["1362,2","1362,20","1362,20 €", "1362,2 €", "1362,2€", "1362,20€"] },
+  { text: "Rechne um: Wie viel g sind 9 kg und 1 g?", answers: ["9001", "9001g", "9001 g", "9001 G", "9001G"] },
+  { text: "Wie viel Zinsen erbringen 1000 € zu 4 % in einem Jahr?", answers: ["40", "40€", "40 €"] },
+  { text: "Rudi kauft sich ein neues Mofa. Es kostet 1390 €. Bei Barzahlung bekommt er 2 % Rabatt. Wie viel muss er bezahlen?", answers: ["1362,2", "1362,20", "1362,20 €", "1362,2 €", "1362,2€", "1362,20€"] },
   { text: "Im Sägewerk können aus einem Baumstamm 20 Bretter von 3 cm Dicke geschnitten werden. Wie viele Bretter erhält man, wenn sie 2 cm dick sind?", answers: ["30"] },
   { text: "Im Sägewerk können aus einem Baumstamm 20 Bretter von 3 cm Dicke geschnitten werden. Wie dick wird ein Brett, wenn man 15 Bretter aus dem Stamm schneidet?", answers: ["4", "4cm", "4 cm", "4 Cm", "4Cm"] },
-  { text: "Berechne die Grundstücksgröße in m².", answers: ["930" , "930 m²", "930m²", "930 m2"], image: "/images/Math/Mathe1.png" },
-  { text: "Das Rad hat einen Durchmesser von 0,6 m. Welche Strecke legt es zurück, wenn es sich 100 mal dreht?", answers: ["188,4","188,4 m","188,4m"], image: "/images/Math/Mathe2.png" },
+  { text: "Berechne die Grundstücksgröße in m².", answers: ["930", "930 m²", "930m²", "930 m2"], image: "/images/Math/Mathe1.png" },
+  { text: "Das Rad hat einen Durchmesser von 0,6 m. Welche Strecke legt es zurück, wenn es sich 100 mal dreht?", answers: ["188,4", "188,4 m", "188,4m"], image: "/images/Math/Mathe2.png" },
   { text: "√81 = ?", answers: ["9"] },
   { text: "10³ = ?", answers: ["1000"] },
 ]);
@@ -208,7 +208,8 @@ const startTest = () => {
 
 <template>
   <div>
-    <Head title="Tests" />
+
+    <Head title="BRT-A" />
     <div class="p-4">
       <div class="flex justify-between items-center mb-4">
         <h1 class="text-2xl font-bold">BRT-A</h1>
@@ -226,18 +227,12 @@ const startTest = () => {
                   'hover:bg-blue-500': idx === currentQuestionIndex,
                   'bg-gray-300 border-gray-400 text-gray-900': userAnswers[idx] && idx !== currentQuestionIndex,
                   'bg-gray-100 border-gray-300 text-gray-900': !userAnswers[idx] && idx !== currentQuestionIndex,
-                }"
-                @click="jumpToQuestion(idx)"
-                :disabled="isTestComplete || !showTest"
-              >
-                <span
-                  class="w-8 h-8 flex items-center justify-center rounded-full border mr-2"
-                  :class="{
-                    'bg-blue-600 text-white border-blue-600': idx === currentQuestionIndex,
-                    'bg-gray-400 text-white border-gray-400': userAnswers[idx] && idx !== currentQuestionIndex,
-                    'bg-gray-300 text-gray-600 border-gray-400': !userAnswers[idx] && idx !== currentQuestionIndex,
-                  }"
-                >
+                }" @click="jumpToQuestion(idx)" :disabled="isTestComplete || !showTest">
+                <span class="w-8 h-8 flex items-center justify-center rounded-full border mr-2" :class="{
+                  'bg-blue-600 text-white border-blue-600': idx === currentQuestionIndex,
+                  'bg-gray-400 text-white border-gray-400': userAnswers[idx] && idx !== currentQuestionIndex,
+                  'bg-gray-300 text-gray-600 border-gray-400': !userAnswers[idx] && idx !== currentQuestionIndex,
+                }">
                   {{ idx + 1 }}
                 </span>
                 <span class="truncate max-w-[130px] text-left text-xs" :title="q.text">
@@ -254,11 +249,17 @@ const startTest = () => {
           <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
             <h2 class="text-2xl font-bold mb-4">Willkommen zum Berufsbezogenen Rechentest</h2>
             <p class="mb-6 text-base text-center max-w-xl">
-              In diesem Verfahren finden Sie insgesamt {{ questions.length }} Rechenaufgaben, die zu lösen sind. Hierfür haben Sie
-              35 Minuten Zeit. Halten Sie sich nicht zu lange an einer Aufgabe auf, wenn Sie sie nicht lösen können. Gehen Sie zur
+              In diesem Verfahren finden Sie insgesamt {{ questions.length }} Rechenaufgaben, die zu lösen sind. Hierfür
+              haben
+              Sie
+              35 Minuten Zeit. Halten Sie sich nicht zu lange an einer Aufgabe auf, wenn Sie sie nicht lösen können.
+              Gehen Sie
+              zur
               nächsten weiter.
             </p>
-            <p>Wir wollen wissen, auf welcher Ebene Sie mit Ihren Kenntnissen stehen und wo wir Sie individuell fördern können.</p>
+            <p>Wir wollen wissen, auf welcher Ebene Sie mit Ihren Kenntnissen stehen und wo wir Sie individuell fördern
+              können.
+            </p>
             <br />
             <p>Für Nebenrechnungen haben Sie einen zusätzlichen Block.</p>
             <p>Bitte notieren Sie vor Abgabe Ihres Blattes Ihren Namen und das heutige Datum darauf.</p>
@@ -276,13 +277,8 @@ const startTest = () => {
               <img :src="currentQuestion.image" alt="Fragebild" class="max-w-xs border rounded shadow" />
             </div>
             <div class="w-full md:w-1/2">
-              <Input
-                ref="answerInput"
-                type="text"
-                v-model="userAnswers[currentQuestionIndex]"
-                placeholder="Ihre Antwort"
-                class="mb-2 w-full"
-              />
+              <Input ref="answerInput" type="text" v-model="userAnswers[currentQuestionIndex]"
+                placeholder="Ihre Antwort" class="mb-2 w-full" />
 
               <div class="flex flex-row justify-between mt-2">
                 <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline">

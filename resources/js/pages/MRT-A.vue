@@ -25,7 +25,7 @@ const page = usePage<{
     };
   };
 }>();
-const userName = computed(() => page.props.auth?.user?.name ?? '');
+// const userName = computed(() => page.props.auth?.user?.name ?? '');
 const profile = computed(() => page.props.auth?.user?.participant_profile);
 const userAge = computed<number | null>(() => {
   const age = profile.value?.age;
@@ -218,98 +218,102 @@ const startTest = () => {
 </script>
 
 <template>
+  <div>
 
-  <Head title="Tests" />
-  <div class="p-4">
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold">MRT-A</h1>
-    </div>
-    <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
-      <div class="flex-1 flex flex-col gap-4">
-        <!-- Start Test Screen -->
-        <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
-          <h2 class="text-2xl font-bold mb-4">Willkommen zum Mannheimer Rechtschreibtest</h2>
-          <p class="mb-6 text-base text-center max-w-xl">
-            Mit diesem Verfahren wollen wir wissen, wie Ihre Rechtschreibkenntnisse sind. Jede Aufgabe enthält 4 Wörter.
-            Wählen Sie das richtig geschriebene Wort aus.
-          </p>
-          <p class="font-semibold">Beispielaufgabe:</p>
-          <!-- Images column -->
-          <div class="flex flex-col items-center gap-6 my-6">
-            <img src="/images/MRT/woerter_empty.PNG" alt="Beispiel falsch"
-              class="w-[600px] h-[150px] object-contain rounded shadow" />
-            <img src="/images/MRT/woerter_selectedPNG.PNG" alt="Beispiel richtig"
-              class="w-[600px] h-[150px] object-contain rounded shadow" />
+    <Head title="Tests" />
+    <div class="p-4">
+      <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold">MRT-A</h1>
+      </div>
+      <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
+        <div class="flex-1 flex flex-col gap-4">
+          <!-- Start Test Screen -->
+          <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
+            <h2 class="text-2xl font-bold mb-4">Willkommen zum Mannheimer Rechtschreibtest</h2>
+            <p class="mb-6 text-base text-center max-w-xl">
+              Mit diesem Verfahren wollen wir wissen, wie Ihre Rechtschreibkenntnisse sind. Jede Aufgabe enthält 4
+              Wörter.
+              Wählen Sie das richtig geschriebene Wort aus.
+            </p>
+            <p class="font-semibold">Beispielaufgabe:</p>
+            <!-- Images column -->
+            <div class="flex flex-col items-center gap-6 my-6">
+              <img src="/images/MRT/woerter_empty.PNG" alt="Beispiel falsch"
+                class="w-[600px] h-[150px] object-contain rounded shadow" />
+              <img src="/images/MRT/woerter_selectedPNG.PNG" alt="Beispiel richtig"
+                class="w-[600px] h-[150px] object-contain rounded shadow" />
+            </div>
+            <p>Dieses klicken Sie an und bestätigen es mit einem weiteren Klick. Es gilt die alte und neue
+              Rechtschreibung.
+            </p>
+            <Button @click="startTest" class="px-8 py-3 mt-6 text-lg font-semibold rounded-xl shadow"
+              :disabled="!userAge">
+              Test starten
+            </Button>
           </div>
-          <p>Dieses klicken Sie an und bestätigen es mit einem weiteren Klick. Es gilt die alte und neue Rechtschreibung.
-          </p>
-          <Button @click="startTest" class="px-8 py-3 mt-6 text-lg font-semibold rounded-xl shadow"
-            :disabled="!userAge">
-            Test starten
-          </Button>
-        </div>
 
-        <!-- Test Content -->
-        <div v-else-if="!isTestComplete && currentQuestion" class="p-6 bg-background border rounded-lg">
-          <h2 class="text-xl font-semibold mb-4">Frage {{ currentQuestionIndex + 1 }}:</h2>
-          <div class="flex flex-row gap-4 mb-6">
-            <div v-for="(option, oidx) in currentQuestion.options" :key="oidx" class="flex flex-col items-center">
-              <button class="px-4 py-3 rounded-xl border transition text-base font-sans font-semibold min-w-[120px]"
-                :class="[
-                  userAnswers[currentQuestionIndex] === String.fromCharCode(65 + oidx)
-                    ? 'bg-blue-300 border-blue-700 text-blue-900 dark:bg-blue-900 dark:text-blue-100'
-                    : tempSelected[currentQuestionIndex] === String.fromCharCode(65 + oidx)
-                      ? 'bg-blue-100 border-blue-500 text-blue-900 dark:bg-blue-800 dark:border-blue-600 dark:text-blue-100'
-                      : 'bg-white border-gray-300 hover:bg-blue-50 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-blue-900',
-                  'focus:outline-none',
-                  userAnswers[currentQuestionIndex] ? 'cursor-default opacity-60' : 'cursor-pointer'
-                ]" @click="handleOptionClick(oidx)" :disabled="false">
-                <!-- *** NO LETTERS, JUST OPTION *** -->
-                <span class="font-sans select-none">{{ option }}</span>
-              </button>
-              <span
-                v-if="tempSelected[currentQuestionIndex] === String.fromCharCode(65 + oidx) && tempClickState[currentQuestionIndex] && !userAnswers[currentQuestionIndex]"
-                class="mt-2 text-xs text-blue-700 font-semibold">
-                Klicken Sie erneut zum Bestätigen
-              </span>
+          <!-- Test Content -->
+          <div v-else-if="!isTestComplete && currentQuestion" class="p-6 bg-background border rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">Frage {{ currentQuestionIndex + 1 }}:</h2>
+            <div class="flex flex-row gap-4 mb-6">
+              <div v-for="(option, oidx) in currentQuestion.options" :key="oidx" class="flex flex-col items-center">
+                <button class="px-4 py-3 rounded-xl border transition text-base font-sans font-semibold min-w-[120px]"
+                  :class="[
+                    userAnswers[currentQuestionIndex] === String.fromCharCode(65 + oidx)
+                      ? 'bg-blue-300 border-blue-700 text-blue-900 dark:bg-blue-900 dark:text-blue-100'
+                      : tempSelected[currentQuestionIndex] === String.fromCharCode(65 + oidx)
+                        ? 'bg-blue-100 border-blue-500 text-blue-900 dark:bg-blue-800 dark:border-blue-600 dark:text-blue-100'
+                        : 'bg-white border-gray-300 hover:bg-blue-50 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-blue-900',
+                    'focus:outline-none',
+                    userAnswers[currentQuestionIndex] ? 'cursor-default opacity-60' : 'cursor-pointer'
+                  ]" @click="handleOptionClick(oidx)" :disabled="false">
+                  <!-- *** NO LETTERS, JUST OPTION *** -->
+                  <span class="font-sans select-none">{{ option }}</span>
+                </button>
+                <span
+                  v-if="tempSelected[currentQuestionIndex] === String.fromCharCode(65 + oidx) && tempClickState[currentQuestionIndex] && !userAnswers[currentQuestionIndex]"
+                  class="mt-2 text-xs text-blue-700 font-semibold">
+                  Klicken Sie erneut zum Bestätigen
+                </span>
+              </div>
+            </div>
+
+            <div class="flex flex-row justify-between mt-4">
+              <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline">
+                Zurück
+              </Button>
+              <Button v-if="isLastQuestion" @click="finishTest" :disabled="!userAnswers[currentQuestionIndex]"
+                variant="destructive">
+                Test beenden
+              </Button>
+              <Button v-else @click="handleNextClick" :disabled="!userAnswers[currentQuestionIndex]">
+                Weiter
+              </Button>
             </div>
           </div>
 
-          <div class="flex flex-row justify-between mt-4">
-            <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline">
-              Zurück
-            </Button>
-            <Button v-if="isLastQuestion" @click="finishTest" :disabled="!userAnswers[currentQuestionIndex]"
-              variant="destructive">
-              Test beenden
-            </Button>
-            <Button v-else @click="handleNextClick" :disabled="!userAnswers[currentQuestionIndex]">
-              Weiter
-            </Button>
+          <!-- Test Results -->
+          <div v-else-if="isTestComplete && showResults">
+            <MrtAResult class="invisible" :results="calculatedResults" />
           </div>
-        </div>
 
-        <!-- Test Results -->
-        <div v-else-if="isTestComplete && showResults">
-          <MrtAResult class="invisible" :results="calculatedResults" />
+          <div v-else></div>
         </div>
-
-        <div v-else></div>
       </div>
+      <Dialog v-model:open="endConfirmOpen">
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Test beenden</DialogTitle>
+            <DialogDescription>
+              Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter class="gap-2">
+            <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
+            <Button variant="destructive" @click="confirmEnd">Ja</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
-    <Dialog v-model:open="endConfirmOpen">
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Test beenden</DialogTitle>
-          <DialogDescription>
-            Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter class="gap-2">
-          <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
-          <Button variant="destructive" @click="confirmEnd">Ja</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   </div>
 </template>
