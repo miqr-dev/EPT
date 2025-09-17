@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ExamStepStatus extends Model
 {
@@ -30,5 +31,10 @@ class ExamStepStatus extends Model
   public function step()
   {
     return $this->belongsTo(ExamStep::class, 'exam_step_id');
+  }
+
+  public function pausedTest(): HasOne
+  {
+    return $this->hasOne(PausedTest::class, 'exam_step_status_id');
   }
 }

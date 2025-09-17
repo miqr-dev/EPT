@@ -20,6 +20,18 @@ interface Question {
   image?: string;
 }
 
+interface BrtProgress {
+  showTest: boolean;
+  currentQuestionIndex: number;
+  userAnswers: string[];
+  questionTimes: number[];
+  nextButtonClickCount?: number;
+}
+
+const props = defineProps<{
+  initialProgress?: Partial<BrtProgress> | null;
+}>();
+
 const questions = ref<Question[]>([
   { text: "619020 – 540600 = ?", answers: ["78420"] },
   { text: "619020 = 170309 + ?", answers: ["448.711"] },
@@ -48,6 +60,59 @@ const questionTimes = ref<number[]>(Array(questions.value.length).fill(0));
 const questionStartTimestamps = ref<(number | null)[]>(Array(questions.value.length).fill(null));
 const startTime = ref<number | null>(null);
 const endConfirmOpen = ref(false);
+
+function applyProgress(progress?: Partial<BrtProgress> | null) {
+  if (!progress || !progress.showTest) {
+    return;
+  }
+
+  const totalQuestions = questions.value.length;
+  showTest.value = true;
+
+  const answers = Array<string>(totalQuestions).fill('');
+  if (Array.isArray(progress.userAnswers)) {
+    progress.userAnswers.forEach((answer, index) => {
+      if (index < totalQuestions) {
+        answers[index] = typeof answer === 'string' ? answer : String(answer ?? '');
+      }
+    });
+  }
+  userAnswers.value = answers;
+
+  const times = Array<number>(totalQuestions).fill(0);
+  if (Array.isArray(progress.questionTimes)) {
+    progress.questionTimes.forEach((time, index) => {
+      if (index < totalQuestions && typeof time === 'number' && Number.isFinite(time)) {
+        times[index] = time;
+      }
+    });
+  }
+  questionTimes.value = times;
+
+  const nextCount = progress.nextButtonClickCount;
+  nextButtonClickCount.value = typeof nextCount === 'number' ? nextCount : 0;
+
+  const targetIndex = typeof progress.currentQuestionIndex === 'number'
+    ? Math.max(0, Math.min(progress.currentQuestionIndex, totalQuestions))
+    : 0;
+  currentQuestionIndex.value = targetIndex;
+
+  questionStartTimestamps.value = Array(totalQuestions).fill(null);
+
+  if (startTime.value === null) {
+    startTime.value = Date.now();
+  }
+}
+
+watch(
+  () => props.initialProgress,
+  (progress) => {
+    if (progress) {
+      applyProgress(progress);
+    }
+  },
+  { immediate: true },
+);
 
 function formatQuestionMark(text: string): string {
   if (text.endsWith('?')) {
@@ -202,6 +267,39 @@ const startTest = () => {
   questionStartTimestamps.value = Array(questions.value.length).fill(null);
   startTime.value = null;
 };
+
+const getProgress = (): Record<string, unknown> | null => {
+  if (!showTest.value || isTestComplete.value) {
+    return null;
+  }
+
+  const totalQuestions = questions.value.length;
+  const index = currentQuestionIndex.value;
+
+  if (
+    index >= 0 &&
+    index < totalQuestions &&
+    questionStartTimestamps.value[index]
+  ) {
+    const now = Date.now();
+    questionTimes.value[index] += Math.round(
+      (now - (questionStartTimestamps.value[index] as number)) / 1000,
+    );
+    questionStartTimestamps.value[index] = null;
+  }
+
+  return {
+    showTest: showTest.value,
+    currentQuestionIndex: currentQuestionIndex.value,
+    userAnswers: [...userAnswers.value],
+    questionTimes: [...questionTimes.value],
+    nextButtonClickCount: nextButtonClickCount.value,
+  };
+};
+
+defineExpose({
+  getProgress,
+});
 
 </script>
 

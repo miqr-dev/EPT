@@ -51,6 +51,10 @@ const userName = computed(() => page.props.auth?.user?.name);
 const activeTestComponent = shallowRef<unknown>(null);
 const isTestDialogOpen = ref(false);
 const activeStepId = ref<number | null>(null);
+const testComponentRef = ref<any>(null);
+const activeTestProps = ref<Record<string, unknown>>({});
+const componentSessionId = ref(0);
+const pausedProgressCache = ref<Record<number, Record<string, unknown>>>({});
 
 const testComponents: Record<string, unknown> = {
     'BRT-A': BRTA,
@@ -72,6 +76,39 @@ const remotelyPausedStepIds = new Set<number>();
 const hasPausedStep = computed(() =>
     Object.values(stepStatuses.value || {}).some((status) => status?.status === 'paused'),
 );
+
+function isProgressSupported(testName: string) {
+    return testName === 'BRT-A' || testName === 'BRT-B';
+}
+
+function cloneProgress<T extends Record<string, unknown>>(progress: T): T {
+    return JSON.parse(JSON.stringify(progress));
+}
+
+function storePausedProgress(stepId: number, progress: Record<string, unknown>) {
+    pausedProgressCache.value[stepId] = cloneProgress(progress);
+}
+
+function getStoredProgress(stepId: number, testName: string) {
+    if (!isProgressSupported(testName)) {
+        return null;
+    }
+
+    const local = pausedProgressCache.value[stepId];
+    if (local) {
+        return cloneProgress(local);
+    }
+
+    const status = stepStatuses.value[stepId];
+    const serverProgress = status?.paused_test?.progress_json;
+
+    if (serverProgress) {
+        pausedProgressCache.value[stepId] = cloneProgress(serverProgress);
+        return cloneProgress(pausedProgressCache.value[stepId]);
+    }
+
+    return null;
+}
 
 function normalizeStepStatuses(statuses: Record<number, StepStatusEntry> | undefined) {
     if (!statuses) {
@@ -101,6 +138,8 @@ function getStatusText(status?: StepStatus) {
 
 interface StartTestOptions {
     skipServerStart?: boolean;
+    resume?: boolean;
+    initialProgress?: Record<string, unknown> | null;
 }
 
 function startTest(step: ExamStepInfo, options: StartTestOptions = {}) {
@@ -110,7 +149,7 @@ function startTest(step: ExamStepInfo, options: StartTestOptions = {}) {
 function handleStepActionClick(step: ExamStepInfo) {
     const status = stepStatuses.value[step.id]?.status;
     if (status === 'in_progress') {
-        startTest(step, { skipServerStart: true });
+        startTest(step, { skipServerStart: true, resume: true });
         return;
     }
 
@@ -151,8 +190,19 @@ function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
         return;
     }
 
+    const initialProgress =
+        options.initialProgress ??
+        (options.resume ? getStoredProgress(step.id, step.test.name) : null);
+
+    if (initialProgress && isProgressSupported(step.test.name)) {
+        activeTestProps.value = { initialProgress };
+    } else {
+        activeTestProps.value = {};
+    }
+
     activeStepId.value = step.id;
     activeTestComponent.value = component;
+    componentSessionId.value += 1;
 
     const showDialog = () => {
         finishing.value = false;
@@ -184,6 +234,7 @@ function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
 function completeTest(results: any) {
     if (!activeStepId.value) return;
 
+    const stepId = activeStepId.value;
     router.post(
         '/my-exam/complete-step',
         {
@@ -192,6 +243,9 @@ function completeTest(results: any) {
         },
         {
             onSuccess: () => {
+                if (typeof stepId === 'number') {
+                    delete pausedProgressCache.value[stepId];
+                }
                 closeTestDialog({ resetActive: true });
             },
         },
@@ -201,11 +255,15 @@ function completeTest(results: any) {
 function breakTest() {
     if (!activeStepId.value) return;
 
+    const stepId = activeStepId.value;
     router.post(
         '/my-exam/break-step',
         { exam_step_id: activeStepId.value },
         {
             onSuccess: () => {
+                if (typeof stepId === 'number') {
+                    delete pausedProgressCache.value[stepId];
+                }
                 closeTestDialog({ resetActive: true });
             },
         },
@@ -218,6 +276,8 @@ function closeTestDialog({ resetActive = false }: { resetActive?: boolean } = {}
     }
 
     cleanupAfterTest();
+    activeTestProps.value = {};
+    testComponentRef.value = null;
 
     if (resetActive) {
         if (typeof activeStepId.value === 'number') {
@@ -241,9 +301,42 @@ function cleanupAfterTest() {
 
 function handleRemotePause(stepId: number) {
     remotelyPausedStepIds.add(stepId);
-    if (activeStepId.value === stepId) {
-        closeTestDialog();
+    if (activeStepId.value !== stepId) {
+        return;
     }
+
+    const step = props.exam.steps.find((candidate) => candidate.id === stepId);
+    let progress: Record<string, unknown> | null = null;
+
+    if (step && isProgressSupported(step.test.name)) {
+        const instance = testComponentRef.value as { getProgress?: () => Record<string, unknown> | null } | null;
+        if (instance && typeof instance.getProgress === 'function') {
+            progress = instance.getProgress() ?? null;
+        }
+    }
+
+    if (progress && step) {
+        storePausedProgress(stepId, progress);
+        if (isProgressSupported(step.test.name)) {
+            router.post(
+                '/my-exam/save-progress',
+                { exam_step_id: stepId, progress },
+                { preserveScroll: true, preserveState: true },
+            );
+        }
+    } else if (step && isProgressSupported(step.test.name)) {
+        const cached = pausedProgressCache.value[stepId];
+        if (cached) {
+            router.post(
+                '/my-exam/save-progress',
+                { exam_step_id: stepId, progress: cloneProgress(cached) },
+                { preserveScroll: true, preserveState: true },
+            );
+        }
+    }
+
+    componentSessionId.value += 1;
+    closeTestDialog();
 }
 
 function handleRemoteResume(stepId: number, status: StepStatus) {
@@ -266,7 +359,7 @@ function handleRemoteResume(stepId: number, status: StepStatus) {
         return;
     }
 
-    startTest(step, { skipServerStart: true });
+    startTest(step, { skipServerStart: true, resume: true });
 }
 
 // --- Fullscreen and Anti-Cheating ---
@@ -342,6 +435,18 @@ watch(
             const id = Number(key);
             const prevStatus = previousStatusByStep.value[id];
             const currentStatus = normalized[id]?.status;
+            const statusEntry = normalized[id];
+
+            if (statusEntry?.paused_test?.progress_json) {
+                storePausedProgress(id, statusEntry.paused_test.progress_json);
+            } else if (
+                statusEntry &&
+                (statusEntry.status === 'completed' ||
+                    statusEntry.status === 'broken' ||
+                    statusEntry.status === 'not_started')
+            ) {
+                delete pausedProgressCache.value[id];
+            }
 
             if (hasSyncedInitialStatuses) {
                 if (currentStatus === 'paused' && prevStatus !== 'paused') {
@@ -472,10 +577,16 @@ watch(
                                             <KeepAlive>
                                                 <component
                                                     v-if="activeTestComponent"
+                                                    ref="testComponentRef"
                                                     :is="activeTestComponent"
-                                                    :key="activeStepId ?? 'inactive'"
+                                                    :key="
+                                                        activeStepId !== null
+                                                            ? `${activeStepId}-${componentSessionId}`
+                                                            : 'inactive'
+                                                    "
                                                     class="h-full w-full"
                                                     @complete="completeTest"
+                                                    v-bind="activeTestProps"
                                                 />
                                             </KeepAlive>
                                         </DialogContent>

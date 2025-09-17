@@ -11,6 +11,7 @@ use App\Models\Exam;
 use App\Models\ExamParticipant;
 use App\Models\ExamStepStatus;
 use App\Models\TestAssignment;
+use App\Models\PausedTest;
 use App\Models\TestResult;
 use Inertia\Inertia;
 
@@ -95,7 +96,8 @@ class ParticipantController extends Controller
     }
 
     // Eager load all step statuses for this participant in this exam.
-    $stepStatuses = ExamStepStatus::where('exam_id', $exam->id)
+    $stepStatuses = ExamStepStatus::with('pausedTest')
+      ->where('exam_id', $exam->id)
       ->where('participant_id', $user->id)
       ->get()
       ->keyBy('exam_step_id');
@@ -136,6 +138,28 @@ class ParticipantController extends Controller
       'status' => 'in_progress',
       'started_at' => now(),
     ]);
+
+    $examStepStatus->loadMissing('step.test');
+    $examStep = $examStepStatus->step;
+
+    if ($examStep && $examStep->test) {
+      $assignment = TestAssignment::firstOrCreate(
+        [
+          'participant_id' => $user->id,
+          'test_id' => $examStep->test->id,
+        ],
+        [
+          'status' => 'assigned',
+        ]
+      );
+
+      if ($assignment->status !== 'completed') {
+        $assignment->update([
+          'status' => 'started',
+          'started_at' => $assignment->started_at ?: now(),
+        ]);
+      }
+    }
 
     return back(303);
   }
@@ -205,6 +229,8 @@ class ParticipantController extends Controller
           'result_json' => $resultData,
         ]);
 
+        $examStepStatus->pausedTest()->delete();
+
         if (in_array($examStep->test->name, ['BRT-A', 'BRT-B'])) {
           $pdfPath = \App\Services\BrtPdfService::generate($testResult);
           if ($pdfPath) {
@@ -226,6 +252,54 @@ class ParticipantController extends Controller
     }
 
     return back(303);
+  }
+
+  public function saveProgress(Request $request)
+  {
+    $user = Auth::user();
+
+    $data = $request->validate([
+      'exam_step_id' => 'required|exists:exam_steps,id',
+      'progress' => 'required|array',
+    ]);
+
+    $examStepStatus = ExamStepStatus::with('step.test')
+      ->where('participant_id', $user->id)
+      ->where('exam_step_id', $data['exam_step_id'])
+      ->firstOrFail();
+
+    $test = $examStepStatus->step?->test;
+
+    if (!$test || !in_array($test->name, ['BRT-A', 'BRT-B'], true)) {
+      return response()->noContent();
+    }
+
+    $assignment = TestAssignment::firstOrCreate(
+      [
+        'participant_id' => $user->id,
+        'test_id' => $test->id,
+      ],
+      [
+        'status' => 'assigned',
+      ]
+    );
+
+    if ($assignment->status === 'assigned') {
+      $assignment->update([
+        'status' => 'started',
+        'started_at' => now(),
+      ]);
+    }
+
+    PausedTest::updateOrCreate(
+      ['exam_step_status_id' => $examStepStatus->id],
+      [
+        'assignment_id' => $assignment->id,
+        'progress_json' => $data['progress'],
+      ]
+    );
+
+    return response()->noContent();
   }
 
   public function breakStep(Request $request)

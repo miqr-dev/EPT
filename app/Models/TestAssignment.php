@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TestAssignment extends Model
 {
@@ -29,8 +29,13 @@ class TestAssignment extends Model
   }
 
   // The results (if completed)
-  public function results(): \Illuminate\Database\Eloquent\Relations\HasMany
+  public function results(): HasMany
   {
     return $this->hasMany(TestResult::class, 'assignment_id');
+  }
+
+  public function pausedTests(): HasMany
+  {
+    return $this->hasMany(PausedTest::class, 'assignment_id');
   }
 }
