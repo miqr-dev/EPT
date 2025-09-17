@@ -226,6 +226,7 @@ function breakTest() {
 }
 
 function closeTestDialog({ resetActive = false }: { resetActive?: boolean } = {}) {
+    blurActiveElement();
     if (isTestDialogOpen.value) {
         isTestDialogOpen.value = false;
     }
@@ -250,6 +251,17 @@ function cleanupAfterTest() {
         document.exitFullscreen().catch(() => undefined);
     }
     finishing.value = false;
+}
+
+function blurActiveElement() {
+    if (typeof document === 'undefined') {
+        return;
+    }
+
+    const active = document.activeElement as HTMLElement | null;
+    if (active && typeof active.blur === 'function') {
+        active.blur();
+    }
 }
 
 function handleRemotePause(stepId: number) {
@@ -326,9 +338,31 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
 
 // --- Polling ---
 let polling: NodeJS.Timeout | null = null;
+let isReloadingExamState = false;
+
+function reloadExamState() {
+    if (isReloadingExamState) {
+        return;
+    }
+
+    isReloadingExamState = true;
+    router.reload({
+        only: ['exam', 'stepStatuses'],
+        onFinish: () => {
+            isReloadingExamState = false;
+        },
+        onCancel: () => {
+            isReloadingExamState = false;
+        },
+        onError: () => {
+            isReloadingExamState = false;
+        },
+    });
+}
+
 onMounted(() => {
     polling = setInterval(() => {
-        router.reload({ only: ['exam', 'stepStatuses'] });
+        reloadExamState();
     }, 5000);
 });
 
