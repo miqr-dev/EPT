@@ -4,6 +4,7 @@ import { useForm } from '@inertiajs/vue3';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import TestResultViewer from '@/components/TestResultViewer.vue';
+import PdfTemplate from './PdfTemplate.vue';
 import html2canvas from 'html2canvas-pro';
 import jsPDF from 'jspdf';
 
@@ -21,6 +22,8 @@ const form = useForm({
 
 const editable = ref<any | null>(null);
 const viewerRef = ref<any>(null);
+const pdfTemplateRef = ref<any>(null);
+const isGeneratingPdf = ref(false);
 
 watch(
   () => props.assignment,
@@ -54,55 +57,21 @@ function closeModal() {
   emit('close');
 }
 
-async function exportChartPdf() {
-  await nextTick(); // ensure chart has rendered
+async function downloadUnifiedPdf() {
+  isGeneratingPdf.value = true;
+  await nextTick();
 
-  // 1) Try what you exposed already
-  let canvasEl = viewerRef.value?.chartEl as HTMLCanvasElement | undefined;
-
-  // 2) If that isn’t a <canvas>, look for one inside the child’s root DOM
-  if (!(canvasEl instanceof HTMLCanvasElement)) {
-    const root = viewerRef.value?.$el as HTMLElement | undefined;
-    canvasEl = root?.querySelector('canvas') ?? undefined;
-  }
-
-  // 3) If still not found, fall back to DOM snapshot of the chart container
-  if (!(canvasEl instanceof HTMLCanvasElement)) {
-    const chartContainer =
-      (viewerRef.value?.chartEl as HTMLElement) ??
-      (viewerRef.value?.$el as HTMLElement);
-    if (!chartContainer) return;
-    const snap = await canvasFromElement(chartContainer);
-    const img = snap.toDataURL('image/png');
-    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-    const pdfW = pdf.internal.pageSize.getWidth();
-    const imgH = (snap.height * pdfW) / snap.width;
-    pdf.addImage(img, 'PNG', 0, 0, pdfW, imgH);
-    pdf.save('mrt-chart.pdf');
+  const el = pdfTemplateRef.value?.$el as HTMLElement | undefined;
+  if (!el) {
+    console.error("PDF template element not found.");
+    isGeneratingPdf.value = false;
     return;
   }
 
-  // Happy path: real canvas
-  const img = canvasEl.toDataURL('image/png');
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  const pdfW = pdf.internal.pageSize.getWidth();
-  const imgH = (canvasEl.height * pdfW) / canvasEl.width;
-  pdf.addImage(img, 'PNG', 0, 0, pdfW, imgH);
-  pdf.save('mrt-chart.pdf');
-}
+  const canvas = await html2canvas(el, {
+      scale: 2, // Higher scale for better quality
+  });
 
-// 3) Answers/details → PDF via html2canvas-pro snapshot
-async function exportDetailsPdf() {
-  if (!viewerRef.value) return;
-  if (!viewerRef.value.showDetails) {
-    viewerRef.value.showDetails = true;
-    await nextTick();
-  }
-
-  const el = viewerRef.value.detailsEl as HTMLElement | undefined;
-  if (!el) return;
-
-  const canvas = await canvasFromElement(el);
   const img = canvas.toDataURL('image/png');
 
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
@@ -118,14 +87,8 @@ async function exportDetailsPdf() {
 
   const marginX = (pdfW - imgW) / 2;
   pdf.addImage(img, 'PNG', marginX, 0, imgW, imgH);
-  pdf.save('mrt-antworten.pdf');
-}
-
-function downloadPdf() {
-  const id = props.assignment?.results?.[0]?.id;
-  if (id) {
-    window.open(route('test-results.download', { testResult: id }), '_blank');
-  }
+  pdf.save(`${props.participant.participant_profile.lastname}_${props.assignment.test.name}_Ergebnis.pdf`);
+  isGeneratingPdf.value = false;
 }
 
 </script>
@@ -137,12 +100,8 @@ function downloadPdf() {
         <div class="flex items-center justify-between w-full">
           <DialogTitle>Testergebnis bearbeiten</DialogTitle>
           <div v-if="assignment" class="flex gap-2">
-            <template v-if="assignment.test && ['MRT-A', 'MRT-B'].includes(assignment.test.name)">
-              <Button variant="outline" size="sm" @click="exportChartPdf">Diagramm PDF</Button>
-              <Button variant="outline" size="sm" @click="exportDetailsPdf">Antworten PDF</Button>
-            </template>
-            <Button v-if="assignment.results?.[0]?.pdf_file_path" variant="outline" size="sm" @click="downloadPdf">
-              Ergebnis PDF
+             <Button variant="outline" size="sm" @click="downloadUnifiedPdf" :disabled="isGeneratingPdf">
+              {{ isGeneratingPdf ? 'Generiere PDF...' : 'Ergebnis PDF' }}
             </Button>
           </div>
         </div>
@@ -154,4 +113,15 @@ function downloadPdf() {
       </DialogFooter>
     </DialogContent>
   </Dialog>
+
+  <!-- Hidden template for PDF generation -->
+  <div v-show="isGeneratingPdf" class="fixed top-0 left-0" style="z-index: -1; width: 210mm; height: 297mm;">
+      <PdfTemplate
+        v-if="assignment"
+        ref="pdfTemplateRef"
+        :assignment="assignment"
+        :participant="participant"
+        teacherName="Frau Dr. Musterfrau"
+      />
+  </div>
 </template>

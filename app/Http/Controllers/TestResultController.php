@@ -58,12 +58,4 @@ class TestResultController extends Controller
         return redirect()->back()->with('success', 'Test result updated successfully.');
     }
 
-    public function download(TestResult $testResult)
-    {
-        $path = $testResult->pdf_file_path;
-        if (!$path || !Storage::exists($path)) {
-            abort(404);
-        }
-        return Storage::download($path);
-    }
 }

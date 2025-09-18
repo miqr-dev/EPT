@@ -205,19 +205,6 @@ class ParticipantController extends Controller
           'result_json' => $resultData,
         ]);
 
-        if (in_array($examStep->test->name, ['BRT-A', 'BRT-B'])) {
-          $pdfPath = \App\Services\BrtPdfService::generate($testResult);
-          if ($pdfPath) {
-            $testResult->update(['pdf_file_path' => $pdfPath]);
-          }
-        }
-        if ($examStep->test->name === 'FPI-R') {
-          $pdfPath = \App\Services\FpiRPdfService::generate($testResult);
-          if ($pdfPath) {
-            $testResult->update(['pdf_file_path' => $pdfPath]);
-          }
-        }
-
         $assignment->update([
           'status' => 'completed',
           'completed_at' => now(),
