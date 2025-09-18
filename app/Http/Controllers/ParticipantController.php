@@ -200,9 +200,13 @@ class ParticipantController extends Controller
           $resultData = \App\Services\Bit2Scorer::score($answers, $sex);
         }
 
+        $exam = Exam::find($examStepStatus->exam_id);
+        $teacherId = $exam ? $exam->teacher_id : null;
+
         $testResult = TestResult::create([
           'assignment_id' => $assignment->id,
           'result_json' => $resultData,
+          'teacher_id' => $teacherId,
         ]);
 
         $assignment->update([
@@ -241,7 +245,7 @@ class ParticipantController extends Controller
         'participantProfile',
         'testAssignments.test',
         'testAssignments.results' => function ($query) {
-          $query->orderBy('created_at', 'desc');
+          $query->with('teacher')->orderBy('created_at', 'desc');
         },
         'tests',
       ])

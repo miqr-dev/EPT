@@ -31,10 +31,10 @@ const testDate = new Date().toLocaleDateString('de-DE', {
     <div class="grid grid-cols-2 gap-4 mt-8">
       <div>
         <h2 class="text-xl font-semibold mb-2">Teilnehmer/in</h2>
-        <p v-if="participant && participant.participant_profile">
-          {{ participant.participant_profile.firstname }} {{ participant.participant_profile.lastname }}
+        <p v-if="participant">
+          {{ participant.name }}
         </p>
-         <p v-else>
+        <p v-else>
           N/A
         </p>
       </div>
@@ -51,7 +51,7 @@ const testDate = new Date().toLocaleDateString('de-DE', {
         <TestResultViewer
           v-if="assignment && assignment.results.length > 0"
           :test="assignment.test"
-          :model-value="JSON.parse(assignment.results[0].result_json)"
+          :model-value="assignment.results[0].result_json"
           :participant-profile="participant?.participant_profile"
         />
         <div v-else class="text-center text-gray-500">

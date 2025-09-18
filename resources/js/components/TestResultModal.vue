@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { ref, watch, nextTick, computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import TestResultViewer from '@/components/TestResultViewer.vue';
 import PdfTemplate from './PdfTemplate.vue';
-import html2canvas from 'html2canvas-pro';
-import jsPDF from 'jspdf';
+import { generatePdfFromElement } from '@/lib/pdf';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -24,6 +23,10 @@ const editable = ref<any | null>(null);
 const viewerRef = ref<any>(null);
 const pdfTemplateRef = ref<any>(null);
 const isGeneratingPdf = ref(false);
+
+const teacherName = computed(() => {
+  return props.assignment?.results?.[0]?.teacher?.name || 'N/A';
+});
 
 watch(
   () => props.assignment,
@@ -62,32 +65,13 @@ async function downloadUnifiedPdf() {
   await nextTick();
 
   const el = pdfTemplateRef.value?.$el as HTMLElement | undefined;
-  if (!el) {
+  if (el) {
+    const filename = `${props.participant.name}_${props.assignment.test.name}_Ergebnis.pdf`;
+    await generatePdfFromElement(el, filename);
+  } else {
     console.error("PDF template element not found.");
-    isGeneratingPdf.value = false;
-    return;
   }
 
-  const canvas = await html2canvas(el, {
-      scale: 2, // Higher scale for better quality
-  });
-
-  const img = canvas.toDataURL('image/png');
-
-  const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-  const pdfW = pdf.internal.pageSize.getWidth();
-  const pdfH = pdf.internal.pageSize.getHeight();
-
-  let imgW = pdfW;
-  let imgH = (canvas.height * imgW) / canvas.width;
-  if (imgH > pdfH) {
-    imgH = pdfH;
-    imgW = (canvas.width * imgH) / canvas.height;
-  }
-
-  const marginX = (pdfW - imgW) / 2;
-  pdf.addImage(img, 'PNG', marginX, 0, imgW, imgH);
-  pdf.save(`${props.participant.participant_profile.lastname}_${props.assignment.test.name}_Ergebnis.pdf`);
   isGeneratingPdf.value = false;
 }
 
@@ -121,7 +105,7 @@ async function downloadUnifiedPdf() {
         ref="pdfTemplateRef"
         :assignment="assignment"
         :participant="participant"
-        teacherName="Frau Dr. Musterfrau"
+        :teacherName="teacherName"
       />
   </div>
 </template>

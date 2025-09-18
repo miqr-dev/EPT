@@ -11,6 +11,7 @@ class TestResult extends Model
     'assignment_id',
     'result_json',
     'pdf_file_path',
+    'teacher_id',
   ];
 
   protected $casts = [
@@ -21,5 +22,11 @@ class TestResult extends Model
   public function assignment(): BelongsTo
   {
     return $this->belongsTo(TestAssignment::class);
+  }
+
+  // Teacher who conducted the exam for this result
+  public function teacher(): BelongsTo
+  {
+    return $this->belongsTo(User::class, 'teacher_id');
   }
 }
