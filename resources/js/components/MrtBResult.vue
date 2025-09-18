@@ -42,6 +42,7 @@ const chartData = computed(() => ({
 
 const chartOptions = {
   responsive: true,
+  animation: false,
   plugins: {
     legend: { display: false },
     title: { display: false },

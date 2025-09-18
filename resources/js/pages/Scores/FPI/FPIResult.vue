@@ -224,7 +224,7 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value)
   --label-row-h:22px;
 
   border:1.5px solid var(--border);background:var(--bg);color:var(--fg);
-  font-family:Arial,sans-serif;width:950px;margin:2rem auto;font-size:11px;line-height:1.25;
+  font-family:Arial,sans-serif;width:100%;margin:2rem auto;font-size:11px;line-height:1.25;
 }
 
 /* Dark mode */

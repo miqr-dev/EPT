@@ -62,17 +62,18 @@ function closeModal() {
 
 async function downloadUnifiedPdf() {
   isGeneratingPdf.value = true;
-  await nextTick();
+  await nextTick(); // Wait for the v-if to render the component
 
-  const el = pdfTemplateRef.value?.$el as HTMLElement | undefined;
-  if (el) {
-    const filename = `${props.participant.name}_${props.assignment.test.name}_Ergebnis.pdf`;
-    await generatePdfFromElement(el, filename);
-  } else {
-    console.error("PDF template element not found.");
-  }
-
-  isGeneratingPdf.value = false;
+  setTimeout(async () => {
+    const el = pdfTemplateRef.value?.$el as HTMLElement | undefined;
+    if (el) {
+      const filename = `${props.participant.name}_${props.assignment.test.name}_Ergebnis.pdf`;
+      await generatePdfFromElement(el, filename);
+    } else {
+      console.error("PDF template element not found.");
+    }
+    isGeneratingPdf.value = false;
+  }, 200); // 200ms delay
 }
 
 </script>
@@ -99,7 +100,7 @@ async function downloadUnifiedPdf() {
   </Dialog>
 
   <!-- Hidden template for PDF generation -->
-  <div v-show="isGeneratingPdf" class="fixed top-0 left-0" style="z-index: -1; width: 210mm; height: 297mm;">
+  <div v-if="isGeneratingPdf" class="fixed top-0 left-0" style="z-index: -1; width: 1200px;">
       <PdfTemplate
         v-if="assignment"
         ref="pdfTemplateRef"
