@@ -1,5 +1,9 @@
 <script setup lang="ts">
-const { results } = defineProps<{ results: any }>()
+const props = defineProps<{
+  results: any;
+  showAnswers: boolean;
+}>();
+const { results } = props;
 
 function formatTime(sec: number | null | undefined): string {
   if (sec == null || isNaN(sec)) return '–'
@@ -71,7 +75,7 @@ const scales = [
       </table>
     </div>
 
-    <details v-if="results.answers" class="mb-6">
+    <details v-if="showAnswers && results.answers" class="mb-6">
       <summary class="cursor-pointer select-none px-2 py-1 bg-muted/40 rounded">
         Antworten
       </summary>
