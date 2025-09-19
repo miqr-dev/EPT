@@ -73,7 +73,7 @@ class RedirectBasedOnRole
 
       if ($user->role === 'participant') {
         $profile = $user->participantProfile;
-        $profileComplete = $profile && $profile->birthday && $profile->sex && $profile->marital_status && $profile->household;
+        $profileComplete = $profile && $profile->birthday && $profile->sex;
 
         $allowedRoutes = $participantRoutes;
         $examStarted = false;
@@ -111,6 +111,3 @@ class RedirectBasedOnRole
     return $next($request);
   }
 }
-
-
-

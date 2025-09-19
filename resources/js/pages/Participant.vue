@@ -49,27 +49,27 @@ const handleLogout = () => {
 };
 
 // Dropdown options
-const educationOptions = [
-  'vor der letzten Hauptschulklasse abgeschlossen',
-  'mit der letzten Hauptschulklasse abgeschlossen',
-  'Real oder Gesamtschule ohne Abschlussprüfung',
-  'Real oder Gesamtschule mit Abschlussprüfung',
-  'Gymnasium ohne Abitur',
-  'Abitur ohne anschließendes Studium',
-  'Abitur mit nicht abgeschlossenem Studium',
-  'Abitur mit abgeschlossenem Studium',
-  'Berufsschule'
-]
-const maritalStatusOptions = [
-  { value: 'single', label: 'Ledig' },
-  { value: 'married', label: 'Verheiratet' },
-  { value: 'divorced/separated', label: 'Geschieden/Getrennt' },
-  { value: 'widowed', label: 'Verwitwet' }
-]
-const householdOptions = [
-  { value: 'single', label: 'Allein lebend' },
-  { value: 'with_partner', label: 'Mit Partner/in' }
-]
+// const educationOptions = [
+//   'vor der letzten Hauptschulklasse abgeschlossen',
+//   'mit der letzten Hauptschulklasse abgeschlossen',
+//   'Real oder Gesamtschule ohne Abschlussprüfung',
+//   'Real oder Gesamtschule mit Abschlussprüfung',
+//   'Gymnasium ohne Abitur',
+//   'Abitur ohne anschließendes Studium',
+//   'Abitur mit nicht abgeschlossenem Studium',
+//   'Abitur mit abgeschlossenem Studium',
+//   'Berufsschule'
+// ]
+// const maritalStatusOptions = [
+//   { value: 'single', label: 'Ledig' },
+//   { value: 'married', label: 'Verheiratet' },
+//   { value: 'divorced/separated', label: 'Geschieden/Getrennt' },
+//   { value: 'widowed', label: 'Verwitwet' }
+// ]
+// const householdOptions = [
+//   { value: 'single', label: 'Allein lebend' },
+//   { value: 'with_partner', label: 'Mit Partner/in' }
+// ]
 </script>
 
 <template>
@@ -118,7 +118,7 @@ const householdOptions = [
             </select>
             <p v-if="form.errors.sex" class="text-sm text-red-600 dark:text-red-400">{{ form.errors.sex }}</p>
           </div>
-          <div>
+          <!-- <div>
             <label class="block mb-1">Schulabschluss</label>
             <select v-model="form.education" required
               class="border rounded px-2 py-2 w-full bg-white dark:bg-gray-700 dark:text-gray-100 transition">
@@ -182,7 +182,7 @@ const householdOptions = [
             <p v-if="form.errors.profession_group_id" class="text-sm text-red-600 dark:text-red-400">
               {{ form.errors.profession_group_id }}
             </p>
-          </div>
+          </div> -->
         </div>
         <div class="pt-4 flex justify-end">
           <button type="submit"

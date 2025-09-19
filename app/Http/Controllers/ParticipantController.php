@@ -55,14 +55,17 @@ class ParticipantController extends Controller
     $data = $request->validate([
       'birthday'             => 'required|date',
       'sex'                  => 'required|string|max:255',
-      'education'            => 'nullable|string|max:255',
-      'marital_status'       => 'required|string|max:255',
-      'household'            => 'required|string|max:255',
       'employed_id'          => 'nullable|exists:employeds,id',
       'profession_group_id'  => 'nullable|exists:profession_groups,id',
     ]);
 
     $data['age'] = \Carbon\Carbon::parse($data['birthday'])->age;
+
+    foreach (['education', 'marital_status', 'household', 'employed_id', 'profession_group_id'] as $optionalField) {
+      if (array_key_exists($optionalField, $data) && $data[$optionalField] === '') {
+        $data[$optionalField] = null;
+      }
+    }
 
     $profile = $user->participantProfile ?: new ParticipantProfile(['user_id' => $user->id]);
     $profile->fill($data)->save();

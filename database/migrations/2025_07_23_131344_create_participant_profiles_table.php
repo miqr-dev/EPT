@@ -16,8 +16,8 @@ return new class extends Migration {
       $table->unsignedTinyInteger('age')->nullable(); // Can be calculated, but store for fast filtering
       $table->string('sex');
       $table->string('education')->nullable();
-      $table->string('marital_status');
-      $table->string('household');
+      $table->string('marital_status')->nullable();
+      $table->string('household')->nullable();
       $table->foreignId('employed_id')->nullable()->constrained('employeds');
       $table->foreignId('profession_group_id')->nullable()->constrained('profession_groups');
       $table->timestamps();

@@ -44,7 +44,7 @@ class AuthenticatedSessionController extends Controller
     $user = $request->user();
     if ($user->role === 'participant') {
       $profile = $user->participantProfile;
-      $profileComplete = $profile && $profile->birthday && $profile->sex && $profile->marital_status && $profile->household;
+      $profileComplete = $profile && $profile->birthday && $profile->sex;
       if (!$profileComplete) {
         return redirect()->intended(route('participant.onboarding', absolute: false));
       }
