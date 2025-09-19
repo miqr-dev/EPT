@@ -32,6 +32,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('/no-exam', [ParticipantController::class, 'noExam'])->name('participant.no-exam');
     Route::post('/my-exam/start-step', [ParticipantController::class, 'startStep'])->name('my-exam.start-step');
     Route::post('/my-exam/complete-step', [ParticipantController::class, 'completeStep'])->name('my-exam.complete-step');
+    Route::post('/my-exam/pause-step', [ParticipantController::class, 'pauseStep'])->name('my-exam.pause-step');
     Route::post('/my-exam/break-step', [ParticipantController::class, 'breakStep'])->name('my-exam.break-step');
 
     // Exam management (teacher/admin only, add middleware if needed)

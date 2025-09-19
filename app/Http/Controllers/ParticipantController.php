@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ParticipantProfile;
@@ -138,6 +139,10 @@ class ParticipantController extends Controller
     $examStepStatus->update([
       'status' => 'in_progress',
       'started_at' => now(),
+      'pause_button_enabled' => false,
+      'paused_from_status' => null,
+      'paused_results' => null,
+      'time_remaining_seconds' => null,
     ]);
 
     return back(303);
@@ -220,6 +225,57 @@ class ParticipantController extends Controller
     }
 
     return back(303);
+  }
+
+  public function pauseStep(Request $request)
+  {
+    $user = Auth::user();
+    $data = $request->validate([
+      'exam_step_id' => 'required|exists:exam_steps,id',
+      'results' => 'nullable',
+    ]);
+
+    $examStepStatus = ExamStepStatus::with('step')
+      ->where('participant_id', $user->id)
+      ->where('exam_step_id', $data['exam_step_id'])
+      ->firstOrFail();
+
+    if (!$examStepStatus->pause_button_enabled) {
+      return back(303)->with('error', 'Pause ist derzeit nicht aktiviert.');
+    }
+
+    if ($examStepStatus->status !== 'in_progress') {
+      return back(303)->with('error', 'Dieser Test kann aktuell nicht pausiert werden.');
+    }
+
+    $exam = Exam::find($examStepStatus->exam_id);
+    $examStepStatus->loadMissing('step');
+    $stepDurationMinutes = $examStepStatus->step->duration ?? $exam?->currentStep?->duration ?? 0;
+    $totalDurationSeconds = max(0, (int) $stepDurationMinutes * 60
+      + (int) $examStepStatus->extra_time * 60
+      + (int) $examStepStatus->grace_period_seconds);
+
+    $timeRemaining = $totalDurationSeconds;
+
+    if ($examStepStatus->started_at) {
+      $startTime = Carbon::parse($examStepStatus->started_at);
+      $endTime = $startTime->copy()->addSeconds($totalDurationSeconds);
+      $timeRemaining = now()->diffInSeconds($endTime, false);
+    }
+
+    $timeRemaining = max(0, (int) $timeRemaining);
+
+    $previousStatus = $examStepStatus->status;
+
+    $examStepStatus->update([
+      'status' => 'paused',
+      'paused_from_status' => $previousStatus,
+      'time_remaining_seconds' => $timeRemaining,
+      'pause_button_enabled' => false,
+      'paused_results' => $data['results'] ?? null,
+    ]);
+
+    return back(303)->with('success', 'Der Test wurde pausiert.');
   }
 
   public function breakStep(Request $request)
