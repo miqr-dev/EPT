@@ -51,6 +51,8 @@ const userName = computed(() => page.props.auth?.user?.name);
 const activeTestComponent = shallowRef<unknown>(null);
 const isTestDialogOpen = ref(false);
 const activeStepId = ref<number | null>(null);
+const activeTestInstance = ref<{ getPausePayload?: () => unknown } | null>(null);
+const isPauseRequestInFlight = ref(false);
 
 const testComponents: Record<string, unknown> = {
     'BRT-A': BRTA,
@@ -122,6 +124,9 @@ function getStepActionLabel(stepId: number) {
     if (status === 'in_progress') {
         return 'Test fortsetzen';
     }
+    if (status === 'paused') {
+        return 'Test pausiert';
+    }
 
     return 'Test starten';
 }
@@ -143,6 +148,104 @@ function isStepActionDisabled(step: ExamStepInfo) {
     return status === 'completed' || status === 'broken' || status === 'paused';
 }
 
+const activeStepStatus = computed(() =>
+    typeof activeStepId.value === 'number' ? stepStatuses.value[activeStepId.value] : null,
+);
+
+const canUsePauseButton = computed(() => {
+    if (!isTestDialogOpen.value) {
+        return false;
+    }
+
+    if (props.exam.status !== 'in_progress') {
+        return false;
+    }
+
+    if (!activeStepStatus.value) {
+        return false;
+    }
+
+    if (activeStepStatus.value.status !== 'in_progress') {
+        return false;
+    }
+
+    return Boolean(activeStepStatus.value.pause_button_enabled);
+});
+
+const isPauseButtonDisabled = computed(
+    () => !canUsePauseButton.value || isPauseRequestInFlight.value,
+);
+
+const pauseButtonTitle = computed(() => {
+    if (!isTestDialogOpen.value) {
+        return '';
+    }
+
+    if (!activeStepStatus.value) {
+        return '';
+    }
+
+    if (isPauseRequestInFlight.value) {
+        return 'Pause wird ausgeführt...';
+    }
+
+    if (activeStepStatus.value.status !== 'in_progress') {
+        return 'Pause steht derzeit nicht zur Verfügung.';
+    }
+
+    if (!activeStepStatus.value.pause_button_enabled) {
+        return 'Der Prüfer muss die Pause aktivieren.';
+    }
+
+    return 'Test pausieren und Ergebnisse sichern.';
+});
+
+function getPausePayload() {
+    const instance = activeTestInstance.value;
+
+    if (!instance || typeof instance.getPausePayload !== 'function') {
+        return null;
+    }
+
+    try {
+        return instance.getPausePayload();
+    } catch (error) {
+        console.error('Fehler beim Erfassen der Pausendaten', error);
+        return null;
+    }
+}
+
+function pauseActiveTest() {
+    if (typeof activeStepId.value !== 'number') {
+        return;
+    }
+
+    if (isPauseButtonDisabled.value) {
+        return;
+    }
+
+    const payload = getPausePayload();
+
+    isPauseRequestInFlight.value = true;
+
+    router.post(
+        '/my-exam/pause-step',
+        {
+            exam_step_id: activeStepId.value,
+            results: payload ?? null,
+        },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                closeTestDialog();
+            },
+            onFinish: () => {
+                isPauseRequestInFlight.value = false;
+            },
+        },
+    );
+}
+
 function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
     const component = testComponents[step.test.name];
 
@@ -156,6 +259,7 @@ function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
 
     const showDialog = () => {
         finishing.value = false;
+        isPauseRequestInFlight.value = false;
         isTestDialogOpen.value = true;
         nextTick(() => {
             requestFullscreen();
@@ -218,6 +322,7 @@ function closeTestDialog({ resetActive = false }: { resetActive?: boolean } = {}
     }
 
     cleanupAfterTest();
+    isPauseRequestInFlight.value = false;
 
     if (resetActive) {
         if (typeof activeStepId.value === 'number') {
@@ -225,6 +330,7 @@ function closeTestDialog({ resetActive = false }: { resetActive?: boolean } = {}
         }
         activeStepId.value = null;
         activeTestComponent.value = null;
+        activeTestInstance.value = null;
     }
 }
 
@@ -256,17 +362,6 @@ function handleRemoteResume(stepId: number, status: StepStatus) {
     if (status !== 'in_progress') {
         return;
     }
-
-    if (isTestDialogOpen.value) {
-        return;
-    }
-
-    const step = props.exam.steps.find((candidate) => candidate.id === stepId);
-    if (!step) {
-        return;
-    }
-
-    startTest(step, { skipServerStart: true });
 }
 
 // --- Fullscreen and Anti-Cheating ---
@@ -467,13 +562,26 @@ watch(
                                             class="inset-0 top-0 left-0 h-screen w-screen max-w-none translate-x-0 translate-y-0 overflow-auto rounded-none border-none bg-white p-0 text-black sm:max-w-none dark:bg-gray-900 dark:text-white"
                                         >
                                             <template #top-right>
-                                                <div class="absolute top-4 right-4 font-semibold">{{ userName }}</div>
+                                                <div class="absolute top-4 right-4 flex items-center gap-3">
+                                                    <span class="font-semibold">{{ userName }}</span>
+                                                    <Button
+                                                        v-if="activeStepStatus"
+                                                        size="sm"
+                                                        variant="outline"
+                                                        :disabled="isPauseButtonDisabled"
+                                                        :title="pauseButtonTitle"
+                                                        @click="pauseActiveTest"
+                                                    >
+                                                        {{ isPauseRequestInFlight ? 'Wird pausiert…' : 'Pause' }}
+                                                    </Button>
+                                                </div>
                                             </template>
                                             <KeepAlive>
                                                 <component
                                                     v-if="activeTestComponent"
                                                     :is="activeTestComponent"
                                                     :key="activeStepId ?? 'inactive'"
+                                                    ref="activeTestInstance"
                                                     class="h-full w-full"
                                                     @complete="completeTest"
                                                 />
