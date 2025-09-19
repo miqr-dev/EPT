@@ -142,6 +142,14 @@ const bit2NormTables: Record<'m' | 'f', NormRow[]> = {
 
 const normTable = computed(() => bit2NormTables[props.participantProfile?.sex === 'f' ? 'f' : 'm']);
 
+const highlightPercentilePrefixes = ['85', '20'];
+
+function shouldHighlightRow(percentile: NormRow['percentile']) {
+    const normalized = `${percentile ?? ''}`.trim();
+    return highlightPercentilePrefixes.some((prefix) => normalized.startsWith(prefix));
+}
+
+
 const highlighted = computed(() => {
     const map: Record<string, number | null> = {};
     if (!local.value) return map;
@@ -250,7 +258,7 @@ const fpiRohwerte = computed(() => {
                         v-for="(row, rIdx) in normTable"
                         :key="rIdx"
                         :class="{
-                            'border-b-2 border-blue-500': ['85-', '20-'].includes(row.percentile as string),
+                            'border-b-2 border-blue-500': shouldHighlightRow(row.percentile),
                         }"
                     >
                         <td class="px-2 py-1 text-center">{{ row.percentile }}</td>
