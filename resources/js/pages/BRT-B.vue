@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -202,6 +202,32 @@ const startTest = () => {
   questionStartTimestamps.value = Array(questions.value.length).fill(null);
   startTime.value = null;
 };
+
+const getProgress = () => {
+  const now = Date.now();
+  const timesSnapshot = questionTimes.value.map((stored, index) => {
+    const startedAt = questionStartTimestamps.value[index];
+    if (startedAt) {
+      return stored + Math.round((now - startedAt) / 1000);
+    }
+    return stored;
+  });
+
+  return {
+    answers: [...userAnswers.value],
+    questionTimes: timesSnapshot,
+    currentQuestionIndex: currentQuestionIndex.value,
+    isTestComplete: isTestComplete.value,
+    showTest: showTest.value,
+    nextButtonClickCount: nextButtonClickCount.value,
+    startedAt: startTime.value,
+    elapsedSeconds: startTime.value ? Math.round((now - startTime.value) / 1000) : null,
+    totalQuestions: questions.value.length,
+    capturedAt: now,
+  };
+};
+
+defineExpose({ getProgress });
 
 </script>
 
