@@ -108,7 +108,10 @@ const isTestComplete = ref(false)
 const page = usePage<{ auth: { user: { name: string } } }>()
 const userName = computed(() => page.props.auth?.user?.name ?? '')
 
-const emit = defineEmits(['complete'])
+const props = defineProps<{
+  pauseEnabled?: boolean;
+}>();
+const emit = defineEmits(['complete', 'pause'])
 
 const endConfirmOpen = ref(false)
 
@@ -246,6 +249,14 @@ const totalTimeTaken = computed(() => {
   <div class="p-4">
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">L-M-T</h1>
+      <Button
+        v-if="showTest && !isTestComplete"
+        :disabled="!pauseEnabled"
+        @click="emit('pause')"
+        variant="secondary"
+      >
+        Pause
+      </Button>
     </div>
     <div class="max-w-5xl mx-auto p-6 bg-background border border-border rounded shadow space-y-8 text-foreground">
 

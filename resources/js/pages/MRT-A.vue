@@ -31,7 +31,10 @@ const userAge = computed<number | null>(() => {
   const age = profile.value?.age;
   return typeof age === 'number' ? age : age ? Number(age) : null;
 });
-const emit = defineEmits(['complete']);
+const props = defineProps<{
+  pauseEnabled?: boolean;
+}>();
+const emit = defineEmits(['complete', 'pause']);
 const endConfirmOpen = ref(false);
 
 const showResults = ref(false);
@@ -223,6 +226,14 @@ const startTest = () => {
   <div class="p-4">
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">MRT-A</h1>
+      <Button
+        v-if="showTest && !isTestComplete"
+        :disabled="!pauseEnabled"
+        @click="emit('pause')"
+        variant="secondary"
+      >
+        Pause
+      </Button>
     </div>
     <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
       <div class="flex-1 flex flex-col gap-4">

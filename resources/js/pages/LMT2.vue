@@ -6,6 +6,11 @@ import { Button } from '@/components/ui/button'
 
 import { LMT_QUESTIONS, LMTQuestion } from '@/pages/Questions/LMTQuestions'
 
+const props = defineProps<{
+  pauseEnabled?: boolean;
+}>();
+const emit = defineEmits(['complete', 'pause']);
+
 const breadcrumbs = [
   { title: 'Tests', href: '/tests' },
   { title: 'LMT', href: '/tests/lmt' },
@@ -117,6 +122,17 @@ function formatTime(sec: number | null): string {
 
   <Head title="LMT" />
   <AppLayout :breadcrumbs="breadcrumbs">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold">L-M-T</h1>
+      <Button
+        v-if="showTest && !isTestComplete"
+        :disabled="!pauseEnabled"
+        @click="emit('pause')"
+        variant="secondary"
+      >
+        Pause
+      </Button>
+    </div>
     <div class="max-w-3xl mx-auto p-6 bg-white border rounded-lg shadow space-y-8">
 
       <!-- Start Screen -->

@@ -12,7 +12,10 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
-const emit = defineEmits(['complete']);
+const props = defineProps<{
+  pauseEnabled?: boolean;
+}>();
+const emit = defineEmits(['complete', 'pause']);
 
 interface Question {
   text: string;
@@ -211,6 +214,14 @@ const startTest = () => {
   <div class="p-4">
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">BRT-B</h1>
+      <Button
+        v-if="showTest && !isTestComplete"
+        :disabled="!pauseEnabled"
+        @click="emit('pause')"
+        variant="secondary"
+      >
+        Pause
+      </Button>
     </div>
     <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20">
       <!-- Sidebar Navigation: Only visible during the test -->

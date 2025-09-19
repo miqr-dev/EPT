@@ -12,7 +12,10 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
-const emit = defineEmits(['complete']);
+const props = defineProps<{
+  pauseEnabled?: boolean;
+}>();
+const emit = defineEmits(['complete', 'pause']);
 // Settings
 const QUESTIONS_PER_BLOCK = 24;
 
@@ -150,6 +153,14 @@ function finishTest() {
   <div class="p-4">
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">FPI-R</h1>
+      <Button
+        v-if="showTest && !finished"
+        :disabled="!pauseEnabled"
+        @click="emit('pause')"
+        variant="secondary"
+      >
+        Pause
+      </Button>
     </div>
     <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
 
