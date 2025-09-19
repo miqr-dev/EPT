@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('/my-exam', [ParticipantController::class, 'examLauncher'])->name('my-exam');
     Route::get('/no-exam', [ParticipantController::class, 'noExam'])->name('participant.no-exam');
     Route::post('/my-exam/start-step', [ParticipantController::class, 'startStep'])->name('my-exam.start-step');
+    Route::post('/my-exam/pause-step', [ParticipantController::class, 'pauseStep'])->name('my-exam.pause-step');
     Route::post('/my-exam/complete-step', [ParticipantController::class, 'completeStep'])->name('my-exam.complete-step');
     Route::post('/my-exam/break-step', [ParticipantController::class, 'breakStep'])->name('my-exam.break-step');
 
@@ -46,6 +47,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::post('/exams/{exam}/next-step', [ExamController::class, 'nextStep'])->name('exams.next-step');
     Route::post('/exams/{exam}/set-status', [ExamController::class, 'setStatus'])->name('exams.set-status');
     Route::post('/exams/{exam}/set-step', [ExamController::class, 'setStep'])->name('exams.set-step');
+    Route::post('/exams/{exam}/toggle-pause', [ExamController::class, 'togglePause'])->name('exams.toggle-pause');
     Route::post('/exams/{exam}/participants/{participant}/step-status', [ExamController::class, 'setParticipantStepStatus'])
         ->name('exams.participants.set-step-status');
 

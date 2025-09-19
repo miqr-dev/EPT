@@ -407,4 +407,18 @@ class ExamController extends Controller
     }
     return redirect()->route('dashboard')->with('success', 'Exam steps updated successfully!');
   }
+
+  public function togglePause(Request $request, Exam $exam)
+  {
+    $data = $request->validate([
+      'step_id' => 'required|exists:exam_steps,id',
+      'pause_enabled' => 'required|boolean',
+    ]);
+
+    $exam->stepStatuses()
+      ->where('exam_step_id', $data['step_id'])
+      ->update(['pause_enabled' => $data['pause_enabled']]);
+
+    return back(303)->with('success', 'Pause status updated.');
+  }
 }

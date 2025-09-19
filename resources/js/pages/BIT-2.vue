@@ -5,7 +5,10 @@ import { BIT2_QUESTIONS } from '@/pages/Questions/BIT2Questions';
 import { Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
-const emit = defineEmits(['complete']);
+const props = defineProps<{
+  pauseEnabled?: boolean;
+}>();
+const emit = defineEmits(['complete', 'pause']);
 
 const showTest = ref(false);
 const pageIndex = ref(0); // 0 first 27, 1 remaining
@@ -53,6 +56,14 @@ function confirmEnd() {
     <div class="p-4">
         <div class="mb-4 flex items-center justify-between">
             <h1 class="text-2xl font-bold">BIT-2</h1>
+            <Button
+                v-if="showTest"
+                :disabled="!pauseEnabled"
+                @click="emit('pause')"
+                variant="secondary"
+            >
+                Pause
+            </Button>
         </div>
         <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4">
             <div class="flex flex-1 flex-col gap-4">

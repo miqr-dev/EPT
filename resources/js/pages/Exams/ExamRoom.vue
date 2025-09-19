@@ -73,6 +73,12 @@ const hasPausedStep = computed(() =>
     Object.values(stepStatuses.value || {}).some((status) => status?.status === 'paused'),
 );
 
+const isPauseEnabled = computed(() => {
+    if (!activeStepId.value) return false;
+    const status = stepStatuses.value[activeStepId.value];
+    return status?.pause_enabled ?? false;
+});
+
 function normalizeStepStatuses(statuses: Record<number, StepStatusEntry> | undefined) {
     if (!statuses) {
         return {} as Record<number, StepStatusEntry>;
@@ -119,7 +125,7 @@ function handleStepActionClick(step: ExamStepInfo) {
 
 function getStepActionLabel(stepId: number) {
     const status = stepStatuses.value[stepId]?.status;
-    if (status === 'in_progress') {
+    if (status === 'in_progress' || status === 'paused') {
         return 'Test fortsetzen';
     }
 
@@ -140,7 +146,7 @@ function isStepActionDisabled(step: ExamStepInfo) {
         return true;
     }
 
-    return status === 'completed' || status === 'broken' || status === 'paused';
+    return status === 'completed' || status === 'broken';
 }
 
 function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
@@ -177,6 +183,22 @@ function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
         {
             preserveScroll: true,
             onSuccess: showDialog,
+        },
+    );
+}
+
+function pauseTest() {
+    if (!activeStepId.value) return;
+
+    router.post(
+        '/my-exam/pause-step',
+        {
+            exam_step_id: activeStepId.value,
+        },
+        {
+            onSuccess: () => {
+                closeTestDialog({ resetActive: true });
+            },
         },
     );
 }
@@ -475,7 +497,9 @@ watch(
                                                     :is="activeTestComponent"
                                                     :key="activeStepId ?? 'inactive'"
                                                     class="h-full w-full"
+                                                    :pause-enabled="isPauseEnabled"
                                                     @complete="completeTest"
+                                                    @pause="pauseTest"
                                                 />
                                             </KeepAlive>
                                         </DialogContent>

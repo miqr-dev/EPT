@@ -5,6 +5,11 @@ import { ref, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
+const props = defineProps<{
+  pauseEnabled?: boolean;
+}>();
+const emit = defineEmits(['complete', 'pause']);
+
 // ---------- NAV ----------
 const page = ref(1)
 const nextPage = () => { if (page.value < 7) page.value++ }
@@ -135,6 +140,16 @@ const percentage = computed(() => {
 <template>
   <Head title="Konzentrationstest" />
   <div class="p-4 md:p-8 max-w-[900px] mx-auto">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold">Konzentrationstest</h1>
+        <Button
+            :disabled="!pauseEnabled"
+            @click="emit('pause')"
+            variant="secondary"
+        >
+            Pause
+        </Button>
+    </div>
     <!-- ======================== PAGE 1 ======================== -->
     <div v-if="page === 1">
       <div class="flex items-baseline gap-2">

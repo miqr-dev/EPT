@@ -128,13 +128,67 @@ class ParticipantController extends Controller
   public function startStep(Request $request)
   {
     $user = Auth::user();
-    $examStepStatus = ExamStepStatus::where('participant_id', $user->id)
+    $examStepStatus = ExamStepStatus::with('step')->where('participant_id', $user->id)
       ->where('exam_step_id', $request->input('exam_step_id'))
       ->firstOrFail();
 
+    if ($examStepStatus->status === 'paused') {
+        $stepDurationMinutes = $examStepStatus->step->duration ?? 0;
+        $totalDurationSeconds = max(0, (int) $stepDurationMinutes * 60
+          + (int) $examStepStatus->extra_time * 60
+          + (int) $examStepStatus->grace_period_seconds);
+
+        $timeRemaining = max(0, (int) ($examStepStatus->time_remaining_seconds ?? $totalDurationSeconds));
+        $elapsed = max(0, $totalDurationSeconds - $timeRemaining);
+
+        $examStepStatus->update([
+            'status' => 'in_progress',
+            'started_at' => $totalDurationSeconds > 0 ? now()->subSeconds($elapsed) : now(),
+            'time_remaining_seconds' => null,
+            'paused_from_status' => null,
+        ]);
+    } else {
+        $examStepStatus->update([
+          'status' => 'in_progress',
+          'started_at' => now(),
+        ]);
+    }
+
+    return back(303);
+  }
+
+  public function pauseStep(Request $request)
+  {
+    $user = Auth::user();
+    $examStepStatus = ExamStepStatus::with('step.test')->where('participant_id', $user->id)
+      ->where('exam_step_id', $request->input('exam_step_id'))
+      ->firstOrFail();
+
+    if (!$examStepStatus->pause_enabled) {
+      return back(303)->with('error', 'Pause is not enabled for this test.');
+    }
+
+    if ($examStepStatus->status === 'paused') {
+        return back(303);
+    }
+
+    $stepDurationMinutes = $examStepStatus->step->duration ?? 0;
+    $totalDurationSeconds = max(0, (int) $stepDurationMinutes * 60
+      + (int) $examStepStatus->extra_time * 60
+      + (int) $examStepStatus->grace_period_seconds);
+
+    $timeRemaining = $totalDurationSeconds;
+
+    if ($examStepStatus->status === 'in_progress' && $examStepStatus->started_at) {
+      $startTime = \Carbon\Carbon::parse($examStepStatus->started_at);
+      $endTime = $startTime->copy()->addSeconds($totalDurationSeconds);
+      $timeRemaining = now()->diffInSeconds($endTime, false);
+    }
+
     $examStepStatus->update([
-      'status' => 'in_progress',
-      'started_at' => now(),
+      'status' => 'paused',
+      'time_remaining_seconds' => max(0, (int) $timeRemaining),
+      'paused_from_status' => $examStepStatus->status,
     ]);
 
     return back(303);

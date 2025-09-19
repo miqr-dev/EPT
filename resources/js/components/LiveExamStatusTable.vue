@@ -164,6 +164,27 @@ const canResumeParticipant = (participant: any) => {
   return status.status === 'paused'
 }
 
+const isPauseEnabled = computed(() => {
+  if (!localExam.value?.current_step) return false
+  const participant = localExam.value?.participants?.[0]
+  if (!participant) return false
+  const status = getParticipantStatus(participant)
+  return status?.pause_enabled ?? false
+})
+
+const togglePause = () => {
+  if (!localExam.value?.current_exam_step_id) return
+  router.post(
+    route('exams.toggle-pause', { exam: props.exam.id }),
+    {
+      step_id: localExam.value.current_exam_step_id,
+      pause_enabled: !isPauseEnabled.value,
+    },
+    {
+      preserveScroll: true,
+    },
+  )
+}
 </script>
 
 <template>
@@ -185,6 +206,10 @@ const canResumeParticipant = (participant: any) => {
             Prüfung beenden
           </Button>
           <template v-if="exam.status === 'in_progress'">
+            <Button @click="togglePause">
+              <span v-if="isPauseEnabled">Pause deaktivieren</span>
+              <span v-else>Pause activieren</span>
+            </Button>
             <Button v-for="step in firstStepRow" :key="step.id" @click="setStep(step.id)"
               :disabled="exam.current_exam_step_id === step.id">
               {{ step.test.name }} starten
