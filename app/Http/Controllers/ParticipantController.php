@@ -270,6 +270,21 @@ class ParticipantController extends Controller
         return response()->json(['message' => 'Progress saved.']);
     }
 
+    public function acknowledgePause(Request $request)
+    {
+        $user = Auth::user();
+        $examStepStatus = ExamStepStatus::where('participant_id', $user->id)
+            ->where('exam_step_id', $request->input('exam_step_id'))
+            ->firstOrFail();
+
+        $examStepStatus->update([
+            'status' => 'paused',
+            'pause_requested_at' => null,
+        ]);
+
+        return response()->json(['message' => 'Pause acknowledged.']);
+    }
+
   public function breakStep(Request $request)
   {
     $user = Auth::user();

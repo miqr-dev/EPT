@@ -343,14 +343,14 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
 let autosaveInterval: NodeJS.Timeout | null = null;
 
 async function autosave() {
-    if (!activeStepId.value || !activeTestComponentRef.value) return;
+    if (!activeStepId.value || !activeTestComponentRef.value) return Promise.resolve();
 
     const results = activeTestComponentRef.value?.getResults
         ? await activeTestComponentRef.value.getResults()
         : null;
 
     if (results) {
-        router.post(
+        return router.post(
             '/my-exam/autosave-progress',
             {
                 exam_step_id: activeStepId.value,
@@ -362,6 +362,7 @@ async function autosave() {
             },
         );
     }
+    return Promise.resolve();
 }
 
 // --- Polling ---
@@ -378,6 +379,16 @@ onUnmounted(() => {
 });
 
 let hasSyncedInitialStatuses = false;
+const previousPauseRequestAt = ref<Record<number, string | null>>({});
+
+async function handlePauseRequest(stepId: number) {
+    await autosave();
+    router.post('/my-exam/acknowledge-pause', { exam_step_id: stepId }, {
+        preserveScroll: true,
+        preserveState: true,
+    });
+}
+
 watch(
     () => props.stepStatuses,
     (newStatuses) => {
@@ -397,6 +408,11 @@ watch(
             const currentStatus = normalized[id]?.status;
 
             if (hasSyncedInitialStatuses) {
+                const pauseRequestedAt = normalized[id]?.pause_requested_at;
+                if (pauseRequestedAt && previousPauseRequestAt.value[id] !== pauseRequestedAt) {
+                    handlePauseRequest(id);
+                }
+
                 if (currentStatus === 'paused' && prevStatus !== 'paused') {
                     handleRemotePause(id);
                 } else if (prevStatus === 'paused' && currentStatus && currentStatus !== 'paused') {
@@ -406,9 +422,11 @@ watch(
 
             if (typeof currentStatus === 'undefined') {
                 delete previousStatusByStep.value[id];
+                delete previousPauseRequestAt.value[id];
                 remotelyPausedStepIds.delete(id);
             } else {
                 previousStatusByStep.value[id] = currentStatus;
+                previousPauseRequestAt.value[id] = normalized[id]?.pause_requested_at;
             }
         });
 

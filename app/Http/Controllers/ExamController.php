@@ -344,15 +344,11 @@ class ExamController extends Controller
         $timeRemaining = now()->diffInSeconds($endTime, false);
       }
 
-      $timeRemaining = max(0, (int) $timeRemaining);
-
       $status->update([
-        'status' => 'paused',
-        'paused_from_status' => $status->status,
-        'time_remaining_seconds' => $timeRemaining,
+        'pause_requested_at' => now(),
       ]);
 
-      return back(303)->with('success', 'Teilnehmer wurde pausiert.');
+      return back(303)->with('success', 'Pause request sent to participant.');
     }
 
     if ($status->status !== 'paused') {
