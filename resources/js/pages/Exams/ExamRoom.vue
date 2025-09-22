@@ -164,6 +164,8 @@ function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
             document.addEventListener('fullscreenchange', handleFullscreenChange);
             window.addEventListener('start-finish', beginFinish as EventListener);
             window.addEventListener('cancel-finish', cancelFinish as EventListener);
+            if (autosaveInterval) clearInterval(autosaveInterval);
+            autosaveInterval = setInterval(autosave, 15000);
         });
     };
 
@@ -251,6 +253,10 @@ function closeTestDialog({ resetActive = false }: { resetActive?: boolean } = {}
 }
 
 function cleanupAfterTest() {
+    if (autosaveInterval) {
+        clearInterval(autosaveInterval);
+        autosaveInterval = null;
+    }
     window.removeEventListener('beforeunload', handleBeforeUnload);
     document.removeEventListener('fullscreenchange', handleFullscreenChange);
     window.removeEventListener('start-finish', beginFinish as EventListener);
@@ -331,6 +337,31 @@ function cancelFinish() {
 function handleBeforeUnload(event: BeforeUnloadEvent) {
     event.preventDefault();
     event.returnValue = '';
+}
+
+// --- Autosave ---
+let autosaveInterval: NodeJS.Timeout | null = null;
+
+async function autosave() {
+    if (!activeStepId.value || !activeTestComponentRef.value) return;
+
+    const results = activeTestComponentRef.value?.getResults
+        ? await activeTestComponentRef.value.getResults()
+        : null;
+
+    if (results) {
+        router.post(
+            '/my-exam/autosave-progress',
+            {
+                exam_step_id: activeStepId.value,
+                results,
+            },
+            {
+                preserveScroll: true,
+                preserveState: true,
+            },
+        );
+    }
 }
 
 // --- Polling ---

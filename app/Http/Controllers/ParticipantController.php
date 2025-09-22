@@ -252,6 +252,24 @@ class ParticipantController extends Controller
         return response()->json(['message' => 'Test paused successfully.']);
     }
 
+    public function autosaveProgress(Request $request)
+    {
+        $user = Auth::user();
+        $examStepStatus = ExamStepStatus::where('participant_id', $user->id)
+            ->where('exam_step_id', $request->input('exam_step_id'))
+            ->firstOrFail();
+
+        if ($examStepStatus->status !== 'in_progress') {
+            return response()->json(['message' => 'Test is not in progress.'], 422);
+        }
+
+        $examStepStatus->update([
+            'partial_results' => $request->input('results'),
+        ]);
+
+        return response()->json(['message' => 'Progress saved.']);
+    }
+
   public function breakStep(Request $request)
   {
     $user = Auth::user();
