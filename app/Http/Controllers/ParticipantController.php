@@ -234,8 +234,8 @@ class ParticipantController extends Controller
             return response()->json(['message' => 'Pause is not allowed for this exam.'], 403);
         }
 
-        if ($examStepStatus->status !== 'in_progress') {
-            return response()->json(['message' => 'Test is not in progress.'], 422);
+        if (!in_array($examStepStatus->status, ['in_progress', 'paused'])) {
+            return response()->json(['message' => 'Test is not in a state that can be saved.'], 422);
         }
 
         $totalDurationSeconds = ($examStepStatus->step->duration ?? 0) * 60;
