@@ -105,10 +105,24 @@ const totalPages = computed(() =>
 
 const isTestComplete = ref(false)
 
+const props = defineProps<{
+  initialResults?: {
+    userAnswers: (number | null)[];
+    questionTimes: number[];
+  }
+}>();
+
 const page = usePage<{ auth: { user: { name: string } } }>()
 const userName = computed(() => page.props.auth?.user?.name ?? '')
 
 const emit = defineEmits(['complete'])
+
+defineExpose({
+  getResults: () => ({
+    userAnswers: [...userAnswers.value],
+    questionTimes: [...questionTimes.value],
+  }),
+});
 
 const endConfirmOpen = ref(false)
 
@@ -238,6 +252,13 @@ const totalTimeTaken = computed(() => {
     ? questionTimes.value.reduce((a, b) => a + b, 0)
     : null
 })
+
+watch(() => props.initialResults, (newResults) => {
+    if (newResults) {
+        userAnswers.value = [...newResults.userAnswers];
+        questionTimes.value = [...newResults.questionTimes];
+    }
+}, { immediate: true });
 </script>
 
 <template>

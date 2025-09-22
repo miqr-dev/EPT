@@ -31,7 +31,23 @@ const userAge = computed<number | null>(() => {
   const age = profile.value?.age;
   return typeof age === 'number' ? age : age ? Number(age) : null;
 });
+const props = defineProps<{
+  initialResults?: {
+    answers: { user_answer: string | null; time_seconds: number }[];
+  }
+}>();
+
 const emit = defineEmits(['complete']);
+
+defineExpose({
+  getResults: () => ({
+    answers: userAnswers.value.map((ans, i) => ({
+      user_answer: ans,
+      time_seconds: questionTimes.value[i],
+    })),
+  }),
+});
+
 const endConfirmOpen = ref(false);
 
 const showResults = ref(false);
@@ -214,6 +230,13 @@ const startTest = () => {
   questionStartTimestamps.value = Array(mrtQuestions.length).fill(null);
   startTime.value = null;
 };
+
+watch(() => props.initialResults, (newResults) => {
+    if (newResults) {
+        userAnswers.value = newResults.answers.map(a => a.user_answer);
+        questionTimes.value = newResults.answers.map(a => a.time_seconds);
+    }
+}, { immediate: true });
 
 </script>
 

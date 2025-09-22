@@ -407,4 +407,15 @@ class ExamController extends Controller
     }
     return redirect()->route('dashboard')->with('success', 'Exam steps updated successfully!');
   }
+
+  public function togglePauseAllowance(Request $request, Exam $exam)
+  {
+    $exam->update([
+        'pause_allowed' => !$exam->pause_allowed,
+    ]);
+
+    $message = $exam->pause_allowed ? 'Pause feature has been enabled.' : 'Pause feature has been disabled.';
+
+    return back(303)->with('success', $message);
+  }
 }

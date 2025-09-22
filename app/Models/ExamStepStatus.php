@@ -15,8 +15,13 @@ class ExamStepStatus extends Model
     'duration',
     'extra_time',
     'time_remaining_seconds',
+    'partial_results',
     'started_at',
     'completed_at'
+  ];
+
+  protected $casts = [
+    'partial_results' => 'array',
   ];
 
   public function exam()

@@ -222,6 +222,36 @@ class ParticipantController extends Controller
     return back(303);
   }
 
+  public function pauseStep(Request $request)
+    {
+        $user = Auth::user();
+        $examStepStatus = ExamStepStatus::with('exam', 'step.test')
+            ->where('participant_id', $user->id)
+            ->where('exam_step_id', $request->input('exam_step_id'))
+            ->firstOrFail();
+
+        if (!$examStepStatus->exam->pause_allowed) {
+            return response()->json(['message' => 'Pause is not allowed for this exam.'], 403);
+        }
+
+        if ($examStepStatus->status !== 'in_progress') {
+            return response()->json(['message' => 'Test is not in progress.'], 422);
+        }
+
+        $totalDurationSeconds = ($examStepStatus->step->duration ?? 0) * 60;
+        $startedAt = new \Carbon\Carbon($examStepStatus->started_at);
+        $timeRemaining = $startedAt->addSeconds($totalDurationSeconds)->diffInSeconds(now());
+
+        $examStepStatus->update([
+            'status' => 'paused',
+            'paused_from_status' => 'in_progress',
+            'time_remaining_seconds' => $timeRemaining,
+            'partial_results' => $request->input('results'),
+        ]);
+
+        return response()->json(['message' => 'Test paused successfully.']);
+    }
+
   public function breakStep(Request $request)
   {
     $user = Auth::user();

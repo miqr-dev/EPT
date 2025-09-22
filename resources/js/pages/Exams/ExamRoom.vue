@@ -49,6 +49,7 @@ const page = usePage();
 const userName = computed(() => page.props.auth?.user?.name);
 
 const activeTestComponent = shallowRef<unknown>(null);
+const activeTestComponentRef = ref<any>(null);
 const isTestDialogOpen = ref(false);
 const activeStepId = ref<number | null>(null);
 
@@ -109,7 +110,7 @@ function startTest(step: ExamStepInfo, options: StartTestOptions = {}) {
 
 function handleStepActionClick(step: ExamStepInfo) {
     const status = stepStatuses.value[step.id]?.status;
-    if (status === 'in_progress') {
+    if (status === 'in_progress' || status === 'paused') {
         startTest(step, { skipServerStart: true });
         return;
     }
@@ -119,7 +120,7 @@ function handleStepActionClick(step: ExamStepInfo) {
 
 function getStepActionLabel(stepId: number) {
     const status = stepStatuses.value[stepId]?.status;
-    if (status === 'in_progress') {
+    if (status === 'in_progress' || status === 'paused') {
         return 'Test fortsetzen';
     }
 
@@ -140,7 +141,7 @@ function isStepActionDisabled(step: ExamStepInfo) {
         return true;
     }
 
-    return status === 'completed' || status === 'broken' || status === 'paused';
+    return status === 'completed' || status === 'broken';
 }
 
 function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
@@ -177,6 +178,27 @@ function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
         {
             preserveScroll: true,
             onSuccess: showDialog,
+        },
+    );
+}
+
+async function pauseTest() {
+    if (!activeStepId.value) return;
+
+    const results = activeTestComponentRef.value?.getResults
+        ? await activeTestComponentRef.value.getResults()
+        : null;
+
+    router.post(
+        '/my-exam/pause-step',
+        {
+            exam_step_id: activeStepId.value,
+            results,
+        },
+        {
+            onSuccess: () => {
+                closeTestDialog({ resetActive: true });
+            },
         },
     );
 }
@@ -467,13 +489,25 @@ watch(
                                             class="inset-0 top-0 left-0 h-screen w-screen max-w-none translate-x-0 translate-y-0 overflow-auto rounded-none border-none bg-white p-0 text-black sm:max-w-none dark:bg-gray-900 dark:text-white"
                                         >
                                             <template #top-right>
-                                                <div class="absolute top-4 right-4 font-semibold">{{ userName }}</div>
+                                                <div class="absolute top-4 right-4 z-10 flex items-center gap-4">
+                                                    <Button
+                                                        v-if="exam.pause_allowed"
+                                                        variant="secondary"
+                                                        size="sm"
+                                                        @click="pauseTest"
+                                                    >
+                                                        Pause
+                                                    </Button>
+                                                    <div class="font-semibold">{{ userName }}</div>
+                                                </div>
                                             </template>
                                             <KeepAlive>
                                                 <component
                                                     v-if="activeTestComponent"
+                                                    ref="activeTestComponentRef"
                                                     :is="activeTestComponent"
                                                     :key="activeStepId ?? 'inactive'"
+                                                    :initial-results="stepStatuses[activeStepId!]?.partial_results"
                                                     class="h-full w-full"
                                                     @complete="completeTest"
                                                 />

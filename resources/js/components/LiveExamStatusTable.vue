@@ -122,6 +122,12 @@ const startExam = () => {
   })
 }
 
+const togglePause = () => {
+  router.post(route('exams.toggle-pause', { exam: props.exam.id }), {
+    preserveScroll: true,
+  })
+}
+
 const setStep = (stepId: number) => {
   router.post(route('exams.set-step', { exam: props.exam.id }), { step_id: stepId }, {
     preserveScroll: true,
@@ -177,6 +183,9 @@ const canResumeParticipant = (participant: any) => {
           </Button>
           <Button v-if="exam.status === 'in_progress'" @click="setStatus('paused')">
             Prüfung pausieren
+          </Button>
+          <Button v-if="exam.status === 'in_progress'" @click="togglePause">
+            {{ exam.pause_allowed ? 'Pause deaktivieren' : 'Pause activieren' }}
           </Button>
           <Button v-else-if="exam.status === 'paused'" @click="setStatus('in_progress')">
             Prüfung fortsetzen
