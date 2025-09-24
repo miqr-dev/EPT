@@ -51,6 +51,7 @@ const userName = computed(() => page.props.auth?.user?.name);
 const activeTestComponent = shallowRef<unknown>(null);
 const activeTestComponentRef = ref<any>(null);
 const isTestDialogOpen = ref(false);
+const isPausePending = ref(false);
 const activeStepId = ref<number | null>(null);
 
 const testComponents: Record<string, unknown> = {
@@ -382,10 +383,18 @@ let hasSyncedInitialStatuses = false;
 const previousPauseRequestAt = ref<Record<number, string | null>>({});
 
 async function handlePauseRequest(stepId: number) {
+    isPausePending.value = true;
     await autosave();
     router.post('/my-exam/acknowledge-pause', { exam_step_id: stepId }, {
         preserveScroll: true,
         preserveState: true,
+        onSuccess: () => {
+            isPausePending.value = false;
+        },
+        onError: () => {
+            // Also reset on error to avoid getting stuck
+            isPausePending.value = false;
+        }
     });
 }
 
@@ -537,6 +546,9 @@ watch(
                                         <DialogContent
                                             class="inset-0 top-0 left-0 h-screen w-screen max-w-none translate-x-0 translate-y-0 overflow-auto rounded-none border-none bg-white p-0 text-black sm:max-w-none dark:bg-gray-900 dark:text-white"
                                         >
+                                            <div v-if="isPausePending" class="absolute inset-x-0 top-0 z-20 bg-red-600 text-white text-center p-2 font-bold animate-pulse">
+                                                Pause requested by teacher, saving final data...
+                                            </div>
                                             <template #top-right>
                                                 <div class="absolute top-4 right-4 z-10 flex items-center gap-4">
                                                     <Button
