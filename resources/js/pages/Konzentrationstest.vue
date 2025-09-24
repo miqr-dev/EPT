@@ -2,6 +2,30 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
+
+const props = defineProps<{
+  initialResults?: {
+    page1Inputs: string[];
+    page2Answers: string[];
+    page5Marks: boolean[];
+    page6Answers: string[];
+    page7Marks: boolean[];
+    page5Sum: string;
+    page7Total: string;
+  }
+}>();
+
+defineExpose({
+  getResults: () => ({
+    page1Inputs: [...page1Inputs.value],
+    page2Answers: [...page2Answers.value],
+    page5Marks: [...page5Marks.value],
+    page6Answers: [...page6Answers.value],
+    page7Marks: [...page7Marks.value],
+    page5Sum: page5Sum.value,
+    page7Total: page7Total.value,
+  }),
+});
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -130,6 +154,18 @@ const percentage = computed(() => {
   if (wrong <= 60) return '30 - 49%'
   return '0 - 29%'
 })
+
+watch(() => props.initialResults, (newResults) => {
+    if (newResults) {
+        page1Inputs.value = [...newResults.page1Inputs];
+        page2Answers.value = [...newResults.page2Answers];
+        page5Marks.value = [...newResults.page5Marks];
+        page6Answers.value = [...newResults.page6Answers];
+        page7Marks.value = [...newResults.page7Marks];
+        page5Sum.value = newResults.page5Sum;
+        page7Total.value = newResults.page7Total;
+    }
+}, { immediate: true });
 </script>
 
 <template>

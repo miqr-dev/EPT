@@ -5,7 +5,19 @@ import { BIT2_QUESTIONS } from '@/pages/Questions/BIT2Questions';
 import { Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
+const props = defineProps<{
+  initialResults?: {
+    answers: { number: number; answer: number | null }[];
+  }
+}>();
+
 const emit = defineEmits(['complete']);
+
+defineExpose({
+  getResults: () => ({
+    answers: BIT2_QUESTIONS.map((q) => ({ number: q.number, answer: answers.value[q.number] })),
+  }),
+});
 
 const showTest = ref(false);
 const pageIndex = ref(0); // 0 first 27, 1 remaining
@@ -46,6 +58,14 @@ function confirmEnd() {
     };
     emit('complete', results);
 }
+
+watch(() => props.initialResults, (newResults) => {
+    if (newResults) {
+        newResults.answers.forEach(a => {
+            answers.value[a.number] = a.answer;
+        });
+    }
+}, { immediate: true });
 </script>
 
 <template>

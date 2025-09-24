@@ -6,7 +6,19 @@ import { AVEM_QUESTIONS } from '@/pages/Questions/AVEMQuestions'
 import { Head } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
+const props = defineProps<{
+  initialResults?: {
+    answers: { number: number; answer: number | null }[];
+  }
+}>();
+
 const emit = defineEmits(['complete'])
+
+defineExpose({
+  getResults: () => ({
+    answers: AVEM_QUESTIONS.map((q) => ({ number: q.number, answer: answers.value[q.number] })),
+  }),
+});
 
 const showTest = ref(false)
 const answers = ref<Record<number, number | null>>({})
@@ -54,6 +66,14 @@ function confirmEnd() {
   }
   emit('complete', results)
 }
+
+watch(() => props.initialResults, (newResults) => {
+    if (newResults) {
+        newResults.answers.forEach(a => {
+            answers.value[a.number] = a.answer;
+        });
+    }
+}, { immediate: true });
 
 // UI helpers for answered/unanswered styling
 const isAnswered = (qnum: number) => answers.value[qnum] !== null

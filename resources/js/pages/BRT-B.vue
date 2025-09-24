@@ -12,7 +12,21 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
+const props = defineProps<{
+  initialResults?: {
+    answers: string[];
+    question_times: number[];
+  }
+}>();
+
 const emit = defineEmits(['complete']);
+
+defineExpose({
+  getResults: () => ({
+    answers: [...userAnswers.value],
+    question_times: [...questionTimes.value],
+  }),
+});
 
 interface Question {
   text: string;
@@ -202,6 +216,13 @@ const startTest = () => {
   questionStartTimestamps.value = Array(questions.value.length).fill(null);
   startTime.value = null;
 };
+
+watch(() => props.initialResults, (newResults) => {
+    if (newResults) {
+        userAnswers.value = [...newResults.answers];
+        questionTimes.value = [...newResults.question_times];
+    }
+}, { immediate: true });
 
 </script>
 
