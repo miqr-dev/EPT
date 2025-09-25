@@ -59,7 +59,30 @@ const SCALE_ITEMS: number[][] = Array.from({ length: 11 }, (_, k) =>
 )
 
 const clamp = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, x))
-const toStanineApprox = (mean15: number) => clamp(Math.round(((mean15 - 1) / 4) * 8 + 1), 1, 9)
+
+const parseInterval = (text: string | undefined | null) => {
+  if (!text) return null
+  const cleaned = text.replace(/\s+/g, '').replace(/–/g, '-')
+  if (!cleaned) return null
+  const [minStr, maxStr] = cleaned.split('-')
+  const min = Number(minStr)
+  if (!Number.isFinite(min)) return null
+  const max = maxStr ? Number(maxStr) : min
+  if (!Number.isFinite(max)) return null
+  return { min, max }
+}
+
+const stanineFromRawSum = (scaleIndex: number, rawSum: number) => {
+  const intervals = NORM_INTERVALS[scaleIndex]
+  if (!intervals) return 5
+  const rounded = Math.round(rawSum)
+  for (let i = 0; i < intervals.length; i++) {
+    const interval = parseInterval(intervals[i])
+    if (!interval) continue
+    if (rounded >= interval.min && rounded <= interval.max) return clamp(i + 1, 1, 9)
+  }
+  return clamp(rounded < 6 ? 1 : rounded > 30 ? 9 : 5, 1, 9)
+}
 
 const answersMap = computed<Record<number, number>>(() => {
   const map: Record<number, number> = {}
@@ -84,8 +107,9 @@ const computedStanines = computed<number[] | null>(() => {
       vals.push(REVERSED.has(q) ? 6 - raw : raw)
     }
     if (!vals.length) { out.push(5); continue }
-    const mean = vals.reduce((a,b)=>a+b,0)/vals.length
-    out.push(toStanineApprox(mean))
+    const sum = vals.reduce((a, b) => a + b, 0)
+    const normalised = vals.length ? (sum / vals.length) * 6 : 0
+    out.push(stanineFromRawSum(s, normalised))
   }
   return out
 })
@@ -171,8 +195,6 @@ const intervalsAndPointLabels = {
         ctx.fillText(NORM_INTERVALS[row][s - 1] || '', x.getPixelForValue(s), y.getPixelForValue(row))
       }
     }
-    ctx.restore()
-
     ctx.restore()
   },
 }
@@ -276,9 +298,11 @@ const detailRows = computed(() => {
 </script>
 
 <template>
-  <div class="p-6 bg-background border rounded-lg">
-    <div class="mb-6" style="width: 920px; height: 560px">
-      <Line :data="chartData" :options="chartOptions" />
+  <div class="p-6 bg-background rounded-lg">
+    <div class="mb-6 rounded-md border border-neutral-400/60 bg-white p-4">
+      <div style="width: 920px; height: 560px">
+        <Line :data="chartData" :options="chartOptions" />
+      </div>
     </div>
 
     <details v-if="showAnswers && detailRows.length" class="mt-2">
