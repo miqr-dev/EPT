@@ -141,7 +141,14 @@ const chartData = computed(() => ({
   }],
 }))
 
-const FRAME_PADDING = { top: 76, bottom: 84, left: 220, right: 36 }
+const FRAME_PADDING = { top: 76, bottom: 84, left: 36, right: 36 }
+const LABEL_GUTTER = 224
+const LAYOUT_PADDING = {
+  top: FRAME_PADDING.top,
+  bottom: FRAME_PADDING.bottom,
+  left: FRAME_PADDING.left + LABEL_GUTTER,
+  right: FRAME_PADDING.right,
+}
 
 const getFrameBounds = (chart: any) => {
   const { chartArea } = chart
@@ -216,14 +223,13 @@ const intervalsAndPointLabels = {
       }
     }
     // Left column labels inside the frame
-    ctx.textAlign = 'left'
+    ctx.textAlign = 'right'
     ctx.font = '12px "Helvetica Neue", Helvetica, Arial, sans-serif'
-    const numberX = frame.left + 16
-    const labelX = frame.left + 48
+    const textX = frame.left - 12
     for (let row = 0; row < scaleLabels.length; row++) {
       const yPos = y.getPixelForValue(row)
-      ctx.fillText(`${row + 1}.`, numberX, yPos)
-      ctx.fillText(scaleLabels[row] || '', labelX, yPos)
+      const label = scaleLabels[row] ? `${row + 1}. ${scaleLabels[row]}` : `${row + 1}.`
+      ctx.fillText(label, textX, yPos)
     }
 
     ctx.restore()
@@ -301,7 +307,7 @@ const chartOptions = computed(() => ({
     },
   },
   // padding outside data area that becomes part of the framed chart bands
-  layout: { padding: FRAME_PADDING },
+  layout: { padding: LAYOUT_PADDING },
   elements: { point: { hitRadius: 6 } },
   color: '#111',
 }))
