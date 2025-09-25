@@ -186,7 +186,7 @@ const topBottomPlugin = {
     for (let s = 1; s <= 9; s++) ctx.fillText(String(s), x.getPixelForValue(s), topNumY)
 
     // Segment labels below the numbers
-    const topLblY = topNumY + 22
+    const topLblY = topNumY + 12
     ctx.fillText('Muster S', x.getPixelForValue(2), topLblY)
     ctx.fillText('Risikomuster B', x.getPixelForValue(3.5), topLblY)
     ctx.fillText('Muster G', x.getPixelForValue(5), topLblY)
@@ -267,12 +267,10 @@ const chartOptions = computed(() => ({
         color: (ctx: any) => {
           const val = Number(ctx.tick.value)
           if (!Number.isFinite(val)) return 'rgba(0,0,0,0.08)'
-          if (val === 4 || val === 6) return '#111'
           return Number.isInteger(val) ? 'rgba(0,0,0,0.32)' : 'rgba(0,0,0,0.1)'
         },
         lineWidth: (ctx: any) => {
           const val = Number(ctx.tick.value)
-          if (val === 4 || val === 6) return 1.4
           return Number.isInteger(val) ? 1 : 0.6
         },
       },
@@ -295,9 +293,9 @@ const chartOptions = computed(() => ({
       annotations: {
         // grey band 4..6 (behind lines)
         band: { type: 'box', xMin: 4, xMax: 6, yMin: -0.5, yMax: 10.5, backgroundColor: 'rgba(150,150,150,0.12)', borderWidth: 0, z: 0 },
-        // SOLID at 4 and 6
-        line4: { type: 'line', scaleID: 'x', value: 4, borderColor: '#111', borderWidth: 1.2, z: 10 },
-        line6: { type: 'line', scaleID: 'x', value: 6, borderColor: '#111', borderWidth: 1.2, z: 10 },
+        // SOLID boundaries between stanine groups
+        lineBetweenSAndB: { type: 'line', scaleID: 'x', value: 3.5, borderColor: '#111', borderWidth: 1.2, z: 10 },
+        lineBetweenGAndA: { type: 'line', scaleID: 'x', value: 6.5, borderColor: '#111', borderWidth: 1.2, z: 10 },
       },
     },
   },
