@@ -141,37 +141,56 @@ const chartData = computed(() => ({
   }],
 }))
 
+const FRAME_PADDING = { top: 76, bottom: 84, left: 220, right: 36 }
+
+const getFrameBounds = (chart: any) => {
+  const { chartArea } = chart
+  return {
+    left: chartArea.left - FRAME_PADDING.left,
+    right: chartArea.right + FRAME_PADDING.right,
+    top: chartArea.top - FRAME_PADDING.top,
+    bottom: chartArea.bottom + FRAME_PADDING.bottom,
+  }
+}
+
 /* ---------- custom draw: headers, Prozent, cell texts, point labels, frame ---------- */
 const topBottomPlugin = {
   id: 'avemTopBottom',
   afterDraw(chart: any) {
-    const { ctx, chartArea, scales } = chart
+    const { ctx, scales } = chart
     const x = scales.x
     if (!x) return
+    const frame = getFrameBounds(chart)
+    const centerX = (frame.left + frame.right) / 2
+
     ctx.save()
     ctx.fillStyle = '#222'
-    ctx.font = '12px "Helvetica Neue", Helvetica, Arial, sans-serif'
     ctx.textAlign = 'center'
 
-    // Top 1..9 ABOVE the frame
-    ctx.textBaseline = 'bottom'
-    const topNumY = chartArea.top - 22
+    // Title within top band
+    ctx.font = '16px "Helvetica Neue", Helvetica, Arial, sans-serif'
+    ctx.textBaseline = 'top'
+    ctx.fillText('Stanine-Werte', centerX, frame.top + 18)
+
+    // Top 1..9 inside the frame band
+    ctx.font = '12px "Helvetica Neue", Helvetica, Arial, sans-serif'
+    ctx.textBaseline = 'middle'
+    const topNumY = frame.top + 48
     for (let s = 1; s <= 9; s++) ctx.fillText(String(s), x.getPixelForValue(s), topNumY)
 
-    // Segment labels
-    const topLblY = chartArea.top - 4
+    // Segment labels below the numbers
+    const topLblY = topNumY + 22
     ctx.fillText('Muster S', x.getPixelForValue(2), topLblY)
     ctx.fillText('Risikomuster B', x.getPixelForValue(3.5), topLblY)
     ctx.fillText('Muster G', x.getPixelForValue(5), topLblY)
     ctx.fillText('Risikomuster A', x.getPixelForValue(8), topLblY)
 
-    // Bottom Prozent row (outside the frame)
+    // Bottom Prozent row
     const perc = [4, 11, 23, 40, 60, 77, 89, 96]
     const xs = [1, 2, 3, 4, 5, 6, 7, 8]
-    ctx.textBaseline = 'middle'
-    const baseY = chartArea.bottom + 24
+    const baseY = frame.bottom - 40
     for (let i = 0; i < xs.length; i++) ctx.fillText(String(perc[i]), x.getPixelForValue(xs[i]), baseY)
-    ctx.fillText('Prozent', x.getPixelForValue(5), baseY + 16)
+    ctx.fillText('Prozent', x.getPixelForValue(5), baseY + 18)
 
     ctx.restore()
   },
@@ -183,6 +202,7 @@ const intervalsAndPointLabels = {
     const { ctx, scales } = chart
     const x = scales.x, y = scales.y
     if (!x || !y) return
+    const frame = getFrameBounds(chart)
 
     // Cell interval strings
     ctx.save()
@@ -195,6 +215,17 @@ const intervalsAndPointLabels = {
         ctx.fillText(NORM_INTERVALS[row][s - 1] || '', x.getPixelForValue(s), y.getPixelForValue(row))
       }
     }
+    // Left column labels inside the frame
+    ctx.textAlign = 'left'
+    ctx.font = '12px "Helvetica Neue", Helvetica, Arial, sans-serif'
+    const numberX = frame.left + 16
+    const labelX = frame.left + 48
+    for (let row = 0; row < scaleLabels.length; row++) {
+      const yPos = y.getPixelForValue(row)
+      ctx.fillText(`${row + 1}.`, numberX, yPos)
+      ctx.fillText(scaleLabels[row] || '', labelX, yPos)
+    }
+
     ctx.restore()
   },
 }
@@ -203,11 +234,12 @@ const intervalsAndPointLabels = {
 const frameBorder = {
   id: 'avemFrame',
   afterDraw(chart: any) {
-    const { ctx, chartArea } = chart
+    const { ctx } = chart
+    const frame = getFrameBounds(chart)
     ctx.save()
     ctx.strokeStyle = '#2a2a2a'
     ctx.lineWidth = 1.2
-    ctx.strokeRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top)
+    ctx.strokeRect(frame.left, frame.top, frame.right - frame.left, frame.bottom - frame.top)
     ctx.restore()
   },
 }
@@ -241,13 +273,7 @@ const chartOptions = computed(() => ({
       border: { display: false },
     },
     y: {
-      ticks: {
-        // add more left margin between text and table
-        padding: 24,
-        color: '#1f2933',
-        font: { size: 12, family: 'Helvetica Neue, Helvetica, Arial, sans-serif' },
-        callback: (val: any) => `${Number(val) + 1}. ${scaleLabels[Number(val)] || ''}`,
-      },
+      ticks: { display: false },
       grid: {
         color: (ctx: any) => (ctx.index === 0 || ctx.index === 10 ? '#111' : 'rgba(0,0,0,0.12)'),
         lineWidth: (ctx: any) => (ctx.index === 0 || ctx.index === 10 ? 1.2 : 0.8),
@@ -258,13 +284,7 @@ const chartOptions = computed(() => ({
   plugins: {
     legend: { display: false },
     tooltip: { callbacks: { label: (ctx: any) => ` Stanine: ${ctx.parsed.x}` } },
-    title: {
-      display: true,
-      text: 'Stanine-Werte',
-      color: '#111',
-      font: { size: 18, weight: '600', family: 'Helvetica Neue, Helvetica, Arial, sans-serif' },
-      padding: { bottom: 44 },                     // enough room for top 1..9 + headings
-    },
+    title: { display: false },
     annotation: {
       annotations: {
         // grey band 4..6 (behind lines)
@@ -280,8 +300,8 @@ const chartOptions = computed(() => ({
       },
     },
   },
-  // padding OUTSIDE the frame: room above (numbers) & below (percent)
-  layout: { padding: { top: 64, bottom: 60, left: 12, right: 12 } },
+  // padding outside data area that becomes part of the framed chart bands
+  layout: { padding: FRAME_PADDING },
   elements: { point: { hitRadius: 6 } },
   color: '#111',
 }))
@@ -299,7 +319,7 @@ const detailRows = computed(() => {
 
 <template>
   <div class="p-6 bg-background rounded-lg">
-    <div class="mb-6 rounded-md border border-neutral-400/60 bg-white p-4">
+    <div class="mb-6 rounded-md bg-white p-4">
       <div style="width: 920px; height: 560px">
         <Line :data="chartData" :options="chartOptions" />
       </div>
