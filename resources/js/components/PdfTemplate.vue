@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import TestResultViewer from '@/components/TestResultViewer.vue';
 
-defineProps<{
+const props = defineProps<{
   assignment: any;
   participant: any;
   teacherName: string;
+  resultData?: any;
 }>();
 
 const testDate = new Date().toLocaleDateString('de-DE', {
@@ -51,7 +52,7 @@ const testDate = new Date().toLocaleDateString('de-DE', {
         <TestResultViewer
           v-if="assignment && assignment.results.length > 0"
           :test="assignment.test"
-          :model-value="assignment.results[0].result_json"
+          :model-value="props.resultData ?? assignment.results[0].result_json"
           :participant-profile="participant?.participant_profile"
         />
         <div v-else class="text-center text-gray-500">
