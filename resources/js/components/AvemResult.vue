@@ -127,7 +127,7 @@ const chartData = computed(() => ({
   datasets: [{
     label: 'Stanine',
     data: stanines.value,
-    borderColor: '#1f2933',
+    borderColor: '#c1121f',
     backgroundColor: '#ffffff',
     borderWidth: 1.4,
     tension: 0,
@@ -135,7 +135,7 @@ const chartData = computed(() => ({
     pointHoverRadius: 5,
     pointBorderWidth: 1.6,
     pointStyle: 'rectRot',
-    pointBorderColor: '#1f2933',
+    pointBorderColor: '#c1121f',
     pointBackgroundColor: '#ffffff',
     fill: false,
   }],
@@ -296,13 +296,8 @@ const chartOptions = computed(() => ({
         // grey band 4..6 (behind lines)
         band: { type: 'box', xMin: 4, xMax: 6, yMin: -0.5, yMax: 10.5, backgroundColor: 'rgba(150,150,150,0.12)', borderWidth: 0, z: 0 },
         // SOLID at 4 and 6
-        line4: { type: 'line', xMin: 4, xMax: 4, borderColor: '#111', borderWidth: 1.2, z: 10 },
-        line6: { type: 'line', xMin: 6, xMax: 6, borderColor: '#111', borderWidth: 1.2, z: 10 },
-        // DASHED at exact midpoints 3.5 and 6.5
-        mid35: { type: 'line', xMin: 3.5, xMax: 3.5, borderColor: 'rgba(0,0,0,0.55)', borderWidth: 1, borderDash: [5, 5], z: 10 },
-        mid65: { type: 'line', xMin: 6.5, xMax: 6.5, borderColor: 'rgba(0,0,0,0.55)', borderWidth: 1, borderDash: [5, 5], z: 10 },
-        diag1: { type: 'line', xMin: 1, xMax: 9, yMin: 10.5, yMax: -0.5, borderColor: 'rgba(0,0,0,0.4)', borderWidth: 0.8, borderDash: [6, 4], z: 1 },
-        diag2: { type: 'line', xMin: 1, xMax: 9, yMin: -0.5, yMax: 10.5, borderColor: 'rgba(0,0,0,0.4)', borderWidth: 0.8, borderDash: [6, 4], z: 1 },
+        line4: { type: 'line', scaleID: 'x', value: 4, borderColor: '#111', borderWidth: 1.2, z: 10 },
+        line6: { type: 'line', scaleID: 'x', value: 6, borderColor: '#111', borderWidth: 1.2, z: 10 },
       },
     },
   },
