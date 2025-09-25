@@ -103,12 +103,16 @@ const chartData = computed(() => ({
   datasets: [{
     label: 'Stanine',
     data: stanines.value,
-    borderColor: '#e11d48',
-    backgroundColor: '#e11d48',
-    borderWidth: 2,
+    borderColor: '#1f2933',
+    backgroundColor: '#ffffff',
+    borderWidth: 1.4,
     tension: 0,
     pointRadius: 4,
     pointHoverRadius: 5,
+    pointBorderWidth: 1.6,
+    pointStyle: 'rectRot',
+    pointBorderColor: '#1f2933',
+    pointBackgroundColor: '#ffffff',
     fill: false,
   }],
 }))
@@ -121,8 +125,8 @@ const topBottomPlugin = {
     const x = scales.x
     if (!x) return
     ctx.save()
-    ctx.fillStyle = '#111'
-    ctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'
+    ctx.fillStyle = '#222'
+    ctx.font = '12px "Helvetica Neue", Helvetica, Arial, sans-serif'
     ctx.textAlign = 'center'
 
     // Top 1..9 ABOVE the frame
@@ -159,7 +163,7 @@ const intervalsAndPointLabels = {
     // Cell interval strings
     ctx.save()
     ctx.fillStyle = '#333'
-    ctx.font = '10px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'
+    ctx.font = '10px "Helvetica Neue", Helvetica, Arial, sans-serif'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     for (let row = 0; row < NORM_INTERVALS.length; row++) {
@@ -169,15 +173,6 @@ const intervalsAndPointLabels = {
     }
     ctx.restore()
 
-    // numeric labels next to the red points
-    const meta = chart.getDatasetMeta(0)
-    ctx.save()
-    ctx.fillStyle = '#e11d48'
-    ctx.font = '11px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'
-    meta.data.forEach((pt: any, i: number) => {
-      const { x: px, y: py } = pt.getProps(['x','y'], true)
-      ctx.fillText(String(chart.data.datasets[0].data[i]), px + 8, py - 6)
-    })
     ctx.restore()
   },
 }
@@ -189,7 +184,7 @@ const frameBorder = {
     const { ctx, chartArea } = chart
     ctx.save()
     ctx.strokeStyle = '#2a2a2a'
-    ctx.lineWidth = 1
+    ctx.lineWidth = 1.2
     ctx.strokeRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, chartArea.bottom - chartArea.top)
     ctx.restore()
   },
@@ -209,18 +204,32 @@ const chartOptions = computed(() => ({
       ticks: { display: false, stepSize: 1 },      // hide bottom 1..9
       grid: {
         drawTicks: false,
-        color: (ctx: any) => (Number.isInteger(ctx.tick.value) ? 'rgba(0,0,0,0.20)' : 'rgba(0,0,0,0.08)'),
-        lineWidth: 1,
+        color: (ctx: any) => {
+          const val = Number(ctx.tick.value)
+          if (!Number.isFinite(val)) return 'rgba(0,0,0,0.08)'
+          if (val === 4 || val === 6) return '#111'
+          return Number.isInteger(val) ? 'rgba(0,0,0,0.32)' : 'rgba(0,0,0,0.1)'
+        },
+        lineWidth: (ctx: any) => {
+          const val = Number(ctx.tick.value)
+          if (val === 4 || val === 6) return 1.4
+          return Number.isInteger(val) ? 1 : 0.6
+        },
       },
       border: { display: false },
     },
     y: {
       ticks: {
         // add more left margin between text and table
-        padding: 20,
+        padding: 24,
+        color: '#1f2933',
+        font: { size: 12, family: 'Helvetica Neue, Helvetica, Arial, sans-serif' },
         callback: (val: any) => `${Number(val) + 1}. ${scaleLabels[Number(val)] || ''}`,
       },
-      grid: { color: 'rgba(0,0,0,0.08)' },
+      grid: {
+        color: (ctx: any) => (ctx.index === 0 || ctx.index === 10 ? '#111' : 'rgba(0,0,0,0.12)'),
+        lineWidth: (ctx: any) => (ctx.index === 0 || ctx.index === 10 ? 1.2 : 0.8),
+      },
       border: { display: false },
     },
   },
@@ -230,24 +239,27 @@ const chartOptions = computed(() => ({
     title: {
       display: true,
       text: 'Stanine-Werte',
-      font: { size: 18, weight: '600' },
+      color: '#111',
+      font: { size: 18, weight: '600', family: 'Helvetica Neue, Helvetica, Arial, sans-serif' },
       padding: { bottom: 44 },                     // enough room for top 1..9 + headings
     },
     annotation: {
       annotations: {
         // grey band 4..6 (behind lines)
-        band: { type: 'box', xMin: 4, xMax: 6, yMin: -0.5, yMax: 10.5, backgroundColor: 'rgba(120,120,120,0.12)', borderWidth: 0, z: 0 },
+        band: { type: 'box', xMin: 4, xMax: 6, yMin: -0.5, yMax: 10.5, backgroundColor: 'rgba(150,150,150,0.12)', borderWidth: 0, z: 0 },
         // SOLID at 4 and 6
         line4: { type: 'line', xMin: 4, xMax: 4, borderColor: '#111', borderWidth: 1.2, z: 10 },
         line6: { type: 'line', xMin: 6, xMax: 6, borderColor: '#111', borderWidth: 1.2, z: 10 },
         // DASHED at exact midpoints 3.5 and 6.5
         mid35: { type: 'line', xMin: 3.5, xMax: 3.5, borderColor: 'rgba(0,0,0,0.55)', borderWidth: 1, borderDash: [5, 5], z: 10 },
         mid65: { type: 'line', xMin: 6.5, xMax: 6.5, borderColor: 'rgba(0,0,0,0.55)', borderWidth: 1, borderDash: [5, 5], z: 10 },
+        diag1: { type: 'line', xMin: 1, xMax: 9, yMin: 10.5, yMax: -0.5, borderColor: 'rgba(0,0,0,0.4)', borderWidth: 0.8, borderDash: [6, 4], z: 1 },
+        diag2: { type: 'line', xMin: 1, xMax: 9, yMin: -0.5, yMax: 10.5, borderColor: 'rgba(0,0,0,0.4)', borderWidth: 0.8, borderDash: [6, 4], z: 1 },
       },
     },
   },
   // padding OUTSIDE the frame: room above (numbers) & below (percent)
-  layout: { padding: { top: 60, bottom: 56, left: 0, right: 0 } },
+  layout: { padding: { top: 64, bottom: 60, left: 12, right: 12 } },
   elements: { point: { hitRadius: 6 } },
   color: '#111',
 }))
