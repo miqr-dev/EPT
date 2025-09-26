@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 
@@ -17,18 +17,6 @@ const formatTime = (seconds?: number) => {
 
 // We need a local copy of the exam to update the timer
 const localExam = ref(JSON.parse(JSON.stringify(props.exam)))
-
-const stepRows = computed(() => {
-  const steps = Array.isArray(localExam.value?.steps) ? localExam.value.steps : []
-  const rows: any[][] = []
-  for (let i = 0; i < steps.length; i += 5) {
-    rows.push(steps.slice(i, i + 5))
-  }
-  return rows
-})
-
-const firstStepRow = computed(() => stepRows.value[0] ?? [])
-const additionalStepRows = computed(() => stepRows.value.slice(1))
 
 const getParticipantStatusFromExam = (exam: any, participant: any) => {
   if (!exam.current_step) {
@@ -170,36 +158,25 @@ const canResumeParticipant = (participant: any) => {
   <div class="mt-8">
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ exam.name }}</h2>
-      <div class="flex flex-col gap-2">
-        <div class="flex flex-wrap items-center gap-2">
-          <Button v-if="exam.status === 'not_started'" @click="startExam">
-            Prüfung starten
-          </Button>
-          <Button v-if="exam.status === 'in_progress'" @click="setStatus('paused')">
-            Prüfung pausieren
-          </Button>
-          <Button v-else-if="exam.status === 'paused'" @click="setStatus('in_progress')">
-            Prüfung fortsetzen
-          </Button>
-          <Button v-if="exam.status !== 'completed'" @click="setStatus('completed')">
-            Prüfung beenden
-          </Button>
-          <template v-if="exam.status === 'in_progress'">
-            <Button v-for="step in firstStepRow" :key="step.id" @click="setStep(step.id)"
-              :disabled="exam.current_exam_step_id === step.id">
-              {{ step.test.name }} starten
-            </Button>
-          </template>
-        </div>
+      <div class="flex space-x-2">
+        <Button v-if="exam.status === 'not_started'" @click="startExam">
+          Prüfung starten
+        </Button>
         <template v-if="exam.status === 'in_progress'">
-          <div v-for="(row, rowIndex) in additionalStepRows" :key="`step-row-${rowIndex}`"
-            class="flex flex-wrap items-center gap-2">
-            <Button v-for="step in row" :key="step.id" @click="setStep(step.id)"
-              :disabled="exam.current_exam_step_id === step.id">
-              {{ step.test.name }} starten
-            </Button>
-          </div>
+            <Button v-for="step in exam.steps" :key="step.id" @click="setStep(step.id)"
+            :disabled="exam.current_exam_step_id === step.id">
+            {{ step.test.name }} starten
+          </Button>
         </template>
+        <Button v-if="exam.status === 'in_progress'" @click="setStatus('paused')">
+          Prüfung pausieren
+        </Button>
+        <Button v-else-if="exam.status === 'paused'" @click="setStatus('in_progress')">
+          Prüfung fortsetzen
+        </Button>
+        <Button v-if="exam.status !== 'completed'" @click="setStatus('completed')">
+          Prüfung beenden
+        </Button>
       </div>
     </div>
     <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg">

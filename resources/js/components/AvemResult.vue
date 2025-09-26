@@ -264,7 +264,7 @@ const detailRows = computed(() => {
 </script>
 
 <template>
-  <div class="p-6 bg-background border rounded-lg">
+  <div class="p-6 bg-background border rounded-lg flex flex-col items-center">
     <div class="mb-6" style="width: 920px; height: 560px">
       <Line :data="chartData" :options="chartOptions" />
     </div>
