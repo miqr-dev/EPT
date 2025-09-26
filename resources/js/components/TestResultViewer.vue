@@ -218,7 +218,7 @@ const fpiRohwerte = computed(() => {
     <div v-if="local" v-bind="$attrs">
         <MrtAResult v-if="test.name === 'MRT-A'" :results="local" />
         <MrtBResult v-else-if="test.name === 'MRT-B'" :results="local" />
-        <LmtResult v-else-if="test.name === 'LMT'" :results="local" />
+        <LmtResult v-else-if="test.name === 'LMT'" :results="local" :show-answers="false" />
         <FpiResult v-else-if="test.name === 'FPI-R'" :stanines="fpiStanines" :rohwerte="fpiRohwerte" />
         <div v-else-if="test.name === 'BIT-2'" class="overflow-x-auto">
             <table class="mb-4 w-full overflow-hidden rounded-lg border text-sm shadow">
@@ -268,7 +268,7 @@ const fpiRohwerte = computed(() => {
                 </tbody>
             </table>
         </div>
-        <AvemResult v-else-if="test.name === 'AVEM'" :results="local" />
+        <AvemResult v-else-if="test.name === 'AVEM'" :results="local" :show-answers="false" />
         <template v-else>
             <table class="mb-4 w-full overflow-hidden rounded-lg border text-sm shadow">
                 <tbody>

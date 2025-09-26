@@ -16,7 +16,10 @@ import { AVEM_QUESTIONS } from '@/pages/Questions/AVEMQuestions'
 
 Chart.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title, annotationPlugin)
 
-const props = defineProps<{ results: any }>()
+const props = defineProps<{
+  results: any;
+  showAnswers: boolean;
+}>();
 
 const scaleLabels = [
   'Subjektive Bedeutsamkeit der Arbeit',
@@ -261,12 +264,12 @@ const detailRows = computed(() => {
 </script>
 
 <template>
-  <div class="p-6 bg-background border rounded-lg">
+  <div class="p-6 bg-background border rounded-lg flex flex-col items-center">
     <div class="mb-6" style="width: 920px; height: 560px">
       <Line :data="chartData" :options="chartOptions" />
     </div>
 
-    <details v-if="detailRows.length" class="mt-2">
+    <details v-if="showAnswers && detailRows.length" class="mt-2">
       <summary class="cursor-pointer select-none px-2 py-1 bg-muted/40 rounded">Antworten</summary>
       <div class="overflow-x-auto mt-3">
         <table class="min-w-full text-sm border rounded shadow">
