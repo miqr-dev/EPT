@@ -256,6 +256,7 @@ Chart.register(topBottomPlugin, intervalsAndPointLabels, frameBorder)
 const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
+  animation: false,
   indexAxis: 'y' as const,
   scales: {
     x: {
