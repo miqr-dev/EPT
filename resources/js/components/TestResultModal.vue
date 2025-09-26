@@ -60,20 +60,40 @@ function closeModal() {
   emit('close');
 }
 
+function sanitizeForFilename(value?: string | null) {
+  if (!value) {
+    return '';
+  }
+
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9_.-]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
 async function downloadUnifiedPdf() {
   isGeneratingPdf.value = true;
-  await nextTick(); // Wait for the v-if to render the component
 
-  setTimeout(async () => {
+  try {
+    await nextTick();
+    await nextTick(); // ensure the PDF template is rendered
+
     const el = pdfTemplateRef.value?.$el as HTMLElement | undefined;
-    if (el) {
-      const filename = `${props.participant.name}_${props.assignment.test.name}_Ergebnis.pdf`;
-      await generatePdfFromElement(el, filename);
-    } else {
-      console.error("PDF template element not found.");
+    if (!el) {
+      console.error('PDF template element not found.');
+      return;
     }
+
+    const participantName = sanitizeForFilename(props.participant?.name) || 'Teilnehmer';
+    const testName = sanitizeForFilename(props.assignment?.test?.name) || 'Test';
+    const filename = `${participantName}_${testName}_Ergebnis.pdf`;
+
+    await generatePdfFromElement(el, filename);
+  } finally {
     isGeneratingPdf.value = false;
-  }, 200); // 200ms delay
+  }
 }
 
 </script>
