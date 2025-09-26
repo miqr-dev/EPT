@@ -16,10 +16,12 @@ import { AVEM_QUESTIONS } from '@/pages/Questions/AVEMQuestions'
 
 Chart.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title, annotationPlugin)
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   results: any;
-  showAnswers: boolean;
-}>();
+  showAnswers?: boolean;
+}>(), {
+  showAnswers: false,
+});
 
 const scaleLabels = [
   'Subjektive Bedeutsamkeit der Arbeit',
@@ -61,13 +63,31 @@ const SCALE_ITEMS: number[][] = Array.from({ length: 11 }, (_, k) =>
 const clamp = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, x))
 const toStanineApprox = (mean15: number) => clamp(Math.round(((mean15 - 1) / 4) * 8 + 1), 1, 9)
 
+const normalizeAnswers = () => {
+  const src = props.results?.answers
+  if (Array.isArray(src)) return src
+  if (src && typeof src === 'object') {
+    return Object.entries(src).map(([key, value]) => ({
+      number: Number(key),
+      answer: value,
+    }))
+  }
+  if (Array.isArray(props.results?.answers_list)) return props.results.answers_list
+  return []
+}
+
+const extractAnswerValue = (entry: any) =>
+  entry?.answer ?? entry?.user_answer ?? entry?.value ?? entry?.response ?? entry?.score ?? null
+
 const answersMap = computed<Record<number, number>>(() => {
   const map: Record<number, number> = {}
-  const arr = Array.isArray(props.results?.answers) ? props.results.answers : []
+  const arr = normalizeAnswers()
   for (const a of arr) {
-    const num = Number(a.number)
-    const val = Number(a.answer)
-    if (num >= 1 && num <= 66 && val >= 1 && val <= 5) map[num] = val
+    const num = Number(a?.number ?? a?.question ?? a?.id)
+    const val = Number(extractAnswerValue(a))
+    if (Number.isFinite(num) && Number.isFinite(val) && num >= 1 && num <= 66 && val >= 1 && val <= 5) {
+      map[num] = val
+    }
   }
   return map
 })
@@ -90,12 +110,52 @@ const computedStanines = computed<number[] | null>(() => {
   return out
 })
 
+const STANINE_KEYS = ['sb','be','vb','ps','df','rt','op','ir','eb','lz','su']
+
+const coerceStanine = (val: unknown) => {
+  const num = Number(val)
+  return Number.isFinite(num) ? clamp(Math.round(num), 1, 9) : null
+}
+
 const stanines = computed<number[]>(() => {
-  const provided =
-    (Array.isArray(props.results?.stanines) && props.results.stanines.length === 11 && props.results.stanines) ||
-    (Array.isArray(props.results?.group_stanines) && props.results.group_stanines.length === 11 && props.results.group_stanines) ||
-    null
-  return provided ?? (computedStanines.value ?? Array(11).fill(5))
+  const candidateSources = [
+    props.results?.stanines,
+    props.results?.group_stanines,
+    props.results?.category_stanines,
+    props.results?.stanine_scores,
+    props.results?.stanine,
+  ]
+
+  for (const source of candidateSources) {
+    if (!source) continue
+
+    if (Array.isArray(source) && source.length >= 11) {
+      const arr = source.slice(0, 11).map(coerceStanine)
+      if (arr.some((v) => v != null)) {
+        return arr.map((v) => v ?? 5)
+      }
+    }
+
+    if (source && typeof source === 'object') {
+      const lower = Object.keys(source).reduce<Record<string, unknown>>((acc, key) => {
+        acc[key.toLowerCase()] = (source as any)[key]
+        return acc
+      }, {})
+
+      const values = STANINE_KEYS.map((key, idx) => {
+        const explicit = lower[key]
+        if (explicit != null) return coerceStanine(explicit)
+        const numeric = lower[String(idx + 1)] ?? lower[`s${idx + 1}`] ?? lower[`scale${idx + 1}`] ?? lower[`scale_${idx + 1}`]
+        return coerceStanine(numeric)
+      })
+
+      if (values.some((v) => v != null)) {
+        return values.map((v) => v ?? 5)
+      }
+    }
+  }
+
+  return computedStanines.value ?? Array(11).fill(5)
 })
 
 const chartData = computed(() => ({
@@ -253,11 +313,11 @@ const chartOptions = computed(() => ({
 }))
 
 const detailRows = computed(() => {
-  const arr = Array.isArray(props.results?.answers) ? props.results.answers : []
+  const arr = normalizeAnswers()
   return arr.map((a: any, idx: number) => {
-    const num = Number(a.number ?? idx + 1)
+    const num = Number(a?.number ?? a?.question ?? idx + 1)
     const q = AVEM_QUESTIONS.find(q => q.number === num)?.text ?? ''
-    const val = a.answer ?? null
+    const val = extractAnswerValue(a)
     return { number: num, text: q, answer: val }
   })
 })
