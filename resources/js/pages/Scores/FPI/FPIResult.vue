@@ -38,8 +38,6 @@ const getCatNum = (index: number): string => {
   return 'N';
 };
 
-interface Point { x: number; y: number }
-
 // replace both functions with a single value→x helper
 function xForStanine(val: number) {
   // columns are labeled [9,8,7,6,5,4,3,2,1] from left to right
@@ -52,25 +50,9 @@ function rowY(idx: number) {
   return rowHeight * idx + rowHeight / 2;
 }
 
-const stanineCoords = computed<Point[]>(() => {
-  const values = props.stanines ?? [];
-  return values
-    .map((s, idx) => {
-      const val = typeof s === 'string' ? Number(s) : s;
-      if (!val || val < 1 || val > 9) return null;
-      return { x: xForStanine(val), y: rowY(idx) } as Point;
-    })
-    .filter((p): p is Point => p !== null);
-});
-
-
-const staninePoints = computed(() =>
-  stanineCoords.value.map((pt) => `${pt.x},${pt.y}`).join(' '),
-);
-
 const splitAfterRows = [9]; // after Offenheit
 
-interface Pt { x: number; y: number; row: number }
+interface Pt { x: number; y: number; row: number, stanine: number }
 
 const pointsByRow = computed<(Pt | null)[]>(() => {
   const values = props.stanines ?? [];
@@ -79,8 +61,20 @@ const pointsByRow = computed<(Pt | null)[]>(() => {
     if (!val || val < 1 || val > 9) return null;
     // use your existing x helper (xForStanine or stanineX(val-1))
     const x = typeof xForStanine === 'function' ? xForStanine(val) : (cellWidth * (val - 1) + cellWidth / 2);
-    return { x, y: rowY(idx), row: idx };
+    return { x, y: rowY(idx), row: idx, stanine: val };
   });
+});
+
+const outlierPoints = computed(() => {
+  return pointsByRow.value.filter(pt => pt && (pt.stanine < 3 || pt.stanine > 7));
+});
+
+const drawablePoints = computed(() => {
+  return pointsByRow.value.filter(pt => pt !== null);
+});
+
+const drawableOutlierPoints = computed(() => {
+  return outlierPoints.value.filter(pt => pt !== null);
 });
 
 const polySegments = computed<{ x: number; y: number }[][]>(() => {
@@ -163,7 +157,7 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value)
         <div v-for="s in blueStanines" :key="`blue-${s}`" class="blue-line"
           :style="{ left: `${xForStanine(s) - LINE_W / 2}px`, width: `${LINE_W}px` }" />
         <!-- overlay markers -->
-        <circle v-for="(pt, idx) in pointsByRow" v-if="pt" :key="'dot-' + idx" :cx="pt.x" :cy="pt.y" :r="MARKER_R"
+        <circle v-for="(pt, idx) in drawablePoints" :key="'dot-' + idx" :cx="pt.x" :cy="pt.y" :r="MARKER_R"
           fill="var(--overlay-fill)" stroke="var(--overlay-stroke)" :stroke-width="MARKER_SW" />
         <svg :width="gridWidth" :height="gridHeight" class="polyline-svg">
           <template v-for="(seg, sIdx) in polySegments" :key="'seg-'+sIdx">
@@ -171,8 +165,11 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value)
           </template>
 
           <!-- keep the dots -->
-          <circle v-for="(pt, idx) in pointsByRow" v-if="pt" :key="'dot-' + idx" :cx="pt.x" :cy="pt.y" r="4"
+          <circle v-for="(pt, idx) in drawablePoints" :key="'dot-' + idx" :cx="pt.x" :cy="pt.y" r="4"
             fill="white" stroke="black" stroke-width="1.5" />
+
+          <circle v-for="(pt, idx) in drawableOutlierPoints" :key="'outlier-' + idx" :cx="pt.x" :cy="pt.y" r="8"
+            fill="none" stroke="red" stroke-width="1.5" />
         </svg>
         <div class="average-box" :style="{
           top: 0,
