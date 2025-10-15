@@ -65,6 +65,10 @@ const missedSidebarQuestions = computed(() => {
   );
 });
 
+const showMissedSidebar = computed(
+  () => showTest.value && !finished.value && missedSidebarQuestions.value.length > 0
+);
+
 // Navigation
 function handleNextBlock() {
   currentBlockQuestions.value.forEach(q => {
@@ -147,140 +151,142 @@ function finishTest() {
 <template>
 
   <Head title="FPI-R" />
-  <div class="p-4">
+  <div class="p-4 min-h-screen flex flex-col">
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">FPI-R</h1>
     </div>
-    <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
+    <div class="flex flex-1">
+      <div class="relative flex flex-col lg:flex-row w-full min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground my-auto lg:min-h-0 lg:h-screen">
 
-      <!-- Sidebar: Only missed (unanswered after Weiter) -->
-      <aside v-if="showTest && !finished && missedSidebarQuestions.length"
-        class="w-64 flex-shrink-0 flex flex-col items-start space-y-2 py-4 h-fit sticky top-8">
-        <h3 class="font-bold mb-2 text-sm text-muted-foreground pl-4">Offene Fragen</h3>
-        <div class="flex flex-col space-y-1 w-full items-start">
-          <template v-for="q in missedSidebarQuestions" :key="q?.number">
-            <button
-              class="w-full flex items-center py-1 px-2 rounded-lg border transition text-base hover:bg-blue-50 dark:hover:bg-blue-900"
-              @click="jumpToQuestion(q.number)">
-              <span
-                class="w-8 h-8 flex items-center justify-center rounded-full border mr-2 bg-yellow-100 text-black font-bold dark:bg-yellow-900 dark:text-yellow-100">
-                {{ q.number }}
-              </span>
-              <span class="truncate max-w-[130px] text-left text-xs" :title="q.text">
-                {{ q.text.length > 30 ? q.text.slice(0, 30) + '…' : q.text }}
-              </span>
-            </button>
-          </template>
-        </div>
-        <div class="w-full mt-6">
-          <div class="h-2 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
-            <div class="h-full bg-blue-500 transition-all duration-300"
-              :style="{ width: Math.round((blockIndex + 1) / totalBlocks * 100) + '%' }"></div>
+        <!-- Sidebar: Only missed (unanswered after Weiter) -->
+        <aside v-if="showMissedSidebar"
+          class="w-full flex-shrink-0 flex flex-col items-start space-y-2 py-4 h-fit lg:w-64 lg:flex-none lg:overflow-y-auto lg:py-4 lg:fixed lg:top-28"
+          style="max-height: calc(100vh - 7rem); left: clamp(1rem, 5vw, 4rem);">
+          <h3 class="font-bold mb-2 text-sm text-muted-foreground pl-4">Offene Fragen</h3>
+          <div class="flex flex-col space-y-1 w-full items-start">
+            <template v-for="q in missedSidebarQuestions" :key="q?.number">
+              <button
+                class="w-full flex items-center py-1 px-2 rounded-lg border transition text-base hover:bg-blue-50 dark:hover:bg-blue-900"
+                @click="jumpToQuestion(q.number)">
+                <span
+                  class="w-8 h-8 flex items-center justify-center rounded-full border mr-2 bg-yellow-100 text-black font-bold dark:bg-yellow-900 dark:text-yellow-100">
+                  {{ q.number }}
+                </span>
+                <span class="truncate max-w-[130px] text-left text-xs" :title="q.text">
+                  {{ q.text.length > 30 ? q.text.slice(0, 30) + '…' : q.text }}
+                </span>
+              </button>
+            </template>
           </div>
-          <div class="text-xs text-gray-600 dark:text-gray-400 text-center mt-1">
-            {{ blockIndex + 1 }}/{{ totalBlocks }} Seiten
-          </div>
-        </div>
-      </aside>
-
-      <!-- Main Content -->
-      <div class="flex-1 flex flex-col gap-4">
-
-        <!-- Consent screen -->
-        <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
-          <h2 class="text-2xl font-bold mb-4">Willkommen zum FPI-R-Fragebogen</h2>
-          <p class="mb-6 text-base text-center max-w-xl">
-            In diesem Fragebogen geht es um eine Reihe von Aussagen über bestimmte
-            Verhaltensweisen, Einstellungen und Gewohnheiten, die auch für den Berufskontext wichtig sind.
-          </p>
-          <p class="mb-6 text-base text-center max-w-xl">
-            Bitte beantworten Sie jede Aussage mit <strong>„stimmt“</strong> oder <strong>„stimmt nicht“</strong>.
-            Kreuzen Sie an, was auf Sie zutrifft. Es gibt keine richtigen und falschen Antworten.
-          </p>
-          <p class="mb-6 text-base text-center max-w-xl">
-            Überlegen Sie bitte nicht erst, welche Antwort vielleicht den „besten Eindruck“ machen könnte,
-            sondern antworten Sie so, wie es für Sie persönlich gilt.
-          </p>
-          <div
-            class="mb-8 mt-4 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg border dark:border-blue-700 font-semibold w-full max-w-xl">
-            <div class="mb-3">Ich habe die Anleitung gelesen und bin bereit, jeden Satz offen zu beantworten.</div>
-            <div class="flex flex-row gap-8">
-              <label class="flex items-center cursor-pointer">
-                <input type="radio" v-model="consentAnswer" value="stimmt" />
-                <span class="ml-2">stimmt</span>
-              </label>
-              <label class="flex items-center cursor-pointer">
-                <input type="radio" v-model="consentAnswer" value="stimmtNicht" />
-                <span class="ml-2">stimmt nicht</span>
-              </label>
+          <div class="w-full mt-6">
+            <div class="h-2 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
+              <div class="h-full bg-blue-500 transition-all duration-300"
+                :style="{ width: Math.round((blockIndex + 1) / totalBlocks * 100) + '%' }"></div>
+            </div>
+            <div class="text-xs text-gray-600 dark:text-gray-400 text-center mt-1">
+              {{ blockIndex + 1 }}/{{ totalBlocks }} Seiten
             </div>
           </div>
-          <Button :disabled="consentAnswer !== 'stimmt'" @click="startTest"
-            class="px-8 py-3 text-lg font-semibold rounded-xl shadow">
-            Test starten
-          </Button>
-        </div>
+        </aside>
 
-        <!-- Questions Block Table -->
-        <div v-else-if="!finished" class="p-6 bg-background border rounded-lg">
-          <table class="w-full text-base mb-6 border-separate" style="border-spacing: 0;">
-            <thead>
-              <tr>
-                <th colspan="4" class="p-0">
-                  <div class="flex items-center justify-between w-full text-base font-medium pt-1 pb-2">
-                    <span class="w-1/3 text-left">{{ currentRangeString }}</span>
-                    <span class="w-1/3 text-center text-sm text-muted-foreground font-semibold">
-                      Seite {{ blockIndex + 1 }}/{{ totalBlocks }}
-                    </span>
-                    <span class="w-1/3"></span>
-                  </div>
-                </th>
-              </tr>
-              <tr>
-                <th class="w-12"></th>
-                <th class="text-left"></th>
-                <th class="w-36 text-center">stimmt</th>
-                <th class="w-36 text-center">stimmt nicht</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="q in currentBlockQuestions" :key="q.number"
-                :class="{ 'bg-gray-50 dark:bg-gray-700': !answers[q.number] }">
-                <td class="font-mono align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700 w-12 text-right">
-                  {{ q.number }}.
-                </td>
-                <td class="align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700 pl-2">
-                  {{ q.text }}
-                  <div v-if="q.number === 131" class="text-xs text-gray-500 italic">
-                    gegebenenfalls freilassen
-                  </div>
-                </td>
-                <td class="text-center align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700">
-                  <input type="radio" :name="'q' + q.number" v-model="answers[q.number]" value="stimmt" />
-                </td>
-                <td class="text-center align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700">
-                  <input type="radio" :name="'q' + q.number" v-model="answers[q.number]" value="stimmtNicht" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="flex flex-row justify-between">
-            <Button @click="handlePrevBlock" :disabled="blockIndex === 0" variant="outline">
-              Zurück
-            </Button>
-            <Button v-if="blockIndex < totalBlocks - 1" @click="handleNextBlock">
-              Weiter
-            </Button>
-            <Button v-else @click="finishTest" variant="destructive" :disabled="!isComplete"
-              :title="!isComplete ? `Bitte alle Fragen beantworten (${remaining} offen)` : ''">
-              Test beenden
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col gap-4" :class="{ 'sidebar-fixed-offset': showMissedSidebar }">
+
+          <!-- Consent screen -->
+          <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
+            <h2 class="text-2xl font-bold mb-4">Willkommen zum FPI-R-Fragebogen</h2>
+            <p class="mb-6 text-base text-center max-w-xl">
+              In diesem Fragebogen geht es um eine Reihe von Aussagen über bestimmte
+              Verhaltensweisen, Einstellungen und Gewohnheiten, die auch für den Berufskontext wichtig sind.
+            </p>
+            <p class="mb-6 text-base text-center max-w-xl">
+              Bitte beantworten Sie jede Aussage mit <strong>„stimmt“</strong> oder <strong>„stimmt nicht“</strong>.
+              Kreuzen Sie an, was auf Sie zutrifft. Es gibt keine richtigen und falschen Antworten.
+            </p>
+            <p class="mb-6 text-base text-center max-w-xl">
+              Überlegen Sie bitte nicht erst, welche Antwort vielleicht den „besten Eindruck“ machen könnte,
+              sondern antworten Sie so, wie es für Sie persönlich gilt.
+            </p>
+            <div
+              class="mb-8 mt-4 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg border dark:border-blue-700 font-semibold w-full max-w-xl">
+              <div class="mb-3">Ich habe die Anleitung gelesen und bin bereit, jeden Satz offen zu beantworten.</div>
+              <div class="flex flex-row gap-8">
+                <label class="flex items-center cursor-pointer">
+                  <input type="radio" v-model="consentAnswer" value="stimmt" />
+                  <span class="ml-2">stimmt</span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                  <input type="radio" v-model="consentAnswer" value="stimmtNicht" />
+                  <span class="ml-2">stimmt nicht</span>
+                </label>
+              </div>
+            </div>
+            <Button :disabled="consentAnswer !== 'stimmt'" @click="startTest"
+              class="px-8 py-3 text-lg font-semibold rounded-xl shadow">
+              Test starten
             </Button>
           </div>
+
+          <!-- Questions Block Table -->
+          <div v-else-if="!finished" class="p-6 bg-background border rounded-lg">
+            <table class="w-full text-base mb-6 border-separate" style="border-spacing: 0;">
+              <thead>
+                <tr>
+                  <th colspan="4" class="p-0">
+                    <div class="flex items-center justify-between w-full text-base font-medium pt-1 pb-2">
+                      <span class="w-1/3 text-left">{{ currentRangeString }}</span>
+                      <span class="w-1/3 text-center text-sm text-muted-foreground font-semibold">
+                        Seite {{ blockIndex + 1 }}/{{ totalBlocks }}
+                      </span>
+                      <span class="w-1/3"></span>
+                    </div>
+                  </th>
+                </tr>
+                <tr>
+                  <th class="w-12"></th>
+                  <th class="text-left"></th>
+                  <th class="w-36 text-center">stimmt</th>
+                  <th class="w-36 text-center">stimmt nicht</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="q in currentBlockQuestions" :key="q.number"
+                  :class="{ 'bg-gray-50 dark:bg-gray-700': !answers[q.number] }">
+                  <td class="font-mono align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700 w-12 text-right">
+                    {{ q.number }}.
+                  </td>
+                  <td class="align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700 pl-2">
+                    {{ q.text }}
+                    <div v-if="q.number === 131" class="text-xs text-gray-500 italic">
+                      gegebenenfalls freilassen
+                    </div>
+                  </td>
+                  <td class="text-center align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700">
+                    <input type="radio" :name="'q' + q.number" v-model="answers[q.number]" value="stimmt" />
+                  </td>
+                  <td class="text-center align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700">
+                    <input type="radio" :name="'q' + q.number" v-model="answers[q.number]" value="stimmtNicht" />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="flex flex-row justify-between">
+              <Button @click="handlePrevBlock" :disabled="blockIndex === 0" variant="outline">
+                Zurück
+              </Button>
+              <Button v-if="blockIndex < totalBlocks - 1" @click="handleNextBlock">
+                Weiter
+              </Button>
+              <Button v-else @click="finishTest" variant="destructive" :disabled="!isComplete"
+                :title="!isComplete ? `Bitte alle Fragen beantworten (${remaining} offen)` : ''">
+                Test beenden
+              </Button>
+            </div>
+          </div>
+
+          <div v-else></div>
+
         </div>
-
-        <div v-else></div>
-
-
       </div>
     </div>
     <Dialog v-model:open="endConfirmOpen">
@@ -299,3 +305,11 @@ function finishTest() {
     </Dialog>
   </div>
 </template>
+
+<style scoped>
+@media (min-width: 1024px) {
+  .sidebar-fixed-offset {
+    margin-left: calc(16rem + clamp(1rem, 5vw, 4rem) + 1rem);
+  }
+}
+</style>
