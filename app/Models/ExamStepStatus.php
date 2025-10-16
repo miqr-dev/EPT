@@ -15,8 +15,15 @@ class ExamStepStatus extends Model
     'duration',
     'extra_time',
     'time_remaining_seconds',
+    'pause_button_enabled',
+    'paused_results',
     'started_at',
     'completed_at'
+  ];
+
+  protected $casts = [
+    'pause_button_enabled' => 'boolean',
+    'paused_results' => 'array',
   ];
 
   public function exam()

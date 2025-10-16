@@ -306,7 +306,7 @@ class ExamController extends Controller
   public function setParticipantStepStatus(Request $request, Exam $exam, User $participant)
   {
     $data = $request->validate([
-      'action' => 'required|in:pause,resume',
+      'action' => 'required|in:pause,resume,allow_pause,disable_pause',
     ]);
 
     if (!$exam->current_exam_step_id) {
@@ -327,6 +327,30 @@ class ExamController extends Controller
       + (int) $status->extra_time * 60
       + (int) $status->grace_period_seconds);
 
+    if ($data['action'] === 'allow_pause') {
+      if ($status->status !== 'in_progress') {
+        return back(303)->with('error', 'Pause kann nur während eines aktiven Tests aktiviert werden.');
+      }
+
+      if ($status->pause_button_enabled) {
+        return back(303);
+      }
+
+      $status->update(['pause_button_enabled' => true]);
+
+      return back(303)->with('success', 'Pause wurde für den Teilnehmer aktiviert.');
+    }
+
+    if ($data['action'] === 'disable_pause') {
+      if (!$status->pause_button_enabled) {
+        return back(303);
+      }
+
+      $status->update(['pause_button_enabled' => false]);
+
+      return back(303)->with('success', 'Pause wurde deaktiviert.');
+    }
+
     if ($data['action'] === 'pause') {
       if (in_array($status->status, ['completed', 'broken'], true)) {
         return back(303)->with('error', 'Dieser Test kann nicht pausiert werden.');
@@ -346,10 +370,13 @@ class ExamController extends Controller
 
       $timeRemaining = max(0, (int) $timeRemaining);
 
+      $previousStatus = $status->status;
+
       $status->update([
         'status' => 'paused',
-        'paused_from_status' => $status->status,
+        'paused_from_status' => $previousStatus,
         'time_remaining_seconds' => $timeRemaining,
+        'pause_button_enabled' => false,
       ]);
 
       return back(303)->with('success', 'Teilnehmer wurde pausiert.');
@@ -377,6 +404,8 @@ class ExamController extends Controller
       $updates['started_at'] = null;
       $updates['completed_at'] = null;
     }
+
+    $updates['pause_button_enabled'] = false;
 
     $status->update($updates);
 
