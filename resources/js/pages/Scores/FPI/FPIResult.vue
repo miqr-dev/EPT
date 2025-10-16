@@ -12,16 +12,16 @@ const props = defineProps<{
 const chartCategories = [
   { label: "Lebenszufriedenheit", commentL: "lebenszufrieden, gute Laune<br>zuversichtlich", commentR: "unzufrieden, bedrückt<br>negative Lebenseinstellung" },
   { label: "Soziale Orientierung", commentL: "sozial verantwortlich<br>hilfsbereit, mitmenschlich", commentR: "Eigenverantwortung in Not-<br>lagen betonend, selbstbe-<br>zogen unsolidarisch" },
-  { label: "Leistungsorientierung", commentL: "leistungsorientiert, aktiv<br>schnell-handelnd<br>ehrgeizig-konkurrierend", commentR: "wenig leistungsorientiert<br>oder energisch, wenig<br>ehrgeizig-konkurrierend" },
+  { label: "Leistungsorientierung", commentL: "leistungsorientiert, aktiv schnell-handelnd<br>ehrgeizig-konkurrierend", commentR: "wenig leistungsorientiert<br>oder energisch, wenig<br>ehrgeizig-konkurrierend" },
   { label: "Gehemmtheit", commentL: "gehemmt, unsicher,<br>kontaktscheu", commentR: "ungezwungen, selbstsicher,<br>kontaktbereit" },
   { label: "Erregbarkeit", commentL: "erregbar, empfindlich,<br>unbeherrscht", commentR: "ruhig, gelassen,<br>selbstbeherrscht" },
-  { label: "Aggressivität", commentL: "aggressives Verhalten-<br>spontan und reaktiv,<br>sich durchsetzend", commentR: "wenig aggressiv,<br>kontrolliert,<br>zurückhaltend" },
+  { label: "Aggressivität", commentL: "aggressives Verhalten-spontan<br>und reaktiv,<br>sich durchsetzend", commentR: "wenig aggressiv,<br>kontrolliert,<br>zurückhaltend" },
   { label: "Beanspruchung", commentL: "angespannt, überfordert<br>sich oft „im Stress“ fühlend", commentR: "wenig beansprucht, nicht<br>überfordert, belastbar" },
   { label: "Körperliche Beschwerden", commentL: "viele Beschwerden<br>psychosomatisch gestört", commentR: "wenig Beschwerden,<br>psychosomatisch nicht gestört" },
-  { label: "Gesundheitssorgen", commentL: "furcht vor Erkrankung<br>gesundheitsbewusst, sich<br>schonend", commentR: "wenig Gesundheitssorgen<br>gesundheitlich unbekümmert,<br>robust" },
-  { label: "Offenheit", commentL: "Offenes Zugeben kleiner<br>Schwächen und alltäglicher<br>Normverletzungen, ungeniert,<br>unkonventionell", commentR: "an Umgangsnormen orientiert,<br>auf guten Eindruck bedacht,<br>mangelnde Selbstkritik,<br>verschlossen<br>(Achtung bei Stanine 1-3)" },
+  { label: "Gesundheitssorgen", commentL: "furcht vor Erkrankung<br>gesundheitsbewusst, sich schonend", commentR: "wenig Gesundheitssorgen<br>gesundheitlich unbekümmert,<br>robust" },
+  { label: "Offenheit", commentL: "Offenes Zugeben kleiner Schwächen und<br>alltäglicher Normverletzungen, ungeniert,<br>unkonventionell", commentR: "an Umgangsnormen orientiert,<br>auf guten Eindruck bedacht,<br>mangelnde Selbstkritik,verschlossen<br>(Achtung bei Stanine 1-3)" },
   { label: "Extraversion", commentL: "extravertiert, gesellig<br>impulsiv, unternehmungslustig", commentR: "introvertiert, zurückhaltend<br>überlegt, ernst" },
-  { label: "Emotionalität", commentL: "emotional, labil, empfindlich<br>ängstlich, viele Probleme und<br>körperliche Beschwerden", commentR: "emotional stabil, gelassen<br>selbstvertrauend,<br>lebenszufrieden" },
+  { label: "Emotionalität", commentL: "emotional, labil, empfindlich ängstlich, viele Probleme und körperliche Beschwerden", commentR: "emotional stabil, gelassen<br>selbstvertrauend,<br>lebenszufrieden" },
 ];
 
 // Chart geometry constants for precise layout
