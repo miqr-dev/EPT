@@ -184,7 +184,7 @@ function finishTest() {
       </aside>
 
       <!-- Main Content -->
-      <div class="flex-1 flex flex-col gap-4">
+      <div class="flex-1 flex flex-col gap-4 mx-auto w-full max-w-5xl">
 
         <!-- Consent screen -->
         <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
