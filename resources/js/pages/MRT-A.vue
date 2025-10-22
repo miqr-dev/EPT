@@ -28,8 +28,23 @@ const page = usePage<{
 const userName = computed(() => page.props.auth?.user?.name ?? '');
 const profile = computed(() => page.props.auth?.user?.participant_profile);
 const userAge = computed<number | null>(() => {
-  const age = profile.value?.age;
-  return typeof age === 'number' ? age : age ? Number(age) : null;
+  // Case 1: User has a participant profile with an age.
+  if (profile.value && typeof profile.value.age === 'number') {
+    return profile.value.age;
+  }
+  if (profile.value && profile.value.age) {
+      return Number(profile.value.age)
+  }
+
+  // Case 2: User does NOT have a participant profile (is an admin/tester).
+  if (!profile.value) {
+    // Generate a random age for non-participants.
+    return Math.floor(Math.random() * (50 - 20 + 1)) + 20;
+  }
+
+  // Case 3: User has a participant profile but no age.
+  // In this case, we do not generate a random age, preserving the original behavior for participants.
+  return null;
 });
 const emit = defineEmits(['complete']);
 const endConfirmOpen = ref(false);
