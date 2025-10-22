@@ -93,9 +93,9 @@ async function downloadUnifiedPdf() {
       </DialogHeader>
       <TestResultViewer v-if="editable" ref="viewerRef" :test="assignment?.test" v-model="editable"
         :participant-profile="participant?.participant_profile" class="flex-1 overflow-y-auto mb-4" />
-      <DialogFooter>
+      <!-- <DialogFooter>
         <Button type="submit" @click="submit">Änderungen speichern</Button>
-      </DialogFooter>
+      </DialogFooter> -->
     </DialogContent>
   </Dialog>
 

@@ -102,6 +102,17 @@ function confirmEnd() {
 
                 <div v-else-if="pageIndex === 1" class="rounded-lg border bg-background p-6">
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div>
+                            <table class="text-base">
+                                <tbody>
+                                    <tr><td class="pr-2 font-mono">5</td><td>sehr gern</td></tr>
+                                    <tr><td class="pr-2 font-mono">4</td><td>gern</td></tr>
+                                    <tr><td class="pr-2 font-mono">3</td><td>weder gern noch ungern</td></tr>
+                                    <tr><td class="pr-2 font-mono">2</td><td>ungern</td></tr>
+                                    <tr><td class="pr-2 font-mono">1</td><td>sehr ungern</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                         <table class="w-full border-separate text-base" style="border-spacing: 0">
                             <tbody>
                                 <tr v-for="q in secondPageLeft" :key="q.number" :class="{ 'bg-gray-50 dark:bg-gray-700': answers[q.number] === null }">
@@ -117,7 +128,26 @@ function confirmEnd() {
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="mt-4 flex justify-between">
+                        <Button variant="outline" @click="prevPage">Zurück</Button>
+                        <Button @click="nextPage">Weiter</Button>
+                    </div>
+                </div>
 
+                <div v-else-if="pageIndex === 2" class="rounded-lg border bg-background p-6">
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div>
+                            <table class="text-base">
+                                <tbody>
+                                    <tr><td class="pr-2 font-mono">5</td><td>sehr gern</td></tr>
+                                    <tr><td class="pr-2 font-mono">4</td><td>gern</td></tr>
+                                    <tr><td class="pr-2 font-mono">3</td><td>weder gern noch ungern</td></tr>
+                                    <tr><td class="pr-2 font-mono">2</td><td>ungern</td></tr>
+                                    <tr><td class="pr-2 font-mono">1</td><td>sehr ungern</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                         <table class="w-full border-separate text-base" style="border-spacing: 0">
                             <tbody>
                                 <tr v-for="q in secondPageRight" :key="q.number" :class="{ 'bg-gray-50 dark:bg-gray-700': answers[q.number] === null }">

@@ -171,7 +171,7 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value)
           <circle v-for="(pt, idx) in drawableOutlierPoints" :key="'outlier-' + idx" :cx="pt.x" :cy="pt.y" r="8"
             fill="none" stroke="red" stroke-width="1.5" />
         </svg>
-        <div class="average-box" :style="{
+        <div class="average-box avg-top" :style="{
           top: 0,
           height: `${rowHeight * 10}px`,
           left: `${innerLeft}px`,
@@ -183,7 +183,7 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value)
           </div>
         </div>
 
-        <div class="average-box" :style="{
+        <div class="average-box avg-bottom" :style="{
           top: `${rowHeight * 10}px`,
           height: `${rowHeight * 2}px`,
           left: `${innerLeft}px`,
@@ -309,5 +309,38 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value)
    ========================= */
 .footer-cell{height:48px;display:flex;align-items:center;font-size:12px}
 .footer-cell.standardwert-cell{padding-left:8px}
+
+.average-box { position:absolute; border:1px solid var(--overlay-stroke); box-sizing:border-box; z-index:2; }
+
+/* let the thick row divider be visible */
+.avg-top    { border-bottom: none; }  /* don’t cover the divider from above */
+.avg-bottom { border-top:    none; }  /* don’t cover the divider from below */
+
+.polyline-svg polyline {
+  stroke: var(--overlay-stroke);
+  stroke-width: 3;               /* thicker so it stands over grid/blue lines */
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+/* reset */
+.average-box { border: none; }
+
+/* upper block: only left+right borders */
+.avg-top {
+  border-left: 1px solid var(--overlay-stroke);
+  border-right: 1px solid var(--overlay-stroke);
+}
+
+/* lower block: left+right+bottom (top already none) */
+.avg-bottom {
+  border-left: 1px solid var(--overlay-stroke);
+  border-right: 1px solid var(--overlay-stroke);
+  border-bottom: 1px solid var(--overlay-stroke);
+}
+
+
 </style>
 
