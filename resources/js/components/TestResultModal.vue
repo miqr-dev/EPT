@@ -107,6 +107,7 @@ async function downloadUnifiedPdf() {
         :assignment="assignment"
         :participant="participant"
         :teacherName="teacherName"
+        :result-data="editable"
       />
   </div>
 </template>
