@@ -61,8 +61,8 @@ const testDate = new Date().toLocaleDateString('de-DE', {
     </div>
 
     <!-- Footer -->
-    <div class="mt-12 text-center text-gray-500 text-sm">
+    <!-- <div class="mt-12 text-center text-gray-500 text-sm">
       <p>Dieses Dokument wurde automatisch generiert.</p>
-    </div>
+    </div> -->
   </div>
 </template>

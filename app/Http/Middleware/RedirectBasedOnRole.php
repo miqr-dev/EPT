@@ -49,6 +49,7 @@ class RedirectBasedOnRole
         'participant.onboarding',
         'participant.onboarding.save',
         'mrt-a',
+        'mrt-b',
         'brt-a',
         'brt-b',
         'bit-2',

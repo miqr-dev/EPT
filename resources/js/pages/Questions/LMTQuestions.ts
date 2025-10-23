@@ -141,7 +141,7 @@ export const LMT_QUESTIONS: LMTQuestion[] = [
     options: [
       { category: "angenehm finden", points: 0 },
       { category: "nicht angenehm finden", points: 0 },
-      { category: "unangenehm finden", points: 1, group: "L2" },
+      { category: "sehr unangenehm finden", points: 1, group: "L2" },
     ],
   },
   {
