@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { BIT2_QUESTIONS } from '@/pages/Questions/BIT2Questions';
 
 const bit2Groups = ['TH', 'GH', 'TN', 'EH', 'LF', 'KB', 'VB', 'LG', 'SE'];
 
@@ -109,6 +110,28 @@ const highlighted = computed(() => {
   }
   return map;
 });
+
+const answerMap: Record<number, string> = {
+  5: 'sehr gern',
+  4: 'gern',
+  3: 'weder gern noch ungern',
+  2: 'ungern',
+  1: 'sehr ungern',
+};
+
+const normalizedAnswers = computed(() => {
+  if (!props.results?.answers) return [];
+  return props.results.answers.map((ans: any, index: number) => {
+    const question = BIT2_QUESTIONS[index];
+    const userAnswer = ans.user_answer ?? ans.answer;
+    return {
+      number: ans.number ?? index + 1,
+      question: question?.text ?? ans.question,
+      user_answer: userAnswer !== null ? answerMap[userAnswer] ?? userAnswer : '–',
+      time_seconds: ans.time_seconds,
+    };
+  });
+});
 </script>
 <template>
   <div class="overflow-x-auto">
@@ -128,7 +151,7 @@ const highlighted = computed(() => {
       </tbody>
     </table> -->
     <!-- Norm table -->
-<table class="w-auto mx-auto border text-sm min-w-[760px]">
+    <table class="w-auto mx-auto border text-sm min-w-[760px]">
       <thead class="bg-muted/40 dark:bg-gray-700">
         <tr>
           <th class="px-2 py-1 text-center font-semibold">{{ props.participantProfile?.sex === 'f' ? '♀' : '♂' }}</th>
@@ -171,4 +194,23 @@ const highlighted = computed(() => {
       </tbody>
     </table>
   </div>
+    <details class="mt-4">
+      <summary class="cursor-pointer">Antworten anzeigen</summary>
+      <table class="w-full text-sm border-collapse border border-gray-300">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="border border-gray-300 p-2">#</th>
+            <th class="border border-gray-300 p-2">Frage</th>
+            <th class="border border-gray-300 p-2">Ihre Antwort</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(answer, index) in normalizedAnswers" :key="index">
+            <td class="border border-gray-300 p-2">{{ answer.number }}</td>
+            <td class="border border-gray-300 p-2">{{ answer.question }}</td>
+            <td class="border border-gray-300 p-2">{{ answer.user_answer }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </details>
 </template>

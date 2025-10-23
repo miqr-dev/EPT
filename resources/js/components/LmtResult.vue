@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { LMT_QUESTIONS } from '@/pages/Questions/LMTQuestions';
 const props = defineProps<{
   results: any;
   showAnswers: boolean;
@@ -41,11 +42,7 @@ const scales = [
         <thead class="bg-muted/40">
           <tr>
             <th class="p-2 text-left"></th>
-            <th
-              v-for="scale in scales"
-              :key="scale.key"
-              class="p-2 text-left"
-            >
+            <th v-for="scale in scales" :key="scale.key" class="p-2 text-left">
               {{ scale.label }}
             </th>
           </tr>
@@ -53,29 +50,21 @@ const scales = [
         <tbody>
           <tr class="border-t">
             <td class="p-2 font-semibold">Rohwert</td>
-            <td
-              v-for="scale in scales"
-              :key="scale.key"
-              class="p-2"
-            >
+            <td v-for="scale in scales" :key="scale.key" class="p-2">
               {{ results.group_scores?.[scale.key] ?? '–' }}
             </td>
           </tr>
           <tr class="border-t">
             <td class="p-2 font-semibold">T-Wert</td>
-            <td
-              v-for="scale in scales"
-              :key="scale.key"
-              class="p-2"
-            >
+            <td v-for="scale in scales" :key="scale.key" class="p-2">
               {{ results.group_t_values?.[scale.key] ?? '–' }}
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-
-    <details v-if="showAnswers && results.answers" class="mb-6">
+  </div>
+      <details v-if="showAnswers && results.answers" class="mb-6">
       <summary class="cursor-pointer select-none px-2 py-1 bg-muted/40 rounded">
         Antworten
       </summary>
@@ -84,6 +73,7 @@ const scales = [
           <thead class="bg-muted/40">
             <tr>
               <th class="p-2 text-left">#</th>
+              <th class="p-2 text-left">Frage</th>
               <th class="p-2 text-left">Antwort</th>
               <th class="p-2 text-left">Gruppe</th>
               <th class="p-2 text-left">Punkte</th>
@@ -93,6 +83,7 @@ const scales = [
           <tbody>
             <tr v-for="(ans, idx) in results.answers" :key="idx" class="border-t">
               <td class="p-2">{{ ans.number }}</td>
+              <td class="p-2">{{ LMT_QUESTIONS[idx].text }}</td>
               <td class="p-2">{{ ans.selected_category ?? '–' }}</td>
               <td class="p-2">{{ ans.selected_group ?? '–' }}</td>
               <td class="p-2">{{ ans.points ?? '–' }}</td>
@@ -102,6 +93,4 @@ const scales = [
         </table>
       </div>
     </details>
-  </div>
 </template>
-
