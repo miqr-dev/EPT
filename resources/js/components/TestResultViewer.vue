@@ -36,11 +36,17 @@ interface ResultJson {
   [key: string]: any;
 }
 
-const props = defineProps<{
-  modelValue: ResultJson | null;
-  test: { name: string };
-  participantProfile?: { age: number; sex?: string } | null;
-}>();
+const props = withDefaults(
+  defineProps<{
+    modelValue: ResultJson | null;
+    test: { name: string };
+    participantProfile?: { age: number; sex?: string } | null;
+    showAnswers?: boolean;
+  }>(),
+  {
+    showAnswers: true,
+  },
+);
 
 const emit = defineEmits(['update:modelValue']);
 
@@ -141,9 +147,9 @@ const fpiRohwerte = computed(() => {
   <div v-if="local" v-bind="$attrs">
     <MrtAResult v-if="test.name === 'MRT-A'" :results="local" />
     <MrtBResult v-else-if="test.name === 'MRT-B'" :results="local" />
-        <LmtResult v-else-if="test.name === 'LMT'" :results="local" :show-answers="true" />
-        <FpiResult v-else-if="test.name === 'FPI-R'" :stanines="fpiStanines" :rohwerte="fpiRohwerte" :answers="local.answers" />
-        <BIT2Result v-else-if="test.name === 'BIT-2'" :results="local" :participantProfile="participantProfile" />
+        <LmtResult v-else-if="test.name === 'LMT'" :results="local" :show-answers="showAnswers" />
+        <FpiResult v-else-if="test.name === 'FPI-R'" :stanines="fpiStanines" :rohwerte="fpiRohwerte" :answers="local.answers" :show-answers="showAnswers" />
+        <BIT2Result v-else-if="test.name === 'BIT-2'" :results="local" :participantProfile="participantProfile" :show-answers="showAnswers" />
         <AvemResult v-else-if="test.name === 'AVEM'" :results="local" />
     <template v-else>
       <table class="mb-4 w-full overflow-hidden rounded-lg border text-sm shadow">

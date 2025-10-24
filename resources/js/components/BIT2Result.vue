@@ -21,10 +21,17 @@ interface ResultJson {
   [key: string]: any;
 }
 
-const props = defineProps<{
-  results: ResultJson | null;
-  participantProfile?: { age: number; sex?: string } | null;
-}>();
+const props = withDefaults(
+  defineProps<{
+    results: ResultJson | null;
+    participantProfile?: { age: number; sex?: string } | null;
+    showAnswers?: boolean;
+  }>(),
+  {
+    showAnswers: true,
+  },
+);
+
 
 // --- BIT‑2 percentile table (real values) ---
 interface NormRow {
@@ -194,7 +201,7 @@ const normalizedAnswers = computed(() => {
       </tbody>
     </table>
   </div>
-    <details class="mt-4">
+    <details v-if="showAnswers" class="mt-4">
       <summary class="cursor-pointer">Antworten anzeigen</summary>
       <table class="w-full text-sm border-collapse border border-gray-300">
         <thead>

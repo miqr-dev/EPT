@@ -4,11 +4,18 @@ import { FPI_QUESTIONS } from '../../Questions/FPIQuestions';
 
 // Stanine positions and raw scores are provided by the parent component.
 // No defaults are supplied so a missing value simply renders an empty graph.
-const props = defineProps<{
-  stanines?: (number | null)[];
-  rohwerte?: (number | string | null)[];
-  answers?: any[];
-}>();
+const props = withDefaults(
+  defineProps<{
+    stanines?: (number | null)[];
+    rohwerte?: (number | string | null)[];
+    answers?: any[];
+    showAnswers?: boolean;
+  }>(),
+  {
+    showAnswers: true,
+  },
+);
+
 
 const normalizedAnswers = computed(() => {
   if (!props.answers) return [];
@@ -215,7 +222,7 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value)
       <div class="footer-cell standardwert-cell">fehlende Antworten</div>
     </div>
   </div>
-    <details class="mt-4">
+    <details v-if="showAnswers" class="mt-4">
       <summary class="cursor-pointer">Antworten anzeigen</summary>
       <table class="w-full text-sm border-collapse border border-gray-300">
         <thead>
