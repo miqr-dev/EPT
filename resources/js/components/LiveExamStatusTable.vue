@@ -137,7 +137,10 @@ const setStatus = (status: string) => {
 const getParticipantUserId = (participant: any) =>
   participant.participant_id ?? participant.user?.id
 
-const setParticipantAction = (participant: any, action: 'pause' | 'resume') => {
+const setParticipantAction = (
+  participant: any,
+  action: 'pause' | 'resume' | 'allow_pause' | 'disable_pause',
+) => {
   const participantId = getParticipantUserId(participant)
   if (!participantId) return
   router.post(
@@ -150,11 +153,11 @@ const setParticipantAction = (participant: any, action: 'pause' | 'resume') => {
   )
 }
 
-const canPauseParticipant = (participant: any) => {
+const canEnablePauseForParticipant = (participant: any) => {
   const status = getParticipantStatus(participant)
   if (!status) return false
   if (localExam.value?.status !== 'in_progress') return false
-  return !['paused', 'completed', 'broken'].includes(status.status)
+  return status.status === 'in_progress' && !status.pause_button_enabled
 }
 
 const canResumeParticipant = (participant: any) => {
@@ -162,6 +165,13 @@ const canResumeParticipant = (participant: any) => {
   if (!status) return false
   if (localExam.value?.status !== 'in_progress') return false
   return status.status === 'paused'
+}
+
+const canDisablePauseForParticipant = (participant: any) => {
+  const status = getParticipantStatus(participant)
+  if (!status) return false
+  if (localExam.value?.status !== 'in_progress') return false
+  return status.status === 'in_progress' && status.pause_button_enabled
 }
 
 </script>
@@ -253,19 +263,39 @@ const canResumeParticipant = (participant: any) => {
                 –
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
               {{ formatTime(getParticipantStatus(participant)?.time_remaining) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
               <div class="flex justify-end gap-2">
-                <Button v-if="canPauseParticipant(participant)"
-                  variant="secondary" size="sm" @click="setParticipantAction(participant, 'pause')">
-                  Pausieren
-                </Button>
-                <Button v-if="canResumeParticipant(participant)"
-                  size="sm" @click="setParticipantAction(participant, 'resume')">
-                  Fortsetzen
-                </Button>
+                <template v-if="canResumeParticipant(participant)">
+                  <Button size="sm" @click="setParticipantAction(participant, 'resume')">
+                    Fortsetzen
+                  </Button>
+                </template>
+                <template v-else-if="canDisablePauseForParticipant(participant)">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    @click="setParticipantAction(participant, 'disable_pause')"
+                  >
+                    Pause deaktivieren
+                  </Button>
+                </template>
+                <template v-else-if="canEnablePauseForParticipant(participant)">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    @click="setParticipantAction(participant, 'allow_pause')"
+                  >
+                    Pause aktivieren
+                  </Button>
+                </template>
+                <template v-else-if="getParticipantStatus(participant)?.pause_button_enabled">
+                  <Button variant="outline" size="sm" disabled>
+                    Pause aktiviert
+                  </Button>
+                </template>
               </div>
             </td>
           </tr>
