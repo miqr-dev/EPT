@@ -123,6 +123,24 @@ class ParticipantController extends Controller
     ]);
   }
 
+  public function examStatus()
+  {
+    $user = Auth::user();
+    $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
+
+    if (!$examParticipant) {
+      return response()->json(['status' => 'no_exam']);
+    }
+
+    $exam = Exam::find($examParticipant->exam_id);
+
+    if (!$exam) {
+      return response()->json(['status' => 'no_exam']);
+    }
+
+    return response()->json(['status' => $exam->status]);
+  }
+
   public function noExam()
   {
     return Inertia::render('Exams/NoExam');
