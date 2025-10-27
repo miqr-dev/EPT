@@ -88,7 +88,8 @@ const pointsByRow = computed<(Pt | null)[]>(() => {
 });
 
 const outlierPoints = computed(() => {
-  return pointsByRow.value.filter(pt => pt && (pt.stanine < 3 || pt.stanine > 7));
+  // mark as outlier when stanine is ≤3 or ≥7 (includes 3 and 7)
+  return pointsByRow.value.filter(pt => pt && (pt.stanine <= 3 || pt.stanine >= 7));
 });
 
 const drawablePoints = computed(() => {
