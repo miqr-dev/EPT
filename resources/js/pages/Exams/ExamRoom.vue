@@ -49,7 +49,9 @@ const page = usePage();
 const userName = computed(() => page.props.auth?.user?.name);
 
 const activeTestComponent = shallowRef<unknown>(null);
+const activeTestComponentRef = ref<any>(null);
 const isTestDialogOpen = ref(false);
+const isPausePending = ref(false);
 const activeStepId = ref<number | null>(null);
 
 const testComponents: Record<string, unknown> = {
@@ -109,7 +111,7 @@ function startTest(step: ExamStepInfo, options: StartTestOptions = {}) {
 
 function handleStepActionClick(step: ExamStepInfo) {
     const status = stepStatuses.value[step.id]?.status;
-    if (status === 'in_progress') {
+    if (status === 'in_progress' || status === 'paused') {
         startTest(step, { skipServerStart: true });
         return;
     }
@@ -119,7 +121,7 @@ function handleStepActionClick(step: ExamStepInfo) {
 
 function getStepActionLabel(stepId: number) {
     const status = stepStatuses.value[stepId]?.status;
-    if (status === 'in_progress') {
+    if (status === 'in_progress' || status === 'paused') {
         return 'Test fortsetzen';
     }
 
@@ -140,7 +142,7 @@ function isStepActionDisabled(step: ExamStepInfo) {
         return true;
     }
 
-    return status === 'completed' || status === 'broken' || status === 'paused';
+    return status === 'completed' || status === 'broken';
 }
 
 function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
@@ -163,6 +165,8 @@ function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
             document.addEventListener('fullscreenchange', handleFullscreenChange);
             window.addEventListener('start-finish', beginFinish as EventListener);
             window.addEventListener('cancel-finish', cancelFinish as EventListener);
+            if (autosaveInterval) clearInterval(autosaveInterval);
+            autosaveInterval = setInterval(autosave, 15000);
         });
     };
 
@@ -177,6 +181,27 @@ function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
         {
             preserveScroll: true,
             onSuccess: showDialog,
+        },
+    );
+}
+
+async function pauseTest() {
+    if (!activeStepId.value) return;
+
+    const results = activeTestComponentRef.value?.getResults
+        ? await activeTestComponentRef.value.getResults()
+        : null;
+
+    router.post(
+        '/my-exam/pause-step',
+        {
+            exam_step_id: activeStepId.value,
+            results,
+        },
+        {
+            onSuccess: () => {
+                closeTestDialog({ resetActive: true });
+            },
         },
     );
 }
@@ -229,6 +254,10 @@ function closeTestDialog({ resetActive = false }: { resetActive?: boolean } = {}
 }
 
 function cleanupAfterTest() {
+    if (autosaveInterval) {
+        clearInterval(autosaveInterval);
+        autosaveInterval = null;
+    }
     window.removeEventListener('beforeunload', handleBeforeUnload);
     document.removeEventListener('fullscreenchange', handleFullscreenChange);
     window.removeEventListener('start-finish', beginFinish as EventListener);
@@ -311,6 +340,32 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
     event.returnValue = '';
 }
 
+// --- Autosave ---
+let autosaveInterval: NodeJS.Timeout | null = null;
+
+async function autosave() {
+    if (!activeStepId.value || !activeTestComponentRef.value) return Promise.resolve();
+
+    const results = activeTestComponentRef.value?.getResults
+        ? await activeTestComponentRef.value.getResults()
+        : null;
+
+    if (results) {
+        return router.post(
+            '/my-exam/autosave-progress',
+            {
+                exam_step_id: activeStepId.value,
+                results,
+            },
+            {
+                preserveScroll: true,
+                preserveState: true,
+            },
+        );
+    }
+    return Promise.resolve();
+}
+
 // --- Polling ---
 let polling: NodeJS.Timeout | null = null;
 onMounted(() => {
@@ -325,6 +380,24 @@ onUnmounted(() => {
 });
 
 let hasSyncedInitialStatuses = false;
+const previousPauseRequestAt = ref<Record<number, string | null>>({});
+
+async function handlePauseRequest(stepId: number) {
+    isPausePending.value = true;
+    await autosave();
+    router.post('/my-exam/acknowledge-pause', { exam_step_id: stepId }, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            isPausePending.value = false;
+        },
+        onError: () => {
+            // Also reset on error to avoid getting stuck
+            isPausePending.value = false;
+        }
+    });
+}
+
 watch(
     () => props.stepStatuses,
     (newStatuses) => {
@@ -344,6 +417,11 @@ watch(
             const currentStatus = normalized[id]?.status;
 
             if (hasSyncedInitialStatuses) {
+                const pauseRequestedAt = normalized[id]?.pause_requested_at;
+                if (pauseRequestedAt && previousPauseRequestAt.value[id] !== pauseRequestedAt) {
+                    handlePauseRequest(id);
+                }
+
                 if (currentStatus === 'paused' && prevStatus !== 'paused') {
                     handleRemotePause(id);
                 } else if (prevStatus === 'paused' && currentStatus && currentStatus !== 'paused') {
@@ -353,9 +431,11 @@ watch(
 
             if (typeof currentStatus === 'undefined') {
                 delete previousStatusByStep.value[id];
+                delete previousPauseRequestAt.value[id];
                 remotelyPausedStepIds.delete(id);
             } else {
                 previousStatusByStep.value[id] = currentStatus;
+                previousPauseRequestAt.value[id] = normalized[id]?.pause_requested_at;
             }
         });
 
@@ -466,14 +546,29 @@ watch(
                                         <DialogContent
                                             class="inset-0 top-0 left-0 h-screen w-screen max-w-none translate-x-0 translate-y-0 overflow-auto rounded-none border-none bg-white p-0 text-black sm:max-w-none dark:bg-gray-900 dark:text-white"
                                         >
+                                            <div v-if="isPausePending" class="absolute inset-x-0 top-0 z-20 bg-red-600 text-white text-center p-2 font-bold animate-pulse">
+                                                Pause requested by teacher, saving final data...
+                                            </div>
                                             <template #top-right>
-                                                <div class="absolute top-4 right-4 font-semibold">{{ userName }}</div>
+                                                <div class="absolute top-4 right-4 z-10 flex items-center gap-4">
+                                                    <Button
+                                                        v-if="exam.pause_allowed"
+                                                        variant="secondary"
+                                                        size="sm"
+                                                        @click="pauseTest"
+                                                    >
+                                                        Pause
+                                                    </Button>
+                                                    <div class="font-semibold">{{ userName }}</div>
+                                                </div>
                                             </template>
                                             <KeepAlive>
                                                 <component
                                                     v-if="activeTestComponent"
+                                                    ref="activeTestComponentRef"
                                                     :is="activeTestComponent"
                                                     :key="activeStepId ?? 'inactive'"
+                                                    :initial-results="stepStatuses[activeStepId!]?.partial_results"
                                                     class="h-full w-full"
                                                     @complete="completeTest"
                                                 />

@@ -12,7 +12,30 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
+const props = defineProps<{
+  initialResults?: {
+    answers: { number: number; answer: 'stimmt' | 'stimmtNicht' | null }[];
+    total_time_seconds: number;
+  }
+}>();
+
 const emit = defineEmits(['complete']);
+
+defineExpose({
+  getResults: () => {
+    const totalTimeSeconds = startTime.value
+      ? Math.round((Date.now() - startTime.value) / 1000)
+      : null;
+    return {
+      answers: FPI_QUESTIONS.map(q => ({
+        number: q.number,
+        answer: answers.value[q.number],
+      })),
+      total_time_seconds: totalTimeSeconds,
+    };
+  },
+});
+
 // Settings
 const QUESTIONS_PER_BLOCK = 24;
 
@@ -87,6 +110,17 @@ function startTest() {
   startTime.value = Date.now();
   showTest.value = true;
 }
+
+watch(() => props.initialResults, (newResults) => {
+    if (newResults) {
+        newResults.answers.forEach(a => {
+            answers.value[a.number] = a.answer;
+        });
+        if (newResults.total_time_seconds) {
+            startTime.value = Date.now() - newResults.total_time_seconds * 1000;
+        }
+    }
+}, { immediate: true });
 
 // function finishTest() {
 //   window.dispatchEvent(new Event('start-finish'))

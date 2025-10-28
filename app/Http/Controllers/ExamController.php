@@ -344,15 +344,11 @@ class ExamController extends Controller
         $timeRemaining = now()->diffInSeconds($endTime, false);
       }
 
-      $timeRemaining = max(0, (int) $timeRemaining);
-
       $status->update([
-        'status' => 'paused',
-        'paused_from_status' => $status->status,
-        'time_remaining_seconds' => $timeRemaining,
+        'pause_requested_at' => now(),
       ]);
 
-      return back(303)->with('success', 'Teilnehmer wurde pausiert.');
+      return back(303)->with('success', 'Pause request sent to participant.');
     }
 
     if ($status->status !== 'paused') {
@@ -406,5 +402,16 @@ class ExamController extends Controller
       }
     }
     return redirect()->route('dashboard')->with('success', 'Exam steps updated successfully!');
+  }
+
+  public function togglePauseAllowance(Request $request, Exam $exam)
+  {
+    $exam->update([
+        'pause_allowed' => !$exam->pause_allowed,
+    ]);
+
+    $message = $exam->pause_allowed ? 'Pause feature has been enabled.' : 'Pause feature has been disabled.';
+
+    return back(303)->with('success', $message);
   }
 }

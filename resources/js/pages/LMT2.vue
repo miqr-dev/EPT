@@ -1,6 +1,20 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head } from '@inertiajs/vue3'
+
+const props = defineProps<{
+  initialResults?: {
+    userAnswers: (number | null)[];
+    questionTimes: number[];
+  }
+}>();
+
+defineExpose({
+  getResults: () => ({
+    userAnswers: [...userAnswers.value],
+    questionTimes: [...questionTimes.value],
+  }),
+});
 import { ref, computed, watch, nextTick } from 'vue'
 import { Button } from '@/components/ui/button'
 
@@ -104,6 +118,13 @@ const totalTimeTaken = computed(() => {
     ? questionTimes.value.reduce((a, b) => a + b, 0)
     : null
 })
+
+watch(() => props.initialResults, (newResults) => {
+    if (newResults) {
+        userAnswers.value = [...newResults.userAnswers];
+        questionTimes.value = [...newResults.questionTimes];
+    }
+}, { immediate: true });
 
 function formatTime(sec: number | null): string {
   if (sec === null || isNaN(sec)) return "–"
