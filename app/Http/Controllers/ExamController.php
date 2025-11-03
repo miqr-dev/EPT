@@ -383,6 +383,29 @@ class ExamController extends Controller
     return back(303)->with('success', 'Teilnehmer wurde fortgesetzt.');
   }
 
+  public function forceEndTest(Request $request, Exam $exam, User $participant)
+  {
+      if (!$exam->current_exam_step_id) {
+          return back(303)->with('error', 'Prüfung hat keinen aktiven Test.');
+      }
+
+      $status = ExamStepStatus::where([
+          'exam_id' => $exam->id,
+          'participant_id' => $participant->id,
+          'exam_step_id' => $exam->current_exam_step_id,
+      ])->first();
+
+      if (!$status || $status->status !== 'in_progress') {
+          return back(303)->with('error', 'Test kann nicht beendet werden.');
+      }
+
+      $status->update(['status' => 'force_ending']);
+
+      broadcast(new \App\Events\TestForceEnding($participant->id));
+
+      return back(303)->with('success', 'Test wird in 10 Sekunden beendet.');
+  }
+
   public function updateSteps(Request $request, Exam $exam): RedirectResponse
   {
     $data = $request->validate([
