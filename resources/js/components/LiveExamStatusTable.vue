@@ -140,14 +140,26 @@ const getParticipantUserId = (participant: any) =>
 const setParticipantAction = (participant: any, action: 'pause' | 'resume' | 'force-end') => {
   const participantId = getParticipantUserId(participant)
   if (!participantId) return
-  router.post(
-    route('exams.participants.set-step-status', {
-      exam: props.exam.id,
-      participant: participantId,
-    }),
-    { action },
-    { preserveScroll: true, preserveState: true },
-  )
+
+  if (action === 'force-end') {
+    router.post(
+      route('exams.participants.force-end', {
+        exam: props.exam.id,
+        participant: participantId,
+      }),
+      {},
+      { preserveScroll: true, preserveState: true },
+    )
+  } else {
+    router.post(
+      route('exams.participants.set-step-status', {
+        exam: props.exam.id,
+        participant: participantId,
+      }),
+      { action },
+      { preserveScroll: true, preserveState: true },
+    )
+  }
 }
 
 const canPauseParticipant = (participant: any) => {
