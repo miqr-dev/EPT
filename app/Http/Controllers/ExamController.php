@@ -11,6 +11,7 @@ use App\Models\Test;
 use App\Models\City;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Events\TestForceEnding;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -399,9 +400,9 @@ class ExamController extends Controller
           return back(303)->with('error', 'Test kann nicht beendet werden.');
       }
 
-      $status->update(['status' => 'force_ending']);
+      $status->update(['status' => 'completed']);
 
-      broadcast(new \App\Events\TestForceEnding($participant->id));
+      broadcast(new TestForceEnding($participant->id));
 
       return back(303)->with('success', 'Test wird in 10 Sekunden beendet.');
   }

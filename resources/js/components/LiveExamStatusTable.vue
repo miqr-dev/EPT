@@ -180,7 +180,7 @@ const canForceEnd = (participant: any) => {
   const status = getParticipantStatus(participant)
   if (!status) return false
   if (localExam.value?.status !== 'in_progress') return false
-  return status.status === 'in_progress' && status.status !== 'force_ending'
+  return status.status === 'in_progress'
 }
 
 </script>
@@ -263,7 +263,7 @@ const canForceEnd = (participant: any) => {
                   'bg-yellow-100 text-yellow-800': getParticipantStatus(participant)?.status === 'in_progress',
                   'bg-blue-100 text-blue-800': getParticipantStatus(participant)?.status === 'not_started',
                   'bg-purple-100 text-purple-800': getParticipantStatus(participant)?.status === 'paused',
-                  'bg-red-100 text-red-800': getParticipantStatus(participant)?.status === 'broken' || getParticipantStatus(participant)?.status === 'force_ending',
+                  'bg-red-100 text-red-800': getParticipantStatus(participant)?.status === 'broken',
                 }">
                 {{ getParticipantStatus(participant)?.status?.replace('_', ' ') }}
               </span>

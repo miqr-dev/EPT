@@ -329,7 +329,7 @@ onMounted(() => {
                     countdown.value--;
                     if (countdown.value === 0) {
                         clearInterval(interval);
-                        breakTest();
+                        closeTestDialog({ resetActive: true });
                     }
                 }, 1000);
             });
