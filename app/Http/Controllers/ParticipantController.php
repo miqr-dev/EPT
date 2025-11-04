@@ -154,6 +154,8 @@ class ParticipantController extends Controller
     $examStepStatus->update([
       'status' => 'completed',
       'completed_at' => now(),
+      'force_finish_requested_at' => null,
+      'force_finish_deadline' => null,
     ]);
 
     $results = $request->input('results');
@@ -232,6 +234,8 @@ class ParticipantController extends Controller
     $examStepStatus->update([
       'status' => 'broken',
       'completed_at' => now(),
+      'force_finish_requested_at' => null,
+      'force_finish_deadline' => null,
     ]);
 
     return back(303);

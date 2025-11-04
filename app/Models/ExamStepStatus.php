@@ -12,11 +12,20 @@ class ExamStepStatus extends Model
     'exam_step_id',
     'status',
     'paused_from_status',
+    'force_finish_requested_at',
+    'force_finish_deadline',
     'duration',
     'extra_time',
     'time_remaining_seconds',
     'started_at',
     'completed_at'
+  ];
+
+  protected $casts = [
+    'force_finish_requested_at' => 'datetime',
+    'force_finish_deadline' => 'datetime',
+    'started_at' => 'datetime',
+    'completed_at' => 'datetime',
   ];
 
   public function exam()

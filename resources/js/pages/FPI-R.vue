@@ -11,6 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 
 const emit = defineEmits(['complete']);
 // Settings
@@ -24,6 +25,30 @@ const answers = ref<Record<number, 'stimmt' | 'stimmtNicht' | null>>({});
 const missedQuestions = ref<number[]>([]);
 const finished = ref(false);
 const endConfirmOpen = ref(false);
+
+const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
+  isActive: () => showTest.value && !finished.value,
+  onStart: () => {
+    endConfirmOpen.value = true;
+    window.dispatchEvent(new Event('start-finish'));
+  },
+  onCancel: () => {
+    if (endConfirmOpen.value) {
+      window.dispatchEvent(new Event('cancel-finish'));
+      endConfirmOpen.value = false;
+    }
+  },
+});
+
+const acknowledgeForcedFinish = () => {
+  window.dispatchEvent(new Event('cancel-finish'));
+  endConfirmOpen.value = false;
+};
+
+const submitForcedFinish = () => {
+  window.dispatchEvent(new Event('start-finish'));
+  confirmEnd();
+};
 const startTime = ref<number | null>(null);
 const totalQuestions = FPI_QUESTIONS.length;
 const currentFrom = computed(() => blockIndex.value * QUESTIONS_PER_BLOCK + 1);
@@ -67,6 +92,9 @@ const missedSidebarQuestions = computed(() => {
 
 // Navigation
 function handleNextBlock() {
+  if (isForcedFinish.value) {
+    return;
+  }
   currentBlockQuestions.value.forEach(q => {
     if (!answers.value[q.number] && !missedQuestions.value.includes(q.number)) {
       missedQuestions.value.push(q.number);
@@ -77,9 +105,15 @@ function handleNextBlock() {
   }
 }
 function handlePrevBlock() {
+  if (isForcedFinish.value) {
+    return;
+  }
   if (blockIndex.value > 0) blockIndex.value--;
 }
 function jumpToQuestion(num: number) {
+  if (isForcedFinish.value) {
+    return;
+  }
   const idx = FPI_QUESTIONS.findIndex(q => q.number === num);
   if (idx !== -1) blockIndex.value = Math.floor(idx / QUESTIONS_PER_BLOCK);
 }
@@ -94,6 +128,7 @@ function startTest() {
 // }
 
 function confirmEnd() {
+  clearForcedFinish(false);
   currentBlockQuestions.value.forEach(q => {
     if (!answers.value[q.number] && !missedQuestions.value.includes(q.number)) {
       missedQuestions.value.push(q.number);
@@ -115,8 +150,12 @@ function confirmEnd() {
 }
 
 function cancelEnd() {
+  if (isForcedFinish.value) {
+    return;
+  }
   window.dispatchEvent(new Event('cancel-finish'))
   endConfirmOpen.value = false
+  clearForcedFinish(false)
 }
 
 // --- additions in <script setup> ---
@@ -137,6 +176,10 @@ function finishTest() {
     // jump to first missing to help the user
     if (missedQuestions.value.length) jumpToQuestion(missedQuestions.value[0])
     return
+  }
+  if (isForcedFinish.value) {
+    submitForcedFinish();
+    return;
   }
   window.dispatchEvent(new Event('start-finish'))
   endConfirmOpen.value = true
@@ -161,7 +204,9 @@ function finishTest() {
           <template v-for="q in missedSidebarQuestions" :key="q?.number">
             <button
               class="w-full flex items-center py-1 px-2 rounded-lg border transition text-base hover:bg-blue-50 dark:hover:bg-blue-900"
-              @click="jumpToQuestion(q.number)">
+              @click="jumpToQuestion(q.number)"
+              :disabled="isForcedFinish"
+            >
               <span
                 class="w-8 h-8 flex items-center justify-center rounded-full border mr-2 bg-yellow-100 text-black font-bold dark:bg-yellow-900 dark:text-yellow-100">
                 {{ q.number }}
@@ -223,6 +268,13 @@ function finishTest() {
 
         <!-- Questions Block Table -->
         <div v-else-if="!finished" class="p-6 bg-background border rounded-lg">
+          <div
+            v-if="isForcedFinish"
+            class="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            Der Test wurde vom Prüfer beendet. Beantworten Sie noch offene Fragen in diesem Block und schließen Sie den Test mit
+            „Antwort abgeben und Test beenden“ ab.
+          </div>
           <table class="w-full text-base mb-6 border-separate" style="border-spacing: 0;">
             <thead>
               <tr>
@@ -265,16 +317,23 @@ function finishTest() {
             </tbody>
           </table>
           <div class="flex flex-row justify-between">
-            <Button @click="handlePrevBlock" :disabled="blockIndex === 0" variant="outline">
+            <Button @click="handlePrevBlock" :disabled="blockIndex === 0 || isForcedFinish" variant="outline">
               Zurück
             </Button>
-            <Button v-if="blockIndex < totalBlocks - 1" @click="handleNextBlock">
-              Weiter
-            </Button>
-            <Button v-else @click="finishTest" variant="destructive" :disabled="!isComplete"
-              :title="!isComplete ? `Bitte alle Fragen beantworten (${remaining} offen)` : ''">
-              Test beenden
-            </Button>
+            <template v-if="isForcedFinish">
+              <Button variant="destructive" @click="submitForcedFinish">
+                Antwort abgeben und Test beenden
+              </Button>
+            </template>
+            <template v-else>
+              <Button v-if="blockIndex < totalBlocks - 1" @click="handleNextBlock">
+                Weiter
+              </Button>
+              <Button v-else @click="finishTest" variant="destructive" :disabled="!isComplete"
+                :title="!isComplete ? `Bitte alle Fragen beantworten (${remaining} offen)` : ''">
+                Test beenden
+              </Button>
+            </template>
           </div>
         </div>
 
@@ -287,13 +346,19 @@ function finishTest() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Test beenden</DialogTitle>
-          <DialogDescription>
+          <DialogDescription v-if="!isForcedFinish">
             Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
+          </DialogDescription>
+          <DialogDescription v-else>
+            Der Test ist beendet. Sie können nur noch den aktuellen Fragenblock abschließen.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter class="gap-2">
-          <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
-          <Button variant="destructive" @click="confirmEnd">Ja</Button>
+          <Button v-if="!isForcedFinish" variant="secondary" @click="cancelEnd">Abbrechen</Button>
+          <Button v-if="!isForcedFinish" variant="destructive" @click="confirmEnd">
+            Ja
+          </Button>
+          <Button v-else variant="destructive" @click="acknowledgeForcedFinish">OK</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

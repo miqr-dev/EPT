@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 
 const emit = defineEmits(['complete']);
 
@@ -49,6 +50,30 @@ const questionStartTimestamps = ref<(number | null)[]>(Array(questions.value.len
 const startTime = ref<number | null>(null);
 const endConfirmOpen = ref(false);
 
+const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
+  isActive: () => showTest.value && !isTestComplete.value,
+  onStart: () => {
+    endConfirmOpen.value = true;
+    window.dispatchEvent(new Event('start-finish'));
+  },
+  onCancel: () => {
+    if (endConfirmOpen.value) {
+      window.dispatchEvent(new Event('cancel-finish'));
+      endConfirmOpen.value = false;
+    }
+  },
+});
+
+const acknowledgeForcedFinish = () => {
+  window.dispatchEvent(new Event('cancel-finish'));
+  endConfirmOpen.value = false;
+};
+
+const submitForcedFinish = () => {
+  window.dispatchEvent(new Event('start-finish'));
+  confirmEnd();
+};
+
 function formatQuestionMark(text: string): string {
   if (text.endsWith('?')) {
     return (
@@ -67,15 +92,21 @@ const currentQuestion = computed(() =>
     : null
 );
 
-const nextButtonText = computed(() =>
-  nextButtonClickCount.value === 1 ? "Weiter (Bestätigen)" : "Weiter"
-);
+const nextButtonText = computed(() => {
+  if (isForcedFinish.value) {
+    return "Antwort abgeben und Test beenden";
+  }
+  return nextButtonClickCount.value === 1 ? "Weiter (Bestätigen)" : "Weiter";
+});
 
 const isLastQuestion = computed(
   () => currentQuestionIndex.value === questions.value.length - 1
 );
 
 const jumpToQuestion = (index: number) => {
+  if (isForcedFinish.value) {
+    return;
+  }
   const now = Date.now();
   if (
     currentQuestionIndex.value >= 0 &&
@@ -92,6 +123,10 @@ const jumpToQuestion = (index: number) => {
 };
 
 const handleNextClick = () => {
+  if (isForcedFinish.value) {
+    submitForcedFinish();
+    return;
+  }
   nextButtonClickCount.value++;
   if (nextButtonClickCount.value >= 2) {
     const now = Date.now();
@@ -117,6 +152,9 @@ const handleNextClick = () => {
 };
 
 const handlePrevClick = () => {
+  if (isForcedFinish.value) {
+    return;
+  }
   const now = Date.now();
   if (
     currentQuestionIndex.value >= 0 &&
@@ -135,11 +173,16 @@ const handlePrevClick = () => {
 };
 
 const finishTest = () => {
+  if (isForcedFinish.value) {
+    submitForcedFinish();
+    return;
+  }
   window.dispatchEvent(new Event('start-finish'));
   endConfirmOpen.value = true;
 };
 
-const confirmEnd = () => {
+function confirmEnd() {
+  clearForcedFinish(false);
   const now = Date.now();
   if (
     currentQuestionIndex.value >= 0 &&
@@ -159,11 +202,15 @@ const confirmEnd = () => {
     question_times: [...questionTimes.value],
   };
   emit('complete', results);
-};
+}
 
 const cancelEnd = () => {
+  if (isForcedFinish.value) {
+    return;
+  }
   window.dispatchEvent(new Event('cancel-finish'));
   endConfirmOpen.value = false;
+  clearForcedFinish(false);
 };
 
 // Per-question timer starter
@@ -224,7 +271,7 @@ const startTest = () => {
                 'hover:bg-blue-500': idx === currentQuestionIndex,
                 'bg-gray-300 border-gray-400 text-gray-900': userAnswers[idx] && idx !== currentQuestionIndex,
                 'bg-gray-100 border-gray-300 text-gray-900': !userAnswers[idx] && idx !== currentQuestionIndex,
-              }" @click="jumpToQuestion(idx)" :disabled="isTestComplete || !showTest">
+              }" @click="jumpToQuestion(idx)" :disabled="isTestComplete || !showTest || isForcedFinish">
               <span class="w-8 h-8 flex items-center justify-center rounded-full border mr-2" :class="{
                 'bg-blue-600 text-white border-blue-600': idx === currentQuestionIndex,
                 'bg-gray-400 text-white border-gray-400': userAnswers[idx] && idx !== currentQuestionIndex,
@@ -262,6 +309,13 @@ const startTest = () => {
         <!-- Test Content -->
         <div v-else-if="!isTestComplete && currentQuestion" class="p-6 bg-background border rounded-lg">
           <h2 class="text-xl font-semibold mb-4">Frage {{ currentQuestionIndex + 1 }}:</h2>
+          <div
+            v-if="isForcedFinish"
+            class="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            Der Test wurde vom Prüfer beendet. Beantworten Sie diese Frage und schließen Sie den Test mit
+            „Antwort abgeben und Test beenden“ ab.
+          </div>
           <p class="text-lg mb-6" v-html="formatQuestionMark(currentQuestion.text)"></p>
           <div v-if="currentQuestion.image" class="mb-4">
             <img :src="currentQuestion.image" alt="Fragebild" class="max-w-xs border rounded shadow" />
@@ -271,18 +325,22 @@ const startTest = () => {
               class="mb-2 w-full" />
 
             <div class="flex flex-row justify-between mt-2">
-              <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline">
+              <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0 || isForcedFinish" variant="outline">
                 Zurück
               </Button>
-              <Button v-if="isLastQuestion" @click="finishTest" variant="destructive">
-                Test beenden
+              <Button
+                v-if="isLastQuestion"
+                @click="finishTest"
+                variant="destructive"
+              >
+                {{ isForcedFinish ? 'Antwort abgeben und Test beenden' : 'Test beenden' }}
               </Button>
               <Button v-else @click="handleNextClick">
                 {{ nextButtonText }}
               </Button>
             </div>
           </div>
-          <p v-if="nextButtonClickCount === 1" class="text-sm text-muted-foreground mt-2">
+          <p v-if="nextButtonClickCount === 1 && !isForcedFinish" class="text-sm text-muted-foreground mt-2">
             Klicken Sie erneut auf "Weiter (Bestätigen)", um fortzufahren.
           </p>
         </div>
@@ -294,20 +352,24 @@ const startTest = () => {
       </div>
     </div>
   </div>
-  <Dialog v-model:open="endConfirmOpen">
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Test beenden</DialogTitle>
-        <DialogDescription>
-          Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
-        </DialogDescription>
-      </DialogHeader>
-      <DialogFooter class="gap-2">
-        <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
-        <Button variant="destructive" @click="confirmEnd">Ja</Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
+    <Dialog v-model:open="endConfirmOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Test beenden</DialogTitle>
+          <DialogDescription v-if="!isForcedFinish">
+            Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
+          </DialogDescription>
+          <DialogDescription v-else>
+            Der Test ist beendet. Sie können nur noch die aktuelle Frage beantworten.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter class="gap-2">
+          <Button v-if="!isForcedFinish" variant="secondary" @click="cancelEnd">Abbrechen</Button>
+          <Button v-if="!isForcedFinish" variant="destructive" @click="confirmEnd">Ja</Button>
+          <Button v-else variant="destructive" @click="acknowledgeForcedFinish">OK</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
 </div>
 </template>
 
