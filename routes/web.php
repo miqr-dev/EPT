@@ -49,6 +49,9 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::post('/exams/{exam}/participants/{participant}/step-status', [ExamController::class, 'setParticipantStepStatus'])
         ->name('exams.participants.set-step-status');
 
+    Route::post('/exams/{exam}/participants/{participant}/force-end', [ExamController::class, 'forceEndTest'])
+        ->name('exams.participants.force-end');
+
     Route::post('/exams', [ExamController::class, 'store'])->name('exams.store');
     Route::post('/exams/store-with-participants', [ExamController::class, 'storeWithParticipants'])->name('exams.storeWithParticipants');
     Route::put('/exams/{exam}/steps', [ExamController::class, 'updateSteps'])->name('exams.updateSteps');

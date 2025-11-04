@@ -272,6 +272,8 @@ function handleRemoteResume(stepId: number, status: StepStatus) {
 // --- Fullscreen and Anti-Cheating ---
 const finishing = ref(false);
 const fullscreenWarningOpen = ref(false);
+const forceEndWarningOpen = ref(false);
+const countdown = ref(10);
 
 function requestFullscreen() {
     const elem = document.documentElement;
@@ -317,6 +319,21 @@ onMounted(() => {
     polling = setInterval(() => {
         router.reload({ only: ['exam', 'stepStatuses'] });
     }, 5000);
+
+    const user = usePage().props.auth.user;
+    if (user) {
+        window.Echo.private(`participant.${user.id}`)
+            .listen('TestForceEnding', () => {
+                forceEndWarningOpen.value = true;
+                const interval = setInterval(() => {
+                    countdown.value--;
+                    if (countdown.value === 0) {
+                        clearInterval(interval);
+                        closeTestDialog({ resetActive: true });
+                    }
+                }, 1000);
+            });
+    }
 });
 
 onUnmounted(() => {
@@ -348,6 +365,16 @@ watch(
                     handleRemotePause(id);
                 } else if (prevStatus === 'paused' && currentStatus && currentStatus !== 'paused') {
                     handleRemoteResume(id, currentStatus);
+                }
+
+                // Fallback: If the active test is suddenly 'completed', it was force-ended.
+                if (
+                    id === activeStepId.value &&
+                    isTestDialogOpen.value &&
+                    currentStatus === 'completed' &&
+                    prevStatus === 'in_progress'
+                ) {
+                    closeTestDialog({ resetActive: true });
                 }
             }
 
@@ -505,6 +532,17 @@ watch(
                     <Button variant="secondary" @click="cancelFullscreenExit">Abbrechen</Button>
                     <Button variant="destructive" @click="confirmFullscreenExit">Ja</Button>
                 </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <Dialog :open="forceEndWarningOpen">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Test wird beendet</DialogTitle>
+                    <DialogDescription>
+                        Der Prüfer hat den Test beendet. Der Test wird in {{ countdown }} Sekunden beendet.
+                    </DialogDescription>
+                </DialogHeader>
             </DialogContent>
         </Dialog>
     </div>

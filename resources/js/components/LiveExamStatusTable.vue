@@ -137,17 +137,29 @@ const setStatus = (status: string) => {
 const getParticipantUserId = (participant: any) =>
   participant.participant_id ?? participant.user?.id
 
-const setParticipantAction = (participant: any, action: 'pause' | 'resume') => {
+const setParticipantAction = (participant: any, action: 'pause' | 'resume' | 'force-end') => {
   const participantId = getParticipantUserId(participant)
   if (!participantId) return
-  router.post(
-    route('exams.participants.set-step-status', {
-      exam: props.exam.id,
-      participant: participantId,
-    }),
-    { action },
-    { preserveScroll: true, preserveState: true },
-  )
+
+  if (action === 'force-end') {
+    router.post(
+      route('exams.participants.force-end', {
+        exam: props.exam.id,
+        participant: participantId,
+      }),
+      {},
+      { preserveScroll: true, preserveState: true },
+    )
+  } else {
+    router.post(
+      route('exams.participants.set-step-status', {
+        exam: props.exam.id,
+        participant: participantId,
+      }),
+      { action },
+      { preserveScroll: true, preserveState: true },
+    )
+  }
 }
 
 const canPauseParticipant = (participant: any) => {
@@ -162,6 +174,13 @@ const canResumeParticipant = (participant: any) => {
   if (!status) return false
   if (localExam.value?.status !== 'in_progress') return false
   return status.status === 'paused'
+}
+
+const canForceEnd = (participant: any) => {
+  const status = getParticipantStatus(participant)
+  if (!status) return false
+  if (localExam.value?.status !== 'in_progress') return false
+  return status.status === 'in_progress'
 }
 
 </script>
@@ -265,6 +284,11 @@ const canResumeParticipant = (participant: any) => {
                 <Button v-if="canResumeParticipant(participant)"
                   size="sm" @click="setParticipantAction(participant, 'resume')">
                   Fortsetzen
+                </Button>
+                <Button v-if="canForceEnd(participant)"
+                  variant="destructive"
+                  size="sm" @click="setParticipantAction(participant, 'force-end')">
+                  Prüfung beenden
                 </Button>
               </div>
             </td>
