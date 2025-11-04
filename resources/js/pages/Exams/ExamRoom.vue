@@ -78,6 +78,9 @@ const previousStatusByStep = ref<Record<number, StepStatus | undefined>>({});
 const previousForceFinishByStep = ref<Record<number, string | null>>({});
 const remotelyPausedStepIds = new Set<number>();
 const pendingForceFinishRequests = new Map<number, ForceFinishDetail>();
+const remotePauseCountdown = ref<number | null>(null);
+const remotePauseStepId = ref<number | null>(null);
+let remotePauseTimer: ReturnType<typeof setInterval> | null = null;
 
 const hasPausedStep = computed(() =>
     Object.values(stepStatuses.value || {}).some((status) => status?.status === 'paused'),
@@ -235,6 +238,13 @@ function closeTestDialog({ resetActive = false }: { resetActive?: boolean } = {}
 
     cleanupAfterTest();
 
+    if (remotePauseTimer) {
+        clearInterval(remotePauseTimer);
+        remotePauseTimer = null;
+    }
+    remotePauseCountdown.value = null;
+    remotePauseStepId.value = null;
+
     if (resetActive) {
         const stepId = typeof activeStepId.value === 'number' ? activeStepId.value : null;
         if (typeof activeStepId.value === 'number') {
@@ -259,10 +269,43 @@ function cleanupAfterTest() {
     finishing.value = false;
 }
 
+function stopRemotePauseCountdown() {
+    if (remotePauseTimer) {
+        clearInterval(remotePauseTimer);
+        remotePauseTimer = null;
+    }
+    remotePauseCountdown.value = null;
+    remotePauseStepId.value = null;
+}
+
 function handleRemotePause(stepId: number) {
     remotelyPausedStepIds.add(stepId);
+
+    if (remotePauseStepId.value === stepId && remotePauseCountdown.value !== null) {
+        return;
+    }
+
     if (activeStepId.value === stepId) {
-        closeTestDialog();
+        remotePauseStepId.value = stepId;
+        remotePauseCountdown.value = 30;
+
+        if (remotePauseTimer) {
+            clearInterval(remotePauseTimer);
+        }
+
+        remotePauseTimer = setInterval(() => {
+            if (remotePauseCountdown.value === null) {
+                return;
+            }
+
+            if (remotePauseCountdown.value <= 0) {
+                stopRemotePauseCountdown();
+                closeTestDialog();
+                return;
+            }
+
+            remotePauseCountdown.value = Math.max(0, remotePauseCountdown.value - 1);
+        }, 1000);
     }
 }
 
@@ -272,6 +315,10 @@ function handleRemoteResume(stepId: number, status: StepStatus) {
     }
 
     remotelyPausedStepIds.delete(stepId);
+
+    if (remotePauseStepId.value === stepId) {
+        stopRemotePauseCountdown();
+    }
 
     if (status !== 'in_progress') {
         return;
@@ -367,6 +414,7 @@ onMounted(() => {
 onUnmounted(() => {
     if (polling) clearInterval(polling);
     cleanupAfterTest();
+    stopRemotePauseCountdown();
 });
 
 let hasSyncedInitialStatuses = false;
@@ -525,19 +573,34 @@ watch(
                                         </DialogTrigger>
                                         <DialogContent
                                             class="inset-0 top-0 left-0 h-screen w-screen max-w-none translate-x-0 translate-y-0 overflow-auto rounded-none border-none bg-white p-0 text-black sm:max-w-none dark:bg-gray-900 dark:text-white"
+                                            :force-mount="true"
                                         >
                                             <template #top-right>
                                                 <div class="absolute top-4 right-4 font-semibold">{{ userName }}</div>
                                             </template>
-                                            <KeepAlive>
-                                                <component
-                                                    v-if="activeTestComponent"
-                                                    :is="activeTestComponent"
-                                                    :key="activeStepId ?? 'inactive'"
-                                                    class="h-full w-full"
-                                                    @complete="completeTest"
-                                                />
-                                            </KeepAlive>
+                                            <div class="relative h-full w-full">
+                                                <KeepAlive>
+                                                    <component
+                                                        v-if="activeTestComponent"
+                                                        :is="activeTestComponent"
+                                                        :key="activeStepId ?? 'inactive'"
+                                                        class="h-full w-full"
+                                                        @complete="completeTest"
+                                                    />
+                                                </KeepAlive>
+                                                <div
+                                                    v-if="remotePauseCountdown !== null && remotePauseStepId === activeStepId"
+                                                    class="absolute inset-0 z-10 flex items-center justify-center bg-black/50 p-6 text-center"
+                                                >
+                                                    <div
+                                                        class="max-w-md rounded-lg bg-white px-6 py-4 text-base font-medium text-gray-800 shadow-lg dark:bg-gray-800 dark:text-gray-100"
+                                                    >
+                                                        Der Prüfer pausiert diesen Test in
+                                                        <span class="font-bold">{{ remotePauseCountdown }}</span>
+                                                        Sekunden. Bitte schließen Sie Ihre aktuelle Aufgabe ab.
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </DialogContent>
                                     </Dialog>
                                 </td>
