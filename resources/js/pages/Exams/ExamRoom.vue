@@ -573,6 +573,7 @@ watch(
                                         </DialogTrigger>
                                         <DialogContent
                                             class="inset-0 top-0 left-0 h-screen w-screen max-w-none translate-x-0 translate-y-0 overflow-auto rounded-none border-none bg-white p-0 text-black sm:max-w-none dark:bg-gray-900 dark:text-white"
+                                            :force-mount="true"
                                         >
                                             <template #top-right>
                                                 <div class="absolute top-4 right-4 font-semibold">{{ userName }}</div>
