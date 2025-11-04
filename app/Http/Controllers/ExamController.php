@@ -306,7 +306,7 @@ class ExamController extends Controller
   public function setParticipantStepStatus(Request $request, Exam $exam, User $participant)
   {
     $data = $request->validate([
-      'action' => 'required|in:pause,resume',
+      'action' => 'required|in:pause,resume,finish',
     ]);
 
     if (!$exam->current_exam_step_id) {
@@ -355,32 +355,56 @@ class ExamController extends Controller
       return back(303)->with('success', 'Teilnehmer wurde pausiert.');
     }
 
-    if ($status->status !== 'paused') {
-      return back(303)->with('error', 'Teilnehmer ist aktuell nicht pausiert.');
+    if ($data['action'] === 'resume') {
+      if ($status->status !== 'paused') {
+        return back(303)->with('error', 'Teilnehmer ist aktuell nicht pausiert.');
+      }
+
+      $resumeStatus = $status->paused_from_status ?: 'not_started';
+      $timeRemaining = max(0, (int) ($status->time_remaining_seconds ?? $totalDurationSeconds));
+      $updates = [
+        'paused_from_status' => null,
+        'time_remaining_seconds' => null,
+      ];
+
+      if ($resumeStatus === 'in_progress') {
+        $elapsed = max(0, $totalDurationSeconds - $timeRemaining);
+        $updates['status'] = 'in_progress';
+        $updates['started_at'] = $totalDurationSeconds > 0 ? now()->subSeconds($elapsed) : now();
+      } elseif ($resumeStatus === 'completed') {
+        $updates['status'] = 'completed';
+      } else {
+        $updates['status'] = 'not_started';
+        $updates['started_at'] = null;
+        $updates['completed_at'] = null;
+      }
+
+      $status->update($updates);
+
+      return back(303)->with('success', 'Teilnehmer wurde fortgesetzt.');
     }
 
-    $resumeStatus = $status->paused_from_status ?: 'not_started';
-    $timeRemaining = max(0, (int) ($status->time_remaining_seconds ?? $totalDurationSeconds));
-    $updates = [
-      'paused_from_status' => null,
-      'time_remaining_seconds' => null,
-    ];
+    if ($data['action'] === 'finish') {
+      if ($status->status !== 'in_progress') {
+        return back(303)->with('error', 'Der Test des Teilnehmers läuft aktuell nicht.');
+      }
 
-    if ($resumeStatus === 'in_progress') {
-      $elapsed = max(0, $totalDurationSeconds - $timeRemaining);
-      $updates['status'] = 'in_progress';
-      $updates['started_at'] = $totalDurationSeconds > 0 ? now()->subSeconds($elapsed) : now();
-    } elseif ($resumeStatus === 'completed') {
-      $updates['status'] = 'completed';
-    } else {
-      $updates['status'] = 'not_started';
-      $updates['started_at'] = null;
-      $updates['completed_at'] = null;
+      if ($status->force_finish_requested_at) {
+        return back(303)->with('success', 'Der Test wird bereits beendet.');
+      }
+
+      $requestedAt = now();
+      $deadline = $requestedAt->copy()->addSeconds(10);
+
+      $status->update([
+        'force_finish_requested_at' => $requestedAt,
+        'force_finish_deadline' => $deadline,
+      ]);
+
+      return back(303)->with('success', 'Der Test des Teilnehmers wird beendet.');
     }
 
-    $status->update($updates);
-
-    return back(303)->with('success', 'Teilnehmer wurde fortgesetzt.');
+    return back(303);
   }
 
   public function updateSteps(Request $request, Exam $exam): RedirectResponse

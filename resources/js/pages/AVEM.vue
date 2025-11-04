@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AVEM_QUESTIONS } from '@/pages/Questions/AVEMQuestions'
+import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish'
 import { Head } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
@@ -11,6 +12,30 @@ const emit = defineEmits(['complete'])
 const showTest = ref(false)
 const answers = ref<Record<number, number | null>>({})
 const endConfirmOpen = ref(false)
+
+const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
+  isActive: () => showTest.value,
+  onStart: () => {
+    endConfirmOpen.value = true
+    window.dispatchEvent(new Event('start-finish'))
+  },
+  onCancel: () => {
+    if (endConfirmOpen.value) {
+      window.dispatchEvent(new Event('cancel-finish'))
+      endConfirmOpen.value = false
+    }
+  },
+})
+
+const acknowledgeForcedFinish = () => {
+  window.dispatchEvent(new Event('cancel-finish'))
+  endConfirmOpen.value = false
+}
+
+const submitForcedFinish = () => {
+  window.dispatchEvent(new Event('start-finish'))
+  confirmEnd()
+}
 
 // init answers
 AVEM_QUESTIONS.forEach((q) => (answers.value[q.number] = null))
@@ -40,14 +65,23 @@ function startTest() {
   showTest.value = true
 }
 function finishTest() {
+  if (isForcedFinish.value) {
+    submitForcedFinish()
+    return
+  }
   window.dispatchEvent(new Event('start-finish'))
   endConfirmOpen.value = true
 }
 function cancelEnd() {
+  if (isForcedFinish.value) {
+    return
+  }
   endConfirmOpen.value = false
   window.dispatchEvent(new Event('cancel-finish'))
+  clearForcedFinish(false)
 }
 function confirmEnd() {
+  clearForcedFinish(false)
   endConfirmOpen.value = false
   const results = {
     answers: AVEM_QUESTIONS.map((q) => ({ number: q.number, answer: answers.value[q.number] })),
@@ -164,6 +198,13 @@ const borderClass = (qnum: number) =>
 
         <!-- Test table -->
         <div v-else class="overflow-x-auto rounded-lg border bg-background p-6">
+          <div
+            v-if="isForcedFinish"
+            class="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            Der Test wurde vom Prüfer beendet. Überprüfen Sie Ihre Antworten und schließen Sie den Test mit
+            „Antwort abgeben und Test beenden“ ab.
+          </div>
           <table class="w-full border-separate text-base" style="border-spacing: 0">
             <tbody>
               <tr
@@ -254,7 +295,14 @@ const borderClass = (qnum: number) =>
           </table>
 
           <div class="mt-4 flex justify-end">
-            <Button variant="destructive" @click="finishTest">Test beenden</Button>
+            <template v-if="isForcedFinish">
+              <Button variant="destructive" @click="submitForcedFinish">
+                Antwort abgeben und Test beenden
+              </Button>
+            </template>
+            <template v-else>
+              <Button variant="destructive" @click="finishTest">Test beenden</Button>
+            </template>
           </div>
         </div>
       </div>
@@ -264,11 +312,13 @@ const borderClass = (qnum: number) =>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Test beenden</DialogTitle>
-          <DialogDescription>Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.</DialogDescription>
+          <DialogDescription v-if="!isForcedFinish">Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.</DialogDescription>
+          <DialogDescription v-else>Der Test ist beendet. Sie können nur noch die aktuellen Antworten prüfen.</DialogDescription>
         </DialogHeader>
         <DialogFooter class="gap-2">
-          <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
-          <Button variant="destructive" @click="confirmEnd">Ja</Button>
+          <Button v-if="!isForcedFinish" variant="secondary" @click="cancelEnd">Abbrechen</Button>
+          <Button v-if="!isForcedFinish" variant="destructive" @click="confirmEnd">Ja</Button>
+          <Button v-else variant="destructive" @click="acknowledgeForcedFinish">OK</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

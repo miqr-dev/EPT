@@ -28,7 +28,15 @@ type ExamStepInfo = {
 type StepStatusEntry = {
     id: number;
     status: StepStatus;
+    force_finish_requested_at?: string | null;
+    force_finish_deadline?: string | null;
     [key: string]: any;
+};
+
+type ForceFinishDetail = {
+    stepId: number;
+    deadline?: string | null;
+    requestedAt?: string | null;
 };
 
 const props = defineProps<{
@@ -67,7 +75,9 @@ const testComponents: Record<string, unknown> = {
 
 const stepStatuses = ref<Record<number, StepStatusEntry>>(normalizeStepStatuses(props.stepStatuses));
 const previousStatusByStep = ref<Record<number, StepStatus | undefined>>({});
+const previousForceFinishByStep = ref<Record<number, string | null>>({});
 const remotelyPausedStepIds = new Set<number>();
+const pendingForceFinishRequests = new Map<number, ForceFinishDetail>();
 
 const hasPausedStep = computed(() =>
     Object.values(stepStatuses.value || {}).some((status) => status?.status === 'paused'),
@@ -163,6 +173,12 @@ function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
             document.addEventListener('fullscreenchange', handleFullscreenChange);
             window.addEventListener('start-finish', beginFinish as EventListener);
             window.addEventListener('cancel-finish', cancelFinish as EventListener);
+            const pending = pendingForceFinishRequests.get(step.id);
+            if (pending) {
+                setTimeout(() => {
+                    dispatchForceFinish(pending);
+                }, 0);
+            }
         });
     };
 
@@ -220,8 +236,12 @@ function closeTestDialog({ resetActive = false }: { resetActive?: boolean } = {}
     cleanupAfterTest();
 
     if (resetActive) {
+        const stepId = typeof activeStepId.value === 'number' ? activeStepId.value : null;
         if (typeof activeStepId.value === 'number') {
             remotelyPausedStepIds.delete(activeStepId.value);
+        }
+        if (stepId !== null) {
+            pendingForceFinishRequests.delete(stepId);
         }
         activeStepId.value = null;
         activeTestComponent.value = null;
@@ -267,6 +287,31 @@ function handleRemoteResume(stepId: number, status: StepStatus) {
     }
 
     startTest(step, { skipServerStart: true });
+}
+
+function buildForceFinishDetail(stepId: number, status: StepStatusEntry): ForceFinishDetail {
+    return {
+        stepId,
+        deadline: status.force_finish_deadline ?? status.force_finish_requested_at ?? null,
+        requestedAt: status.force_finish_requested_at ?? null,
+    };
+}
+
+function dispatchForceFinish(detail: ForceFinishDetail) {
+    window.dispatchEvent(new CustomEvent('teacher-force-finish', { detail }));
+}
+
+function queueForceFinish(stepId: number, status: StepStatusEntry) {
+    const detail = buildForceFinishDetail(stepId, status);
+    pendingForceFinishRequests.set(stepId, detail);
+
+    if (isTestDialogOpen.value && activeStepId.value === stepId) {
+        dispatchForceFinish(detail);
+    }
+}
+
+function clearQueuedForceFinish(stepId: number) {
+    pendingForceFinishRequests.delete(stepId);
 }
 
 // --- Fullscreen and Anti-Cheating ---
@@ -342,12 +387,21 @@ watch(
             const id = Number(key);
             const prevStatus = previousStatusByStep.value[id];
             const currentStatus = normalized[id]?.status;
+            const currentForceFinish = normalized[id]?.force_finish_requested_at ?? null;
+            const prevForceFinish = previousForceFinishByStep.value[id];
 
             if (hasSyncedInitialStatuses) {
                 if (currentStatus === 'paused' && prevStatus !== 'paused') {
                     handleRemotePause(id);
                 } else if (prevStatus === 'paused' && currentStatus && currentStatus !== 'paused') {
                     handleRemoteResume(id, currentStatus);
+                }
+                if (normalized[id]) {
+                    if (currentForceFinish && currentForceFinish !== prevForceFinish) {
+                        queueForceFinish(id, normalized[id]!);
+                    } else if (!currentForceFinish && prevForceFinish) {
+                        clearQueuedForceFinish(id);
+                    }
                 }
             }
 
@@ -356,6 +410,12 @@ watch(
                 remotelyPausedStepIds.delete(id);
             } else {
                 previousStatusByStep.value[id] = currentStatus;
+            }
+
+            if (typeof currentForceFinish === 'undefined') {
+                delete previousForceFinishByStep.value[id];
+            } else {
+                previousForceFinishByStep.value[id] = currentForceFinish;
             }
         });
 

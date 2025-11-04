@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import MrtAResult from '@/components/MrtAResult.vue';
 import { useMrtA } from '@/composables/useMrtA';
+import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 
 const { mrtQuestions, calculateScores } = useMrtA();
 
@@ -25,7 +26,6 @@ const page = usePage<{
     };
   };
 }>();
-const userName = computed(() => page.props.auth?.user?.name ?? '');
 const profile = computed(() => page.props.auth?.user?.participant_profile);
 const userAge = computed<number | null>(() => {
     // Case 1: User has a participant profile with an age.
@@ -48,6 +48,30 @@ const userAge = computed<number | null>(() => {
 });
 const emit = defineEmits(['complete']);
 const endConfirmOpen = ref(false);
+
+const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
+  isActive: () => showTest.value && !isTestComplete.value,
+  onStart: () => {
+    endConfirmOpen.value = true;
+    window.dispatchEvent(new Event('start-finish'));
+  },
+  onCancel: () => {
+    if (endConfirmOpen.value) {
+      window.dispatchEvent(new Event('cancel-finish'));
+      endConfirmOpen.value = false;
+    }
+  },
+});
+
+const acknowledgeForcedFinish = () => {
+  window.dispatchEvent(new Event('cancel-finish'));
+  endConfirmOpen.value = false;
+};
+
+const submitForcedFinish = () => {
+  window.dispatchEvent(new Event('start-finish'));
+  confirmEnd();
+};
 
 const showResults = ref(false);
 
@@ -106,7 +130,9 @@ const handleOptionClick = (optIdx: number) => {
       );
       questionStartTimestamps.value[qidx] = null;
     }
-    if (currentQuestionIndex.value < mrtQuestions.length - 1) {
+    if (isForcedFinish.value) {
+      submitForcedFinish();
+    } else if (currentQuestionIndex.value < mrtQuestions.length - 1) {
       currentQuestionIndex.value++;
     }
   } else {
@@ -118,6 +144,9 @@ const handleOptionClick = (optIdx: number) => {
 
 
 const handleNextClick = () => {
+  if (isForcedFinish.value) {
+    return;
+  }
   const now = Date.now();
   const qidx = currentQuestionIndex.value;
   if (
@@ -136,6 +165,9 @@ const handleNextClick = () => {
 };
 
 const handlePrevClick = () => {
+  if (isForcedFinish.value) {
+    return;
+  }
   const now = Date.now();
   const qidx = currentQuestionIndex.value;
   if (
@@ -154,16 +186,25 @@ const handlePrevClick = () => {
 };
 
 const finishTest = () => {
+  if (isForcedFinish.value) {
+    submitForcedFinish();
+    return;
+  }
   window.dispatchEvent(new Event('start-finish'));
   endConfirmOpen.value = true;
 };
 
 const cancelEnd = () => {
+  if (isForcedFinish.value) {
+    return;
+  }
   window.dispatchEvent(new Event('cancel-finish'));
   endConfirmOpen.value = false;
+  clearForcedFinish(false);
 };
 
-const confirmEnd = () => {
+function confirmEnd() {
+  clearForcedFinish(false);
   const now = Date.now();
   const qidx = currentQuestionIndex.value;
   if (
@@ -180,7 +221,7 @@ const confirmEnd = () => {
   endConfirmOpen.value = false;
   showResults.value = true;
   emit('complete', calculatedResults.value);
-};
+}
 
 const calculatedResults = computed(() => {
   if (!isTestComplete.value) return null;
@@ -267,6 +308,13 @@ const startTest = () => {
         <!-- Test Content -->
         <div v-else-if="!isTestComplete && currentQuestion" class="p-6 bg-background border rounded-lg">
           <h2 class="text-xl font-semibold mb-4">Frage {{ currentQuestionIndex + 1 }}:</h2>
+          <div
+            v-if="isForcedFinish"
+            class="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            Der Test wurde vom Prüfer beendet. Beantworten Sie diese Frage und schließen Sie den Test mit
+            „Antwort abgeben und Test beenden“ ab.
+          </div>
           <div class="flex flex-row gap-4 mb-6">
             <div v-for="(option, oidx) in currentQuestion.options" :key="oidx" class="flex flex-col items-center">
               <button class="px-4 py-3 rounded-xl border transition text-base font-sans font-semibold min-w-[120px]"
@@ -291,16 +339,23 @@ const startTest = () => {
           </div>
 
           <div class="flex flex-row justify-between mt-4">
-            <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline">
+            <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0 || isForcedFinish" variant="outline">
               Zurück
             </Button>
-            <Button v-if="isLastQuestion" @click="finishTest" :disabled="!userAnswers[currentQuestionIndex]"
-              variant="destructive">
-              Test beenden
-            </Button>
-            <Button v-else @click="handleNextClick" :disabled="!userAnswers[currentQuestionIndex]">
-              Weiter
-            </Button>
+            <template v-if="isForcedFinish">
+              <Button variant="destructive" @click="submitForcedFinish">
+                Antwort abgeben und Test beenden
+              </Button>
+            </template>
+            <template v-else>
+              <Button v-if="isLastQuestion" @click="finishTest" :disabled="!userAnswers[currentQuestionIndex]"
+                variant="destructive">
+                Test beenden
+              </Button>
+              <Button v-else @click="handleNextClick" :disabled="!userAnswers[currentQuestionIndex]">
+                Weiter
+              </Button>
+            </template>
           </div>
         </div>
 
@@ -316,13 +371,17 @@ const startTest = () => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Test beenden</DialogTitle>
-          <DialogDescription>
+          <DialogDescription v-if="!isForcedFinish">
             Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
+          </DialogDescription>
+          <DialogDescription v-else>
+            Der Test ist beendet. Sie können nur noch die aktuelle Frage beantworten.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter class="gap-2">
-          <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
-          <Button variant="destructive" @click="confirmEnd">Ja</Button>
+          <Button v-if="!isForcedFinish" variant="secondary" @click="cancelEnd">Abbrechen</Button>
+          <Button v-if="!isForcedFinish" variant="destructive" @click="confirmEnd">Ja</Button>
+          <Button v-else variant="destructive" @click="acknowledgeForcedFinish">OK</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
