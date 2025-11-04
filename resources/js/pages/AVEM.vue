@@ -47,11 +47,11 @@ const LABELS: Record<number, string> = {
 }
 
 const LEGEND_TOP = [
-  { val: 5, text: 'völlig zu' },
-  { val: 4, text: 'überwiegend' },
-  { val: 3, text: 'teils/teils' },
-  { val: 2, text: 'überwiegend nicht' },
-  { val: 1, text: 'trifft überhaupt nicht' },
+  { val: 5, text: 'völlig zu', heightClass: 'h-6' },
+  { val: 4, text: 'überwiegend', heightClass: 'h-10' },
+  { val: 3, text: 'teils/teils', heightClass: 'h-14' },
+  { val: 2, text: 'überwiegend nicht', heightClass: 'h-20' },
+  { val: 1, text: 'trifft überhaupt nicht', heightClass: 'h-24' },
 ]
 
 function startTest() {
@@ -113,7 +113,7 @@ const borderClass = (qnum: number) =>
 
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <!-- Left note box -->
-              <div class="border-2 border-gray-700 p-4 dark:border-gray-200">
+              <div class="flex items-center border-2 border-gray-700 p-4 dark:border-gray-200">
                 <div class="text-[15px] leading-6 text-gray-900 dark:text-gray-100">
                   <strong>Bitte beachten Sie:</strong><br />
                   <strong>Voller Kreis</strong> heißt, dass Sie der Aussage <strong>völlig</strong> zustimmen,<br />
@@ -125,7 +125,7 @@ const borderClass = (qnum: number) =>
               <div class="flex flex-col">
                 <div class="mb-2 text-[15px] text-gray-900 dark:text-gray-100">Die Aussage…</div>
 
-                <div class="grid grid-cols-5 items-start gap-4">
+                <div class="grid grid-cols-5 items-end gap-4">
                   <div
                     v-for="item in LEGEND_TOP"
                     :key="item.val"
@@ -136,7 +136,8 @@ const borderClass = (qnum: number) =>
                       {{ item.text }}
                     </div>
                     <div class="flex flex-col items-center mb-2">
-                      <div class="w-px h-6 bg-gray-700 dark:bg-gray-200"></div>
+                         <div class="w-px bg-gray-700 dark:bg-gray-200" :class="item.heightClass"></div>
+
                       <div
                         class="mt-[1px]"
                         style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid currentColor;"
