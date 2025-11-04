@@ -145,6 +145,7 @@ const handleOptionClick = (optIdx: number) => {
 
 const handleNextClick = () => {
   if (isForcedFinish.value) {
+    submitForcedFinish();
     return;
   }
   const now = Date.now();
@@ -342,20 +343,21 @@ const startTest = () => {
             <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0 || isForcedFinish" variant="outline">
               Zurück
             </Button>
-            <template v-if="isForcedFinish">
-              <Button variant="destructive" @click="submitForcedFinish">
-                Antwort abgeben und Test beenden
-              </Button>
-            </template>
-            <template v-else>
-              <Button v-if="isLastQuestion" @click="finishTest" :disabled="!userAnswers[currentQuestionIndex]"
-                variant="destructive">
-                Test beenden
-              </Button>
-              <Button v-else @click="handleNextClick" :disabled="!userAnswers[currentQuestionIndex]">
-                Weiter
-              </Button>
-            </template>
+            <Button
+              v-if="isLastQuestion"
+              @click="finishTest"
+              :disabled="!userAnswers[currentQuestionIndex]"
+              variant="destructive"
+            >
+              {{ isForcedFinish ? 'Antwort abgeben und Test beenden' : 'Test beenden' }}
+            </Button>
+            <Button
+              v-else
+              @click="handleNextClick"
+              :disabled="!userAnswers[currentQuestionIndex]"
+            >
+              {{ isForcedFinish ? 'Antwort abgeben und Test beenden' : 'Weiter' }}
+            </Button>
           </div>
         </div>
 

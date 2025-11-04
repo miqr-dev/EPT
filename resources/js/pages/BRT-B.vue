@@ -92,9 +92,12 @@ const currentQuestion = computed(() =>
     : null
 );
 
-const nextButtonText = computed(() =>
-  nextButtonClickCount.value === 1 ? "Weiter (Bestätigen)" : "Weiter"
-);
+const nextButtonText = computed(() => {
+  if (isForcedFinish.value) {
+    return "Antwort abgeben und Test beenden";
+  }
+  return nextButtonClickCount.value === 1 ? "Weiter (Bestätigen)" : "Weiter";
+});
 
 const isLastQuestion = computed(
   () => currentQuestionIndex.value === questions.value.length - 1
@@ -121,6 +124,7 @@ const jumpToQuestion = (index: number) => {
 
 const handleNextClick = () => {
   if (isForcedFinish.value) {
+    submitForcedFinish();
     return;
   }
   nextButtonClickCount.value++;
@@ -324,19 +328,16 @@ const startTest = () => {
               <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0 || isForcedFinish" variant="outline">
                 Zurück
               </Button>
-              <template v-if="isForcedFinish">
-                <Button variant="destructive" @click="submitForcedFinish">
-                  Antwort abgeben und Test beenden
-                </Button>
-              </template>
-              <template v-else>
-                <Button v-if="isLastQuestion" @click="finishTest" variant="destructive">
-                  Test beenden
-                </Button>
-                <Button v-else @click="handleNextClick">
-                  {{ nextButtonText }}
-                </Button>
-              </template>
+              <Button
+                v-if="isLastQuestion"
+                @click="finishTest"
+                variant="destructive"
+              >
+                {{ isForcedFinish ? 'Antwort abgeben und Test beenden' : 'Test beenden' }}
+              </Button>
+              <Button v-else @click="handleNextClick">
+                {{ nextButtonText }}
+              </Button>
             </div>
           </div>
           <p v-if="nextButtonClickCount === 1 && !isForcedFinish" class="text-sm text-muted-foreground mt-2">
