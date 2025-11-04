@@ -366,6 +366,16 @@ watch(
                 } else if (prevStatus === 'paused' && currentStatus && currentStatus !== 'paused') {
                     handleRemoteResume(id, currentStatus);
                 }
+
+                // Fallback: If the active test is suddenly 'completed', it was force-ended.
+                if (
+                    id === activeStepId.value &&
+                    isTestDialogOpen.value &&
+                    currentStatus === 'completed' &&
+                    prevStatus === 'in_progress'
+                ) {
+                    closeTestDialog({ resetActive: true });
+                }
             }
 
             if (typeof currentStatus === 'undefined') {
