@@ -407,6 +407,92 @@ class ExamController extends Controller
     return back(303);
   }
 
+  public function pause(Request $request, Exam $exam, User $participant)
+  {
+    if (!$exam->current_exam_step_id) {
+        return back(303)->with('error', 'Prüfung hat keinen aktiven Test.');
+    }
+
+    $status = ExamStepStatus::firstOrCreate([
+        'exam_id' => $exam->id,
+        'participant_id' => $participant->id,
+        'exam_step_id' => $exam->current_exam_step_id,
+    ]);
+
+    if (in_array($status->status, ['completed', 'broken', 'paused'], true)) {
+        return back(303)->with('error', 'Dieser Test kann nicht pausiert werden.');
+    }
+
+    $status->loadMissing('step');
+    $stepDurationMinutes = $status->step->duration ?? $exam->currentStep?->duration ?? 0;
+    $totalDurationSeconds = max(0, (int) $stepDurationMinutes * 60
+      + (int) $status->extra_time * 60
+      + (int) $status->grace_period_seconds);
+
+    $timeRemaining = $totalDurationSeconds;
+    if ($status->status === 'in_progress' && $status->started_at) {
+        $startTime = Carbon::parse($status->started_at);
+        $endTime = $startTime->copy()->addSeconds($totalDurationSeconds);
+        $timeRemaining = now()->diffInSeconds($endTime, false);
+    }
+    $timeRemaining = max(0, (int) $timeRemaining);
+
+    $status->update([
+        'status' => 'paused',
+        'paused_from_status' => $status->status,
+        'time_remaining_seconds' => $timeRemaining,
+    ]);
+
+    broadcast(new \App\Events\TestPausing($participant->id));
+
+    return back(303)->with('success', 'Test pause initiated.');
+  }
+
+  public function resume(Request $request, Exam $exam, User $participant)
+  {
+    if (!$exam->current_exam_step_id) {
+        return back(303)->with('error', 'Prüfung hat keinen aktiven Test.');
+    }
+
+    $status = ExamStepStatus::where([
+        'exam_id' => $exam->id,
+        'participant_id' => $participant->id,
+        'exam_step_id' => $exam->current_exam_step_id,
+    ])->first();
+
+    if (!$status || $status->status !== 'paused') {
+        return back(303)->with('error', 'Test is not paused.');
+    }
+
+    $status->loadMissing('step');
+    $stepDurationMinutes = $status->step->duration ?? $exam->currentStep?->duration ?? 0;
+    $totalDurationSeconds = max(0, (int) $stepDurationMinutes * 60
+      + (int) $status->extra_time * 60
+      + (int) $status->grace_period_seconds);
+
+    $resumeStatus = $status->paused_from_status ?: 'not_started';
+    $timeRemaining = max(0, (int) ($status->time_remaining_seconds ?? $totalDurationSeconds));
+    $updates = [
+        'paused_from_status' => null,
+        'time_remaining_seconds' => null,
+    ];
+
+    if ($resumeStatus === 'in_progress') {
+        $elapsed = max(0, $totalDurationSeconds - $timeRemaining);
+        $updates['status'] = 'in_progress';
+        $updates['started_at'] = $totalDurationSeconds > 0 ? now()->subSeconds($elapsed) : now();
+    } else {
+        $updates['status'] = 'not_started';
+        $updates['started_at'] = null;
+    }
+
+    $status->update($updates);
+
+    broadcast(new \App\Events\TestResumed($participant->id));
+
+    return back(303)->with('success', 'Test resumed.');
+  }
+
   public function updateSteps(Request $request, Exam $exam): RedirectResponse
   {
     $data = $request->validate([

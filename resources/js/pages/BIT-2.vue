@@ -3,10 +3,15 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BIT2_QUESTIONS } from '@/pages/Questions/BIT2Questions';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
-import { Head } from '@inertiajs/vue3';
+import { useTestPause } from '@/composables/useTestPause';
+import { Head, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 const emit = defineEmits(['complete']);
+
+const props = defineProps<{
+  participant: any;
+}>();
 
 const showTest = ref(false);
 const pageIndex = ref(0); // 0 first 27, 1 remaining
@@ -29,6 +34,17 @@ const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherF
         }
     },
 });
+
+function confirmEnd() {
+    clearForcedFinish(false);
+    endConfirmOpen.value = false;
+    const results = {
+        answers: BIT2_QUESTIONS.map((q) => ({ number: q.number, answer: answers.value[q.number] })),
+    };
+    emit('complete', results);
+}
+
+const { isPaused, pauseCountdown } = useTestPause(props.participant.id, confirmEnd);
 
 BIT2_QUESTIONS.forEach((q) => (answers.value[q.number] = null));
 
@@ -61,19 +77,15 @@ function cancelEnd() {
     window.dispatchEvent(new Event('cancel-finish'));
     clearForcedFinish(false);
 }
-function confirmEnd() {
-    clearForcedFinish(false);
-    endConfirmOpen.value = false;
-    const results = {
-        answers: BIT2_QUESTIONS.map((q) => ({ number: q.number, answer: answers.value[q.number] })),
-    };
-    emit('complete', results);
-}
 </script>
 
 <template>
     <Head title="BIT-2" />
-    <div class="p-4">
+    <div class="p-4 relative">
+        <div v-if="isPaused" class="absolute inset-0 bg-white bg-opacity-80 z-10 flex flex-col items-center justify-center">
+            <h2 class="text-2xl font-bold">Test Paused</h2>
+            <p v-if="pauseCountdown > 0" class="text-lg">Pausing in {{ pauseCountdown }} seconds...</p>
+        </div>
         <div class="mb-4 flex items-center justify-between">
             <h1 class="text-2xl font-bold">BIT-2</h1>
         </div>

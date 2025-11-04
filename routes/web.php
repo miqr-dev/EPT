@@ -48,6 +48,10 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::post('/exams/{exam}/set-step', [ExamController::class, 'setStep'])->name('exams.set-step');
     Route::post('/exams/{exam}/participants/{participant}/step-status', [ExamController::class, 'setParticipantStepStatus'])
         ->name('exams.participants.set-step-status');
+    Route::post('/exams/{exam}/participants/{participant}/pause', [ExamController::class, 'pause'])
+        ->name('exams.participants.pause');
+    Route.post('/exams/{exam}/participants/{participant}/resume', [ExamController::class, 'resume'])
+        ->name('exams.participants.resume');
 
     Route::post('/exams', [ExamController::class, 'store'])->name('exams.store');
     Route::post('/exams/store-with-participants', [ExamController::class, 'storeWithParticipants'])->name('exams.storeWithParticipants');
