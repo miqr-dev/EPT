@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BIT2_QUESTIONS } from '@/pages/Questions/BIT2Questions';
+import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
@@ -11,6 +12,23 @@ const showTest = ref(false);
 const pageIndex = ref(0); // 0 first 27, 1 remaining
 const answers = ref<Record<number, number | null>>({});
 const endConfirmOpen = ref(false);
+
+const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
+    isActive: () => showTest.value && pageIndex.value >= 0,
+    onStart: () => {
+        endConfirmOpen.value = true;
+        window.dispatchEvent(new Event('start-finish'));
+    },
+    onCountdownFinished: () => {
+        confirmEnd();
+    },
+    onCancel: () => {
+        if (endConfirmOpen.value) {
+            window.dispatchEvent(new Event('cancel-finish'));
+            endConfirmOpen.value = false;
+        }
+    },
+});
 
 BIT2_QUESTIONS.forEach((q) => (answers.value[q.number] = null));
 
@@ -36,10 +54,15 @@ function finishTest() {
     endConfirmOpen.value = true;
 }
 function cancelEnd() {
+    if (isForcedFinish.value) {
+        return;
+    }
     endConfirmOpen.value = false;
     window.dispatchEvent(new Event('cancel-finish'));
+    clearForcedFinish(false);
 }
 function confirmEnd() {
+    clearForcedFinish(false);
     endConfirmOpen.value = false;
     const results = {
         answers: BIT2_QUESTIONS.map((q) => ({ number: q.number, answer: answers.value[q.number] })),
@@ -177,11 +200,18 @@ function confirmEnd() {
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Test beenden</DialogTitle>
-                    <DialogDescription> Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück. </DialogDescription>
+                    <DialogDescription v-if="!isForcedFinish">
+                        Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
+                    </DialogDescription>
+                    <DialogDescription v-else>
+                        Der Test wird automatisch in {{ forcedFinishCountdown }} Sekunden beendet.
+                    </DialogDescription>
                 </DialogHeader>
                 <DialogFooter class="gap-2">
-                    <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
-                    <Button variant="destructive" @click="confirmEnd">Ja</Button>
+                    <Button v-if="!isForcedFinish" variant="secondary" @click="cancelEnd">Abbrechen</Button>
+                    <Button variant="destructive" @click="confirmEnd">
+                        {{ isForcedFinish ? 'Jetzt beenden' : 'Ja' }}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

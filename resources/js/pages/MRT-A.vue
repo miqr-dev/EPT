@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import MrtAResult from '@/components/MrtAResult.vue';
 import { useMrtA } from '@/composables/useMrtA';
+import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 
 const { mrtQuestions, calculateScores } = useMrtA();
 
@@ -25,7 +26,6 @@ const page = usePage<{
     };
   };
 }>();
-const userName = computed(() => page.props.auth?.user?.name ?? '');
 const profile = computed(() => page.props.auth?.user?.participant_profile);
 const userAge = computed<number | null>(() => {
     // Case 1: User has a participant profile with an age.
@@ -48,6 +48,23 @@ const userAge = computed<number | null>(() => {
 });
 const emit = defineEmits(['complete']);
 const endConfirmOpen = ref(false);
+
+const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
+  isActive: () => showTest.value && !isTestComplete.value,
+  onStart: () => {
+    endConfirmOpen.value = true;
+    window.dispatchEvent(new Event('start-finish'));
+  },
+  onCountdownFinished: () => {
+    confirmEnd();
+  },
+  onCancel: () => {
+    if (endConfirmOpen.value) {
+      window.dispatchEvent(new Event('cancel-finish'));
+      endConfirmOpen.value = false;
+    }
+  },
+});
 
 const showResults = ref(false);
 
@@ -159,11 +176,16 @@ const finishTest = () => {
 };
 
 const cancelEnd = () => {
+  if (isForcedFinish.value) {
+    return;
+  }
   window.dispatchEvent(new Event('cancel-finish'));
   endConfirmOpen.value = false;
+  clearForcedFinish(false);
 };
 
-const confirmEnd = () => {
+function confirmEnd() {
+  clearForcedFinish(false);
   const now = Date.now();
   const qidx = currentQuestionIndex.value;
   if (
@@ -180,7 +202,7 @@ const confirmEnd = () => {
   endConfirmOpen.value = false;
   showResults.value = true;
   emit('complete', calculatedResults.value);
-};
+}
 
 const calculatedResults = computed(() => {
   if (!isTestComplete.value) return null;
@@ -316,13 +338,18 @@ const startTest = () => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Test beenden</DialogTitle>
-          <DialogDescription>
+          <DialogDescription v-if="!isForcedFinish">
             Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
+          </DialogDescription>
+          <DialogDescription v-else>
+            Der Test wird automatisch in {{ forcedFinishCountdown }} Sekunden beendet.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter class="gap-2">
-          <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
-          <Button variant="destructive" @click="confirmEnd">Ja</Button>
+          <Button v-if="!isForcedFinish" variant="secondary" @click="cancelEnd">Abbrechen</Button>
+          <Button variant="destructive" @click="confirmEnd">
+            {{ isForcedFinish ? 'Jetzt beenden' : 'Ja' }}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

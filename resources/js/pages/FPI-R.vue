@@ -11,6 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 
 const emit = defineEmits(['complete']);
 // Settings
@@ -24,6 +25,23 @@ const answers = ref<Record<number, 'stimmt' | 'stimmtNicht' | null>>({});
 const missedQuestions = ref<number[]>([]);
 const finished = ref(false);
 const endConfirmOpen = ref(false);
+
+const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
+  isActive: () => showTest.value && !finished.value,
+  onStart: () => {
+    endConfirmOpen.value = true;
+    window.dispatchEvent(new Event('start-finish'));
+  },
+  onCountdownFinished: () => {
+    confirmEnd();
+  },
+  onCancel: () => {
+    if (endConfirmOpen.value) {
+      window.dispatchEvent(new Event('cancel-finish'));
+      endConfirmOpen.value = false;
+    }
+  },
+});
 const startTime = ref<number | null>(null);
 const totalQuestions = FPI_QUESTIONS.length;
 const currentFrom = computed(() => blockIndex.value * QUESTIONS_PER_BLOCK + 1);
@@ -94,6 +112,7 @@ function startTest() {
 // }
 
 function confirmEnd() {
+  clearForcedFinish(false);
   currentBlockQuestions.value.forEach(q => {
     if (!answers.value[q.number] && !missedQuestions.value.includes(q.number)) {
       missedQuestions.value.push(q.number);
@@ -115,8 +134,12 @@ function confirmEnd() {
 }
 
 function cancelEnd() {
+  if (isForcedFinish.value) {
+    return;
+  }
   window.dispatchEvent(new Event('cancel-finish'))
   endConfirmOpen.value = false
+  clearForcedFinish(false)
 }
 
 // --- additions in <script setup> ---
@@ -287,13 +310,18 @@ function finishTest() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Test beenden</DialogTitle>
-          <DialogDescription>
+          <DialogDescription v-if="!isForcedFinish">
             Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
+          </DialogDescription>
+          <DialogDescription v-else>
+            Der Test wird automatisch in {{ forcedFinishCountdown }} Sekunden beendet.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter class="gap-2">
-          <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
-          <Button variant="destructive" @click="confirmEnd">Ja</Button>
+          <Button v-if="!isForcedFinish" variant="secondary" @click="cancelEnd">Abbrechen</Button>
+          <Button variant="destructive" @click="confirmEnd">
+            {{ isForcedFinish ? 'Jetzt beenden' : 'Ja' }}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

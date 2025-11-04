@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { ref, computed, watch, nextTick } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 
 const emit = defineEmits(['complete']);
 
@@ -48,6 +49,23 @@ const questionTimes = ref<number[]>(Array(questions.value.length).fill(0));
 const questionStartTimestamps = ref<(number | null)[]>(Array(questions.value.length).fill(null));
 const startTime = ref<number | null>(null);
 const endConfirmOpen = ref(false);
+
+const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
+  isActive: () => showTest.value && !isTestComplete.value,
+  onStart: () => {
+    endConfirmOpen.value = true;
+    window.dispatchEvent(new Event('start-finish'));
+  },
+  onCountdownFinished: () => {
+    confirmEnd();
+  },
+  onCancel: () => {
+    if (endConfirmOpen.value) {
+      window.dispatchEvent(new Event('cancel-finish'));
+      endConfirmOpen.value = false;
+    }
+  },
+});
 
 function formatQuestionMark(text: string): string {
   if (text.endsWith('?')) {
@@ -139,7 +157,8 @@ const finishTest = () => {
   endConfirmOpen.value = true;
 };
 
-const confirmEnd = () => {
+function confirmEnd() {
+  clearForcedFinish(false);
   const now = Date.now();
   if (
     currentQuestionIndex.value >= 0 &&
@@ -160,11 +179,15 @@ const confirmEnd = () => {
     question_times: [...questionTimes.value],
   };
   emit('complete', results);
-};
+}
 
 const cancelEnd = () => {
+  if (isForcedFinish.value) {
+    return;
+  }
   window.dispatchEvent(new Event('cancel-finish'));
   endConfirmOpen.value = false;
+  clearForcedFinish(false);
 };
 
 // Per-question timer starter
@@ -299,13 +322,18 @@ const startTest = () => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Test beenden</DialogTitle>
-          <DialogDescription>
+          <DialogDescription v-if="!isForcedFinish">
             Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
+          </DialogDescription>
+          <DialogDescription v-else>
+            Der Test wird automatisch in {{ forcedFinishCountdown }} Sekunden beendet.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter class="gap-2">
-          <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
-          <Button variant="destructive" @click="confirmEnd">Ja</Button>
+          <Button v-if="!isForcedFinish" variant="secondary" @click="cancelEnd">Abbrechen</Button>
+          <Button variant="destructive" @click="confirmEnd">
+            {{ isForcedFinish ? 'Jetzt beenden' : 'Ja' }}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

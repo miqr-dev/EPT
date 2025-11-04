@@ -137,7 +137,7 @@ const setStatus = (status: string) => {
 const getParticipantUserId = (participant: any) =>
   participant.participant_id ?? participant.user?.id
 
-const setParticipantAction = (participant: any, action: 'pause' | 'resume') => {
+const setParticipantAction = (participant: any, action: 'pause' | 'resume' | 'finish') => {
   const participantId = getParticipantUserId(participant)
   if (!participantId) return
   router.post(
@@ -162,6 +162,14 @@ const canResumeParticipant = (participant: any) => {
   if (!status) return false
   if (localExam.value?.status !== 'in_progress') return false
   return status.status === 'paused'
+}
+
+const canForceFinishParticipant = (participant: any) => {
+  const status = getParticipantStatus(participant)
+  if (!status) return false
+  if (localExam.value?.status !== 'in_progress') return false
+  if (status.status !== 'in_progress') return false
+  return !status.force_finish_requested_at
 }
 
 </script>
@@ -265,6 +273,10 @@ const canResumeParticipant = (participant: any) => {
                 <Button v-if="canResumeParticipant(participant)"
                   size="sm" @click="setParticipantAction(participant, 'resume')">
                   Fortsetzen
+                </Button>
+                <Button v-if="canForceFinishParticipant(participant)"
+                  variant="destructive" size="sm" @click="setParticipantAction(participant, 'finish')">
+                  Test beenden
                 </Button>
               </div>
             </td>
