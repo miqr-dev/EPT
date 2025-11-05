@@ -59,6 +59,27 @@ function confirmEnd() {
 const { isPaused, pauseCountdown } = useTestPause(props.participant.id, props.examStepId, getAnswers);
 
 const questions = computed(() => FPI_R_QUESTIONS);
+
+const currentPage = ref(0);
+const questionsPerPage = 12;
+const totalPages = computed(() => Math.ceil(questions.value.length / questionsPerPage));
+const paginatedQuestions = computed(() => {
+    const start = currentPage.value * questionsPerPage;
+    const end = start + questionsPerPage;
+    return questions.value.slice(start, end);
+});
+
+function nextPage() {
+    if (currentPage.value < totalPages.value - 1) {
+        currentPage.value++;
+    }
+}
+
+function prevPage() {
+    if (currentPage.value > 0) {
+        currentPage.value--;
+    }
+}
 </script>
 
 <template>
@@ -80,7 +101,7 @@ const questions = computed(() => FPI_R_QUESTIONS);
                 <div v-else class="rounded-lg border bg-background p-6">
                     <table class="w-full border-separate text-base" style="border-spacing: 0">
                         <tbody>
-                            <tr v-for="q in questions" :key="q.number" :class="{ 'bg-gray-50 dark:bg-gray-700': answers[q.number] === null }">
+                            <tr v-for="q in paginatedQuestions" :key="q.number" :class="{ 'bg-gray-50 dark:bg-gray-700': answers[q.number] === null }">
                                 <td class="font-mono w-8 pr-2 align-top pt-2 text-right border-b-2 border-gray-200 dark:border-gray-700">{{ q.number }}.</td>
                                 <td class="pr-4 align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700">{{ q.text }}</td>
                                 <td class="px-2 text-center align-top pt-1 border-b-2 border-gray-200 dark:border-gray-700">
@@ -100,6 +121,10 @@ const questions = computed(() => FPI_R_QUESTIONS);
                             </tr>
                         </tbody>
                     </table>
+                    <div class="mt-4 flex justify-between">
+                        <Button @click="prevPage" :disabled="currentPage === 0">Zurück</Button>
+                        <Button @click="nextPage" :disabled="currentPage === totalPages - 1">Weiter</Button>
+                    </div>
                     <div class="mt-4 flex justify-end">
                         <Button variant="destructive" @click="endConfirmOpen = true">Test beenden</Button>
                     </div>

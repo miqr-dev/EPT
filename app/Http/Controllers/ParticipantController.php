@@ -117,11 +117,40 @@ class ParticipantController extends Controller
     }
 
 
-    $pausedTestResults = TestResult::whereHas('assignment', function ($query) use ($user) {
-        $query->where('participant_id', $user->id);
-    })->where('status', 'paused')->get()->keyBy(function ($result) {
-        return $result->assignment->test_id;
-    });
+    $pausedTestResults = collect();
+    $pausedStepIds = $stepStatuses->where('status', 'paused')->pluck('exam_step_id');
+
+    if ($pausedStepIds->isNotEmpty()) {
+        $testIdsForPausedSteps = $exam->steps
+            ->whereIn('id', $pausedStepIds)
+            ->pluck('test_id');
+
+        if ($testIdsForPausedSteps->isNotEmpty()) {
+            $assignments = TestAssignment::where('participant_id', $user->id)
+                ->whereIn('test_id', $testIdsForPausedSteps)
+                ->get();
+
+            if ($assignments->isNotEmpty()) {
+                $assignmentIds = $assignments->pluck('id');
+
+                // Get all results and find the latest for each assignment
+                $allResults = TestResult::whereIn('assignment_id', $assignmentIds)
+                    ->latest()
+                    ->get();
+
+                $latestPausedResults = $allResults->unique('assignment_id');
+
+                // Key the results by test_id for the view
+                $assignmentsById = $assignments->keyBy('id');
+                $pausedTestResults = $latestPausedResults->keyBy(function($result) use ($assignmentsById) {
+                    if (isset($assignmentsById[$result->assignment_id])) {
+                        return $assignmentsById[$result->assignment_id]->test_id;
+                    }
+                    return null;
+                })->filter();
+            }
+        }
+    }
 
     return Inertia::render('Exams/ExamRoom', [
         'exam' => $exam,
@@ -278,7 +307,6 @@ class ParticipantController extends Controller
               TestResult::create([
                   'assignment_id' => $assignment->id,
                   'result_json' => $results,
-                  'status' => 'paused',
               ]);
           }
       }

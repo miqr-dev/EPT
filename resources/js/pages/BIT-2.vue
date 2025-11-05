@@ -57,9 +57,7 @@ function confirmEnd() {
     emit('complete', getAnswers());
 }
 
-onMounted(() => {
-  const { isPaused, pauseCountdown } = useTestPause(props.participant.id, props.examStepId, getAnswers);
-});
+const { isPaused, pauseCountdown } = useTestPause(props.participant.id, props.examStepId, getAnswers);
 
 const firstPageQuestions = computed(() => BIT2_QUESTIONS.slice(0, 27));
 const secondPageLeft = computed(() => BIT2_QUESTIONS.slice(27, 54));
