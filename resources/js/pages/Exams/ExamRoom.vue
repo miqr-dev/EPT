@@ -30,6 +30,7 @@ type StepStatusEntry = {
     status: StepStatus;
     force_finish_requested_at?: string | null;
     force_finish_deadline?: string | null;
+    progress_json?: unknown;
     [key: string]: any;
 };
 
@@ -59,6 +60,32 @@ const userName = computed(() => page.props.auth?.user?.name);
 const activeTestComponent = shallowRef<unknown>(null);
 const isTestDialogOpen = ref(false);
 const activeStepId = ref<number | null>(null);
+const activeProgress = computed(() => {
+    const id = activeStepId.value;
+    if (!id) {
+        return null;
+    }
+    return stepStatuses.value[id]?.progress_json ?? null;
+});
+const activeStep = computed(() => {
+    if (!activeStepId.value) {
+        return null;
+    }
+    return props.exam.steps.find((step) => step.id === activeStepId.value) ?? null;
+});
+const activeComponentProps = computed(() => {
+    const step = activeStep.value;
+    if (!step) {
+        return {};
+    }
+    if (step.test.name === 'FPI-R') {
+        return {
+            examStepId: activeStepId.value,
+            initialProgress: activeProgress.value,
+        };
+    }
+    return {};
+});
 
 const testComponents: Record<string, unknown> = {
     'BRT-A': BRTA,
@@ -217,6 +244,12 @@ function completeTest(results: any) {
 function breakTest() {
     if (!activeStepId.value) return;
 
+    window.dispatchEvent(
+        new CustomEvent('participant-save-progress', {
+            detail: { stepId: activeStepId.value },
+        }),
+    );
+
     router.post(
         '/my-exam/break-step',
         { exam_step_id: activeStepId.value },
@@ -260,6 +293,12 @@ function cleanupAfterTest() {
 }
 
 function handleRemotePause(stepId: number) {
+    window.dispatchEvent(
+        new CustomEvent('participant-save-progress', {
+            detail: { stepId },
+        }),
+    );
+
     remotelyPausedStepIds.add(stepId);
     if (activeStepId.value === stepId) {
         closeTestDialog();
@@ -535,6 +574,7 @@ watch(
                                                     :is="activeTestComponent"
                                                     :key="activeStepId ?? 'inactive'"
                                                     class="h-full w-full"
+                                                    v-bind="activeComponentProps"
                                                     @complete="completeTest"
                                                 />
                                             </KeepAlive>
