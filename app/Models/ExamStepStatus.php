@@ -18,7 +18,8 @@ class ExamStepStatus extends Model
     'extra_time',
     'time_remaining_seconds',
     'started_at',
-    'completed_at'
+    'completed_at',
+    'progress_json',
   ];
 
   protected $casts = [
@@ -26,6 +27,7 @@ class ExamStepStatus extends Model
     'force_finish_deadline' => 'datetime',
     'started_at' => 'datetime',
     'completed_at' => 'datetime',
+    'progress_json' => 'array',
   ];
 
   public function exam()

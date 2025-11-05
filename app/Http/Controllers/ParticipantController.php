@@ -156,6 +156,7 @@ class ParticipantController extends Controller
       'completed_at' => now(),
       'force_finish_requested_at' => null,
       'force_finish_deadline' => null,
+      'progress_json' => null,
     ]);
 
     $results = $request->input('results');
@@ -222,6 +223,76 @@ class ParticipantController extends Controller
     }
 
     return back(303);
+  }
+
+  public function saveProgress(Request $request)
+  {
+    $user = Auth::user();
+
+    $data = $request->validate([
+      'exam_step_id' => 'required|integer|exists:exam_steps,id',
+      'progress' => 'required|array',
+    ]);
+
+    $status = ExamStepStatus::with('step.test')
+      ->where('participant_id', $user->id)
+      ->where('exam_step_id', $data['exam_step_id'])
+      ->firstOrFail();
+
+    $testName = $status->step?->test?->name;
+    if ($testName !== 'FPI-R') {
+      return response()->json([
+        'message' => 'Progress saving is not available for this test.',
+      ], 422);
+    }
+
+    $progress = $data['progress'];
+
+    $consent = $progress['consentAnswer'] ?? null;
+    $consent = in_array($consent, ['stimmt', 'stimmtNicht'], true) ? $consent : null;
+
+    $blockIndex = isset($progress['blockIndex']) ? (int) $progress['blockIndex'] : 0;
+    $blockIndex = max(0, $blockIndex);
+
+    $missedQuestions = [];
+    if (isset($progress['missedQuestions']) && is_array($progress['missedQuestions'])) {
+      foreach ($progress['missedQuestions'] as $value) {
+        if (is_numeric($value)) {
+          $missedQuestions[] = (int) $value;
+        }
+      }
+      $missedQuestions = array_values(array_unique($missedQuestions));
+    }
+
+    $answers = [];
+    if (isset($progress['answers']) && is_array($progress['answers'])) {
+      foreach ($progress['answers'] as $number => $answer) {
+        if (!is_numeric($number)) {
+          continue;
+        }
+        $num = (int) $number;
+        $answers[$num] = in_array($answer, ['stimmt', 'stimmtNicht'], true) ? $answer : null;
+      }
+      ksort($answers);
+    }
+
+    $elapsedSeconds = isset($progress['elapsedSeconds']) ? (int) $progress['elapsedSeconds'] : 0;
+    $elapsedSeconds = max(0, $elapsedSeconds);
+
+    $status->update([
+      'progress_json' => [
+        'version' => 1,
+        'showTest' => (bool) ($progress['showTest'] ?? false),
+        'consentAnswer' => $consent,
+        'blockIndex' => $blockIndex,
+        'missedQuestions' => $missedQuestions,
+        'answers' => $answers,
+        'elapsedSeconds' => $elapsedSeconds,
+        'savedAt' => now()->toIso8601String(),
+      ],
+    ]);
+
+    return response()->noContent();
   }
 
   public function breakStep(Request $request)

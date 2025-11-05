@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import axios from 'axios';
 import { Head } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { FPI_QUESTIONS } from '@/pages/Questions/FPIQuestions';
 import {
@@ -13,18 +14,42 @@ import {
 } from '@/components/ui/dialog';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 
-const emit = defineEmits(['complete']);
-// Settings
-const QUESTIONS_PER_BLOCK = 24;
+type AnswerValue = 'stimmt' | 'stimmtNicht' | null;
+interface FpiProgressPayload {
+  version?: number;
+  showTest?: boolean;
+  consentAnswer?: AnswerValue;
+  blockIndex?: number;
+  missedQuestions?: number[];
+  answers?: Record<number, AnswerValue>;
+  elapsedSeconds?: number;
+  savedAt?: string | null;
+}
 
-// State
+const props = defineProps<{ examStepId?: number | null; initialProgress?: FpiProgressPayload | null }>();
+const emit = defineEmits(['complete']);
+
+const QUESTIONS_PER_BLOCK = 24;
+const MAX_BLOCK_INDEX = Math.max(0, Math.ceil(FPI_QUESTIONS.length / QUESTIONS_PER_BLOCK) - 1);
+
+function createEmptyAnswers(): Record<number, AnswerValue> {
+  const initial: Record<number, AnswerValue> = {};
+  FPI_QUESTIONS.forEach((question) => {
+    initial[question.number] = null;
+  });
+  return initial;
+}
+
 const showTest = ref(false);
-const consentAnswer = ref<'stimmt' | 'stimmtNicht' | null>(null);
+const consentAnswer = ref<AnswerValue>(null);
 const blockIndex = ref(0);
-const answers = ref<Record<number, 'stimmt' | 'stimmtNicht' | null>>({});
+const answers = ref<Record<number, AnswerValue>>(createEmptyAnswers());
 const missedQuestions = ref<number[]>([]);
 const finished = ref(false);
 const endConfirmOpen = ref(false);
+const startTime = ref<number | null>(null);
+const elapsedBeforePause = ref(0);
+const hasSubmitted = ref(false);
 
 const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
   isActive: () => showTest.value && !finished.value,
@@ -42,50 +67,104 @@ const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherF
     }
   },
 });
-const startTime = ref<number | null>(null);
+
 const totalQuestions = FPI_QUESTIONS.length;
 const currentFrom = computed(() => blockIndex.value * QUESTIONS_PER_BLOCK + 1);
 const currentTo = computed(() => Math.min((blockIndex.value + 1) * QUESTIONS_PER_BLOCK, totalQuestions));
 const currentRangeString = computed(() => `Fragen ${currentFrom.value}–${currentTo.value} von ${totalQuestions}`);
-
-
-
-// Init answers as null for each question
-FPI_QUESTIONS.forEach(q => {
-  answers.value[q.number] = null;
-});
-
-// Compute block questions
-const totalBlocks = computed(() =>
-  Math.ceil(FPI_QUESTIONS.length / QUESTIONS_PER_BLOCK)
-);
-
+const totalBlocks = computed(() => Math.ceil(FPI_QUESTIONS.length / QUESTIONS_PER_BLOCK));
 const currentBlockQuestions = computed(() => {
   const start = blockIndex.value * QUESTIONS_PER_BLOCK;
   return FPI_QUESTIONS.slice(start, start + QUESTIONS_PER_BLOCK);
 });
 
-// Sidebar: Show missed questions only after Weiter was clicked
-// Get the highest-numbered answered question
 const lastAnsweredNumber = computed(() => {
-  // Get all numbers with an answer
   const answeredNums = Object.keys(answers.value)
-    .map(n => Number(n))
-    .filter(n => answers.value[n] !== null);
+    .map((n) => Number(n))
+    .filter((n) => answers.value[n] !== null);
   return answeredNums.length ? Math.max(...answeredNums) : 0;
 });
 
-// Show only missed (unanswered) questions BEFORE the last answered
 const missedSidebarQuestions = computed(() => {
   if (!lastAnsweredNumber.value) return [];
-  return FPI_QUESTIONS.filter(q =>
-    !answers.value[q.number] && q.number < lastAnsweredNumber.value
-  );
+  return FPI_QUESTIONS.filter((q) => !answers.value[q.number] && q.number < lastAnsweredNumber.value);
 });
 
-// Navigation
+const isComplete = computed(() =>
+  FPI_QUESTIONS.every((q) => q.number === 131 || answers.value[q.number] !== null),
+);
+const remaining = computed(() => FPI_QUESTIONS.filter((q) => answers.value[q.number] === null).length);
+
+let suppressAutoSave = false;
+let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+const isSaving = ref(false);
+let queuedWhileSaving = false;
+let lastSerializedProgress: string | null = null;
+let initialProgressApplied = false;
+
+function sanitizeAnswers(raw: Record<number, unknown> | undefined | null): Record<number, AnswerValue> {
+  const sanitized = createEmptyAnswers();
+  if (!raw) {
+    return sanitized;
+  }
+  for (const question of FPI_QUESTIONS) {
+    const value = raw[question.number];
+    sanitized[question.number] = value === 'stimmt' || value === 'stimmtNicht' ? value : null;
+  }
+  return sanitized;
+}
+
+function sanitizeMissedQuestions(raw: unknown): number[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  const filtered = raw
+    .map((val) => (typeof val === 'number' || typeof val === 'string' ? Number(val) : null))
+    .filter((val): val is number => typeof val === 'number' && Number.isFinite(val));
+  return Array.from(new Set(filtered));
+}
+
+function applyInitialProgress(progress: FpiProgressPayload | null | undefined) {
+  if (initialProgressApplied) {
+    return;
+  }
+  restoreFromProgress(progress ?? null);
+  initialProgressApplied = true;
+}
+
+function restoreFromProgress(progress: FpiProgressPayload | null) {
+  suppressAutoSave = true;
+  answers.value = sanitizeAnswers(progress?.answers ?? null);
+  consentAnswer.value = progress?.consentAnswer === 'stimmt' || progress?.consentAnswer === 'stimmtNicht'
+    ? progress.consentAnswer
+    : null;
+  const candidateBlockIndex = Number(progress?.blockIndex ?? 0);
+  blockIndex.value = Number.isFinite(candidateBlockIndex)
+    ? Math.min(Math.max(0, Math.trunc(candidateBlockIndex)), MAX_BLOCK_INDEX)
+    : 0;
+  missedQuestions.value = sanitizeMissedQuestions(progress?.missedQuestions ?? []);
+  finished.value = false;
+  endConfirmOpen.value = false;
+  hasSubmitted.value = false;
+  const shouldShowTest = Boolean(progress?.showTest);
+  showTest.value = shouldShowTest;
+  elapsedBeforePause.value = Math.max(0, Number(progress?.elapsedSeconds ?? 0));
+  startTime.value = shouldShowTest ? Date.now() - elapsedBeforePause.value * 1000 : null;
+
+  if (saveTimeout) {
+    clearTimeout(saveTimeout);
+    saveTimeout = null;
+  }
+
+  lastSerializedProgress = JSON.stringify(buildProgressPayload());
+
+  setTimeout(() => {
+    suppressAutoSave = false;
+  }, 0);
+}
+
 function handleNextBlock() {
-  currentBlockQuestions.value.forEach(q => {
+  currentBlockQuestions.value.forEach((q) => {
     if (!answers.value[q.number] && !missedQuestions.value.includes(q.number)) {
       missedQuestions.value.push(q.number);
     }
@@ -94,37 +173,138 @@ function handleNextBlock() {
     blockIndex.value++;
   }
 }
+
 function handlePrevBlock() {
   if (blockIndex.value > 0) blockIndex.value--;
 }
+
 function jumpToQuestion(num: number) {
-  const idx = FPI_QUESTIONS.findIndex(q => q.number === num);
+  const idx = FPI_QUESTIONS.findIndex((q) => q.number === num);
   if (idx !== -1) blockIndex.value = Math.floor(idx / QUESTIONS_PER_BLOCK);
 }
+
 function startTest() {
-  startTime.value = Date.now();
+  elapsedBeforePause.value = Math.max(0, elapsedBeforePause.value);
+  startTime.value = Date.now() - elapsedBeforePause.value * 1000;
   showTest.value = true;
 }
 
-// function finishTest() {
-//   window.dispatchEvent(new Event('start-finish'))
-//   endConfirmOpen.value = true
-// }
+function computeElapsedSeconds(): number {
+  if (!showTest.value) {
+    return elapsedBeforePause.value;
+  }
+  if (!startTime.value) {
+    return elapsedBeforePause.value;
+  }
+  const diff = Math.round((Date.now() - startTime.value) / 1000);
+  return Math.max(diff, elapsedBeforePause.value);
+}
+
+function buildProgressPayload(): Required<Pick<FpiProgressPayload, 'version' | 'showTest' | 'consentAnswer' | 'blockIndex' | 'missedQuestions' | 'answers' | 'elapsedSeconds'>> {
+  const sanitizedAnswers = createEmptyAnswers();
+  for (const question of FPI_QUESTIONS) {
+    const value = answers.value[question.number];
+    sanitizedAnswers[question.number] = value === 'stimmt' || value === 'stimmtNicht' ? value : null;
+  }
+
+  const sanitizedMissed = Array.from(new Set(missedQuestions.value.map((val) => Number(val)).filter((val) => Number.isFinite(val))));
+
+  return {
+    version: 1,
+    showTest: showTest.value,
+    consentAnswer: consentAnswer.value,
+    blockIndex: blockIndex.value,
+    missedQuestions: sanitizedMissed,
+    answers: sanitizedAnswers,
+    elapsedSeconds: computeElapsedSeconds(),
+  };
+}
+
+function shouldAutoSave(): boolean {
+  return Boolean(props.examStepId) && !hasSubmitted.value;
+}
+
+function scheduleSave() {
+  if (!shouldAutoSave()) {
+    return;
+  }
+  if (suppressAutoSave) {
+    return;
+  }
+  if (isSaving.value) {
+    queuedWhileSaving = true;
+    return;
+  }
+  if (saveTimeout) {
+    clearTimeout(saveTimeout);
+  }
+  saveTimeout = setTimeout(() => {
+    void flushProgressSave();
+  }, 1000);
+}
+
+async function flushProgressSave(force = false): Promise<void> {
+  if (!shouldAutoSave()) {
+    return;
+  }
+
+  if (saveTimeout) {
+    clearTimeout(saveTimeout);
+    saveTimeout = null;
+  }
+
+  const payload = buildProgressPayload();
+  const serialized = JSON.stringify(payload);
+
+  if (!force && lastSerializedProgress === serialized) {
+    return;
+  }
+
+  if (isSaving.value) {
+    queuedWhileSaving = true;
+    return;
+  }
+
+  isSaving.value = true;
+  try {
+    const url = typeof route === 'function' ? route('my-exam.save-progress') : '/my-exam/save-progress';
+    await axios.post(url, {
+      exam_step_id: props.examStepId,
+      progress: payload,
+    });
+    lastSerializedProgress = serialized;
+    elapsedBeforePause.value = payload.elapsedSeconds;
+    if (showTest.value && startTime.value) {
+      startTime.value = Date.now() - elapsedBeforePause.value * 1000;
+    }
+  } catch (error) {
+    console.error('Failed to save FPI-R progress', error);
+  } finally {
+    isSaving.value = false;
+    if (queuedWhileSaving) {
+      queuedWhileSaving = false;
+      void flushProgressSave();
+    }
+  }
+}
 
 function confirmEnd() {
   clearForcedFinish(false);
-  currentBlockQuestions.value.forEach(q => {
+  currentBlockQuestions.value.forEach((q) => {
     if (!answers.value[q.number] && !missedQuestions.value.includes(q.number)) {
       missedQuestions.value.push(q.number);
     }
   });
+  if (saveTimeout) {
+    clearTimeout(saveTimeout);
+    saveTimeout = null;
+  }
   endConfirmOpen.value = false;
   finished.value = true;
-  const totalTimeSeconds = startTime.value
-    ? Math.round((Date.now() - startTime.value) / 1000)
-    : null;
+  hasSubmitted.value = true;
+  const totalTimeSeconds = startTime.value ? computeElapsedSeconds() : null;
   const results = {
-    answers: FPI_QUESTIONS.map(q => ({
+    answers: FPI_QUESTIONS.map((q) => ({
       number: q.number,
       answer: answers.value[q.number],
     })),
@@ -137,34 +317,67 @@ function cancelEnd() {
   if (isForcedFinish.value) {
     return;
   }
-  window.dispatchEvent(new Event('cancel-finish'))
-  endConfirmOpen.value = false
-  clearForcedFinish(false)
+  window.dispatchEvent(new Event('cancel-finish'));
+  endConfirmOpen.value = false;
+  clearForcedFinish(false);
 }
-
-// --- additions in <script setup> ---
-const isComplete = computed(() =>
-  FPI_QUESTIONS.every(q => 
-  q.number === 131 || answers.value[q.number] !== null)
-)
-const remaining = computed(() =>
-  FPI_QUESTIONS.filter(q => answers.value[q.number] === null).length
-)
 
 function finishTest() {
-  // hard guard
   if (!isComplete.value) {
     missedQuestions.value = FPI_QUESTIONS
-      .filter(q => answers.value[q.number] === null)
-      .map(q => q.number)
-    // jump to first missing to help the user
-    if (missedQuestions.value.length) jumpToQuestion(missedQuestions.value[0])
-    return
+      .filter((q) => answers.value[q.number] === null)
+      .map((q) => q.number);
+    if (missedQuestions.value.length) jumpToQuestion(missedQuestions.value[0]);
+    return;
   }
-  window.dispatchEvent(new Event('start-finish'))
-  endConfirmOpen.value = true
+  window.dispatchEvent(new Event('start-finish'));
+  endConfirmOpen.value = true;
 }
 
+function handleExternalSave(event: Event) {
+  if (!props.examStepId) {
+    return;
+  }
+  const detail = (event as CustomEvent<{ stepId?: number }>).detail;
+  if (detail && typeof detail.stepId === 'number' && detail.stepId !== props.examStepId) {
+    return;
+  }
+  void flushProgressSave(true);
+}
+
+applyInitialProgress(props.initialProgress);
+
+watch(
+  () => props.initialProgress,
+  (progress) => {
+    if (!initialProgressApplied && progress) {
+      restoreFromProgress(progress);
+      initialProgressApplied = true;
+    }
+  },
+  { deep: true },
+);
+
+watch(() => answers.value, scheduleSave, { deep: true });
+watch(() => blockIndex.value, scheduleSave);
+watch(() => missedQuestions.value, scheduleSave, { deep: true });
+watch(() => showTest.value, scheduleSave);
+watch(() => consentAnswer.value, scheduleSave);
+
+onMounted(() => {
+  window.addEventListener('participant-save-progress', handleExternalSave as EventListener);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('participant-save-progress', handleExternalSave as EventListener);
+  if (saveTimeout) {
+    clearTimeout(saveTimeout);
+    saveTimeout = null;
+  }
+  if (shouldAutoSave()) {
+    void flushProgressSave(true);
+  }
+});
 </script>
 
 <template>
