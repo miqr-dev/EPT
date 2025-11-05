@@ -13,7 +13,15 @@ import {
 } from '@/components/ui/dialog';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 
-const emit = defineEmits(['complete']);
+import { watch } from 'vue';
+
+const props = defineProps<{
+    pausedTestResult?: {
+        answers: { number: number; answer: 'stimmt' | 'stimmtNicht' | null }[];
+    };
+}>();
+
+const emit = defineEmits(['complete', 'update:answers']);
 // Settings
 const QUESTIONS_PER_BLOCK = 24;
 
@@ -54,6 +62,26 @@ const currentRangeString = computed(() => `Fragen ${currentFrom.value}–${curre
 FPI_QUESTIONS.forEach(q => {
   answers.value[q.number] = null;
 });
+
+if (props.pausedTestResult) {
+    props.pausedTestResult.answers.forEach(a => {
+        answers.value[a.number] = a.answer;
+    });
+}
+
+watch(
+    answers,
+    newAnswers => {
+        const results = {
+            answers: FPI_QUESTIONS.map(q => ({
+                number: q.number,
+                answer: newAnswers[q.number],
+            })),
+        };
+        emit('update:answers', results);
+    },
+    { deep: true, immediate: true },
+);
 
 // Compute block questions
 const totalBlocks = computed(() =>

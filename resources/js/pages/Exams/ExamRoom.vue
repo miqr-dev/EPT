@@ -51,6 +51,9 @@ const props = defineProps<{
         };
     };
     stepStatuses: Record<number, StepStatusEntry>;
+    pausedTestResult?: {
+        result_json: any;
+    };
 }>();
 
 const page = usePage();
@@ -259,9 +262,27 @@ function cleanupAfterTest() {
     finishing.value = false;
 }
 
+const activeTestAnswers = ref<any>(null);
+
+function pauseTest(answers: any) {
+    if (!activeStepId.value) return;
+
+    router.post(
+        '/my-exam/pause-step',
+        {
+            exam_step_id: activeStepId.value,
+            results: answers,
+        },
+        {
+            preserveScroll: true,
+        },
+    );
+}
+
 function handleRemotePause(stepId: number) {
     remotelyPausedStepIds.add(stepId);
     if (activeStepId.value === stepId) {
+        pauseTest(activeTestAnswers.value);
         closeTestDialog();
     }
 }
@@ -535,7 +556,9 @@ watch(
                                                     :is="activeTestComponent"
                                                     :key="activeStepId ?? 'inactive'"
                                                     class="h-full w-full"
+                                                    :paused-test-result="pausedTestResult?.result_json"
                                                     @complete="completeTest"
+                                                    @update:answers="activeTestAnswers = $event"
                                                 />
                                             </KeepAlive>
                                         </DialogContent>
