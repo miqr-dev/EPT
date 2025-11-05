@@ -18,6 +18,7 @@ import { watch } from 'vue';
 const props = defineProps<{
     pausedTestResult?: {
         answers: { number: number; answer: 'stimmt' | 'stimmtNicht' | null }[];
+        blockIndex?: number;
     };
 }>();
 
@@ -64,19 +65,26 @@ FPI_QUESTIONS.forEach(q => {
 });
 
 if (props.pausedTestResult) {
-    props.pausedTestResult.answers.forEach(a => {
-        answers.value[a.number] = a.answer;
-    });
+    if (props.pausedTestResult.answers) {
+        props.pausedTestResult.answers.forEach(a => {
+            answers.value[a.number] = a.answer;
+        });
+    }
+    if (props.pausedTestResult.blockIndex) {
+        blockIndex.value = props.pausedTestResult.blockIndex;
+    }
+    showTest.value = true;
 }
 
 watch(
-    answers,
-    newAnswers => {
+    [answers, blockIndex],
+    ([newAnswers, newBlockIndex]) => {
         const results = {
             answers: FPI_QUESTIONS.map(q => ({
                 number: q.number,
                 answer: newAnswers[q.number],
             })),
+            blockIndex: newBlockIndex,
         };
         emit('update:answers', results);
     },
