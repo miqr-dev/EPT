@@ -3,15 +3,30 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BIT2_QUESTIONS } from '@/pages/Questions/BIT2Questions';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
-import { Head } from '@inertiajs/vue3';
+import { useTestPause } from '@/composables/useTestPause';
+import { Head, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 const emit = defineEmits(['complete']);
 
+const props = defineProps<{
+  participant: any;
+  examStepId: number;
+  pausedTestResult: any;
+}>();
+
 const showTest = ref(false);
-const pageIndex = ref(0); // 0 first 27, 1 remaining
+const pageIndex = ref(0);
 const answers = ref<Record<number, number | null>>({});
 const endConfirmOpen = ref(false);
+
+if (props.pausedTestResult) {
+  props.pausedTestResult.answers.forEach((answer: any) => {
+    answers.value[answer.number] = answer.answer;
+  });
+} else {
+  BIT2_QUESTIONS.forEach((q) => (answers.value[q.number] = null));
+}
 
 const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
     isActive: () => showTest.value && pageIndex.value >= 0,
@@ -30,7 +45,19 @@ const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherF
     },
 });
 
-BIT2_QUESTIONS.forEach((q) => (answers.value[q.number] = null));
+function getAnswers() {
+  return {
+    answers: BIT2_QUESTIONS.map((q) => ({ number: q.number, answer: answers.value[q.number] })),
+  };
+}
+
+function confirmEnd() {
+    clearForcedFinish(false);
+    endConfirmOpen.value = false;
+    emit('complete', getAnswers());
+}
+
+const { isPaused, pauseCountdown } = useTestPause(props.participant.id, props.examStepId, getAnswers);
 
 const firstPageQuestions = computed(() => BIT2_QUESTIONS.slice(0, 27));
 const secondPageLeft = computed(() => BIT2_QUESTIONS.slice(27, 54));
@@ -61,19 +88,15 @@ function cancelEnd() {
     window.dispatchEvent(new Event('cancel-finish'));
     clearForcedFinish(false);
 }
-function confirmEnd() {
-    clearForcedFinish(false);
-    endConfirmOpen.value = false;
-    const results = {
-        answers: BIT2_QUESTIONS.map((q) => ({ number: q.number, answer: answers.value[q.number] })),
-    };
-    emit('complete', results);
-}
 </script>
 
 <template>
     <Head title="BIT-2" />
-    <div class="p-4">
+    <div class="p-4 relative">
+        <div v-if="isPaused" class="absolute inset-0 bg-white bg-opacity-80 z-10 flex flex-col items-center justify-center">
+            <h2 class="text-2xl font-bold">Test Paused</h2>
+            <p v-if="pauseCountdown > 0" class="text-lg">Pausing in {{ pauseCountdown }} seconds...</p>
+        </div>
         <div class="mb-4 flex items-center justify-between">
             <h1 class="text-2xl font-bold">BIT-2</h1>
         </div>
@@ -140,7 +163,7 @@ function confirmEnd() {
                             <tbody>
                                 <tr v-for="q in secondPageLeft" :key="q.number" :class="{ 'bg-gray-50 dark:bg-gray-700': answers[q.number] === null }">
                                     <td class="font-mono w-8 pr-2 align-top pt-2 text-right border-b-2 border-gray-200 dark:border-gray-700">{{ q.number }}.</td>
-                                    <td class="pr-4 align-top pt-2 border-b-2 border-gray-200 dark:border-gray-700">{{ q.text }}</td>
+                                    <td class="pr-4 align-top pt-2 border-b-2 border-gray-700">{{ q.text }}</td>
                                     <td v-for="opt in [5, 4, 3, 2, 1]" :key="opt" class="px-2 text-center align-top pt-1 border-b-2 border-gray-200 dark:border-gray-700">
                                         <label class="w-8 h-8 relative flex items-center justify-center border border-gray-400 cursor-pointer">
                                             <input class="sr-only" type="radio" :name="'q' + q.number" :value="opt" v-model="answers[q.number]" />

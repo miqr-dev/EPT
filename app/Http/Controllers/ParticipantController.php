@@ -117,9 +117,45 @@ class ParticipantController extends Controller
     }
 
 
+    $pausedTestResults = collect();
+    $pausedStepIds = $stepStatuses->where('status', 'paused')->pluck('exam_step_id');
+
+    if ($pausedStepIds->isNotEmpty()) {
+        $testIdsForPausedSteps = $exam->steps
+            ->whereIn('id', $pausedStepIds)
+            ->pluck('test_id');
+
+        if ($testIdsForPausedSteps->isNotEmpty()) {
+            $assignments = TestAssignment::where('participant_id', $user->id)
+                ->whereIn('test_id', $testIdsForPausedSteps)
+                ->get();
+
+            if ($assignments->isNotEmpty()) {
+                $assignmentIds = $assignments->pluck('id');
+
+                // Get all results and find the latest for each assignment
+                $allResults = TestResult::whereIn('assignment_id', $assignmentIds)
+                    ->latest()
+                    ->get();
+
+                $latestPausedResults = $allResults->unique('assignment_id');
+
+                // Key the results by test_id for the view
+                $assignmentsById = $assignments->keyBy('id');
+                $pausedTestResults = $latestPausedResults->keyBy(function($result) use ($assignmentsById) {
+                    if (isset($assignmentsById[$result->assignment_id])) {
+                        return $assignmentsById[$result->assignment_id]->test_id;
+                    }
+                    return null;
+                })->filter();
+            }
+        }
+    }
+
     return Inertia::render('Exams/ExamRoom', [
-      'exam' => $exam,
-      'stepStatuses' => $stepStatuses, // Pass all statuses to the view.
+        'exam' => $exam,
+        'stepStatuses' => $stepStatuses,
+        'pausedTestResults' => $pausedTestResults,
     ]);
   }
 
@@ -239,6 +275,43 @@ class ParticipantController extends Controller
     ]);
 
     return back(303);
+  }
+
+  public function pauseStep(Request $request)
+  {
+      $user = Auth::user();
+      $examStepStatus = ExamStepStatus::with('step.test')
+          ->where('participant_id', $user->id)
+          ->where('exam_step_id', $request->input('exam_step_id'))
+          ->firstOrFail();
+
+      $examStepStatus->update([
+          'status' => 'paused',
+      ]);
+
+      $results = $request->input('results');
+
+      if ($results) {
+          $examStep = $examStepStatus->step;
+          if ($examStep && $examStep->test) {
+              $assignment = TestAssignment::firstOrCreate(
+                  [
+                      'participant_id' => $user->id,
+                      'test_id' => $examStep->test->id,
+                  ],
+                  [
+                      'status' => 'assigned',
+                  ]
+              );
+
+              TestResult::create([
+                  'assignment_id' => $assignment->id,
+                  'result_json' => $results,
+              ]);
+          }
+      }
+
+      return back(303);
   }
 
   public function list()
