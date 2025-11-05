@@ -536,6 +536,9 @@ watch(
                                                     :key="activeStepId ?? 'inactive'"
                                                     class="h-full w-full"
                                                     @complete="completeTest"
+                                                    :participant="page.props.auth.user"
+                                                    :examStepId="activeStepId"
+                                                    :pausedTestResult="props.pausedTestResults[activeStep.test.id]?.result_json"
                                                 />
                                             </KeepAlive>
                                         </DialogContent>

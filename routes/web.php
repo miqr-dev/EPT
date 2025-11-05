@@ -33,6 +33,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::post('/my-exam/start-step', [ParticipantController::class, 'startStep'])->name('my-exam.start-step');
     Route::post('/my-exam/complete-step', [ParticipantController::class, 'completeStep'])->name('my-exam.complete-step');
     Route::post('/my-exam/break-step', [ParticipantController::class, 'breakStep'])->name('my-exam.break-step');
+    Route::post('/my-exam/pause-step', [ParticipantController::class, 'pauseStep'])->name('my-exam.pause-step');
 
     // Exam management (teacher/admin only, add middleware if needed)
     Route::post('/exam-step-status/{status}/add-time', [ExamStepStatusController::class, 'addTime'])->name('exam-step-status.add-time');
@@ -50,7 +51,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
         ->name('exams.participants.set-step-status');
     Route::post('/exams/{exam}/participants/{participant}/pause', [ExamController::class, 'pause'])
         ->name('exams.participants.pause');
-    Route.post('/exams/{exam}/participants/{participant}/resume', [ExamController::class, 'resume'])
+    Route::post('/exams/{exam}/participants/{participant}/resume', [ExamController::class, 'resume'])
         ->name('exams.participants.resume');
 
     Route::post('/exams', [ExamController::class, 'store'])->name('exams.store');
