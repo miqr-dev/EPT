@@ -126,7 +126,7 @@ class ParticipantController extends Controller
                 ->first();
 
             if ($assignment) {
-                $pausedTestResult = TestResult::where('assignment_id', 'assignment'->id)
+                $pausedTestResult = TestResult::where('assignment_id', $assignment->id)
                     ->where('is_paused', true)
                     ->latest()
                     ->first();
