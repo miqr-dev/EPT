@@ -117,26 +117,48 @@ class ParticipantController extends Controller
     }
 
 
-    $pausedTestResult = null;
-    if ($exam->current_exam_step_id) {
-        $currentStepStatus = $stepStatuses[$exam->current_exam_step_id] ?? null;
-        if ($currentStepStatus && $currentStepStatus->status === 'paused') {
-            $assignment = TestAssignment::where('participant_id', $user->id)
-                ->where('test_id', $exam->currentStep->test_id)
-                ->first();
+    $pausedTestResults = [];
 
-            if ($assignment) {
-                $pausedTestResult = TestResult::where('assignment_id', $assignment->id)
-                    ->latest()
-                    ->first();
-            }
+    $testIds = $exam->steps
+      ->pluck('test_id')
+      ->filter()
+      ->unique();
+
+    if ($testIds->isNotEmpty()) {
+      $assignments = TestAssignment::where('participant_id', $user->id)
+        ->whereIn('test_id', $testIds)
+        ->with(['results' => function ($query) {
+          $query->latest()->limit(1);
+        }])
+        ->get()
+        ->keyBy('test_id');
+
+      foreach ($exam->steps as $step) {
+        $status = $stepStatuses[$step->id] ?? null;
+        if (!$status) {
+          continue;
         }
+
+        if (!in_array($status->status, ['paused', 'in_progress'], true)) {
+          continue;
+        }
+
+        $assignment = $assignments->get($step->test_id);
+        if (!$assignment || $assignment->results->isEmpty()) {
+          continue;
+        }
+
+        $latestResult = $assignment->results->first();
+        if ($latestResult) {
+          $pausedTestResults[$step->id] = $latestResult->result_json;
+        }
+      }
     }
 
     return Inertia::render('Exams/ExamRoom', [
       'exam' => $exam,
       'stepStatuses' => $stepStatuses, // Pass all statuses to the view.
-      'pausedTestResult' => $pausedTestResult,
+      'pausedTestResults' => (object) $pausedTestResults,
     ]);
   }
 
