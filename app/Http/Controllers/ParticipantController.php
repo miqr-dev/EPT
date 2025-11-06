@@ -331,6 +331,8 @@ class ParticipantController extends Controller
         $exam = Exam::find($examStepStatus->exam_id);
         $teacherId = $exam ? $exam->teacher_id : null;
 
+        TestResult::where('assignment_id', $assignment->id)->delete();
+
         TestResult::create([
           'assignment_id' => $assignment->id,
           'result_json' => $results,
