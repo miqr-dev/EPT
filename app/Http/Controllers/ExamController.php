@@ -9,6 +9,8 @@ use App\Models\ExamStepStatus;
 use App\Models\User;
 use App\Models\Test;
 use App\Models\City;
+use App\Models\TestAssignment;
+use App\Models\TestResult;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -359,6 +361,20 @@ class ExamController extends Controller
       if ($status->status !== 'paused') {
         return back(303)->with('error', 'Teilnehmer ist aktuell nicht pausiert.');
       }
+
+      $assignment = TestAssignment::firstOrCreate(
+        [
+            'participant_id' => $participant->id,
+            'test_id' => $exam->currentStep->test_id,
+        ],
+        [
+            'status' => 'assigned',
+        ]
+    );
+
+    if ($assignment) {
+        TestResult::where('assignment_id', $assignment->id)->delete();
+    }
 
       $resumeStatus = $status->paused_from_status ?: 'not_started';
       $timeRemaining = max(0, (int) ($status->time_remaining_seconds ?? $totalDurationSeconds));

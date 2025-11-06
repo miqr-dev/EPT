@@ -127,7 +127,6 @@ class ParticipantController extends Controller
 
             if ($assignment) {
                 $pausedTestResult = TestResult::where('assignment_id', $assignment->id)
-                    ->where('is_paused', true)
                     ->latest()
                     ->first();
             }
@@ -232,11 +231,6 @@ class ParticipantController extends Controller
           'teacher_id' => $teacherId,
         ]);
 
-        // Clean up any temporary paused data
-        TestResult::where('assignment_id', $assignment->id)
-            ->where('is_paused', true)
-            ->delete();
-
         $assignment->update([
           'status' => 'completed',
           'completed_at' => now(),
@@ -330,16 +324,11 @@ class ParticipantController extends Controller
         $exam = Exam::find($examStepStatus->exam_id);
         $teacherId = $exam ? $exam->teacher_id : null;
 
-        TestResult::updateOrCreate(
-            [
-                'assignment_id' => $assignment->id,
-                'is_paused' => true,
-            ],
-            [
-                'result_json' => $results,
-                'teacher_id' => $teacherId,
-            ]
-        );
+        TestResult::create([
+          'assignment_id' => $assignment->id,
+          'result_json' => $results,
+          'teacher_id' => $teacherId,
+        ]);
       }
     }
 
