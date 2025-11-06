@@ -247,11 +247,15 @@ class ParticipantController extends Controller
         $exam = Exam::find($examStepStatus->exam_id);
         $teacherId = $exam ? $exam->teacher_id : null;
 
-        $testResult = TestResult::create([
-          'assignment_id' => $assignment->id,
-          'result_json' => $resultData,
-          'teacher_id' => $teacherId,
-        ]);
+        $testResult = TestResult::updateOrCreate(
+          [
+            'assignment_id' => $assignment->id,
+          ],
+          [
+            'result_json' => $resultData,
+            'teacher_id' => $teacherId,
+          ]
+        );
 
         $assignment->update([
           'status' => 'completed',
@@ -346,11 +350,15 @@ class ParticipantController extends Controller
         $exam = Exam::find($examStepStatus->exam_id);
         $teacherId = $exam ? $exam->teacher_id : null;
 
-        TestResult::create([
-          'assignment_id' => $assignment->id,
-          'result_json' => $results,
-          'teacher_id' => $teacherId,
-        ]);
+        TestResult::updateOrCreate(
+          [
+            'assignment_id' => $assignment->id,
+          ],
+          [
+            'result_json' => $results,
+            'teacher_id' => $teacherId,
+          ]
+        );
       }
     }
 
