@@ -56,6 +56,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('/api/active-exams', [ExamController::class, 'getActiveExams'])->name('api.active-exams');
     Route::get('/participants', [ParticipantController::class, 'list'])->name('participants.list');
     Route::put('/test-results/{testResult}', [TestResultController::class, 'update'])->name('test-results.update');
+    Route::delete('/test-results', [TestResultController::class, 'remove'])->name('test-results.remove');
 });
 
 Route::get('/login', function () {
