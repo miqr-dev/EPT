@@ -116,10 +116,30 @@ class ParticipantController extends Controller
       }
     }
 
+    // Check for any paused step for this participant in this exam
+    $pausedStepStatus = ExamStepStatus::where('exam_id', $exam->id)
+        ->where('participant_id', $user->id)
+        ->where('status', 'paused')
+        ->first();
+
+    if ($pausedStepStatus) {
+        // A test is paused. Let's make sure the exam is pointing to it.
+        if ($exam->current_exam_step_id !== $pausedStepStatus->exam_step_id) {
+            $exam->current_exam_step_id = $pausedStepStatus->exam_step_id;
+            $exam->save();
+            // We need to reload the exam relationship to reflect this change
+            $exam->load('currentStep.test');
+        }
+    }
+
 
     $pausedTestResult = null;
     if ($exam->current_exam_step_id) {
-        $currentStepStatus = $stepStatuses[$exam->current_exam_step_id] ?? null;
+        // Refetch the current step status in case it was created or changed
+        $currentStepStatus = $stepStatuses[$exam->current_exam_step_id] ?? ExamStepStatus::where('exam_step_id', $exam->current_exam_step_id)
+            ->where('participant_id', $user->id)
+            ->first();
+
         if ($currentStepStatus && $currentStepStatus->status === 'paused') {
             $assignment = TestAssignment::where('participant_id', $user->id)
                 ->where('test_id', $exam->currentStep->test_id)
