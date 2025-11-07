@@ -88,6 +88,7 @@ class RedirectBasedOnRole
             'my-exam.start-step',
             'my-exam.complete-step',
             'participant.no-exam',
+            'my-exam.pause-step',
           ]);
         }
 
