@@ -13,6 +13,14 @@ const pageIndex = ref(0); // 0 first 27, 1 remaining
 const answers = ref<Record<number, number | null>>({});
 const endConfirmOpen = ref(false);
 
+const isComplete = computed(() =>
+    BIT2_QUESTIONS.every((q) => answers.value[q.number] !== null),
+);
+
+const remaining = computed(
+    () => BIT2_QUESTIONS.filter((q) => answers.value[q.number] === null).length,
+);
+
 const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
     isActive: () => showTest.value && pageIndex.value >= 0,
     onStart: () => {
@@ -50,6 +58,24 @@ function prevPage() {
     pageIndex.value--;
 }
 function finishTest() {
+    if (!isComplete.value) {
+        const firstUnanswered = BIT2_QUESTIONS.find(
+            (q) => answers.value[q.number] === null,
+        );
+
+        if (firstUnanswered) {
+            if (firstUnanswered.number <= 27) {
+                pageIndex.value = 0;
+            } else if (firstUnanswered.number <= 54) {
+                pageIndex.value = 1;
+            } else {
+                pageIndex.value = 2;
+            }
+        }
+
+        return;
+    }
+
     window.dispatchEvent(new Event('start-finish'));
     endConfirmOpen.value = true;
 }
@@ -189,7 +215,14 @@ function confirmEnd() {
                     </div>
                     <div class="mt-4 flex justify-between">
                         <Button variant="outline" @click="prevPage">Zurück</Button>
-                        <Button variant="destructive" @click="finishTest">Test beenden</Button>
+                        <Button
+                            variant="destructive"
+                            @click="finishTest"
+                            :disabled="!isComplete"
+                            :title="!isComplete ? `Bitte alle Fragen beantworten (${remaining} offen)` : ''"
+                        >
+                            Test beenden
+                        </Button>
                     </div>
                 </div>
 
