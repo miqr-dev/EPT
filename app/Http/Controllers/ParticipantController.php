@@ -117,9 +117,26 @@ class ParticipantController extends Controller
     }
 
 
+    $pausedTestResult = null;
+    if ($exam->current_exam_step_id) {
+        $currentStepStatus = $stepStatuses[$exam->current_exam_step_id] ?? null;
+        if ($currentStepStatus && $currentStepStatus->status === 'paused') {
+            $assignment = TestAssignment::where('participant_id', $user->id)
+                ->where('test_id', $exam->currentStep->test_id)
+                ->first();
+
+            if ($assignment) {
+                $pausedTestResult = TestResult::where('assignment_id', $assignment->id)
+                    ->latest()
+                    ->first();
+            }
+        }
+    }
+
     return Inertia::render('Exams/ExamRoom', [
       'exam' => $exam,
       'stepStatuses' => $stepStatuses, // Pass all statuses to the view.
+      'pausedTestResult' => $pausedTestResult,
     ]);
   }
 
@@ -241,63 +258,6 @@ class ParticipantController extends Controller
     return back(303);
   }
 
-  public function pauseStep(Request $request)
-    {
-        $user = Auth::user();
-        $examStepStatus = ExamStepStatus::with('step.test')
-            ->where('participant_id', $user->id)
-            ->where('exam_step_id', $request->input('exam_step_id'))
-            ->firstOrFail();
-
-        $results = $request->input('results');
-
-        if ($results) {
-            $examStep = $examStepStatus->step;
-            if ($examStep && $examStep->test) {
-                $assignment = TestAssignment::firstOrCreate(
-                    [
-                        'participant_id' => $user->id,
-                        'test_id' => $examStep->test->id,
-                    ],
-                    [
-                        'status' => 'assigned',
-                    ]
-                );
-
-                TestResult::updateOrCreate(
-                    ['assignment_id' => $assignment->id],
-                    ['result_json' => $results]
-                );
-            }
-        }
-
-        return response()->json(['status' => 'success']);
-    }
-
-    public function getPausedStep($stepId)
-    {
-        $user = Auth::user();
-        $examStepStatus = ExamStepStatus::with('step.test')
-            ->where('participant_id', $user->id)
-            ->where('exam_step_id', $stepId)
-            ->firstOrFail();
-
-        $testResult = null;
-        if ($examStepStatus->step && $examStepStatus->step->test) {
-            $assignment = TestAssignment::where('participant_id', $user->id)
-                ->where('test_id', $examStepStatus->step->test->id)
-                ->first();
-
-            if ($assignment) {
-                $testResult = TestResult::where('assignment_id', $assignment->id)->first();
-            }
-        }
-
-        return response()->json([
-            'testResult' => $testResult ? ['results' => $testResult->result_json] : null
-        ]);
-    }
-
   public function list()
   {
     $user = Auth::user();
@@ -336,5 +296,42 @@ class ParticipantController extends Controller
     return Inertia::render('Participants/List', [
       'participants' => $participants,
     ]);
+  }
+
+  public function pauseStep(Request $request)
+  {
+    $user = Auth::user();
+    $examStepStatus = ExamStepStatus::with('step.test')
+      ->where('participant_id', $user->id)
+      ->where('exam_step_id', $request->input('exam_step_id'))
+      ->firstOrFail();
+
+    $results = $request->input('results');
+
+    if ($results) {
+      $examStep = $examStepStatus->step;
+      if ($examStep && $examStep->test) {
+        $assignment = TestAssignment::firstOrCreate(
+          [
+            'participant_id' => $user->id,
+            'test_id' => $examStep->test->id,
+          ],
+          [
+            'status' => 'assigned',
+          ]
+        );
+
+        $exam = Exam::find($examStepStatus->exam_id);
+        $teacherId = $exam ? $exam->teacher_id : null;
+
+        TestResult::create([
+          'assignment_id' => $assignment->id,
+          'result_json' => $results,
+          'teacher_id' => $teacherId,
+        ]);
+      }
+    }
+
+    return back(303);
   }
 }
