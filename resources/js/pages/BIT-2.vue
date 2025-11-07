@@ -3,13 +3,102 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BIT2_QUESTIONS } from '@/pages/Questions/BIT2Questions';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
-import { Head } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Head, usePage } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
 
 const emit = defineEmits(['complete']);
 
-const showTest = ref(false);
-const pageIndex = ref(0); // 0 first 27, 1 remaining
+type Bit2Progress = {
+    hasStarted: boolean;
+    pageIndex: number;
+    answers: Record<number, number | null>;
+};
+
+const page = usePage<{
+    exam?: {
+        id?: number | string;
+        current_step?: { id?: number | string } | null;
+        currentStep?: { id?: number | string } | null;
+    };
+}>();
+
+function resolveStorageKey() {
+    const exam = page.props.exam;
+    if (exam && typeof exam === 'object') {
+        const examId = (exam as { id?: number | string }).id;
+        const step = (exam as {
+            current_step?: { id?: number | string } | null;
+            currentStep?: { id?: number | string } | null;
+        }).current_step ?? (exam as { currentStep?: { id?: number | string } | null }).currentStep ?? null;
+        const stepId = step?.id;
+
+        if (examId != null && stepId != null) {
+            return `bit2-progress-${examId}-${stepId}`;
+        }
+
+        if (examId != null) {
+            return `bit2-progress-${examId}-bit2`;
+        }
+    }
+
+    return 'bit2-progress';
+}
+
+const storageKey = resolveStorageKey();
+
+function clampPageIndex(value: number) {
+    if (!Number.isFinite(value)) {
+        return 0;
+    }
+
+    return Math.min(Math.max(Math.round(value), 0), 2);
+}
+
+function loadProgress(): Bit2Progress | null {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+
+    try {
+        const raw = window.sessionStorage.getItem(storageKey);
+        if (!raw) {
+            return null;
+        }
+
+        const parsed = JSON.parse(raw) as Partial<Bit2Progress> | null;
+        if (!parsed || typeof parsed !== 'object') {
+            return null;
+        }
+
+        const storedAnswers: Record<number, number | null> = {};
+        if (parsed.answers && typeof parsed.answers === 'object') {
+            Object.entries(parsed.answers).forEach(([key, value]) => {
+                const numericKey = Number(key);
+                if (!Number.isNaN(numericKey)) {
+                    const numericValue = typeof value === 'number' ? value : null;
+                    storedAnswers[numericKey] = numericValue !== null && numericValue >= 1 && numericValue <= 5 ? numericValue : null;
+                }
+            });
+        }
+
+        return {
+            hasStarted: Boolean(parsed.hasStarted),
+            pageIndex: clampPageIndex(typeof parsed.pageIndex === 'number' ? parsed.pageIndex : 0),
+            answers: storedAnswers,
+        };
+    } catch (_error) {
+        return null;
+    }
+}
+
+const savedProgress = loadProgress();
+let initialHasStarted = savedProgress?.hasStarted ?? false;
+if (!initialHasStarted && savedProgress?.answers) {
+    initialHasStarted = Object.values(savedProgress.answers).some((value) => value !== null);
+}
+const hasStarted = ref(initialHasStarted);
+const showTest = ref(hasStarted.value);
+const pageIndex = ref(savedProgress?.pageIndex ?? 0); // 0 first 27, 1 remaining
 const answers = ref<Record<number, number | null>>({});
 const endConfirmOpen = ref(false);
 
@@ -30,7 +119,64 @@ const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherF
     },
 });
 
-BIT2_QUESTIONS.forEach((q) => (answers.value[q.number] = null));
+function applyStoredAnswers(storedAnswers?: Record<number, number | null>) {
+    BIT2_QUESTIONS.forEach((q) => {
+        answers.value[q.number] = storedAnswers?.[q.number] ?? null;
+    });
+}
+
+applyStoredAnswers(savedProgress?.answers);
+
+function clearStoredProgress() {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    try {
+        window.sessionStorage.removeItem(storageKey);
+    } catch (_error) {
+        // Ignore removal errors
+    }
+}
+
+function serializeAnswers() {
+    const serialized: Record<number, number | null> = {};
+    BIT2_QUESTIONS.forEach((q) => {
+        serialized[q.number] = answers.value[q.number] ?? null;
+    });
+    return serialized;
+}
+
+function saveProgress() {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    if (!hasStarted.value) {
+        clearStoredProgress();
+        return;
+    }
+
+    const payload: Bit2Progress = {
+        hasStarted: true,
+        pageIndex: clampPageIndex(pageIndex.value),
+        answers: serializeAnswers(),
+    };
+
+    try {
+        window.sessionStorage.setItem(storageKey, JSON.stringify(payload));
+    } catch (_error) {
+        // Ignore write errors (e.g., storage full or disabled)
+    }
+}
+
+watch(pageIndex, saveProgress);
+watch(hasStarted, saveProgress);
+watch(answers, saveProgress, { deep: true });
+
+if (hasStarted.value) {
+    saveProgress();
+}
 
 const firstPageQuestions = computed(() => BIT2_QUESTIONS.slice(0, 27));
 const secondPageLeft = computed(() => BIT2_QUESTIONS.slice(27, 54));
@@ -40,8 +186,11 @@ const instructions = `Dieser Fragebogen soll ein Bild Ihrer Interessen an versch
 
 
 function startTest() {
+    if (!hasStarted.value) {
+        pageIndex.value = 0;
+    }
+    hasStarted.value = true;
     showTest.value = true;
-    pageIndex.value = 0;
 }
 function nextPage() {
     pageIndex.value++;
@@ -68,6 +217,7 @@ function confirmEnd() {
         answers: BIT2_QUESTIONS.map((q) => ({ number: q.number, answer: answers.value[q.number] })),
     };
     emit('complete', results);
+    clearStoredProgress();
 }
 </script>
 
