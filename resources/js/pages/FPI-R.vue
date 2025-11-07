@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { FPI_QUESTIONS } from '@/pages/Questions/FPIQuestions';
 import {
@@ -13,12 +13,23 @@ import {
 } from '@/components/ui/dialog';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 
-const emit = defineEmits(['complete']);
+type Answer = 'stimmt' | 'stimmtNicht';
+
+const props = defineProps<{
+    participant: { id: number; name: string };
+    examStepId: number;
+    pausedTestResult?: {
+        answers: { number: number; answer: Answer | null }[];
+        block_index: number;
+    } | null;
+}>();
+
+const emit = defineEmits(['complete', 'update:answers']);
 // Settings
 const QUESTIONS_PER_BLOCK = 24;
 
 // State
-const showTest = ref(false);
+const showTest = ref(props.pausedTestResult ? true : false);
 const consentAnswer = ref<'stimmt' | 'stimmtNicht' | null>(null);
 const blockIndex = ref(0);
 const answers = ref<Record<number, 'stimmt' | 'stimmtNicht' | null>>({});
@@ -54,6 +65,27 @@ const currentRangeString = computed(() => `Fragen ${currentFrom.value}–${curre
 FPI_QUESTIONS.forEach(q => {
   answers.value[q.number] = null;
 });
+
+if (props.pausedTestResult) {
+    props.pausedTestResult.answers.forEach(item => {
+        answers.value[item.number] = item.answer;
+    });
+    blockIndex.value = props.pausedTestResult.block_index;
+}
+
+watch(
+    [answers, blockIndex],
+    () => {
+        emit('update:answers', {
+            answers: FPI_QUESTIONS.map(q => ({
+                number: q.number,
+                answer: answers.value[q.number],
+            })),
+            block_index: blockIndex.value,
+        });
+    },
+    { deep: true },
+);
 
 // Compute block questions
 const totalBlocks = computed(() =>

@@ -54,11 +54,13 @@ const props = defineProps<{
 }>();
 
 const page = usePage();
+const participant = computed(() => page.props.auth.user);
 const userName = computed(() => page.props.auth?.user?.name);
 
 const activeTestComponent = shallowRef<unknown>(null);
 const isTestDialogOpen = ref(false);
 const activeStepId = ref<number | null>(null);
+const pausedTestResult = ref<any>(null);
 
 const testComponents: Record<string, unknown> = {
     'BRT-A': BRTA,
@@ -117,11 +119,21 @@ function startTest(step: ExamStepInfo, options: StartTestOptions = {}) {
     openTestInterface(step, options);
 }
 
-function handleStepActionClick(step: ExamStepInfo) {
+async function handleStepActionClick(step: ExamStepInfo) {
     const status = stepStatuses.value[step.id]?.status;
     if (status === 'in_progress') {
         startTest(step, { skipServerStart: true });
         return;
+    }
+
+    if (status === 'paused') {
+        try {
+            const response = await fetch(`/my-exam/paused-step/${step.id}`);
+            const data = await response.json();
+            pausedTestResult.value = data.testResult?.results;
+        } catch (error) {
+            console.error('Failed to fetch paused test result', error);
+        }
     }
 
     startTest(step);
@@ -138,6 +150,12 @@ function getStepActionLabel(stepId: number) {
 
 function isStepActionDisabled(step: ExamStepInfo) {
     const status = stepStatuses.value[step.id]?.status;
+
+    // A paused step can be resumed.
+    if (status === 'paused') {
+        return false;
+    }
+
     if (props.exam.status !== 'in_progress') {
         return true;
     }
@@ -197,6 +215,21 @@ function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
     );
 }
 
+function updateAnswers(answers: any) {
+    if (!activeStepId.value) return;
+
+    router.post(
+        '/my-exam/pause-step',
+        {
+            exam_step_id: activeStepId.value,
+            results: answers,
+        },
+        {
+            preserveScroll: true,
+        },
+    );
+}
+
 function completeTest(results: any) {
     if (!activeStepId.value) return;
 
@@ -245,6 +278,7 @@ function closeTestDialog({ resetActive = false }: { resetActive?: boolean } = {}
         }
         activeStepId.value = null;
         activeTestComponent.value = null;
+        pausedTestResult.value = null;
     }
 }
 
@@ -534,8 +568,12 @@ watch(
                                                     v-if="activeTestComponent"
                                                     :is="activeTestComponent"
                                                     :key="activeStepId ?? 'inactive'"
+                                                    :participant="participant"
+                                                    :exam-step-id="activeStepId"
+                                                    :paused-test-result="pausedTestResult"
                                                     class="h-full w-full"
                                                     @complete="completeTest"
+                                                    @update:answers="updateAnswers"
                                                 />
                                             </KeepAlive>
                                         </DialogContent>
