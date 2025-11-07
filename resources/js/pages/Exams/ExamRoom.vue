@@ -573,7 +573,7 @@ watch(
                                                     :paused-test-result="pausedTestResult"
                                                     class="h-full w-full"
                                                     @complete="completeTest"
-                                                    @update:answers="updateAnswers"
+                                                    @pause="updateAnswers"
                                                 />
                                             </KeepAlive>
                                         </DialogContent>

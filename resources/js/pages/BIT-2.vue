@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { BIT2_QUESTIONS } from '@/pages/Questions/BIT2Questions';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { Head } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps<{
     participant: { id: number; name: string };
@@ -15,7 +15,7 @@ const props = defineProps<{
     } | null;
 }>();
 
-const emit = defineEmits(['complete', 'update:answers']);
+const emit = defineEmits(['complete', 'pause']);
 
 const showTest = ref(props.pausedTestResult ? true : false);
 const pageIndex = ref(0); // 0 first 27, 1 remaining
@@ -48,16 +48,20 @@ if (props.pausedTestResult) {
     pageIndex.value = props.pausedTestResult.page_index;
 }
 
-watch(
-    [answers, pageIndex],
-    () => {
-        emit('update:answers', {
-            answers: BIT2_QUESTIONS.map((q) => ({ number: q.number, answer: answers.value[q.number] })),
-            page_index: pageIndex.value,
-        });
-    },
-    { deep: true },
-);
+const handlePause = () => {
+    emit('pause', {
+        answers: BIT2_QUESTIONS.map((q) => ({ number: q.number, answer: answers.value[q.number] })),
+        page_index: pageIndex.value,
+    });
+};
+
+onMounted(() => {
+    window.addEventListener('beforeunload', handlePause);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('beforeunload', handlePause);
+});
 
 const firstPageQuestions = computed(() => BIT2_QUESTIONS.slice(0, 27));
 const secondPageLeft = computed(() => BIT2_QUESTIONS.slice(27, 54));
