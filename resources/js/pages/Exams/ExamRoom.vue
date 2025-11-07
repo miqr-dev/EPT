@@ -51,9 +51,7 @@ const props = defineProps<{
         };
     };
     stepStatuses: Record<number, StepStatusEntry>;
-    pausedTestResult?: {
-        result_json: any;
-    };
+    pausedTestResults?: Record<string, unknown>;
 }>();
 
 const page = usePage();
@@ -62,6 +60,14 @@ const userName = computed(() => page.props.auth?.user?.name);
 const activeTestComponent = shallowRef<unknown>(null);
 const isTestDialogOpen = ref(false);
 const activeStepId = ref<number | null>(null);
+const localPausedResults = ref<Record<string, unknown>>({});
+const pausedTestResults = computed<Record<string, unknown>>(() => {
+    const serverResults = (props.pausedTestResults ?? {}) as Record<string, unknown>;
+    return {
+        ...localPausedResults.value,
+        ...serverResults,
+    };
+});
 
 const testComponents: Record<string, unknown> = {
     'BRT-A': BRTA,
@@ -200,8 +206,24 @@ function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
     );
 }
 
+const activePausedTestResult = computed(() => {
+    if (!activeStepId.value) {
+        return undefined;
+    }
+
+    const status = stepStatuses.value[activeStepId.value]?.status;
+    if (!status || !['paused', 'in_progress'].includes(status)) {
+        return undefined;
+    }
+
+    const key = String(activeStepId.value);
+    return pausedTestResults.value[key];
+});
+
 function completeTest(results: any) {
-    if (!activeStepId.value) return;
+    if (typeof activeStepId.value !== 'number') return;
+
+    const stepId = activeStepId.value;
 
     router.post(
         '/my-exam/complete-step',
@@ -211,6 +233,7 @@ function completeTest(results: any) {
         },
         {
             onSuccess: () => {
+                delete localPausedResults.value[String(stepId)];
                 closeTestDialog({ resetActive: true });
             },
         },
@@ -265,7 +288,11 @@ function cleanupAfterTest() {
 const activeTestAnswers = ref<any>(null);
 
 function pauseTest(answers: any) {
-    if (!activeStepId.value) return;
+    if (typeof activeStepId.value !== 'number') return;
+
+    if (answers) {
+        localPausedResults.value[String(activeStepId.value)] = answers;
+    }
 
     router.post(
         '/my-exam/pause-step',
@@ -433,6 +460,10 @@ watch(
                 previousStatusByStep.value[id] = currentStatus;
             }
 
+            if (!currentStatus || !['paused', 'in_progress'].includes(currentStatus)) {
+                delete localPausedResults.value[String(id)];
+            }
+
             if (typeof currentForceFinish === 'undefined') {
                 delete previousForceFinishByStep.value[id];
             } else {
@@ -556,7 +587,7 @@ watch(
                                                     :is="activeTestComponent"
                                                     :key="activeStepId ?? 'inactive'"
                                                     class="h-full w-full"
-                                                    :paused-test-result="pausedTestResult?.result_json"
+                                                    :paused-test-result="activePausedTestResult"
                                                     @complete="completeTest"
                                                     @update:answers="activeTestAnswers = $event"
                                                 />
