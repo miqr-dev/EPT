@@ -4,9 +4,16 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { BIT2_QUESTIONS } from '@/pages/Questions/BIT2Questions';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { Head } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
-const emit = defineEmits(['complete']);
+const props = defineProps<{
+    pausedTestResult?: {
+        answers: { number: number; answer: number | null }[];
+        pageIndex?: number;
+    };
+}>();
+
+const emit = defineEmits(['complete', 'update:answers']);
 
 const showTest = ref(false);
 const pageIndex = ref(0); // 0 first 27, 1 remaining
@@ -31,6 +38,33 @@ const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherF
 });
 
 BIT2_QUESTIONS.forEach((q) => (answers.value[q.number] = null));
+
+if (props.pausedTestResult) {
+    if (props.pausedTestResult.answers) {
+        props.pausedTestResult.answers.forEach((a) => {
+            answers.value[a.number] = a.answer;
+        });
+    }
+    if (props.pausedTestResult.pageIndex) {
+        pageIndex.value = props.pausedTestResult.pageIndex;
+    }
+    showTest.value = true;
+}
+
+watch(
+    [answers, pageIndex],
+    ([newAnswers, newPageIndex]) => {
+        const results = {
+            answers: BIT2_QUESTIONS.map((q) => ({
+                number: q.number,
+                answer: newAnswers[q.number],
+            })),
+            pageIndex: newPageIndex,
+        };
+        emit('update:answers', results);
+    },
+    { deep: true, immediate: true },
+);
 
 const firstPageQuestions = computed(() => BIT2_QUESTIONS.slice(0, 27));
 const secondPageLeft = computed(() => BIT2_QUESTIONS.slice(27, 54));
