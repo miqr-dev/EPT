@@ -46,7 +46,14 @@ const userAge = computed<number | null>(() => {
   // In this case, we do not generate a random age, preserving the original behavior for participants.
   return null;
 });
-const emit = defineEmits(['complete']);
+const props = defineProps<{
+    pausedTestResult?: {
+        answers: { user_answer: string | null; time_seconds: number }[];
+        currentQuestionIndex?: number;
+    };
+}>();
+
+const emit = defineEmits(['complete', 'update:answers']);
 const endConfirmOpen = ref(false);
 
 const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
@@ -77,6 +84,34 @@ const userAnswers = ref<(string | null)[]>(Array(mrtQuestions.length).fill(null)
 const questionTimes = ref<number[]>(Array(mrtQuestions.length).fill(0));
 const questionStartTimestamps = ref<(number | null)[]>(Array(mrtQuestions.length).fill(null));
 const startTime = ref<number | null>(null);
+
+if (props.pausedTestResult) {
+    if (props.pausedTestResult.answers) {
+        props.pausedTestResult.answers.forEach((a, i) => {
+            userAnswers.value[i] = a.user_answer;
+            questionTimes.value[i] = a.time_seconds;
+        });
+    }
+    if (props.pausedTestResult.currentQuestionIndex) {
+        currentQuestionIndex.value = props.pausedTestResult.currentQuestionIndex;
+    }
+    showTest.value = true;
+}
+
+watch(
+    [userAnswers, questionTimes, currentQuestionIndex],
+    ([newUserAnswers, newQuestionTimes, newCurrentQuestionIndex]) => {
+        const results = {
+            answers: mrtQuestions.map((q, i) => ({
+                user_answer: newUserAnswers[i],
+                time_seconds: newQuestionTimes[i],
+            })),
+            currentQuestionIndex: newCurrentQuestionIndex,
+        };
+        emit('update:answers', results);
+    },
+    { deep: true, immediate: true },
+);
 
 const isTestComplete = computed(() => currentQuestionIndex.value >= mrtQuestions.length);
 
