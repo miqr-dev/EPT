@@ -129,7 +129,7 @@ const toggleCopyChar = (r: number, p: number, c: number) => {
 const getChars = (r: number, p: number) => Array.from(copyRows[r].parts[p])
 
 /* =========================================================
-   PAGES 4–5 + scoring  [were old 6–7]
+   PAGES 4 + scoring  [were old 6–7]
 ========================================================= */
 const page5Text = 'u n u u n u'
 const page5Marks = ref<boolean[]>(page5Text.split(' ').map(() => false))
@@ -153,6 +153,13 @@ const page4Rows = [
 ]
 const page4Answers = ref<string[]>(Array(page4Rows.length).fill(''))
 const page4Correct = ['3', '2', '4']
+
+const page4Marks = ref(page4Rows.map(row => Array.from(row).map(() => false)))
+
+const getPage4Chars = (row: number) => Array.from(page4Rows[row])
+const togglePage4Char = (row: number, idx: number) => {
+  page4Marks.value[row][idx] = !page4Marks.value[row][idx]
+}
 
 const page5Chars = ['A', '%', 'B', '$', 'C', '&', 'D']
 const page5Marks2 = ref<boolean[]>(page5Chars.map(() => false))
@@ -190,6 +197,276 @@ const percentage = computed(() => {
   if (wrong <= 60) return '30 - 49%'
   return '0 - 29%'
 })
+
+/* ======================== PAGE 5 — precise ticks via CSS ======================== */
+type T = { ch: 'h' | 'u' | 'n' | 'm'; top?: 0 | 1 | 2 | 3; bot?: 0 | 1 | 2 | 3 }
+
+/** Row a) — set exactly which letters get 1 or 2 ticks above/below.
+ *  top: 0|1|2 (= none | single | double)
+ *  bot: 0|1|2 (= none | single | double)
+ *  👉 Change this array to match your scan 1:1.
+ */
+const rowA: T[] = [
+  { ch: 'u', top: 2, bot: 1 },   // ← first char: double above + single below
+  { ch: 'n', top: 1, bot: 2 },
+  { ch: 'h', top: 1, bot: 2 },           // adjust these as needed to match the sheet
+  { ch: 'u', bot: 2 },
+  { ch: 'm', top: 1 },
+  { ch: 'n' },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'u', bot: 3 },
+  { ch: 'h', top: 1, bot: 1 },
+  { ch: 'u', top: 2, bot: 2 },
+  { ch: 'n', bot: 2 },
+  { ch: 'h', top: 2 },
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'h', bot: 2 },
+  { ch: 'n', top: 1 },
+  { ch: 'u', bot: 2 },
+  { ch: 'u', top: 2 },
+  { ch: 'n', bot: 2 },
+  { ch: 'n', top: 1, bot: 2 },
+  { ch: 'u', top: 2 },
+  { ch: 'n', bot: 2 },
+  { ch: 'h', top: 1 },
+  { ch: 'u', top: 2 },
+  { ch: 'n', bot: 1 },
+  { ch: 'n', top: 1 },
+  { ch: 'u' },
+  { ch: 'h', top: 1, bot: 1 },
+]
+const rowB: T[] = [
+  { ch: 'h', top: 2, bot: 2 },   // ← first char: double above + single below
+  { ch: 'h', top: 1, bot: 1 },
+  { ch: 'u', top: 1, bot: 1 },           // adjust these as needed to match the sheet
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 1 },
+  { ch: 'h' },
+  { ch: 'n', top: 2, bot: 2 },
+  { ch: 'u', top: 2 },
+  { ch: 'n', bot: 2 },
+  { ch: 'n', top: 1 },
+  { ch: 'n', bot: 2 },
+  { ch: 'u' },
+  { ch: 'n', top: 1, bot: 1 },
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 1, bot: 3 },
+  { ch: 'u', bot: 1 },
+  { ch: 'n' },
+  { ch: 'u', top: 2, bot: 1 },
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'n' },
+  { ch: 'u', top: 2, bot: 1 },
+  { ch: 'h' },
+  { ch: 'u', top: 1, bot: 2 },
+  { ch: 'u' },
+  { ch: 'u', top: 2, bot: 1 },
+  { ch: 'u', top: 1 },
+]
+
+const rowC: T[] = [
+  { ch: 'n', top: 1, bot: 2 },
+  { ch: 'n' },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'h', top: 1 },
+  { ch: 'n', bot: 2 },
+
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'h', bot: 1 },
+  { ch: 'n', top: 2, bot: 2 },
+
+  { ch: 'n', top: 1, bot: 2 },
+  { ch: 'h', top: 2 },
+  { ch: 'u', bot: 2 },
+  { ch: 'u', top: 2 },
+  { ch: 'n', top: 1, bot: 2 },
+  { ch: 'n', top: 1 },
+  { ch: 'h', bot: 2 },
+
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'u' },
+
+  { ch: 'n', bot: 2 },
+  { ch: 'h', top: 1 },
+  { ch: 'n', top: 3, bot: 1 },
+
+  { ch: 'n', bot: 1 },
+  { ch: 'u', top: 2 },
+
+  { ch: 'h', top: 1 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'h' },
+  { ch: 'n', top: 1, bot: 1 },
+  { ch: 'u', top: 1, bot: 1 },
+]
+
+const rowD: T[] = [
+  { ch: 'n', top: 1, bot: 2 },
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 1 },
+  { ch: 'n', bot: 2 },
+  { ch: 'h', top: 3 },
+
+  { ch: 'u', bot: 2 },
+  { ch: 'h', top: 1 },
+  { ch: 'n', bot: 2 },
+
+  { ch: 'n' },
+  { ch: 'u', bot: 2 },
+  { ch: 'h', top: 1 },
+  { ch: 'u', bot: 2 },
+  { ch: 'n', top: 2 },
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+
+  { ch: 'u', top: 1, bot: 2 },
+  { ch: 'u' },
+  { ch: 'h', top: 2, bot: 2 },
+
+  { ch: 'n', top: 1 },
+  { ch: 'h', top: 1, bot: 2 },
+  { ch: 'u', top: 2, bot: 1 },
+
+  { ch: 'n' },
+  { ch: 'n', top: 1, bot: 2 },
+
+  { ch: 'u', bot: 1 },
+  { ch: 'n', top: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'h', top: 1 },
+  { ch: 'n', bot: 1 },
+]
+
+const rowE: T[] = [
+  { ch: 'u', top: 1 },
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'h', bot: 2 },
+  { ch: 'n', top: 3 },
+
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 2 },
+  { ch: 'n', top: 1, bot: 2 },
+
+  { ch: 'n', top: 1 },
+  { ch: 'u', bot: 2 },
+  { ch: 'n', top: 1 },
+  { ch: 'n', bot: 2 },
+  { ch: 'h', top: 2 },
+  { ch: 'n', bot: 2 },
+  { ch: 'h', top: 1 },
+
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'h', top: 1 },
+  { ch: 'n', bot: 3 },
+
+  { ch: 'u', top: 2, bot: 1 },
+  { ch: 'u', top: 2, bot: 1 },
+  { ch: 'n', top: 1 },
+
+  { ch: 'u', bot: 2 },
+  { ch: 'n', top: 2, bot: 1 },
+
+  { ch: 'h' },
+  { ch: 'n', top: 1, bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'u', top: 2 },
+  { ch: 'u', bot: 1 },
+]
+
+const rowF: T[] = [
+  { ch: 'n', top: 2 },
+  { ch: 'n', top: 1 },
+  { ch: 'h', bot: 2 },
+  { ch: 'n', top: 1 },
+  { ch: 'u', bot: 2 },
+
+  { ch: 'h', top: 1 },
+  { ch: 'u', bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+
+  { ch: 'n', top: 1, bot: 1 },
+  { ch: 'n', top: 2, bot: 1 },
+  { ch: 'u', bot: 2 },
+  { ch: 'n', top: 1 },
+  { ch: 'u', bot: 2 },
+  { ch: 'n', top: 1 },
+  { ch: 'n', bot: 2 },
+
+  { ch: 'u', top: 2, bot: 1 },
+  { ch: 'n', bot: 2 },
+  { ch: 'h', top: 1, bot: 1 },
+
+  { ch: 'u', top: 2, bot: 1 },
+  { ch: 'n', top: 1, bot: 1 },
+  { ch: 'u', top: 1, bot: 1 },
+
+  { ch: 'h', bot: 1 },
+  { ch: 'u', top: 3, bot: 1 },
+
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'n', bot: 2 },
+  { ch: 'u', bot: 2 },
+  { ch: 'n', top: 2, bot: 1 },
+  { ch: 'u', top: 1, bot: 1 },
+]
+
+const rowG: T[] = [
+  { ch: 'n', top: 2, bot: 2 },
+  { ch: 'n', top: 1, bot:2},
+  { ch: 'u', top: 1 },
+  { ch: 'u', top: 1, bot:1 },
+  { ch: 'n', top: 2 },
+
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 2 },
+  { ch: 'n', top: 1, bot: 2 },
+
+  { ch: 'h' },
+  { ch: 'n', bot: 2 },
+  { ch: 'n', top: 1 },
+  { ch: 'n', top: 1, bot:2 },
+  { ch: 'u', top: 1, bot:1 },
+  { ch: 'n', bot: 2 },
+  { ch: 'n', top: 2 },
+
+  { ch: 'h', bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'n', bot: 1 },
+
+  { ch: 'n', top: 2},
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'n', bot: 2 },
+
+  { ch: 'u', bot: 2 },
+  { ch: 'h', top: 1 },
+
+  { ch: 'h', top: 1, bot: 1 },
+  { ch: 'u', bot: 2 },
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 2, bot: 1 },
+  { ch: 'u', top: 1, bot: 1 },
+]
+
+/** Put all 10 rows here when ready; for now we render only a) to nail the look. */
+const page5TickRows: T[][] = [rowA, rowB, rowC, rowD, rowE, rowF, rowG]
+
+/** click to mark */
+const page5TickMarks = ref(page5TickRows.map(r => r.map(() => false)))
+const toggleTick = (r: number, i: number) => (page5TickMarks.value[r][i] = !page5TickMarks.value[r][i])
+
+/** per-row totals input */
+const page5TickSums = ref<string[]>(Array(page5TickRows.length).fill(''))
+
+const rowLabel = (i: number) => String.fromCharCode(97 + i) // a..j
+
+// put near your other PAGE 5 helpers
+const GAP_AFTER = [5, 8, 15, 18, 21, 23]; // 1-based
+const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedIndex + 1);
 </script>
 
 <template>
@@ -371,8 +648,11 @@ const percentage = computed(() => {
     <div v-else-if="page === 4">
       <h1 class="text-3xl font-bold mb-4">4</h1>
       <p class="mb-3 text-[18px]">Zählen Sie die Anzahl der 6er in jeder Zeile.</p>
-      <div v-for="(row, i) in page4Rows" :key="i" class="mb-3">
-        <span class="font-mono mr-2 tracking-wider text-[18px] whitespace-nowrap">{{ row }}</span>
+      <div v-for="(row, i) in page4Rows" :key="i" class="mb-3 flex items-center gap-3">
+        <div class="font-mono tracking-wider text-[18px] whitespace-nowrap">
+          <span v-for="(ch, idx) in getPage4Chars(i)" :key="idx" @click="togglePage4Char(i, idx)"
+            :class="['letter', { marked: page4Marks[i][idx] }]">{{ ch }}</span>
+        </div>
         <Input v-model="page4Answers[i]" class="inline w-16 h-9 text-[18px]" />
       </div>
     </div>
@@ -380,20 +660,36 @@ const percentage = computed(() => {
     <!-- ======================== PAGE 5 (Zeichen zählen) ======================== -->
     <div v-else-if="page === 5">
       <h1 class="text-3xl font-bold mb-4">5</h1>
-      <div class="mb-4 text-[20px]">
-        <span v-for="(ch, i) in page5Chars" :key="i" @click="toggleMark(page5Marks2, i)"
-          :class="{ 'underline-double': page5Marks2[i] }" class="cursor-pointer px-1 select-none">
-          {{ ch }}
-        </span>
-      </div>
-      <Input v-model="page5Total" placeholder="Gefundene Zeichen" class="w-56 h-10 text-[18px]" />
+      <div class="h-[3px] bg-black my-2"></div>
 
-      <div class="mt-6 rounded-lg border p-4 bg-white/70">
-        <div class="font-medium text-[18px]">Zwischenergebnis</div>
-        <div class="text-[16px] mt-1">Falsche Antworten: <b>{{ wrongCount }}</b></div>
-        <div class="text-[16px]">Prozent: <b>{{ percentage }}</b></div>
+      <p class="text-[18px] leading-snug mb-10">
+        Markieren und zählen Sie pro Reihe alle Buchstaben <b>„u“</b>, die <b>zwei Striche</b> besitzen und tragen
+        Sie die jeweilige Summe (pro Reihe) in die Kästchen ein!
+      </p>
+
+      <div class="space-y-4">
+        <div v-for="(row, r) in page5TickRows" :key="'p5r' + r"
+          class="grid grid-cols-[24px_minmax(0,1fr)_auto] items-start gap-3 mb-12">
+          <!-- left label -->
+          <div class="row-label text-[22px] pr-1">
+            {{ rowLabel(r) }})
+          </div>
+
+          <!-- the letters with ticks -->
+          <div class="tick-line text-[22px] leading-[1.35]">
+            <span v-for="(t, i) in row" :key="i" class="tk inline-block cursor-pointer select-none"
+              :class="[{ marked: page5TickMarks[r][i] }, hasGapAfter(i) ? 'gap' : '']" :data-top="t.top ?? 0"
+              :data-bot="t.bot ?? 0" @click="toggleTick(r, i)">
+              {{ t.ch }}
+            </span>
+          </div>
+          <!-- right input -->
+          <Input v-model="page5TickSums[r]" class="inline w-16 h-9 text-[18px]" placeholder="" />
+        </div>
       </div>
+
     </div>
+
 
     <!-- NAV -->
     <div class="mt-8 flex gap-3">
@@ -449,5 +745,117 @@ ul .answer-box {
   text-decoration-line: underline;
   text-decoration-style: double;
   text-decoration-color: red;
+}
+
+/* ===== Page 5 tick geometry (triple tick support) ===== */
+.tick-line {
+  --top: -0.60em;
+  /* raise/lower top ticks */
+  --bot: 1.50em;
+  /* move bottom ticks */
+  --h: 0.23em;
+  /* tick height */
+  --w: 0.075em;
+  /* tick thickness */
+  /* try with px so it can’t collapse to the same pixel column */
+  --sep1: 3px;
+  /* gap between 1st and 2nd */
+  --sep2: 7px;
+  /* bigger gap to the 3rd */
+  --word-gap: 0.6em;
+  /* tweak until it matches the scan */
+
+  line-height: 1;
+  font-family: "Noto Sans", "DejaVu Sans", system-ui, sans-serif;
+  white-space: pre-wrap;
+  letter-spacing: 0.02em;
+}
+
+.tk {
+  position: relative;
+  display: inline-block;
+  padding: 0 0.20em;
+}
+
+/* TOP ticks (anchored slightly left; adjust left: % if needed) */
+.tk::before {
+  content: none;
+  position: absolute;
+  top: var(--top);
+  left: 30%;
+  transform: translateX(-50%);
+  width: var(--w);
+  height: var(--h);
+  background: currentColor;
+  border-radius: 1px;
+  z-index: 1;
+}
+
+/* single above */
+.tk[data-top="1"]::before {
+  content: "";
+}
+
+/* double above */
+.tk[data-top="2"]::before {
+  content: "";
+  box-shadow: var(--sep1) 0 0 0 currentColor;
+}
+
+/* triple above: 1st at origin, 2nd at --sep1, 3rd further at --sep2 */
+.tk[data-top="3"]::before {
+  content: "";
+  box-shadow:
+    var(--sep1) 0 0 0 currentColor,
+    var(--sep2) 0 0 0 currentColor;
+}
+
+/* BOTTOM ticks */
+.tk::after {
+  content: none;
+  position: absolute;
+  top: var(--bot);
+  left: 30%;
+  transform: translateX(-50%);
+  width: var(--w);
+  height: var(--h);
+  background: currentColor;
+  border-radius: 1px;
+  z-index: 1;
+}
+
+/* single below */
+.tk[data-bot="1"]::after {
+  content: "";
+}
+
+/* double below */
+.tk[data-bot="2"]::after {
+  content: "";
+  box-shadow: var(--sep1) 0 0 0 currentColor;
+}
+
+/* triple below (bigger gap before the 3rd) */
+.tk[data-bot="3"]::after {
+  content: "";
+  box-shadow:
+    var(--sep1) 0 0 0 currentColor,
+    var(--sep2) 0 0 0 currentColor;
+}
+
+/* clicking mark styling */
+.letter,
+.tk {
+  cursor: pointer;
+}
+
+.marked {
+  color: #dc2626;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.tk.gap {
+  margin-right: var(--word-gap);
 }
 </style>
