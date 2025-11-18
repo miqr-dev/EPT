@@ -266,7 +266,6 @@ const rowB: T[] = [
   { ch: 'u', top: 2, bot: 1 },
   { ch: 'u', top: 1 },
 ]
-
 const rowC: T[] = [
   { ch: 'n', top: 1, bot: 2 },
   { ch: 'n' },
@@ -303,7 +302,6 @@ const rowC: T[] = [
   { ch: 'n', top: 1, bot: 1 },
   { ch: 'u', top: 1, bot: 1 },
 ]
-
 const rowD: T[] = [
   { ch: 'n', top: 1, bot: 2 },
   { ch: 'n', bot: 2 },
@@ -340,7 +338,6 @@ const rowD: T[] = [
   { ch: 'h', top: 1 },
   { ch: 'n', bot: 1 },
 ]
-
 const rowE: T[] = [
   { ch: 'u', top: 1 },
   { ch: 'n', bot: 2 },
@@ -377,7 +374,6 @@ const rowE: T[] = [
   { ch: 'u', top: 2 },
   { ch: 'u', bot: 1 },
 ]
-
 const rowF: T[] = [
   { ch: 'n', top: 2 },
   { ch: 'n', top: 1 },
@@ -414,12 +410,11 @@ const rowF: T[] = [
   { ch: 'n', top: 2, bot: 1 },
   { ch: 'u', top: 1, bot: 1 },
 ]
-
 const rowG: T[] = [
   { ch: 'n', top: 2, bot: 2 },
-  { ch: 'n', top: 1, bot:2},
+  { ch: 'n', top: 1, bot: 2 },
   { ch: 'u', top: 1 },
-  { ch: 'u', top: 1, bot:1 },
+  { ch: 'u', top: 1, bot: 1 },
   { ch: 'n', top: 2 },
 
   { ch: 'n', bot: 2 },
@@ -429,8 +424,8 @@ const rowG: T[] = [
   { ch: 'h' },
   { ch: 'n', bot: 2 },
   { ch: 'n', top: 1 },
-  { ch: 'n', top: 1, bot:2 },
-  { ch: 'u', top: 1, bot:1 },
+  { ch: 'n', top: 1, bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
   { ch: 'n', bot: 2 },
   { ch: 'n', top: 2 },
 
@@ -438,22 +433,129 @@ const rowG: T[] = [
   { ch: 'u', top: 1, bot: 1 },
   { ch: 'n', bot: 1 },
 
-  { ch: 'n', top: 2},
+  { ch: 'n', top: 2 },
   { ch: 'u', top: 1, bot: 1 },
   { ch: 'n', bot: 2 },
 
   { ch: 'u', bot: 2 },
   { ch: 'h', top: 1 },
 
-  { ch: 'h', top: 1, bot: 1 },
-  { ch: 'u', bot: 2 },
-  { ch: 'n', bot: 2 },
-  { ch: 'u', top: 2, bot: 1 },
+  { ch: 'h', bot: 2 },
+  { ch: 'u', top: 1 },
+  { ch: 'n', bot: 1 },
+  { ch: 'u' },
   { ch: 'u', top: 1, bot: 1 },
 ]
+const rowH: T[] = [
+  { ch: 'n', top: 1 },
+  { ch: 'u', top: 2 },
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'n', bot: 2 },
 
+  { ch: 'n', top: 2, bot: 2 },
+  { ch: 'h', bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+
+  { ch: 'n', top: 1, bot: 2 },
+  { ch: 'n', top: 2 },
+  { ch: 'u', bot: 2 },
+  { ch: 'n', top: 2 },
+  { ch: 'u', top: 1, bot: 2 },
+  { ch: 'u' },
+  { ch: 'n', top: 2, bot: 2 },
+
+  { ch: 'n', top: 1 },
+  { ch: 'u', bot: 2 },
+  { ch: 'h', bot: 1 },
+
+  { ch: 'u', top: 2 },
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 2, bot: 1 },
+
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 2 },
+
+  { ch: 'n', bot: 1 },
+  { ch: 'u', top: 2 },
+  { ch: 'n', top: 1, bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'u', top: 1, bot: 1 },
+]
+const rowI: T[] = [
+  { ch: 'u', top: 1, bot: 2 },
+  { ch: 'n', top: 2 },
+  { ch: 'h', bot: 1 },
+  { ch: 'u', top: 2 },
+  { ch: 'n', bot: 2 },
+
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'u', top: 2 },
+  { ch: 'n', bot: 2 },
+
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'n', top: 2 },
+  { ch: 'h', bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'n', bot: 2 },
+  { ch: 'n', top: 1 },
+  { ch: 'h', bot: 2 },
+
+  { ch: 'u', bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'n' },
+
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'n', top: 1 },
+
+  { ch: 'n' },
+  { ch: 'u', top: 1, bot: 1 },
+
+  { ch: 'n' },
+  { ch: 'h', top: 2, bot: 1 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'n', top: 2 },
+  { ch: 'u', bot: 1 },
+]
+const rowJ: T[] = [
+  { ch: 'u', top: 1 },
+  { ch: 'n', top: 1, bot: 2 },
+  { ch: 'h', bot: 2 },
+  { ch: 'u', top: 2, bot: 1 },
+  { ch: 'n', bot: 2 },
+
+  { ch: 'h', top: 1, bot: 1 },
+  { ch: 'n', bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+
+  { ch: 'u', bot: 2 },
+  { ch: 'h', top: 1 },
+  { ch: 'n', bot: 2 },
+  { ch: 'n', top: 2, bot: 1 },
+  { ch: 'u', bot: 2 },
+  { ch: 'u', top: 1 },
+  { ch: 'n', top: 1, bot: 2 },
+
+  { ch: 'u', top: 2 },
+  { ch: 'h', bot: 2 },
+  { ch: 'u', top: 2 },
+
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'u', top: 2, bot: 1 },
+  { ch: 'u', bot: 2 },
+
+  { ch: 'n', top: 1 },
+  { ch: 'u', top: 1, bot: 2 },
+
+  { ch: 'u', top: 1, bot: 2 },
+  { ch: 'u', top: 1, bot: 1 },
+  { ch: 'u', top: 1, bot: 2 },
+  { ch: 'n', top: 1, bot: 1 },
+  { ch: 'u', top: 1, bot: 1 },
+]
 /** Put all 10 rows here when ready; for now we render only a) to nail the look. */
-const page5TickRows: T[][] = [rowA, rowB, rowC, rowD, rowE, rowF, rowG]
+const page5TickRows: T[][] = [rowA, rowB, rowC, rowD, rowE, rowF, rowG, rowH, rowI, rowJ]
 
 /** click to mark */
 const page5TickMarks = ref(page5TickRows.map(r => r.map(() => false)))
