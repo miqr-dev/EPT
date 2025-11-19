@@ -85,6 +85,10 @@ const testComponents: Record<string, unknown> = {
 const stepStatuses = ref<Record<number, StepStatusEntry>>(normalizeStepStatuses(props.stepStatuses));
 const visibleSteps = computed(() =>
     props.exam.steps.filter((step) => {
+        if (props.exam.current_step?.id === step.id) {
+            return true;
+        }
+
         const status = stepStatuses.value?.[step.id]?.status;
         return typeof status !== 'undefined' && status !== 'not_started';
     }),
@@ -604,7 +608,7 @@ watch(
                             </tr>
                             <tr v-if="!visibleSteps.length">
                                 <td colspan="3" class="px-6 py-4 text-center text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                    Momentan sind keine Tests verfügbar. Bitte warten Sie, bis Ihre Prüfung gestartet wurde.
+                                    Momentan sind keine Tests verfügbar. Bitte warten Sie, bis Ihre Prüfung startet oder der Prüfer den nächsten Test freigibt.
                                 </td>
                             </tr>
                         </tbody>
