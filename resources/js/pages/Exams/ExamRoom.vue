@@ -92,6 +92,16 @@ const hasPausedStep = computed(() =>
     Object.values(stepStatuses.value || {}).some((status) => status?.status === 'paused'),
 );
 
+const visibleSteps = computed(() => {
+    if (!props.exam?.steps) {
+        return [];
+    }
+    return props.exam.steps.filter((step) => {
+        const statusEntry = stepStatuses.value[step.id];
+        return statusEntry && statusEntry.status !== 'not_started';
+    });
+});
+
 function normalizeStepStatuses(statuses: Record<number, StepStatusEntry> | undefined) {
     if (!statuses) {
         return {} as Record<number, StepStatusEntry>;
@@ -542,7 +552,7 @@ watch(
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                            <tr v-for="step in exam.steps" :key="step.id">
+                            <tr v-for="step in visibleSteps" :key="step.id">
                                 <td class="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-100">{{ step.test.name }}</td>
                                 <td class="px-6 py-4 text-sm whitespace-nowrap">
                                     <Badge
