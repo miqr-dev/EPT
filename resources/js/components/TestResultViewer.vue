@@ -5,6 +5,7 @@ defineOptions({
 import LmtResult from '@/components/LmtResult.vue';
 import MrtAResult from '@/components/MrtAResult.vue';
 import MrtBResult from '@/components/MrtBResult.vue';
+import KonzentrationstestResult from '@/components/KonzentrationstestResult.vue';
 import AvemResult from '@/components/AvemResult.vue';
 import { Input } from '@/components/ui/input';
 import FpiResult from '@/pages/Scores/FPI/FPIResult.vue';
@@ -147,6 +148,7 @@ const fpiRohwerte = computed(() => {
   <div v-if="local" v-bind="$attrs">
     <MrtAResult v-if="test.name === 'MRT-A'" :results="local" />
     <MrtBResult v-else-if="test.name === 'MRT-B'" :results="local" />
+    <KonzentrationstestResult v-else-if="test.name === 'Konzentrationstest'" :results="local" />
         <LmtResult v-else-if="test.name === 'LMT'" :results="local" :show-answers="showAnswers" />
         <FpiResult v-else-if="test.name === 'FPI-R'" :stanines="fpiStanines" :rohwerte="fpiRohwerte" :answers="local.answers" :show-answers="showAnswers" />
         <BIT2Result v-else-if="test.name === 'BIT-2'" :results="local" :participantProfile="participantProfile" :show-answers="showAnswers" />

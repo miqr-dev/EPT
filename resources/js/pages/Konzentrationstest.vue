@@ -17,6 +17,39 @@ const nextPage = () => {
 const prevPage = () => {
   if (page.value > 1) page.value--
 }
+
+const finishTest = () => {
+  const unanswered = page1Inputs.value.some(ans => ans === '') ||
+                     page2Answers.value.some(ans => ans === '') ||
+                     copyCounts.value.some(ans => ans === '') ||
+                     page4Answers.value.some(ans => ans === '') ||
+                     page5TickSums.value.some(ans => ans === '')
+
+  const proceed = () => {
+    const results = {
+      page1: page1Inputs.value,
+      page2: page2Answers.value,
+      page3: copyCounts.value,
+      page4: page4Answers.value,
+      page5: page5TickSums.value,
+      wrong_count: wrongCount.value,
+      performance_category: performanceCategory.value
+    }
+    emit('complete', results)
+  }
+
+  if (unanswered) {
+    const message = 'Some answers are left empty.'
+    const confirmText = 'Trotzdem beenden'
+    const cancelText = 'Abbrechen'
+    if (confirm(`${message}\n\n${confirmText} / ${cancelText}`)) {
+      proceed()
+    }
+  } else {
+    proceed()
+  }
+}
+const emit = defineEmits(['complete'])
 const toggleMark = (marks: boolean[], i: number) => (marks[i] = !marks[i])
 
 /* =========================================================
@@ -62,7 +95,9 @@ const boxHeightPercent = 8.8
 const debugAlign = ref(false)
 
 // optional scoring keys
-const page2Correct = Array(10).fill('')
+const page2Correct = ['3', '1', '3', '2', '2', '1', '2', '4', '1', '3']
+const page3Correct = ['7', '1', '4', '3', '1', '3', '3', '0', '2', '2', '5', '2', '3', '2', '2', '4', '3', '3', '1', '3', '3', '0', '2']
+const page5Correct = ['7', '4', '8', '5', '7', '9', '7', '10', '10', '9']
 
 /* =========================================================
    PAGE 3 (Original LEFT, Abschrift RIGHT)  [was old page 4]
@@ -152,7 +187,7 @@ const page4Rows = [
   '8695685588685585668989586566985869568956686'
 ]
 const page4Answers = ref<string[]>(Array(page4Rows.length).fill(''))
-const page4Correct = ['3', '2', '4']
+const page4Correct = ['12', '11', '13', '10', '11', '9', '16', '14', '13', '10', '15', '15', '12', '13']
 
 const page4Marks = ref(page4Rows.map(row => Array.from(row).map(() => false)))
 
@@ -173,29 +208,45 @@ const toNum = (s: string) => {
 
 const wrongCount = computed(() => {
   let wrong = 0
+
+  // Page 1
   page1Correct.forEach((ans, i) => {
-    const exp = toNum(ans)!
+    const exp = toNum(ans)
     const got = toNum(page1Inputs.value[i] || '')
     if (got === null || got !== exp) wrong++
   })
+
+  // Page 2
   page2Correct.forEach((ans, i) => {
-    if (!ans) return
     if ((page2Answers.value[i] || '').trim() !== ans.trim()) wrong++
   })
-  page4Rows.forEach((_, i) => {
-    if ((page4Answers.value[i] || '').trim() !== page4Correct[i]) wrong++
+
+  // Page 3
+  page3Correct.forEach((ans, i) => {
+    if ((copyCounts.value[i] || '').trim() !== ans.trim()) wrong++
   })
+
+  // Page 4
+  page4Correct.forEach((ans, i) => {
+    if ((page4Answers.value[i] || '').trim() !== ans.trim()) wrong++
+  })
+
+  // Page 5
+  page5Correct.forEach((ans, i) => {
+    if ((page5TickSums.value[i] || '').trim() !== ans.trim()) wrong++
+  })
+
   return wrong
 })
 
-const percentage = computed(() => {
+const performanceCategory = computed(() => {
   const wrong = wrongCount.value
-  if (wrong <= 5) return '92 - 100%'
-  if (wrong <= 13) return '81 - 91%'
-  if (wrong <= 22) return '67 - 80%'
-  if (wrong <= 33) return '50 - 66%'
-  if (wrong <= 60) return '30 - 49%'
-  return '0 - 29%'
+  if (wrong <= 5) return { range: '100-92%', category: 'Oberer Leistungsbereich' }
+  if (wrong <= 13) return { range: '91-81%', category: 'Leistungsbereich' }
+  if (wrong <= 22) return { range: '80-67%', category: 'Mittlerer Leistungsbereich' }
+  if (wrong <= 33) return { range: '66-50%', category: 'Leistungsbereich' }
+  if (wrong <= 46) return { range: '49-30%', category: 'unterer Leistungsbereich' }
+  return { range: '29-0%', category: 'Leistungsbereich' }
 })
 
 /* ======================== PAGE 5 — precise ticks via CSS ======================== */
@@ -797,6 +848,7 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
     <div class="mt-8 flex gap-3">
       <Button @click="prevPage" v-if="page > 1">Zurück</Button>
       <Button @click="nextPage" v-if="page < MAX_PAGE">Weiter</Button>
+      <Button @click="finishTest" v-if="page === MAX_PAGE">Test beenden</Button>
     </div>
   </div>
 </template>
