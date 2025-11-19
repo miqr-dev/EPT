@@ -3,9 +3,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { Head, router, usePage } from '@inertiajs/vue3';
-import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
-
 // Import test components
 import AVEM from '@/pages/AVEM.vue';
 import BIT2 from '@/pages/BIT-2.vue';
@@ -88,17 +85,22 @@ const previousForceFinishByStep = ref<Record<number, string | null>>({});
 const remotelyPausedStepIds = new Set<number>();
 const pendingForceFinishRequests = new Map<number, ForceFinishDetail>();
 
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch, watchEffect } from 'vue';
+
 const hasPausedStep = computed(() =>
     Object.values(stepStatuses.value || {}).some((status) => status?.status === 'paused'),
 );
 
-const visibleSteps = computed(() => {
+const visibleSteps = ref<ExamStepInfo[]>([]);
+watchEffect(() => {
     if (!props.exam?.steps) {
-        return [];
+        visibleSteps.value = [];
+        return;
     }
-    return props.exam.steps.filter((step) => {
+    visibleSteps.value = props.exam.steps.filter((step) => {
         const statusEntry = stepStatuses.value[step.id];
-        return statusEntry && statusEntry.status !== 'not_started';
+        return (statusEntry && statusEntry.status !== 'not_started') || props.exam.current_step?.id === step.id;
     });
 });
 
