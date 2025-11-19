@@ -3,9 +3,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { Head, router, usePage } from '@inertiajs/vue3';
-import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
-
 // Import test components
 import AVEM from '@/pages/AVEM.vue';
 import BIT2 from '@/pages/BIT-2.vue';
@@ -88,9 +85,24 @@ const previousForceFinishByStep = ref<Record<number, string | null>>({});
 const remotelyPausedStepIds = new Set<number>();
 const pendingForceFinishRequests = new Map<number, ForceFinishDetail>();
 
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch, watchEffect } from 'vue';
+
 const hasPausedStep = computed(() =>
     Object.values(stepStatuses.value || {}).some((status) => status?.status === 'paused'),
 );
+
+const visibleSteps = ref<ExamStepInfo[]>([]);
+watchEffect(() => {
+    if (!props.exam?.steps) {
+        visibleSteps.value = [];
+        return;
+    }
+    visibleSteps.value = props.exam.steps.filter((step) => {
+        const statusEntry = stepStatuses.value[step.id];
+        return (statusEntry && statusEntry.status !== 'not_started') || props.exam.current_step?.id === step.id;
+    });
+});
 
 function normalizeStepStatuses(statuses: Record<number, StepStatusEntry> | undefined) {
     if (!statuses) {
@@ -542,7 +554,7 @@ watch(
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                            <tr v-for="step in exam.steps" :key="step.id">
+                            <tr v-for="step in visibleSteps" :key="step.id">
                                 <td class="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-100">{{ step.test.name }}</td>
                                 <td class="px-6 py-4 text-sm whitespace-nowrap">
                                     <Badge
