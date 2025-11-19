@@ -83,6 +83,12 @@ const testComponents: Record<string, unknown> = {
 };
 
 const stepStatuses = ref<Record<number, StepStatusEntry>>(normalizeStepStatuses(props.stepStatuses));
+const visibleSteps = computed(() =>
+    props.exam.steps.filter((step) => {
+        const status = stepStatuses.value?.[step.id]?.status;
+        return typeof status !== 'undefined' && status !== 'not_started';
+    }),
+);
 const previousStatusByStep = ref<Record<number, StepStatus | undefined>>({});
 const previousForceFinishByStep = ref<Record<number, string | null>>({});
 const remotelyPausedStepIds = new Set<number>();
@@ -542,7 +548,7 @@ watch(
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                            <tr v-for="step in exam.steps" :key="step.id">
+                            <tr v-for="step in visibleSteps" :key="step.id">
                                 <td class="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-100">{{ step.test.name }}</td>
                                 <td class="px-6 py-4 text-sm whitespace-nowrap">
                                     <Badge
@@ -596,9 +602,9 @@ watch(
                                     </Dialog>
                                 </td>
                             </tr>
-                            <tr v-if="!exam.steps.length">
+                            <tr v-if="!visibleSteps.length">
                                 <td colspan="3" class="px-6 py-4 text-center text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                    Für diese Prüfung sind keine Tests definiert.
+                                    Momentan sind keine Tests verfügbar. Bitte warten Sie, bis Ihre Prüfung gestartet wurde.
                                 </td>
                             </tr>
                         </tbody>
