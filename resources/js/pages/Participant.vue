@@ -60,6 +60,16 @@ const handleLogout = () => {
 //   'Abitur mit abgeschlossenem Studium',
 //   'Berufsschule'
 // ]
+
+
+//sonderschulab...
+//hauptschul
+//real mitelschulab
+//abitur + fachabitur
+//studium 
+
+//Aktueller Status
+
 // const maritalStatusOptions = [
 //   { value: 'single', label: 'Ledig' },
 //   { value: 'married', label: 'Verheiratet' },
