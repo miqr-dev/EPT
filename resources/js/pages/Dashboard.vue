@@ -202,156 +202,323 @@ function addTests() {
 <template>
 
   <Head title="Übersicht" />
+
   <AppLayout>
-    <div
-      class="flex min-h-screen flex-col items-center bg-[#f6f7f9] py-4 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      <!-- Live Exam Status -->
-      <div v-for="exam in activeExams" :key="exam.id" class="w-full max-w-7xl">
-        <LiveExamStatusTable :exam="exam" />
-      </div>
-      <!-- New Exam Management Section -->
-      <div class="mt-6 flex w-full max-w-7xl flex-col gap-4 md:flex-row">
-        <!-- Box 1: Recent Users -->
-        <div class="flex flex-1 flex-col">
-          <div
-            class="flex h-full flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow dark:border-gray-700 dark:bg-gray-800">
-            <div class="flex items-center border-b border-gray-100 px-4 py-3 dark:border-gray-700">
-              <h2 class="flex-1 text-base font-semibold text-gray-800 dark:text-gray-200">Aktuelle Benutzer (6h)</h2>
-              <span class="text-xs text-gray-500 dark:text-gray-400">{{ availableRecentUsers.length }}</span>
+    <div class="min-h-screen bg-slate-50 py-6 dark:bg-slate-900">
+      <div class="mx-auto flex max-w-7xl flex-col gap-6 px-4 lg:px-6">
+
+        <!-- Page header -->
+        <header
+          class="flex flex-col gap-3 border-b border-slate-200 pb-4 dark:border-slate-700 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+              Prüfungsübersicht
+            </h1>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Verwalten Sie aktuelle Benutzer, neue Prüfungen und laufende Prüfungsdurchläufe.
+            </p>
+          </div>
+
+          <!-- Small KPI chips -->
+          <div class="flex flex-wrap gap-2 text-xs md:text-sm">
+            <div
+              class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 shadow-sm ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600">
+              <span class="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
+              <span class="font-medium text-slate-700 dark:text-slate-200">
+                Aktive Prüfungen
+              </span>
+              <span
+                class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                {{ activeExams.length }}
+              </span>
             </div>
-            <div class="flex-1 overflow-auto">
-              <table class="w-full text-sm">
-                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th class="w-8 px-2 py-2 text-center">
-                      <input type="checkbox" @change="toggleSelectAllRecent" class="h-4 w-4 accent-blue-600" />
-                    </th>
-                    <th class="px-2 py-2 text-left font-medium">Name</th>
-                    <th class="px-2 py-2 text-left font-medium">Vorname</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="user in availableRecentUsers" :key="user.id"
-                    class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700" @click="toggleRecentUser(user.id)">
-                    <td class="px-2 py-1 text-center">
-                      <input type="checkbox" :checked="selectedRecentUserIds.includes(user.id)"
-                        class="h-4 w-4 accent-blue-600" />
-                    </td>
-                    <td class="px-2 py-1">{{ user.name }}</td>
-                    <td class="px-2 py-1">{{ user.firstname }}</td>
-                  </tr>
-                  <tr v-if="!availableRecentUsers.length">
-                    <td colspan="3" class="py-4 text-center text-gray-400 dark:text-gray-500">Keine aktuellen Benutzer gefunden.</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div
+              class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 shadow-sm ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600">
+              <span class="inline-block h-2 w-2 rounded-full bg-blue-500"></span>
+              <span class="font-medium text-slate-700 dark:text-slate-200">
+                Prüfungen gesamt
+              </span>
+              <span
+                class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                {{ props.exams.length }}
+              </span>
             </div>
           </div>
-        </div>
+        </header>
 
-        <!-- Box 2: Create Exam -->
-        <div class="flex flex-1 flex-col">
-          <div
-            class="h-full rounded-xl border border-gray-100 bg-white p-4 shadow dark:border-gray-700 dark:bg-gray-800">
-            <h2 class="mb-3 text-base font-semibold text-gray-800 dark:text-gray-200">Neue Prüfung erstellen</h2>
-            <div v-if="!showCreateExamForm">
-              <button @click="showCreateExamForm = true"
-                class="w-full rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700">
-                Neue Prüfung erstellen
-              </button>
+        <!-- Active exams section -->
+        <section v-if="activeExams.length"
+          class="space-y-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 shadow-sm dark:border-emerald-800/60 dark:bg-emerald-900/30">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span
+                class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-xs font-semibold text-white">
+                LIVE
+              </span>
+              <div>
+                <h2 class="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
+                  Laufende Prüfungen
+                </h2>
+                <p class="text-xs text-emerald-800/80 dark:text-emerald-200/80">
+                  Übersicht der aktuell laufenden Prüfungsdurchläufe.
+                </p>
+              </div>
             </div>
-            <div v-else>
-              <div class="mb-4">
-                <label for="exam-title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Prüfungstitel</label>
-                <input type="text" id="exam-title" v-model="newExamTitle"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
-                  placeholder="z. B. Abschlussprüfung Sommer 2025" />
-              </div>
-              <div class="flex items-center gap-4">
-                <button @click="addSelectedUsersToStage" :disabled="!selectedRecentUserIds.length"
-                  class="rounded bg-gray-200 px-4 py-2 font-bold text-gray-800 hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">
-                  &rarr;
-                </button>
-                <div class="h-24 flex-1 overflow-y-auto rounded-md border p-2 dark:border-gray-600">
-                  <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">Ausgewählte Teilnehmer:innen:</p>
-                  <ul>
-                    <li v-for="userId in stagedUserIds" :key="userId" class="flex items-center justify-between text-sm">
-                      <span>
-                        {{props.recentUsers.find((u) => u.id === userId)?.name}},
-                        {{props.recentUsers.find((u) => u.id === userId)?.firstname}}
-                      </span>
-                      <button @click="removeStagedUser(userId)" class="text-red-500 hover:text-red-700">&times;</button>
-                    </li>
-                  </ul>
-                  <p v-if="!stagedUserIds.length" class="text-xs text-gray-400 dark:text-gray-500">Keine Teilnehmer:innen ausgewählt.</p>
+          </div>
+
+          <div class="space-y-2">
+            <div v-for="exam in activeExams" :key="exam.id"
+              class="overflow-hidden rounded-xl bg-white/90 ring-1 ring-emerald-100 dark:bg-slate-900 dark:ring-emerald-800/70">
+              <LiveExamStatusTable :exam="exam" />
+            </div>
+          </div>
+        </section>
+
+        <!-- Main 3-column layout -->
+        <section class="grid gap-4 lg:grid-cols-3">
+          <!-- Box 1: Recent Users -->
+          <div class="flex flex-col">
+            <div
+              class="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+                <div>
+                  <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Aktuelle Benutzer (letzte 6h)
+                  </h2>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">
+                    Wählen Sie Teilnehmende für eine neue Prüfung aus.
+                  </p>
                 </div>
+                <span
+                  class="inline-flex items-center justify-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100">
+                  {{ availableRecentUsers.length }}
+                </span>
               </div>
+              <div class="flex-1 overflow-auto">
+                <table class="w-full text-xs md:text-sm">
+                  <thead class="sticky top-0 z-10 bg-slate-50 text-slate-600 dark:bg-slate-700 dark:text-slate-200">
+                    <tr>
+                      <th class="w-10 px-3 py-2 text-center">
+                        <input type="checkbox" @change="toggleSelectAllRecent"
+                          class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                      </th>
+                      <th class="px-3 py-2 text-left font-medium">Name</th>
+                      <th class="px-3 py-2 text-left font-medium">Vorname</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="user in availableRecentUsers" :key="user.id"
+                      class="cursor-pointer border-b border-slate-50 text-slate-800 hover:bg-slate-50/80 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-700"
+                      @click="toggleRecentUser(user.id)">
+                      <td class="px-3 py-1.5 text-center">
+                        <input type="checkbox" :checked="selectedRecentUserIds.includes(user.id)"
+                          class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                      </td>
+                      <td class="px-3 py-1.5">
+                        {{ user.name }}
+                      </td>
+                      <td class="px-3 py-1.5">
+                        {{ user.firstname }}
+                      </td>
+                    </tr>
+                    <tr v-if="!availableRecentUsers.length">
+                      <td colspan="3" class="py-6 text-center text-xs text-slate-400 dark:text-slate-500">
+                        Keine aktuellen Benutzer gefunden.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div
+                class="border-t border-slate-200 px-4 py-2 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                Tipp: Mehrere Personen markieren, um sie gemeinsam zur Prüfung hinzuzufügen.
+              </div>
+            </div>
+          </div>
+
+          <!-- Box 2: Create Exam -->
+          <div class="flex flex-col">
+            <div
+              class="h-full rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Neue Prüfung erstellen
+                  </h2>
+                  <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                    Titel festlegen, Teilnehmende hinzufügen und Prüfungsschritte auswählen.
+                  </p>
+                </div>
+                <span v-if="showCreateExamForm"
+                  class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700 ring-1 ring-blue-100 dark:bg-blue-900/30 dark:text-blue-100 dark:ring-blue-800/60">
+                  Konfiguration
+                </span>
+              </div>
+
               <div class="mt-4">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Prüfungsschritte</label>
-                <div class="mt-2 grid grid-cols-2 gap-2">
-                  <div v-for="test in props.tests" :key="test.id" class="flex items-center">
-                    <input type="checkbox" :id="`test-${test.id}`" :value="test.id" v-model="newExamSteps"
-                      class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                    <label :for="`test-${test.id}`" class="ml-2 block text-sm text-gray-900 dark:text-gray-200">{{
-                      test.name
-                      }}</label>
+                <div v-if="!showCreateExamForm">
+                  <button @click="showCreateExamForm = true"
+                    class="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:ring-offset-slate-800">
+                    <span class="text-base leading-none">＋</span>
+                    <span>Neue Prüfung erstellen</span>
+                  </button>
+                  <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                    Wählen Sie zuerst Teilnehmende in der linken Liste aus.
+                  </p>
+                </div>
+
+                <div v-else class="space-y-4">
+                  <!-- Title -->
+                  <div>
+                    <label for="exam-title" class="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                      Prüfungstitel
+                    </label>
+                    <input type="text" id="exam-title" v-model="newExamTitle"
+                      class="mt-1 block w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                      placeholder="z. B. Abschlussprüfung Sommer 2025" />
+                  </div>
+
+                  <!-- Participants staging -->
+                  <div class="flex items-start gap-3">
+                    <button @click="addSelectedUsersToStage" :disabled="!selectedRecentUserIds.length"
+                      class="mt-5 inline-flex h-9 w-10 items-center justify-center rounded-xl border border-slate-300 bg-slate-50 text-lg font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">
+                      →
+                    </button>
+                    <div
+                      class="flex-1 rounded-xl border border-dashed border-slate-300 bg-slate-50/60 p-3 text-xs dark:border-slate-600 dark:bg-slate-900/40">
+                      <div class="mb-2 flex items-center justify-between">
+                        <p class="font-medium text-slate-700 dark:text-slate-200">
+                          Ausgewählte Teilnehmer:innen
+                        </p>
+                        <span
+                          class="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100">
+                          {{ stagedUserIds.length }}
+                        </span>
+                      </div>
+                      <ul class="space-y-1.5 max-h-32 overflow-y-auto">
+                        <li v-for="userId in stagedUserIds" :key="userId"
+                          class="flex items-center justify-between rounded-lg bg-white px-2 py-1.5 text-xs text-slate-800 shadow-sm ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600">
+                          <span>
+                            {{props.recentUsers.find((u) => u.id === userId)?.name}},
+                            {{props.recentUsers.find((u) => u.id === userId)?.firstname}}
+                          </span>
+                          <button @click="removeStagedUser(userId)"
+                            class="text-xs font-bold text-red-500 hover:text-red-600">
+                            &times;
+                          </button>
+                        </li>
+                      </ul>
+                      <p v-if="!stagedUserIds.length" class="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
+                        Noch keine Teilnehmenden hinzugefügt. Wählen Sie Personen links aus und klicken Sie auf den
+                        Pfeil.
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Steps -->
+                  <div>
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                      Prüfungsschritte
+                    </label>
+                    <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <div v-for="test in props.tests" :key="test.id"
+                        class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs shadow-sm dark:border-slate-600 dark:bg-slate-900">
+                        <input type="checkbox" :id="`test-${test.id}`" :value="test.id" v-model="newExamSteps"
+                          class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                        <label :for="`test-${test.id}`" class="block text-xs text-slate-800 dark:text-slate-100">
+                          {{ test.name }}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="mt-2 flex items-center justify-end gap-2">
+                    <button @click="showCreateExamForm = false"
+                      class="text-xs font-medium text-slate-600 underline-offset-2 hover:text-slate-900 hover:underline dark:text-slate-300 dark:hover:text-slate-100">
+                      Abbrechen
+                    </button>
+                    <button @click="saveExam" :disabled="!newExamTitle || !stagedUserIds.length"
+                      class="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:ring-offset-slate-800">
+                      Prüfung speichern
+                    </button>
                   </div>
                 </div>
               </div>
-              <div class="mt-4 flex justify-end gap-2">
-                <button @click="showCreateExamForm = false"
-                  class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200">
-                  Abbrechen
-                </button>
-                <button @click="saveExam" :disabled="!newExamTitle || !stagedUserIds.length"
-                  class="rounded bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 disabled:opacity-50">
-                  Prüfung speichern
-                </button>
+            </div>
+          </div>
+
+          <!-- Box 3: All Exams -->
+          <div class="flex flex-col">
+            <div
+              class="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+                <div>
+                  <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Alle Prüfungen
+                  </h2>
+                  <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                    Schnellzugriff auf vorhandene Prüfungen und Details.
+                  </p>
+                </div>
+                <span
+                  class="inline-flex items-center justify-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100">
+                  {{ props.exams.length }}
+                </span>
+              </div>
+              <div class="flex-1 overflow-auto">
+                <table class="w-full text-xs md:text-sm">
+                  <thead class="sticky top-0 z-10 bg-slate-50 text-slate-600 dark:bg-slate-700 dark:text-slate-200">
+                    <tr>
+                      <th class="px-3 py-2 text-left font-medium">Name</th>
+                      <th class="px-3 py-2 text-left font-medium">Stadt</th>
+                      <th class="px-3 py-2 text-left font-medium">Status</th>
+                      <th class="px-3 py-2 text-right font-medium"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="exam in props.exams" :key="exam.id"
+                      class="border-b border-slate-50 hover:bg-slate-50/80 dark:border-slate-700 dark:hover:bg-slate-700">
+                      <td class="px-3 py-2 text-slate-900 dark:text-slate-100">
+                        {{ exam.name }}
+                      </td>
+                      <td class="px-3 py-2 text-slate-700 dark:text-slate-200">
+                        {{ exam.city.name }}
+                      </td>
+                      <td class="px-3 py-2">
+                        <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium" :class="{
+                          'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-100 dark:ring-emerald-800/60':
+                            exam.status === 'aktiv',
+                          'bg-amber-50 text-amber-700 ring-1 ring-amber-100 dark:bg-amber-900/30 dark:text-amber-100 dark:ring-amber-800/60':
+                            exam.status === 'geplant',
+                          'bg-slate-100 text-slate-700 ring-1 ring-slate-200 dark:bg-slate-700 dark:text-slate-100 dark:ring-slate-600':
+                            exam.status !== 'aktiv' && exam.status !== 'geplant',
+                        }">
+                          {{ exam.status }}
+                        </span>
+                      </td>
+                      <td class="px-3 py-2 text-right">
+                        <button @click="openExamDetailsModal(exam)"
+                          class="text-xs font-semibold text-blue-600 underline-offset-2 hover:text-blue-700 hover:underline dark:text-blue-300 dark:hover:text-blue-200">
+                          Details
+                        </button>
+                      </td>
+                    </tr>
+                    <tr v-if="!props.exams.length">
+                      <td colspan="4" class="py-6 text-center text-xs text-slate-400 dark:text-slate-500">
+                        Keine Prüfungen gefunden.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- Box 3: All Exams -->
-        <div class="flex flex-1 flex-col">
-          <div
-            class="flex h-full flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow dark:border-gray-700 dark:bg-gray-800">
-            <div class="flex items-center border-b border-gray-100 px-4 py-3 dark:border-gray-700">
-              <h2 class="flex-1 text-base font-semibold text-gray-800 dark:text-gray-200">Alle Prüfungen</h2>
-              <span class="text-xs text-gray-500 dark:text-gray-400">{{ props.exams.length }}</span>
-            </div>
-            <div class="flex-1 overflow-auto">
-              <table class="w-full text-sm">
-                <thead class="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th class="px-2 py-2 text-left font-medium">Name</th>
-                    <th class="px-2 py-2 text-left font-medium">Stadt</th>
-                    <th class="px-2 py-2 text-left font-medium">Status</th>
-                    <th class="px-2 py-2"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="exam in props.exams" :key="exam.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="px-2 py-1">{{ exam.name }}</td>
-                    <td class="px-2 py-1">{{ exam.city.name }}</td>
-                    <td class="px-2 py-1">{{ exam.status }}</td>
-                    <td class="px-2 py-1 text-right">
-                      <button @click="openExamDetailsModal(exam)" class="font-semibold text-blue-600 hover:underline">
-                        Details
-                      </button>
-                    </td>
-                  </tr>
-                  <tr v-if="!props.exams.length">
-                    <td colspan="4" class="py-4 text-center text-gray-400 dark:text-gray-500">Keine Prüfungen gefunden.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        </section>
       </div>
+
+      <ExamDetailsModal :exam="selectedExam" :show="showExamDetailsModal" @close="showExamDetailsModal = false"
+        @save="saveExamSteps" />
     </div>
-    <ExamDetailsModal :exam="selectedExam" :show="showExamDetailsModal" @close="showExamDetailsModal = false"
-      @save="saveExamSteps" />
   </AppLayout>
 </template>
