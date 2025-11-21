@@ -12,6 +12,7 @@ class TestResult extends Model
     'result_json',
     'pdf_file_path',
     'teacher_id',
+    'extra_time_minutes',
   ];
 
   protected $casts = [
