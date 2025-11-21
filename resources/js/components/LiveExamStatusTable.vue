@@ -172,6 +172,41 @@ const canForceFinishParticipant = (participant: any) => {
   return !status.force_finish_requested_at
 }
 
+const addExtraTime = (participant: any) => {
+  const status = getParticipantStatus(participant)
+  if (!status?.id) return
+
+  const minutesInput = window.prompt(
+    'Wie viele zusätzliche Minuten sollen hinzugefügt werden? (mindestens 1 Minute)',
+  )
+
+  if (minutesInput === null) return
+
+  const minutes = parseInt(minutesInput, 10)
+  if (Number.isNaN(minutes) || minutes <= 0) {
+    window.alert('Bitte eine gültige Anzahl an Minuten größer als 0 eingeben.')
+    return
+  }
+
+  router.post(
+    route('exam-step-status.add-time', { status: status.id }),
+    { minutes },
+    {
+      preserveScroll: true,
+      preserveState: true,
+      onSuccess: () => {
+        const additionalSeconds = minutes * 60
+        if (typeof status.time_remaining === 'number') {
+          status.time_remaining = Math.max(0, status.time_remaining + additionalSeconds)
+        }
+        if (typeof status.grace_period_seconds === 'number') {
+          status.grace_period_seconds += additionalSeconds
+        }
+      },
+    },
+  )
+}
+
 </script>
 
 <template>
@@ -265,7 +300,7 @@ const canForceFinishParticipant = (participant: any) => {
               {{ formatTime(getParticipantStatus(participant)?.time_remaining) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-              <div class="flex justify-end gap-2">
+              <div class="flex flex-wrap justify-end gap-2">
                 <Button v-if="canPauseParticipant(participant)"
                   variant="secondary" size="sm" @click="setParticipantAction(participant, 'pause')">
                   Pausieren
@@ -277,6 +312,10 @@ const canForceFinishParticipant = (participant: any) => {
                 <Button v-if="canForceFinishParticipant(participant)"
                   variant="destructive" size="sm" @click="setParticipantAction(participant, 'finish')">
                   Test beenden
+                </Button>
+                <Button variant="outline" size="sm" :disabled="!getParticipantStatus(participant)"
+                  @click="addExtraTime(participant)">
+                  Extra-Zeit
                 </Button>
               </div>
             </td>
