@@ -6,6 +6,8 @@ use App\Models\Exam;
 use App\Models\ExamParticipant;
 use App\Models\ExamStep;
 use App\Models\ExamStepStatus;
+use App\Models\TestAssignment;
+use App\Models\TestResult;
 use App\Models\User;
 use App\Models\Test;
 use App\Models\City;
@@ -405,6 +407,37 @@ class ExamController extends Controller
     }
 
     return back(303);
+  }
+
+  public function addExtraTime(Request $request, Exam $exam, User $participant)
+  {
+    $data = $request->validate([
+      'extra_time' => 'required|integer|min:1',
+    ]);
+
+    if (!$exam->current_exam_step_id) {
+      return back(303)->with('error', 'Prüfung hat keinen aktiven Test.');
+    }
+
+    $status = ExamStepStatus::firstOrCreate([
+      'exam_id' => $exam->id,
+      'participant_id' => $participant->id,
+      'exam_step_id' => $exam->current_exam_step_id,
+    ]);
+
+    $status->extra_time = ($status->extra_time ?? 0) + $data['extra_time'];
+    $status->save();
+
+    $assignment = TestAssignment::firstOrCreate([
+        'participant_id' => $participant->id,
+        'test_id' => $exam->currentStep->test_id,
+    ]);
+
+    $testResult = TestResult::firstOrNew(['assignment_id' => $assignment->id]);
+    $testResult->extra_time_minutes = ($testResult->extra_time_minutes ?? 0) + $data['extra_time'];
+    $testResult->save();
+
+    return back(303)->with('success', 'Extra time added successfully.');
   }
 
   public function updateSteps(Request $request, Exam $exam): RedirectResponse

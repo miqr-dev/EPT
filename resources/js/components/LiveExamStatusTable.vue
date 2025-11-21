@@ -2,10 +2,14 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 const props = defineProps<{
   exam: any
 }>()
+
+const editingExtraTimeFor = ref<number | null>(null)
+const extraTimeMinutes = ref<number | null>(null)
 
 const formatTime = (seconds?: number) => {
   if (typeof seconds !== 'number' || seconds < 0) return '00:00'
@@ -93,10 +97,14 @@ watch(
                 typeof updatedStatus.time_remaining === 'number'
                   ? Math.floor(updatedStatus.time_remaining)
                   : existingStatus.time_remaining
-              updatedStatus.time_remaining =
-                existingStatus.time_remaining > 0
-                  ? Math.min(newTime, existingStatus.time_remaining)
-                  : newTime
+              if (newTime > existingStatus.time_remaining) {
+                updatedStatus.time_remaining = newTime
+              } else {
+                updatedStatus.time_remaining =
+                  existingStatus.time_remaining > 0
+                    ? Math.min(newTime, existingStatus.time_remaining)
+                    : newTime
+              }
             }
             if (updatedStatus.status === 'paused') {
               updatedStatus.time_remaining =
@@ -150,6 +158,25 @@ const setParticipantAction = (participant: any, action: 'pause' | 'resume' | 'fi
   )
 }
 
+const addExtraTime = (participant: any) => {
+  const participantId = getParticipantUserId(participant)
+  if (!participantId || !extraTimeMinutes.value) return
+  router.post(
+    route('exams.participants.add-extra-time', {
+      exam: props.exam.id,
+      participant: participantId,
+    }),
+    { extra_time: extraTimeMinutes.value },
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        editingExtraTimeFor.value = null
+        extraTimeMinutes.value = null
+      },
+    },
+  )
+}
+
 const canPauseParticipant = (participant: any) => {
   const status = getParticipantStatus(participant)
   if (!status) return false
@@ -170,6 +197,18 @@ const canForceFinishParticipant = (participant: any) => {
   if (localExam.value?.status !== 'in_progress') return false
   if (status.status !== 'in_progress') return false
   return !status.force_finish_requested_at
+}
+
+const canAddExtraTime = (participant: any) => {
+  const status = getParticipantStatus(participant)
+  if (!status) return false
+  if (localExam.value?.status !== 'in_progress') return false
+  return status.status !== 'completed'
+}
+
+const startEditingExtraTime = (participantId: number) => {
+  editingExtraTimeFor.value = participantId
+  extraTimeMinutes.value = null
 }
 
 </script>
@@ -278,6 +317,22 @@ const canForceFinishParticipant = (participant: any) => {
                   variant="destructive" size="sm" @click="setParticipantAction(participant, 'finish')">
                   Test beenden
                 </Button>
+                <div v-if="canAddExtraTime(participant)" class="flex items-center gap-2">
+                  <template v-if="editingExtraTimeFor === participant.id">
+                    <Input v-model="extraTimeMinutes" type="number" min="1" class="w-20" placeholder="Min" />
+                    <Button size="sm" @click="addExtraTime(participant)">
+                      Speichern
+                    </Button>
+                    <Button variant="ghost" size="sm" @click="editingExtraTimeFor = null">
+                      X
+                    </Button>
+                  </template>
+                  <template v-else>
+                    <Button variant="outline" size="sm" @click="startEditingExtraTime(participant.id)">
+                      + Zeit
+                    </Button>
+                  </template>
+                </div>
               </div>
             </td>
           </tr>

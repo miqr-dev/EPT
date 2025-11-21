@@ -52,7 +52,11 @@ const props = defineProps<{
     };
     stepStatuses: Record<number, StepStatusEntry>;
     pausedTestResults?: Record<string, unknown>;
+    timeRemaining?: number | null;
 }>();
+
+const showTimeWarning = ref(false);
+const timeWarningMessage = ref('');
 
 const page = usePage();
 const userName = computed(() => page.props.auth?.user?.name);
@@ -408,7 +412,7 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
 let polling: NodeJS.Timeout | null = null;
 onMounted(() => {
     polling = setInterval(() => {
-        router.reload({ only: ['exam', 'stepStatuses'] });
+        router.reload({ only: ['exam', 'stepStatuses', 'timeRemaining'] });
     }, 5000);
 });
 
@@ -492,12 +496,84 @@ watch(
     },
     { immediate: true },
 );
+
+let testTimer: NodeJS.Timeout | null = null;
+let warningTimer5min: NodeJS.Timeout | null = null;
+let warningTimer1min: NodeJS.Timeout | null = null;
+
+const stopTestTimer = () => {
+    if (testTimer) {
+        clearTimeout(testTimer);
+        testTimer = null;
+    }
+    if (warningTimer5min) {
+        clearTimeout(warningTimer5min);
+        warningTimer5min = null;
+    }
+    if (warningTimer1min) {
+        clearTimeout(warningTimer1min);
+        warningTimer1min = null;
+    }
+};
+
+const startTestTimer = (durationInSeconds: number) => {
+    stopTestTimer();
+
+    if (durationInSeconds > 0) {
+        testTimer = setTimeout(() => {
+            if (activeTestAnswers.value) {
+                completeTest(activeTestAnswers.value);
+            }
+        }, durationInSeconds * 1000);
+    }
+
+    const fiveMinutesInSeconds = 5 * 60;
+    if (durationInSeconds > fiveMinutesInSeconds) {
+        warningTimer5min = setTimeout(() => {
+            timeWarningMessage.value = 'Noch 5 Minuten';
+            showTimeWarning.value = true;
+        }, (durationInSeconds - fiveMinutesInSeconds) * 1000);
+    }
+
+    const oneMinuteInSeconds = 1 * 60;
+    if (durationInSeconds > oneMinuteInSeconds) {
+        warningTimer1min = setTimeout(() => {
+            timeWarningMessage.value = 'Noch 1 Minute';
+            showTimeWarning.value = true;
+        }, (durationInSeconds - oneMinuteInSeconds) * 1000);
+    }
+};
+
+watch(
+    () => props.timeRemaining,
+    (newTime) => {
+        if (typeof newTime === 'number') {
+            startTestTimer(newTime);
+        } else {
+            stopTestTimer();
+        }
+    },
+    { immediate: true },
+);
+
+onUnmounted(() => {
+    stopTestTimer();
+});
 </script>
 
 <template>
     <Head title="My Exam" />
     <div class="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
         <div class="w-full max-w-2xl space-y-6 rounded-lg bg-white p-8 shadow-md dark:bg-gray-800">
+            <div
+                v-if="showTimeWarning"
+                class="fixed top-0 left-0 right-0 z-50 bg-yellow-500 text-white text-center p-2"
+            >
+                {{ timeWarningMessage }}
+                <button @click="showTimeWarning = false" class="absolute right-4 top-1/2 -translate-y-1/2 font-bold">
+                    &times;
+                </button>
+            </div>
             <h1 class="text-center text-2xl font-bold text-gray-800 dark:text-gray-100">{{ exam.name }}</h1>
 
             <!-- General Status Messages -->
@@ -588,6 +664,7 @@ watch(
                                                     :key="activeStepId ?? 'inactive'"
                                                     class="h-full w-full"
                                                     :paused-test-result="activePausedTestResult"
+                                                    :time-remaining="props.timeRemaining"
                                                     @complete="completeTest"
                                                     @update:answers="activeTestAnswers = $event"
                                                 />
