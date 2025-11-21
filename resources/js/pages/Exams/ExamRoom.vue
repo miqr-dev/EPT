@@ -518,6 +518,8 @@ function startTimeTicker() {
     activeTimeRemaining.value = timeRemaining;
     resetWarningsFor(timeRemaining);
 
+    evaluateWarnings(timeRemaining);
+
     if (status.status !== 'in_progress' || timeRemaining === null) {
         hideWarningBanner();
         return;
