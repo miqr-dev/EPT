@@ -200,7 +200,6 @@ function addTests() {
 </script>
 
 <template>
-
   <Head title="Übersicht" />
   <AppLayout>
     <div

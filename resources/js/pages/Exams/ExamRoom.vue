@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
@@ -87,6 +87,17 @@ const testComponents: Record<string, unknown> = {
 };
 
 const stepStatuses = ref<Record<number, StepStatusEntry>>(normalizeStepStatuses(props.stepStatuses));
+const testsWithPauseSupport = new Set(['BIT-2', 'FPI-R', 'MRT-A', 'MRT-B']);
+const visibleSteps = computed(() =>
+    props.exam.steps.filter((step) => {
+        if (props.exam.current_step?.id === step.id) {
+            return true;
+        }
+
+        const status = stepStatuses.value?.[step.id]?.status;
+        return typeof status !== 'undefined' && status !== 'not_started';
+    }),
+);
 const previousStatusByStep = ref<Record<number, StepStatus | undefined>>({});
 const previousForceFinishByStep = ref<Record<number, string | null>>({});
 const remotelyPausedStepIds = new Set<number>();
@@ -222,6 +233,23 @@ const activePausedTestResult = computed(() => {
 
     const key = String(activeStepId.value);
     return pausedTestResults.value[key];
+});
+
+const activeComponentProps = computed<Record<string, unknown>>(() => {
+    if (!activeStepId.value) {
+        return {};
+    }
+
+    const step = props.exam.steps.find((candidate) => candidate.id === activeStepId.value);
+    if (!step) {
+        return {};
+    }
+
+    if (testsWithPauseSupport.has(step.test.name) && activePausedTestResult.value) {
+        return { pausedTestResult: activePausedTestResult.value, timeRemaining: props.timeRemaining };
+    }
+
+    return { timeRemaining: props.timeRemaining };
 });
 
 function completeTest(results: any) {
@@ -618,7 +646,7 @@ onUnmounted(() => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                            <tr v-for="step in exam.steps" :key="step.id">
+                            <tr v-for="step in visibleSteps" :key="step.id">
                                 <td class="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-100">{{ step.test.name }}</td>
                                 <td class="px-6 py-4 text-sm whitespace-nowrap">
                                     <Badge
@@ -641,41 +669,18 @@ onUnmounted(() => {
                                     </Badge>
                                 </td>
                                 <td class="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
-                                    <Dialog v-model:open="isTestDialogOpen">
-                                        <DialogTrigger as-child>
-                                            <Button
-                                                size="sm"
-                                                :disabled="isStepActionDisabled(step)"
-                                                @click="handleStepActionClick(step)"
-                                            >
-                                                {{ getStepActionLabel(step.id) }}
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent
-                                            class="inset-0 top-0 left-0 h-screen w-screen max-w-none translate-x-0 translate-y-0 overflow-auto rounded-none border-none bg-white p-0 text-black sm:max-w-none dark:bg-gray-900 dark:text-white"
-                                        >
-                                            <template #top-right>
-                                                <div class="absolute top-4 right-4 font-semibold">{{ userName }}</div>
-                                            </template>
-                                            <KeepAlive>
-                                                <component
-                                                    v-if="activeTestComponent"
-                                                    :is="activeTestComponent"
-                                                    :key="activeStepId ?? 'inactive'"
-                                                    class="h-full w-full"
-                                                    :paused-test-result="activePausedTestResult"
-                                                    :time-remaining="props.timeRemaining"
-                                                    @complete="completeTest"
-                                                    @update:answers="activeTestAnswers = $event"
-                                                />
-                                            </KeepAlive>
-                                        </DialogContent>
-                                    </Dialog>
+                                    <Button
+                                        size="sm"
+                                        :disabled="isStepActionDisabled(step)"
+                                        @click="handleStepActionClick(step)"
+                                    >
+                                        {{ getStepActionLabel(step.id) }}
+                                    </Button>
                                 </td>
                             </tr>
-                            <tr v-if="!exam.steps.length">
+                            <tr v-if="!visibleSteps.length">
                                 <td colspan="3" class="px-6 py-4 text-center text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                    Für diese Prüfung sind keine Tests definiert.
+                                    Momentan sind keine Tests verfügbar. Bitte warten Sie, bis Ihre Prüfung startet oder der Prüfer den nächsten Test freigibt.
                                 </td>
                             </tr>
                         </tbody>
@@ -683,6 +688,31 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
+        <Dialog v-model:open="isTestDialogOpen">
+            <DialogContent
+                class="inset-0 top-0 left-0 h-screen w-screen max-w-none translate-x-0 translate-y-0 overflow-auto rounded-none border-none bg-white p-0 text-black sm:max-w-none dark:bg-gray-900 dark:text-white"
+            >
+                <DialogHeader class="sr-only">
+                    <DialogTitle>Testoberfläche</DialogTitle>
+                    <DialogDescription>Hier bearbeiten Sie den ausgewählten Test.</DialogDescription>
+                </DialogHeader>
+                <template #top-right>
+                    <div class="absolute top-4 right-4 font-semibold">{{ userName }}</div>
+                </template>
+                <div class="h-full w-full">
+                    <KeepAlive>
+                        <component
+                            v-if="activeTestComponent"
+                            :is="activeTestComponent"
+                            :key="activeStepId ?? 'inactive'"
+                            v-bind="activeComponentProps"
+                            @complete="completeTest"
+                            @update:answers="activeTestAnswers = $event"
+                        />
+                    </KeepAlive>
+                </div>
+            </DialogContent>
+        </Dialog>
         <Dialog :open="fullscreenWarningOpen">
             <DialogContent>
                 <DialogHeader>
