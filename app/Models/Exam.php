@@ -6,7 +6,22 @@ use Illuminate\Database\Eloquent\Model;
 
 class Exam extends Model
 {
-  protected $fillable = ['name', 'city_id', 'teacher_id', 'status', 'current_exam_step_id', 'started_at', 'completed_at'];
+  protected $fillable = [
+    'name',
+    'city_id',
+    'teacher_id',
+    'status',
+    'current_exam_step_id',
+    'started_at',
+    'completed_at',
+    'pdf_visible',
+    'pdf_page',
+  ];
+
+  protected $casts = [
+    'pdf_visible' => 'boolean',
+    'pdf_page' => 'integer',
+  ];
 
   public function city()
   {

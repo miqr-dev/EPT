@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use App\Models\ParticipantProfile;
 use App\Models\ProfessionGroup;
 use App\Models\Employed;
@@ -12,6 +14,7 @@ use App\Models\ExamParticipant;
 use App\Models\ExamStepStatus;
 use App\Models\TestAssignment;
 use App\Models\TestResult;
+use App\Models\User;
 use Inertia\Inertia;
 
 class ParticipantController extends Controller
@@ -363,5 +366,49 @@ class ParticipantController extends Controller
     }
 
     return back(303);
+  }
+
+  public function streamPdf(Request $request, ?User $participant = null)
+  {
+    $currentUser = Auth::user();
+    $targetUser = $participant ?: $currentUser;
+
+    if ($participant && $currentUser->id !== $participant->id && $currentUser->role !== 'teacher') {
+      abort(403, 'Unauthorized to view this PDF.');
+    }
+
+    $pdfPath = $this->findParticipantPdfPath($targetUser);
+
+    if (!$pdfPath) {
+      abort(404, 'PDF für die Teilnehmer:in nicht gefunden.');
+    }
+
+    $downloadName = $this->buildDownloadName($targetUser);
+
+    return Storage::disk('windows_it_test')->response($pdfPath, $downloadName);
+  }
+
+  protected function findParticipantPdfPath(User $user): ?string
+  {
+    $disk = Storage::disk('windows_it_test');
+    $expectedName = $this->buildFileName($user);
+
+    return collect($disk->allFiles())
+      ->first(function (string $path) use ($expectedName) {
+        return Str::lower(basename($path)) === $expectedName;
+      });
+  }
+
+  protected function buildFileName(User $user): string
+  {
+    $lastName = Str::slug($user->name, '-');
+    $firstName = Str::slug($user->firstname, '-');
+
+    return Str::lower($lastName . '-' . $firstName . '.pdf');
+  }
+
+  protected function buildDownloadName(User $user): string
+  {
+    return $this->buildFileName($user);
   }
 }
