@@ -7,8 +7,13 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\ExamStepStatusController;
 use App\Http\Controllers\TestResultController;
+use App\Http\Controllers\PdfController;
 
 Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
+    Route::post('/pdf/show', [PdfController::class, 'showPdf'])->name('pdf.show');
+    Route::post('/pdf/change-page', [PdfController::class, 'changePage'])->name('pdf.change-page');
+    Route::post('/pdf/close', [PdfController::class, 'closePdf'])->name('pdf.close');
+    Route::get('/pdf/get-page', [PdfController::class, 'getPdfPage'])->name('pdf.get-page');
     // All role-protected pages
     Route::get('dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
     Route::get('participant', [ParticipantController::class, 'showProfileForm'])->name('participant');

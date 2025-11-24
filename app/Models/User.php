@@ -27,7 +27,6 @@ class User extends Authenticatable implements LdapAuthenticatable
   protected function casts(): array
   {
     return [
-      'email_verified_at' => 'datetime',
       'password' => 'hashed',
     ];
   }
@@ -52,5 +51,10 @@ class User extends Authenticatable implements LdapAuthenticatable
       'participant_id',
       'test_id'
     );
+  }
+
+  public function isEnrolledInExam($examId)
+  {
+      return $this->participantProfile && $this->participantProfile->exam_id === (int) $examId;
   }
 }
