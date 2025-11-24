@@ -6,6 +6,11 @@ import { cn } from '@/lib/utils';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 
+const timeWarningMessage = ref('');
+const showTimeWarning = ref(false);
+let warningTimer5min: ReturnType<typeof setTimeout> | null = null;
+let warningTimer1min: ReturnType<typeof setTimeout> | null = null;
+
 // Import test components
 import AVEM from '@/pages/AVEM.vue';
 import BIT2 from '@/pages/BIT-2.vue';
@@ -53,6 +58,38 @@ const props = defineProps<{
     stepStatuses: Record<number, StepStatusEntry>;
     pausedTestResults?: Record<string, unknown>;
 }>();
+
+const clearWarningTimers = () => {
+    if (warningTimer5min) {
+        clearTimeout(warningTimer5min);
+        warningTimer5min = null;
+    }
+    if (warningTimer1min) {
+        clearTimeout(warningTimer1min);
+        warningTimer1min = null;
+    }
+    showTimeWarning.value = false;
+};
+
+const setupTimers = (durationInSeconds: number) => {
+    clearWarningTimers();
+
+    const fiveMinutesInSeconds = 5 * 60;
+    if (durationInSeconds > fiveMinutesInSeconds) {
+        warningTimer5min = setTimeout(() => {
+            timeWarningMessage.value = 'Noch 5 Minuten';
+            showTimeWarning.value = true;
+        }, (durationInSeconds - fiveMinutesInSeconds) * 1000);
+    }
+
+    const oneMinuteInSeconds = 1 * 60;
+    if (durationInSeconds > oneMinuteInSeconds) {
+        warningTimer1min = setTimeout(() => {
+            timeWarningMessage.value = 'Noch 1 Minute';
+            showTimeWarning.value = true;
+        }, (durationInSeconds - oneMinuteInSeconds) * 1000);
+    }
+};
 
 const page = usePage();
 const userName = computed(() => page.props.auth?.user?.name);
@@ -311,6 +348,7 @@ function cleanupAfterTest() {
         document.exitFullscreen().catch(() => undefined);
     }
     finishing.value = false;
+    clearWarningTimers();
 }
 
 const activeTestAnswers = ref<any>(null);
@@ -443,6 +481,7 @@ onMounted(() => {
 onUnmounted(() => {
     if (polling) clearInterval(polling);
     cleanupAfterTest();
+    clearWarningTimers();
 });
 
 let hasSyncedInitialStatuses = false;
@@ -462,7 +501,15 @@ watch(
         ids.forEach((key) => {
             const id = Number(key);
             const prevStatus = previousStatusByStep.value[id];
-            const currentStatus = normalized[id]?.status;
+            const currentStatusEntry = normalized[id];
+            const currentStatus = currentStatusEntry?.status;
+
+            if (isTestDialogOpen.value && activeStepId.value === id && currentStatusEntry) {
+                const timeRemaining = currentStatusEntry.time_remaining_seconds;
+                if (typeof timeRemaining === 'number') {
+                    setupTimers(timeRemaining);
+                }
+            }
             const currentForceFinish = normalized[id]?.force_finish_requested_at ?? null;
             const prevForceFinish = previousForceFinishByStep.value[id];
 
@@ -616,6 +663,12 @@ watch(
             <DialogContent
                 class="inset-0 top-0 left-0 h-screen w-screen max-w-none translate-x-0 translate-y-0 overflow-auto rounded-none border-none bg-white p-0 text-black sm:max-w-none dark:bg-gray-900 dark:text-white"
             >
+                <div
+                    v-if="showTimeWarning"
+                    class="fixed top-0 left-0 right-0 z-50 bg-yellow-400 p-2 text-center text-black"
+                >
+                    {{ timeWarningMessage }}
+                </div>
                 <DialogHeader class="sr-only">
                     <DialogTitle>Testoberfläche</DialogTitle>
                     <DialogDescription>Hier bearbeiten Sie den ausgewählten Test.</DialogDescription>
