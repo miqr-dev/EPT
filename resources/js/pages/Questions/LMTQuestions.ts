@@ -140,7 +140,7 @@ export const LMT_QUESTIONS: LMTQuestion[] = [
     text: "Ein Leben, in dem ich nicht zu arbeiten bräuchte, würde ich",
     options: [
       { category: "angenehm finden", points: 0 },
-      { category: "nicht angenehm finden", points: 0 },
+      { category: "unangenehm finden", points: 0 },
       { category: "sehr unangenehm finden", points: 1, group: "L2" },
     ],
   },
@@ -245,7 +245,7 @@ export const LMT_QUESTIONS: LMTQuestion[] = [
     text: "Wenn ich mich auf eine Aufgabe nicht so gut vorbereitet hatte und befürchten mußte, in der Schule dranzukommen, fühlte ich mich",
     options: [
       { category: "ziemlich ruhig", points: 0 },
-      { category: "ziemlich unruhig", points: 0 },
+      { category: "ziemlich unwohl", points: 0 },
       { category: "sehr unwohl", points: 1, group: "F-" },
     ],
   },

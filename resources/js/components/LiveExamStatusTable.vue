@@ -2,14 +2,11 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import AddExtraTimeModal from '@/components/AddExtraTimeModal.vue'
 
 const props = defineProps<{
   exam: any
 }>()
-
-const editingExtraTimeFor = ref<number | null>(null)
-const extraTimeMinutes = ref<number | null>(null)
 
 const formatTime = (seconds?: number) => {
   if (typeof seconds !== 'number' || seconds < 0) return '00:00'
@@ -97,14 +94,10 @@ watch(
                 typeof updatedStatus.time_remaining === 'number'
                   ? Math.floor(updatedStatus.time_remaining)
                   : existingStatus.time_remaining
-              if (newTime > existingStatus.time_remaining) {
-                updatedStatus.time_remaining = newTime
-              } else {
-                updatedStatus.time_remaining =
-                  existingStatus.time_remaining > 0
-                    ? Math.min(newTime, existingStatus.time_remaining)
-                    : newTime
-              }
+              updatedStatus.time_remaining =
+                existingStatus.time_remaining > 0
+                  ? Math.min(newTime, existingStatus.time_remaining)
+                  : newTime
             }
             if (updatedStatus.status === 'paused') {
               updatedStatus.time_remaining =
@@ -158,20 +151,25 @@ const setParticipantAction = (participant: any, action: 'pause' | 'resume' | 'fi
   )
 }
 
-const addExtraTime = (participant: any) => {
-  const participantId = getParticipantUserId(participant)
-  if (!participantId || !extraTimeMinutes.value) return
+const showAddExtraTimeModal = ref(false)
+const selectedParticipant = ref<any>(null)
+
+const openAddExtraTimeModal = (participant: any) => {
+  selectedParticipant.value = participant
+  showAddExtraTimeModal.value = true
+}
+
+const addExtraTime = (minutes: number) => {
+  if (!selectedParticipant.value) return
+  const status = getParticipantStatus(selectedParticipant.value)
+  if (!status) return
   router.post(
-    route('exams.participants.add-extra-time', {
-      exam: props.exam.id,
-      participant: participantId,
-    }),
-    { extra_time: extraTimeMinutes.value },
+    route('exam-step-status.add-time', { status: status.id }),
+    { minutes },
     {
       preserveScroll: true,
       onSuccess: () => {
-        editingExtraTimeFor.value = null
-        extraTimeMinutes.value = null
+        showAddExtraTimeModal.value = false
       },
     },
   )
@@ -199,22 +197,15 @@ const canForceFinishParticipant = (participant: any) => {
   return !status.force_finish_requested_at
 }
 
-const canAddExtraTime = (participant: any) => {
-  const status = getParticipantStatus(participant)
-  if (!status) return false
-  if (localExam.value?.status !== 'in_progress') return false
-  return status.status !== 'completed'
-}
-
-const startEditingExtraTime = (participantId: number) => {
-  editingExtraTimeFor.value = participantId
-  extraTimeMinutes.value = null
-}
-
 </script>
 
 <template>
   <div class="mt-8">
+    <AddExtraTimeModal
+      :show="showAddExtraTimeModal"
+      @close="showAddExtraTimeModal = false"
+      @add-time="addExtraTime"
+    />
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ exam.name }}</h2>
       <div class="flex flex-col gap-2">
@@ -270,6 +261,10 @@ const startEditingExtraTime = (participantId: number) => {
             Verbleibende Zeit
           </th>
           <th scope="col"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+            Extra Zeit
+          </th>
+          <th scope="col"
             class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
             Aktion
           </th>
@@ -304,6 +299,9 @@ const startEditingExtraTime = (participantId: number) => {
               {{ formatTime(getParticipantStatus(participant)?.time_remaining) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+              {{ getParticipantStatus(participant)?.extra_time || 0 }} Minuten
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
               <div class="flex justify-end gap-2">
                 <Button v-if="canPauseParticipant(participant)"
                   variant="secondary" size="sm" @click="setParticipantAction(participant, 'pause')">
@@ -317,22 +315,9 @@ const startEditingExtraTime = (participantId: number) => {
                   variant="destructive" size="sm" @click="setParticipantAction(participant, 'finish')">
                   Test beenden
                 </Button>
-                <div v-if="canAddExtraTime(participant)" class="flex items-center gap-2">
-                  <template v-if="editingExtraTimeFor === participant.id">
-                    <Input v-model="extraTimeMinutes" type="number" min="1" class="w-20" placeholder="Min" />
-                    <Button size="sm" @click="addExtraTime(participant)">
-                      Speichern
-                    </Button>
-                    <Button variant="ghost" size="sm" @click="editingExtraTimeFor = null">
-                      X
-                    </Button>
-                  </template>
-                  <template v-else>
-                    <Button variant="outline" size="sm" @click="startEditingExtraTime(participant.id)">
-                      + Zeit
-                    </Button>
-                  </template>
-                </div>
+                <Button variant="outline" size="sm" @click="openAddExtraTimeModal(participant)">
+                  Zeit hinzufügen
+                </Button>
               </div>
             </td>
           </tr>

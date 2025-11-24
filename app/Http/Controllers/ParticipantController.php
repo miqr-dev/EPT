@@ -155,23 +155,10 @@ class ParticipantController extends Controller
       }
     }
 
-    $timeRemaining = null;
-    if ($exam->currentStep) {
-        $status = $stepStatuses[$exam->currentStep->id] ?? null;
-        if ($status && $status->status === 'in_progress') {
-            $duration = $exam->currentStep->duration;
-            $totalDurationSeconds = max(0, ($duration ?? 0) * 60 + (int) $status->extra_time * 60);
-            $startTime = \Carbon\Carbon::parse($status->started_at);
-            $endTime = $startTime->copy()->addSeconds($totalDurationSeconds);
-            $timeRemaining = now()->diffInSeconds($endTime, false);
-        }
-    }
-
     return Inertia::render('Exams/ExamRoom', [
       'exam' => $exam,
       'stepStatuses' => $stepStatuses, // Pass all statuses to the view.
       'pausedTestResults' => (object) $pausedTestResults,
-      'timeRemaining' => $timeRemaining,
     ]);
   }
 

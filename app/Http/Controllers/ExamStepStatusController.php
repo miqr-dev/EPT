@@ -13,7 +13,7 @@ class ExamStepStatusController extends Controller
             'minutes' => 'required|integer|min:1',
         ]);
 
-        $status->increment('grace_period_seconds', $data['minutes'] * 60);
+        $status->increment('extra_time', $data['minutes']);
 
         return back(303)->with('success', 'Extra time added.');
     }
