@@ -401,10 +401,17 @@ class ParticipantController extends Controller
 
   protected function buildFileName(User $user): string
   {
-    $lastName = Str::slug($user->name, '-');
-    $firstName = Str::slug($user->firstname, '-');
+    $lastName = Str::of($user->name ?? '')
+      ->trim()
+      ->replaceMatches('/\s+/', '-')
+      ->lower();
 
-    return Str::lower($lastName . '-' . $firstName . '.pdf');
+    $firstName = Str::of($user->firstname ?? '')
+      ->trim()
+      ->replaceMatches('/\s+/', '-')
+      ->lower();
+
+    return $lastName . '-' . $firstName . '.pdf';
   }
 
   protected function buildDownloadName(User $user): string
