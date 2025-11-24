@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
+import AddExtraTimeModal from '@/components/AddExtraTimeModal.vue'
 
 const props = defineProps<{
   exam: any
@@ -150,6 +151,30 @@ const setParticipantAction = (participant: any, action: 'pause' | 'resume' | 'fi
   )
 }
 
+const showAddExtraTimeModal = ref(false)
+const selectedParticipant = ref<any>(null)
+
+const openAddExtraTimeModal = (participant: any) => {
+  selectedParticipant.value = participant
+  showAddExtraTimeModal.value = true
+}
+
+const addExtraTime = (minutes: number) => {
+  if (!selectedParticipant.value) return
+  const status = getParticipantStatus(selectedParticipant.value)
+  if (!status) return
+  router.post(
+    route('exam-step-status.add-time', { status: status.id }),
+    { minutes },
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        showAddExtraTimeModal.value = false
+      },
+    },
+  )
+}
+
 const canPauseParticipant = (participant: any) => {
   const status = getParticipantStatus(participant)
   if (!status) return false
@@ -176,6 +201,11 @@ const canForceFinishParticipant = (participant: any) => {
 
 <template>
   <div class="mt-8">
+    <AddExtraTimeModal
+      :show="showAddExtraTimeModal"
+      @close="showAddExtraTimeModal = false"
+      @add-time="addExtraTime"
+    />
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ exam.name }}</h2>
       <div class="flex flex-col gap-2">
@@ -231,6 +261,10 @@ const canForceFinishParticipant = (participant: any) => {
             Verbleibende Zeit
           </th>
           <th scope="col"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+            Extra Zeit
+          </th>
+          <th scope="col"
             class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
             Aktion
           </th>
@@ -265,6 +299,9 @@ const canForceFinishParticipant = (participant: any) => {
               {{ formatTime(getParticipantStatus(participant)?.time_remaining) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+              {{ getParticipantStatus(participant)?.extra_time || 0 }} Minuten
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
               <div class="flex justify-end gap-2">
                 <Button v-if="canPauseParticipant(participant)"
                   variant="secondary" size="sm" @click="setParticipantAction(participant, 'pause')">
@@ -277,6 +314,9 @@ const canForceFinishParticipant = (participant: any) => {
                 <Button v-if="canForceFinishParticipant(participant)"
                   variant="destructive" size="sm" @click="setParticipantAction(participant, 'finish')">
                   Test beenden
+                </Button>
+                <Button variant="outline" size="sm" @click="openAddExtraTimeModal(participant)">
+                  Zeit hinzufügen
                 </Button>
               </div>
             </td>
