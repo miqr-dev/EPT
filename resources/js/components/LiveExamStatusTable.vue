@@ -2,10 +2,45 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
+import axios from 'axios';
 
 const props = defineProps<{
   exam: any
 }>()
+
+const showPdfControls = ref(false);
+const currentPage = ref(1);
+
+const showPdf = async () => {
+  try {
+    await axios.post(route('pdf.show'), { exam_id: props.exam.id });
+    showPdfControls.value = true;
+    currentPage.value = 1;
+  } catch (error) {
+    console.error('Error showing PDF:', error);
+  }
+};
+
+const changePage = async (direction: 'next' | 'previous') => {
+  const newPage = direction === 'next' ? currentPage.value + 1 : currentPage.value - 1;
+  if (newPage < 1 || newPage > 6) return;
+
+  try {
+    await axios.post(route('pdf.change-page'), { exam_id: props.exam.id, page: newPage });
+    currentPage.value = newPage;
+  } catch (error) {
+    console.error('Error changing PDF page:', error);
+  }
+};
+
+const closePdf = async () => {
+  try {
+    await axios.post(route('pdf.close'), { exam_id: props.exam.id });
+    showPdfControls.value = false;
+  } catch (error) {
+    console.error('Error closing PDF:', error);
+  }
+};
 
 const formatTime = (seconds?: number) => {
   if (typeof seconds !== 'number' || seconds < 0) return '00:00'
@@ -192,6 +227,20 @@ const canForceFinishParticipant = (participant: any) => {
           <Button v-if="exam.status !== 'completed'" @click="setStatus('completed')">
             Prüfung beenden
           </Button>
+          <Button v-if="exam.status === 'in_progress' && !showPdfControls" @click="showPdf">
+            Show PDF
+          </Button>
+          <div v-if="showPdfControls" class="flex gap-2">
+            <Button @click="changePage('previous')" :disabled="currentPage === 1">
+              Previous Page
+            </Button>
+            <Button @click="changePage('next')" :disabled="currentPage === 6">
+              Next Page
+            </Button>
+            <Button @click="closePdf" variant="destructive">
+              Close PDF
+            </Button>
+          </div>
           <template v-if="exam.status === 'in_progress'">
             <Button v-for="step in firstStepRow" :key="step.id" @click="setStep(step.id)"
               :disabled="exam.current_exam_step_id === step.id">

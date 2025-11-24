@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { cn } from '@/lib/utils';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import PdfViewer from '@/components/PdfViewer.vue';
 
 // Import test components
 import AVEM from '@/pages/AVEM.vue';
@@ -68,6 +69,9 @@ const pausedTestResults = computed<Record<string, unknown>>(() => {
         ...serverResults,
     };
 });
+
+const showPdfViewer = ref(false);
+const pdfPage = ref(1);
 
 const testComponents: Record<string, unknown> = {
     'BRT-A': BRTA,
@@ -438,6 +442,15 @@ onMounted(() => {
     polling = setInterval(() => {
         router.reload({ only: ['exam', 'stepStatuses'] });
     }, 5000);
+
+    window.Echo.private(`exam.${props.exam.id}`)
+        .listen('PdfPageChanged', (event: { page: number }) => {
+            pdfPage.value = event.page;
+            showPdfViewer.value = true;
+        })
+        .listen('PdfViewClosed', () => {
+            showPdfViewer.value = false;
+        });
 });
 
 onUnmounted(() => {
@@ -524,7 +537,8 @@ watch(
 
 <template>
     <Head title="My Exam" />
-    <div class="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
+    <PdfViewer v-if="showPdfViewer" :page="pdfPage" />
+    <div v-else class="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
         <div class="w-full max-w-2xl space-y-6 rounded-lg bg-white p-8 shadow-md dark:bg-gray-800">
             <h1 class="text-center text-2xl font-bold text-gray-800 dark:text-gray-100">{{ exam.name }}</h1>
 
