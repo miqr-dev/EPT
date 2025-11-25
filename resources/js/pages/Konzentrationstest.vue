@@ -830,14 +830,14 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
 
       <div class="space-y-4">
         <div v-for="(row, r) in page5TickRows" :key="'p5r' + r"
-          class="grid grid-cols-[24px_minmax(0,1fr)_auto] items-start gap-3 mb-12">
+          class="flex flex-wrap items-start gap-3 mb-12">
           <!-- left label -->
-          <div class="row-label text-[22px] pr-1">
+          <div class="row-label text-[22px] pr-1 shrink-0">
             {{ rowLabel(r) }})
           </div>
 
           <!-- the letters with ticks -->
-          <div class="tick-line text-[22px] leading-[1.35]">
+          <div class="tick-line text-[22px] leading-[1.35] inline-block">
             <span v-for="(t, i) in row" :key="i" class="tk inline-block cursor-pointer select-none"
               :class="[{ marked: page5TickMarks[r][i] }, hasGapAfter(i) ? 'gap' : '']" :data-top="t.top ?? 0"
               :data-bot="t.bot ?? 0" @click="toggleTick(r, i)">
