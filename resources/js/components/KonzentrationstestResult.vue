@@ -13,7 +13,7 @@ const page5Correct = ['7', '4', '8', '5', '7', '9', '7', '10', '10', '9']
 
 <template>
   <div class="p-6 bg-background border rounded-lg">
-    <h2 class="text-xl font-semibold mb-4">Konzentrationstest Results</h2>
+    <h2 class="text-xl font-semibold mb-4">628 Results</h2>
     <div class="mb-6 w-full max-w-md">
       <table class="w-full text-sm border rounded-lg overflow-hidden shadow">
         <tbody>

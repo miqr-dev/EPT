@@ -1,11 +1,12 @@
-
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AVEM_QUESTIONS } from '@/pages/Questions/AVEMQuestions'
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Head } from '@inertiajs/vue3'
 import { ref } from 'vue'
+import { Info } from 'lucide-vue-next'
 
 const emit = defineEmits(['complete'])
 
@@ -46,12 +47,15 @@ const LABELS: Record<number, string> = {
   1: 'trifft überhaupt nicht zu',
 }
 
+const PARTNER_INFO_TEXT = 'bzw. die Person, zu der die engste persönliche Beziehung besteht.'
+const PARTNER_INFO_QUESTION_NUMBERS = new Set([11, 33])
+
 const LEGEND_TOP = [
   { val: 5, text: 'völlig zu', heightClass: 'h-6' },
   { val: 4, text: 'überwiegend', heightClass: 'h-10' },
   { val: 3, text: 'teils/teils', heightClass: 'h-14' },
   { val: 2, text: 'überwiegend nicht', heightClass: 'h-20' },
-  { val: 1, text: 'trifft überhaupt nicht', heightClass: 'h-24' },
+  { val: 1, text: 'überhaupt nicht', heightClass: 'h-24' },
 ]
 
 function startTest() {
@@ -89,6 +93,7 @@ const borderClass = (qnum: number) =>
 </script>
 
 <template>
+
   <Head title="AVEM" />
   <div class="p-4">
     <div class="mb-4 flex items-center justify-between">
@@ -99,11 +104,11 @@ const borderClass = (qnum: number) =>
       <div class="flex flex-1 flex-col gap-4">
         <!-- Intro + legend -->
         <div v-if="!showTest" class="flex h-full flex-col items-center justify-center">
-          <div
-            class="mb-6 w-full max-w-4xl rounded-lg border bg-yellow-50 p-4 text-base whitespace-pre-line text-foreground dark:bg-yellow-900"
-          >
-            {{ instructions }}
-          </div>
+          <h2 class="mb-4 text-2xl font-bold">AVEM</h2>
+
+          <p class="mb-12 w-full max-w-4xl text-xl text-center">
+Wir bitten Sie, einige Ihrer üblichen Verhaltensweisen, Einstellungen und Gewohnheiten zu beschreiben, wobei vor allem auf Ihr Arbeitsleben Bezug genommen wird. Dazu finden Sie im Folgenden eine Reihe von Aussagen. Lesen Sie jeden dieser Sätze gründlich durch und entscheiden Sie, in welchem Maße er auf Sie persönlich zutrifft.
+          </p>
 
           <!-- Exact first-page block -->
           <div class="w-full max-w-4xl">
@@ -111,7 +116,7 @@ const borderClass = (qnum: number) =>
               <strong>Bitte kreuzen Sie das jeweilige Zeichen an:</strong>
             </div>
 
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 text-xl">
               <!-- Left note box -->
               <div class="flex items-center border-2 border-gray-700 p-4 dark:border-gray-200">
                 <div class="text-[15px] leading-6 text-gray-900 dark:text-gray-100">
@@ -123,30 +128,25 @@ const borderClass = (qnum: number) =>
 
               <!-- Right legend with arrows and icons -->
               <div class="flex flex-col">
-                <div class="mb-2 text-[15px] text-gray-900 dark:text-gray-100">Die Aussage…</div>
+                <div class="mb-2 text-[15px] text-gray-900 dark:text-gray-100">die Aussage trifft...</div>
 
                 <div class="grid grid-cols-5 items-end gap-4">
-                  <div
-                    v-for="item in LEGEND_TOP"
-                    :key="item.val"
-                    class="flex flex-col items-center"
-                  >
+                  <div v-for="item in LEGEND_TOP" :key="item.val" class="flex flex-col items-center">
                     <!-- label with vertical arrow -->
                     <div class="mb-1 text-[13px] text-gray-800 dark:text-gray-200 text-center">
                       {{ item.text }}
                     </div>
                     <div class="flex flex-col items-center mb-2">
-                         <div class="w-px bg-gray-700 dark:bg-gray-200" :class="item.heightClass"></div>
+                      <div class="w-px bg-gray-700 dark:bg-gray-200" :class="item.heightClass"></div>
 
-                      <div
-                        class="mt-[1px]"
+                      <div class="mt-[1px]"
                         style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid currentColor;"
-                        :class="'text-gray-700 dark:text-gray-200'"
-                      ></div>
+                        :class="'text-gray-700 dark:text-gray-200'"></div>
                     </div>
 
                     <!-- Icon (same as test options; has title for tooltip) -->
-                    <svg class="h-7 w-7 text-gray-900 dark:text-gray-200" viewBox="0 0 24 24" aria-hidden="true" :title="LABELS[item.val]">
+                    <svg class="h-7 w-7 text-gray-900 dark:text-gray-200" viewBox="0 0 24 24" aria-hidden="true"
+                      :title="LABELS[item.val]">
                       <defs v-if="item.val === 4">
                         <mask :id="`legend-m75-${item.val}`">
                           <rect x="0" y="0" width="24" height="24" fill="white" />
@@ -187,59 +187,51 @@ const borderClass = (qnum: number) =>
         </div>
 
         <!-- Test table -->
-        <div v-else class="overflow-x-auto rounded-lg border bg-background p-6">
+        <div v-else class="w-full md:w-3/4 self-center overflow-x-auto rounded-lg border bg-background p-6">
           <table class="w-full border-separate text-base" style="border-spacing: 0">
             <tbody>
-              <tr
-                v-for="q in AVEM_QUESTIONS"
-                :key="q.number"
-                :class="rowBgClass(q.number)"
-              >
-                <td
-                  class="w-8 border-b-2 pt-2 pr-2 text-right align-top font-mono"
-                  :class="borderClass(q.number)"
-                >
+              <tr v-for="q in AVEM_QUESTIONS" :key="q.number" :class="rowBgClass(q.number)">
+                <td class="w-8 border-b-2 pt-2 pr-2 text-right align-top font-mono" :class="borderClass(q.number)">
                   {{ q.number }}.
                 </td>
 
-                <td
-                  class="border-b-2 pt-2 pr-4 align-top"
-                  :class="borderClass(q.number)"
-                >
-                  {{ q.text }}
+                <td class="border-b-2 pt-2 pr-4 align-top" :class="borderClass(q.number)">
+                      <div class="flex items-start gap-2">
+                    <TooltipProvider v-if="PARTNER_INFO_QUESTION_NUMBERS.has(q.number)" :delay-duration="0">
+                      <Tooltip>
+                        <TooltipTrigger as-child>
+                          <button
+                            type="button"
+                            class="mt-0.5 text-blue-500 transition hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary dark:text-gray-400 dark:hover:text-gray-200"
+                            :aria-label="PARTNER_INFO_TEXT"
+                          >
+                            <Info class="h-4 w-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent class="max-w-xs text-sm leading-5">
+                          <p>{{ PARTNER_INFO_TEXT }}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
+                    <span class="flex-1 leading-6">{{ q.text }}</span>
+                  </div>
                 </td>
 
                 <!-- Options -->
-                <td
-                  v-for="opt in LIKERT_ORDER"
-                  :key="opt"
-                  class="border-b-2 px-2 pt-1 text-center align-top"
-                  :class="borderClass(q.number)"
-                >
-                  <label
-                    class="relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full transition
-                           hover:scale-[1.04] ring-offset-2 ring-offset-background"
-                    :class="answers[q.number] === opt
-                      ? 'ring-2 ring-blue-500 dark:ring-blue-400'
-                      : 'ring-1 ring-gray-300 dark:ring-gray-600'"
-                    :title="LABELS[opt]"
-                    :aria-label="LABELS[opt]"
-                  >
-                    <input
-                      class="sr-only"
-                      type="radio"
-                      :name="'q' + q.number"
-                      :value="opt"
-                      v-model="answers[q.number]"
-                    />
+                <td v-for="opt in LIKERT_ORDER" :key="opt" class="border-b-2 px-2 pt-1 text-center align-top"
+                  :class="borderClass(q.number)">
+                  <label class="relative inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-full transition
+                           hover:scale-[1.04] ring-offset-2 ring-offset-background" :class="answers[q.number] === opt
+                            ? 'ring-2 ring-blue-500 dark:ring-blue-400'
+                            : 'ring-1 ring-gray-300 dark:ring-gray-600'" :title="LABELS[opt]" :aria-label="LABELS[opt]">
+                    <input class="sr-only" type="radio" :name="'q' + q.number" :value="opt"
+                      v-model="answers[q.number]" />
 
                     <!-- Icon (true pie slices) -->
-                    <svg
-                      class="h-7 w-7"
+                    <svg class="h-7 w-7"
                       :class="answers[q.number] === opt ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
+                      viewBox="0 0 24 24" aria-hidden="true">
                       <!-- unique mask for 75% to avoid ID clashes -->
                       <defs v-if="opt === 4">
                         <mask :id="`m75-${q.number}-${opt}`">
@@ -288,8 +280,10 @@ const borderClass = (qnum: number) =>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Test beenden</DialogTitle>
-          <DialogDescription v-if="!isForcedFinish">Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.</DialogDescription>
-          <DialogDescription v-else>Der Test wird automatisch in {{ forcedFinishCountdown }} Sekunden beendet.</DialogDescription>
+          <DialogDescription v-if="!isForcedFinish">Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein
+            Zurück.</DialogDescription>
+          <DialogDescription v-else>Der Test wird automatisch in {{ forcedFinishCountdown }} Sekunden beendet.
+          </DialogDescription>
         </DialogHeader>
         <DialogFooter class="gap-2">
           <Button v-if="!isForcedFinish" variant="secondary" @click="cancelEnd">Abbrechen</Button>

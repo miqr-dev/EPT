@@ -79,7 +79,7 @@ const testComponents: Record<string, unknown> = {
     LMT2: LMT2,
     'BIT-2': BIT2,
     AVEM: AVEM,
-    Konzentrationstest: KONZ,
+    628: KONZ,
 };
 
 const stepStatuses = ref<Record<number, StepStatusEntry>>(normalizeStepStatuses(props.stepStatuses));
@@ -127,6 +127,10 @@ function getStatusText(status?: StepStatus) {
     }
 
     return map[status];
+}
+
+function displayTestName(name: string) {
+    return name === 'Konzentrationstest' ? '628 Test' : name;
 }
 
 interface StartTestOptions {
@@ -571,7 +575,7 @@ watch(
                         </thead>
                         <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                             <tr v-for="step in visibleSteps" :key="step.id">
-                                <td class="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-100">{{ step.test.name }}</td>
+                                <td class="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900 dark:text-gray-100">{{ displayTestName(step.test.name) }}</td>
                                 <td class="px-6 py-4 text-sm whitespace-nowrap">
                                     <Badge
                                         :class="

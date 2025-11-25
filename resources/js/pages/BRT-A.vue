@@ -231,7 +231,7 @@ const startTest = () => {
 
 <template>
 
-  <Head title="Tests" />
+  <Head title="BRT-A" />
   <div class="p-4">
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">BRT-A</h1>
@@ -269,13 +269,13 @@ const startTest = () => {
         <!-- Start Test Screen -->
         <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
           <h2 class="text-2xl font-bold mb-4">Willkommen zum Berufsbezogenen Rechentest</h2>
-          <p class="mb-6 text-base text-center max-w-xl">
+          <p class="mb-6 text-xl text-center max-w-xl">
             In diesem Verfahren finden Sie insgesamt {{ questions.length }} Rechenaufgaben, die zu lösen sind. Hierfür haben Sie 35 Minuten Zeit. Halten Sie sich nicht zu lange an einer Aufgabe auf, wenn Sie sie nicht lösen können. Gehen Sie zur nächsten weiter.</p>
-            <p> Wir wollen wissen, auf welcher Ebene Sie mit Ihren Kenntnissen stehen und wo wir Sie individuell fördern können. </p>
+            <p class="text-xl"> Wir wollen wissen, auf welcher Ebene Sie mit Ihren Kenntnissen stehen und wo wir Sie individuell fördern können. </p>
             <br>
-            <p>
+            <p class="text-xl">
             Für Nebenrechnungen haben Sie einen zusätzlichen Block.</p>
-            <p>Bitte notieren Sie vor Abgabe Ihres Blattes Ihren Namen und das heutige Datum darauf.
+            <p class="text-xl">Bitte notieren Sie vor Abgabe Ihres Blattes Ihren Namen und das heutige Datum darauf.
             </p>
             
           <Button @click="startTest" class="px-8 py-3 text-lg mt-6 font-semibold rounded-xl shadow">

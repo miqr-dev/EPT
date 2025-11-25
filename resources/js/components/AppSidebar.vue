@@ -60,7 +60,7 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid, // Placeholder icon, can be changed later
     },
     {
-        title: 'Konzentrationstest',
+        title: '628',
         href: '/konzentrationstest',
         icon: LayoutGrid,
     },

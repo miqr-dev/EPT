@@ -624,7 +624,7 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
 
 <template>
 
-  <Head title="Konzentrationstest" />
+  <Head title="628 Test" />
 
   <!-- FULL WIDTH PAGE WRAPPER -->
   <div class="w-full max-w-none px-3 md:px-8">

@@ -52,6 +52,9 @@ const props = withDefaults(
 const emit = defineEmits(['update:modelValue']);
 
 const local = ref<ResultJson | null>(null);
+const isKonzentrationstest = computed(() =>
+  ['Konzentrationstest', '628 Test'].includes((props.test?.name || '').trim()),
+);
 
 watch(
   () => props.modelValue,
@@ -148,7 +151,7 @@ const fpiRohwerte = computed(() => {
   <div v-if="local" v-bind="$attrs">
     <MrtAResult v-if="test.name === 'MRT-A'" :results="local" />
     <MrtBResult v-else-if="test.name === 'MRT-B'" :results="local" />
-    <KonzentrationstestResult v-else-if="test.name === 'Konzentrationstest'" :results="local" />
+    <KonzentrationstestResult v-else-if="isKonzentrationstest" :results="local" />
         <LmtResult v-else-if="test.name === 'LMT'" :results="local" :show-answers="showAnswers" />
         <FpiResult v-else-if="test.name === 'FPI-R'" :stanines="fpiStanines" :rohwerte="fpiRohwerte" :answers="local.answers" :show-answers="showAnswers" />
         <BIT2Result v-else-if="test.name === 'BIT-2'" :results="local" :participantProfile="participantProfile" :show-answers="showAnswers" />
