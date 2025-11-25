@@ -52,7 +52,35 @@ const props = defineProps<{
     };
     stepStatuses: Record<number, StepStatusEntry>;
     pausedTestResults?: Record<string, unknown>;
+    timeRemaining?: number | null;
 }>();
+
+
+const timeRemaining = ref(props.timeRemaining ?? null);
+
+watch(
+    () => props.timeRemaining,
+    (newTime) => {
+        timeRemaining.value = newTime;
+    },
+);
+
+let timer: NodeJS.Timeout | null = null;
+onMounted(() => {
+    if (timeRemaining.value !== null) {
+        timer = setInterval(() => {
+            if (timeRemaining.value !== null && timeRemaining.value > 0) {
+                timeRemaining.value--;
+            }
+        }, 1000);
+    }
+});
+
+onUnmounted(() => {
+    if (timer) {
+        clearInterval(timer);
+    }
+});
 
 const page = usePage();
 const userName = computed(() => page.props.auth?.user?.name);
@@ -241,11 +269,15 @@ const activeComponentProps = computed<Record<string, unknown>>(() => {
         return {};
     }
 
+    const propsToPass: Record<string, unknown> = {
+        timeRemaining: timeRemaining.value,
+    };
+
     if (testsWithPauseSupport.has(step.test.name) && activePausedTestResult.value) {
-        return { pausedTestResult: activePausedTestResult.value };
+        propsToPass.pausedTestResult = activePausedTestResult.value;
     }
 
-    return {};
+    return propsToPass;
 });
 
 function completeTest(results: any) {

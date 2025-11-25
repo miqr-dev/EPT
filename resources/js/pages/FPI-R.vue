@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, toRef } from 'vue';
 import { Button } from '@/components/ui/button';
 import { FPI_QUESTIONS } from '@/pages/Questions/FPIQuestions';
 import {
@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
+import { useTimeWarning } from '@/composables/useTimeWarning';
 
 import { watch } from 'vue';
 
@@ -20,7 +21,11 @@ const props = defineProps<{
         answers: { number: number; answer: 'stimmt' | 'stimmtNicht' | null }[];
         blockIndex?: number;
     };
+    timeRemaining?: number | null;
 }>();
+
+const timeRemainingRef = toRef(props, 'timeRemaining', null);
+const { show5MinWarning, show1MinWarning } = useTimeWarning(timeRemainingRef);
 
 const emit = defineEmits(['complete', 'update:answers']);
 // Settings
@@ -207,6 +212,14 @@ function finishTest() {
 
   <Head title="FPI-R" />
   <div class="p-4">
+    <div v-if="show5MinWarning"
+      class="absolute top-0 left-0 w-full bg-green-500 text-white text-center p-2">
+      5 Minuten verbleibend
+    </div>
+    <div v-if="show1MinWarning"
+      class="absolute top-0 left-0 w-full bg-yellow-500 text-white text-center p-2">
+      1 Minute verbleibend
+    </div>
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">FPI-R</h1>
     </div>

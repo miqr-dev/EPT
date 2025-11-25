@@ -7,6 +7,10 @@ const props = defineProps<{
   exam: any
 }>()
 
+const showAddTimeInputFor = ref<number | null>(null)
+const extraTimeMinutes = ref<number | null>(null)
+const extraTimeError = ref<string | null>(null)
+
 const formatTime = (seconds?: number) => {
   if (typeof seconds !== 'number' || seconds < 0) return '00:00'
   const whole = Math.floor(seconds)
@@ -172,6 +176,43 @@ const canForceFinishParticipant = (participant: any) => {
   return !status.force_finish_requested_at
 }
 
+const toggleAddTimeInput = (participantId: number) => {
+  if (showAddTimeInputFor.value === participantId) {
+    showAddTimeInputFor.value = null
+    extraTimeMinutes.value = null
+    extraTimeError.value = null
+  } else {
+    showAddTimeInputFor.value = participantId
+    extraTimeMinutes.value = null
+    extraTimeError.value = null
+  }
+}
+
+const addExtraTime = (participant: any) => {
+  const status = getParticipantStatus(participant)
+  if (!status || !extraTimeMinutes.value) return
+  if (extraTimeMinutes.value > 30) {
+    extraTimeError.value = 'Maximal 30 Minuten erlaubt.'
+    return
+  }
+  extraTimeError.value = null
+  router.post(
+    route('exam-step-status.add-time', { status: status.id }),
+    { minutes: extraTimeMinutes.value },
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        toggleAddTimeInput(participant.id)
+      },
+    },
+  )
+}
+
+const canAddTime = (participant: any) => {
+  const status = getParticipantStatus(participant)
+  return status?.status === 'in_progress'
+}
+
 </script>
 
 <template>
@@ -266,6 +307,19 @@ const canForceFinishParticipant = (participant: any) => {
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
               <div class="flex justify-end gap-2">
+                <div v-if="showAddTimeInputFor === participant.id" class="flex flex-col">
+                  <div class="flex items-center gap-2">
+                    <input type="number" v-model="extraTimeMinutes" class="w-20 px-2 py-1 border rounded"
+                      placeholder="Minuten" min="1" max="30" />
+                    <Button size="sm" @click="addExtraTime(participant)">
+                      OK
+                    </Button>
+                    <Button variant="ghost" size="sm" @click="toggleAddTimeInput(participant.id)">
+                      Abbrechen
+                    </Button>
+                  </div>
+                  <p v-if="extraTimeError" class="text-red-500 text-xs mt-1">{{ extraTimeError }}</p>
+                </div>
                 <Button v-if="canPauseParticipant(participant)"
                   variant="secondary" size="sm" @click="setParticipantAction(participant, 'pause')">
                   Pausieren
@@ -277,6 +331,10 @@ const canForceFinishParticipant = (participant: any) => {
                 <Button v-if="canForceFinishParticipant(participant)"
                   variant="destructive" size="sm" @click="setParticipantAction(participant, 'finish')">
                   Test beenden
+                </Button>
+                <Button v-if="showAddTimeInputFor !== participant.id" variant="outline" size="sm"
+                  @click="toggleAddTimeInput(participant.id)" :disabled="!canAddTime(participant)">
+                  + Zeit
                 </Button>
               </div>
             </td>

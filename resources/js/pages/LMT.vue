@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3'
-import { ref, computed } from 'vue'
+import { ref, computed, toRef } from 'vue'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -11,8 +11,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish'
+import { useTimeWarning } from '@/composables/useTimeWarning'
 
 import { LMT_QUESTIONS, LMTQuestion } from '@/pages/Questions/LMTQuestions'
+
+const props = defineProps<{
+  timeRemaining?: number | null;
+}>();
+
+const timeRemainingRef = toRef(props, 'timeRemaining', null);
+const { show5MinWarning, show1MinWarning } = useTimeWarning(timeRemainingRef);
 
 const normTable = {
   L1: [22, 29, 34, 37, 41, 45, 47.5, 50, 54, 58, 62, 66, 70, 76, 81],
@@ -264,6 +272,14 @@ const totalTimeTaken = computed(() => {
 
   <Head title="LMT" />
   <div class="p-4">
+    <div v-if="show5MinWarning"
+      class="absolute top-0 left-0 w-full bg-green-500 text-white text-center p-2">
+      5 Minuten verbleibend
+    </div>
+    <div v-if="show1MinWarning"
+      class="absolute top-0 left-0 w-full bg-yellow-500 text-white text-center p-2">
+      1 Minute verbleibend
+    </div>
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">L-M-T</h1>
     </div>

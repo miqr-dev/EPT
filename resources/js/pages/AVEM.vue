@@ -5,9 +5,17 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AVEM_QUESTIONS } from '@/pages/Questions/AVEMQuestions'
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish'
 import { Head } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { ref, toRef } from 'vue'
+import { useTimeWarning } from '@/composables/useTimeWarning'
 
 const emit = defineEmits(['complete'])
+
+const props = defineProps<{
+  timeRemaining?: number | null
+}>()
+
+const timeRemainingRef = toRef(props, 'timeRemaining', null)
+const { show5MinWarning, show1MinWarning } = useTimeWarning(timeRemainingRef)
 
 const showTest = ref(false)
 const answers = ref<Record<number, number | null>>({})
@@ -91,6 +99,14 @@ const borderClass = (qnum: number) =>
 <template>
   <Head title="AVEM" />
   <div class="p-4">
+    <div v-if="show5MinWarning"
+      class="absolute top-0 left-0 w-full bg-green-500 text-white text-center p-2">
+      5 Minuten verbleibend
+    </div>
+    <div v-if="show1MinWarning"
+      class="absolute top-0 left-0 w-full bg-yellow-500 text-white text-center p-2">
+      1 Minute verbleibend
+    </div>
     <div class="mb-4 flex items-center justify-between">
       <h1 class="text-2xl font-bold">AVEM</h1>
     </div>

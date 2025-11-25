@@ -155,10 +155,13 @@ class ParticipantController extends Controller
       }
     }
 
+    $currentStepStatus = $exam->current_exam_step_id ? $stepStatuses[$exam->current_exam_step_id] : null;
+
     return Inertia::render('Exams/ExamRoom', [
       'exam' => $exam,
       'stepStatuses' => $stepStatuses, // Pass all statuses to the view.
       'pausedTestResults' => (object) $pausedTestResults,
+      'timeRemaining' => $currentStepStatus ? $currentStepStatus->time_remaining : null,
     ]);
   }
 

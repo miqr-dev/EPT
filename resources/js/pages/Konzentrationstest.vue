@@ -1,8 +1,9 @@
 <!-- resources/js/Pages/Konzentrationstest.vue -->
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3'
-import { ref, computed } from 'vue'
+import { ref, computed, toRef } from 'vue'
 import { Button } from '@/components/ui/button'
+import { useTimeWarning } from '@/composables/useTimeWarning'
 import { Input } from '@/components/ui/input'
 
 /* =========================================================
@@ -50,6 +51,14 @@ const finishTest = () => {
   }
 }
 const emit = defineEmits(['complete'])
+
+const props = defineProps<{
+  timeRemaining?: number | null;
+}>();
+
+const timeRemainingRef = toRef(props, 'timeRemaining', null);
+const { show5MinWarning, show1MinWarning } = useTimeWarning(timeRemainingRef);
+
 const toggleMark = (marks: boolean[], i: number) => (marks[i] = !marks[i])
 
 /* =========================================================
@@ -628,6 +637,14 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
 
   <!-- FULL WIDTH PAGE WRAPPER -->
   <div class="w-full max-w-none px-3 md:px-8">
+    <div v-if="show5MinWarning"
+      class="absolute top-0 left-0 w-full bg-green-500 text-white text-center p-2">
+      5 Minuten verbleibend
+    </div>
+    <div v-if="show1MinWarning"
+      class="absolute top-0 left-0 w-full bg-yellow-500 text-white text-center p-2">
+      1 Minute verbleibend
+    </div>
 
     <!-- ======================== PAGE 1 ======================== -->
     <div v-if="page === 1">

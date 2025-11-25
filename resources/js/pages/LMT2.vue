@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Head } from '@inertiajs/vue3'
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, toRef } from 'vue'
 import { Button } from '@/components/ui/button'
+import { useTimeWarning } from '@/composables/useTimeWarning'
 
 import { LMT_QUESTIONS, LMTQuestion } from '@/pages/Questions/LMTQuestions'
 
@@ -10,6 +11,13 @@ const breadcrumbs = [
   { title: 'Tests', href: '/tests' },
   { title: 'LMT', href: '/tests/lmt' },
 ]
+
+const props = defineProps<{
+  timeRemaining?: number | null;
+}>();
+
+const timeRemainingRef = toRef(props, 'timeRemaining', null);
+const { show5MinWarning, show1MinWarning } = useTimeWarning(timeRemainingRef);
 
 const questions = ref<LMTQuestion[]>(LMT_QUESTIONS)
 
@@ -117,6 +125,14 @@ function formatTime(sec: number | null): string {
 
   <Head title="LMT" />
   <AppLayout :breadcrumbs="breadcrumbs">
+    <div v-if="show5MinWarning"
+      class="absolute top-0 left-0 w-full bg-green-500 text-white text-center p-2">
+      5 Minuten verbleibend
+    </div>
+    <div v-if="show1MinWarning"
+      class="absolute top-0 left-0 w-full bg-yellow-500 text-white text-center p-2">
+      1 Minute verbleibend
+    </div>
     <div class="max-w-3xl mx-auto p-6 bg-white border rounded-lg shadow space-y-8">
 
       <!-- Start Screen -->
