@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
+import axios from 'axios'
 import { Button } from '@/components/ui/button'
 
 const props = defineProps<{
@@ -88,21 +89,20 @@ watch(
           const updatedStatus = getParticipantStatusFromExam(updatedExam, participant)
           const existingStatus = getParticipantStatusFromExam(localExam.value!, existing)
           if (updatedStatus && existingStatus) {
-            if (typeof existingStatus.time_remaining === 'number') {
-              const newTime =
-                typeof updatedStatus.time_remaining === 'number'
-                  ? Math.floor(updatedStatus.time_remaining)
-                  : existingStatus.time_remaining
-              updatedStatus.time_remaining =
-                existingStatus.time_remaining > 0
-                  ? Math.min(newTime, existingStatus.time_remaining)
-                  : newTime
+            if (typeof updatedStatus.time_remaining === 'number') {
+              updatedStatus.time_remaining = Math.max(
+                0,
+                Math.floor(updatedStatus.time_remaining),
+              )
+            } else {
+              updatedStatus.time_remaining = existingStatus.time_remaining
             }
+
             if (updatedStatus.status === 'paused') {
-              updatedStatus.time_remaining =
-                typeof updatedStatus.time_remaining === 'number'
-                  ? Math.max(0, Math.floor(updatedStatus.time_remaining))
-                  : existingStatus.time_remaining
+              updatedStatus.time_remaining = Math.max(
+                0,
+                Number(updatedStatus.time_remaining ?? existingStatus.time_remaining ?? 0),
+              )
             } else if (updatedStatus.status !== 'in_progress') {
               updatedStatus.time_remaining = 0
             }
@@ -170,6 +170,53 @@ const canForceFinishParticipant = (participant: any) => {
   if (localExam.value?.status !== 'in_progress') return false
   if (status.status !== 'in_progress') return false
   return !status.force_finish_requested_at
+}
+
+const editingParticipantId = ref<number | null>(null)
+const extraMinutesInput = ref('')
+
+const canAddExtraTime = (participant: any) => {
+  const status = getParticipantStatus(participant)
+  if (!status) return false
+  if (localExam.value?.status === 'completed') return false
+  return !['completed', 'broken'].includes(status.status)
+}
+
+const startExtraTimeInput = (participant: any) => {
+  editingParticipantId.value = participant.id
+  extraMinutesInput.value = ''
+}
+
+const cancelExtraTimeInput = () => {
+  editingParticipantId.value = null
+  extraMinutesInput.value = ''
+}
+
+const addExtraTime = async (participant: any) => {
+  const status = getParticipantStatus(participant)
+  if (!status) return
+
+  const minutes = Number.parseInt(extraMinutesInput.value, 10)
+  if (!Number.isFinite(minutes) || minutes <= 0) {
+    return
+  }
+
+  try {
+    const response = await axios.post(route('exam-step-status.add-time', status.id), { minutes })
+    const addedSeconds = minutes * 60
+    status.extra_time = (status.extra_time ?? 0) + minutes
+    if (typeof status.time_remaining === 'number') {
+      status.time_remaining = status.time_remaining + addedSeconds
+    } else if (response?.data?.time_remaining) {
+      status.time_remaining = response.data.time_remaining
+    } else {
+      status.time_remaining = addedSeconds
+    }
+  } catch (error) {
+    console.error('Failed to add extra time', error)
+  } finally {
+    cancelExtraTimeInput()
+  }
 }
 
 </script>
@@ -266,6 +313,30 @@ const canForceFinishParticipant = (participant: any) => {
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
               <div class="flex justify-end gap-2">
+                <div v-if="canAddExtraTime(participant)" class="flex items-center gap-1">
+                  <template v-if="editingParticipantId === participant.id">
+                    <input
+                      v-model="extraMinutesInput"
+                      type="number"
+                      min="1"
+                      class="w-16 rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                      placeholder="Min"
+                      @keydown.enter.prevent="addExtraTime(participant)"
+                      @keydown.escape.prevent="cancelExtraTimeInput"
+                    />
+                    <Button size="sm" variant="secondary" @click.stop="addExtraTime(participant)">
+                      Speichern
+                    </Button>
+                    <Button size="sm" variant="ghost" @click.stop="cancelExtraTimeInput">
+                      Abbrechen
+                    </Button>
+                  </template>
+                  <template v-else>
+                    <Button size="sm" variant="outline" @click.stop="startExtraTimeInput(participant)">
+                      + Zeit
+                    </Button>
+                  </template>
+                </div>
                 <Button v-if="canPauseParticipant(participant)"
                   variant="secondary" size="sm" @click="setParticipantAction(participant, 'pause')">
                   Pausieren

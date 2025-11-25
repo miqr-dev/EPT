@@ -30,6 +30,8 @@ type StepStatusEntry = {
     status: StepStatus;
     force_finish_requested_at?: string | null;
     force_finish_deadline?: string | null;
+    time_remaining?: number;
+    extra_time?: number;
     [key: string]: any;
 };
 
@@ -68,6 +70,22 @@ const pausedTestResults = computed<Record<string, unknown>>(() => {
         ...serverResults,
     };
 });
+
+const currentStepId = computed(() => props.exam.current_step?.id ?? null);
+const currentStepStatus = computed<StepStatusEntry | undefined>(() => {
+    const id = currentStepId.value;
+    if (!id) return undefined;
+    return stepStatuses.value?.[id];
+});
+
+const activeTimeRemaining = ref<number | null>(null);
+const warningMessage = ref('');
+const warningVisible = ref(false);
+const warningTimeoutId = ref<NodeJS.Timeout | null>(null);
+const timeTicker = ref<NodeJS.Timeout | null>(null);
+const autoFinishing = ref(false);
+const warningThresholds = [300, 60];
+const triggeredWarnings = ref(new Set<number>());
 
 const testComponents: Record<string, unknown> = {
     'BRT-A': BRTA,
@@ -406,6 +424,127 @@ function requestFullscreen() {
     }
 }
 
+function hideWarningBanner() {
+    warningVisible.value = false;
+    if (warningTimeoutId.value) {
+        clearTimeout(warningTimeoutId.value);
+        warningTimeoutId.value = null;
+    }
+}
+
+function showWarningBanner(seconds: number) {
+    const minutes = seconds === 60 ? '1 Minute' : `${Math.round(seconds / 60)} Minuten`;
+    warningMessage.value = `Hinweis: Noch ${minutes} verbleiben.`;
+    warningVisible.value = true;
+
+    if (warningTimeoutId.value) {
+        clearTimeout(warningTimeoutId.value);
+    }
+
+    warningTimeoutId.value = setTimeout(() => {
+        warningVisible.value = false;
+        warningTimeoutId.value = null;
+    }, 10_000);
+}
+
+function resetWarningsFor(timeRemaining: number | null) {
+    if (timeRemaining === null) {
+        triggeredWarnings.value.clear();
+        return;
+    }
+
+    warningThresholds.forEach((threshold) => {
+        if (timeRemaining > threshold) {
+            triggeredWarnings.value.delete(threshold);
+        }
+    });
+}
+
+function evaluateWarnings(timeRemaining: number | null) {
+    if (timeRemaining === null) return;
+
+    warningThresholds.forEach((threshold) => {
+        if (timeRemaining <= threshold && !triggeredWarnings.value.has(threshold)) {
+            triggeredWarnings.value.add(threshold);
+            showWarningBanner(threshold);
+        }
+    });
+}
+
+function stopTimeTicker() {
+    if (timeTicker.value) {
+        clearInterval(timeTicker.value);
+        timeTicker.value = null;
+    }
+}
+
+function handleAutoFinish() {
+    const stepId = currentStepId.value;
+    const status = currentStepStatus.value;
+    if (!stepId || !status || status.status !== 'in_progress' || autoFinishing.value) {
+        return;
+    }
+
+    autoFinishing.value = true;
+    router.post(
+        '/my-exam/complete-step',
+        { exam_step_id: stepId },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                closeTestDialog({ resetActive: true });
+            },
+            onFinish: () => {
+                autoFinishing.value = false;
+            },
+        },
+    );
+}
+
+function startTimeTicker() {
+    stopTimeTicker();
+
+    if (props.exam.status !== 'in_progress') {
+        activeTimeRemaining.value = null;
+        triggeredWarnings.value.clear();
+        hideWarningBanner();
+        return;
+    }
+
+    const status = currentStepStatus.value;
+    if (!status) {
+        activeTimeRemaining.value = null;
+        triggeredWarnings.value.clear();
+        hideWarningBanner();
+        return;
+    }
+
+    const timeRemaining = typeof status.time_remaining === 'number' ? Math.max(0, Math.floor(status.time_remaining)) : null;
+    activeTimeRemaining.value = timeRemaining;
+    resetWarningsFor(timeRemaining);
+
+    evaluateWarnings(timeRemaining);
+
+    if (status.status !== 'in_progress' || timeRemaining === null) {
+        hideWarningBanner();
+        return;
+    }
+
+    evaluateWarnings(timeRemaining);
+
+    timeTicker.value = setInterval(() => {
+        if (activeTimeRemaining.value === null) return;
+        const nextValue = Math.max(0, activeTimeRemaining.value - 1);
+        activeTimeRemaining.value = nextValue;
+        evaluateWarnings(nextValue);
+
+        if (nextValue === 0) {
+            stopTimeTicker();
+            handleAutoFinish();
+        }
+    }, 1000);
+}
+
 function handleFullscreenChange() {
     if (!document.fullscreenElement) {
         if (finishing.value) return;
@@ -448,6 +587,8 @@ onMounted(() => {
 onUnmounted(() => {
     if (polling) clearInterval(polling);
     cleanupAfterTest();
+    stopTimeTicker();
+    hideWarningBanner();
 });
 
 let hasSyncedInitialStatuses = false;
@@ -525,6 +666,19 @@ watch(
     },
     { immediate: true },
 );
+
+watch(
+    () => ({
+        status: currentStepStatus.value?.status,
+        timeRemaining: currentStepStatus.value?.time_remaining,
+        examStatus: props.exam.status,
+        stepId: currentStepId.value,
+    }),
+    () => {
+        startTimeTicker();
+    },
+    { immediate: true, deep: true },
+);
 </script>
 
 <template>
@@ -547,6 +701,12 @@ watch(
             <!-- Exam Steps Table -->
             <div v-else class="space-y-4">
                 <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">Testübersicht</h2>
+                <div
+                    v-if="warningVisible"
+                    class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 shadow-sm dark:border-amber-500/40 dark:bg-amber-900/30 dark:text-amber-100"
+                >
+                    {{ warningMessage }}
+                </div>
                 <div
                     v-if="hasPausedStep"
                     class="rounded-md border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-700 dark:border-yellow-400/40 dark:bg-yellow-950/40 dark:text-yellow-100"

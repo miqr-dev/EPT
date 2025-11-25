@@ -12,6 +12,7 @@ use App\Models\ExamParticipant;
 use App\Models\ExamStepStatus;
 use App\Models\TestAssignment;
 use App\Models\TestResult;
+use Carbon\Carbon;
 use Inertia\Inertia;
 
 class ParticipantController extends Controller
@@ -100,6 +101,7 @@ class ParticipantController extends Controller
     // Eager load all step statuses for this participant in this exam.
     $stepStatuses = ExamStepStatus::where('exam_id', $exam->id)
       ->where('participant_id', $user->id)
+      ->with('step')
       ->get()
       ->keyBy('exam_step_id');
 
@@ -114,6 +116,40 @@ class ParticipantController extends Controller
         ]);
         $stepStatuses[$step->id] = $newStatus;
       }
+    }
+
+    foreach ($stepStatuses as $status) {
+      $durationMinutes = $status->step?->duration ?? 0;
+      $totalDurationSeconds = max(0, (int) $durationMinutes * 60
+        + (int) $status->extra_time * 60
+        + (int) $status->grace_period_seconds);
+
+      if ($status->status === 'paused') {
+        $timeRemaining = $status->time_remaining_seconds ?? $totalDurationSeconds;
+      } elseif ($status->status === 'not_started') {
+        $timeRemaining = $totalDurationSeconds;
+      } elseif ($status->started_at) {
+        $startTime = Carbon::parse($status->started_at);
+        $endTime = $startTime->copy()->addSeconds($totalDurationSeconds);
+        $timeRemaining = now()->diffInSeconds($endTime, false);
+      } else {
+        $timeRemaining = $totalDurationSeconds;
+      }
+
+      $timeRemaining = max(0, (int) $timeRemaining);
+
+      if ($status->status === 'in_progress' && $status->started_at && $timeRemaining <= 0) {
+        $status->update([
+          'status' => 'completed',
+          'completed_at' => now(),
+          'force_finish_requested_at' => null,
+          'force_finish_deadline' => null,
+          'time_remaining_seconds' => 0,
+        ]);
+        $timeRemaining = 0;
+      }
+
+      $status->time_remaining = $timeRemaining;
     }
 
 
@@ -254,9 +290,29 @@ class ParticipantController extends Controller
           [
             'result_json' => $resultData,
             'teacher_id' => $teacherId,
+            'extra_time_minutes' => $examStepStatus->extra_time ?? 0,
           ]
         );
 
+        $assignment->update([
+          'status' => 'completed',
+          'completed_at' => now(),
+        ]);
+      }
+    }
+
+    if (!$results && $examStepStatus->step?->test) {
+      $assignment = TestAssignment::firstOrCreate(
+        [
+          'participant_id' => $user->id,
+          'test_id' => $examStepStatus->step->test->id,
+        ],
+        [
+          'status' => 'assigned',
+        ]
+      );
+
+      if ($assignment->status !== 'completed') {
         $assignment->update([
           'status' => 'completed',
           'completed_at' => now(),
@@ -357,6 +413,7 @@ class ParticipantController extends Controller
           [
             'result_json' => $results,
             'teacher_id' => $teacherId,
+            'extra_time_minutes' => $examStepStatus->extra_time ?? 0,
           ]
         );
       }
