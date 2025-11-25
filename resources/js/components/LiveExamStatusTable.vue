@@ -174,6 +174,22 @@ const toggleExtraTime = (participant: any) => {
   }
 }
 
+const onExtraTimeMinutesInput = (participant: any, event: Event) => {
+  const participantId = getParticipantUserId(participant)
+  if (!participantId) return
+
+  const value = (event.target as HTMLInputElement).value
+  const current = getExtraTimeState(participantId) ?? { expanded: true, minutes: '', error: null, loading: false }
+
+  extraTimeState.value = {
+    ...extraTimeState.value,
+    [participantId]: {
+      ...current,
+      minutes: value,
+    },
+  }
+}
+
 const submitExtraTime = (participant: any) => {
   const participantId = getParticipantUserId(participant)
   const status = getParticipantStatus(participant)
@@ -368,7 +384,8 @@ const canForceFinishParticipant = (participant: any) => {
                       class="flex items-center gap-2">
                       <input type="number" min="1" :max="MAX_EXTRA_MINUTES"
                         class="w-20 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 focus:border-blue-500 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                        v-model="extraTimeState[getParticipantUserId(participant)]?.minutes" />
+                        :value="getExtraTimeState(getParticipantUserId(participant))?.minutes ?? ''"
+                        @input="(event) => onExtraTimeMinutesInput(participant, event)" />
                       <Button size="sm"
                         :disabled="getExtraTimeState(getParticipantUserId(participant))?.loading"
                         @click="submitExtraTime(participant)">
