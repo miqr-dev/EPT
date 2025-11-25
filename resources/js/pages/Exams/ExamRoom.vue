@@ -303,7 +303,7 @@ const startCountdownIfNeeded = () => {
     }, 1000);
 };
 
-const syncActiveTimeRemaining = (stepId: number | null) => {
+function syncActiveTimeRemaining(stepId: number | null) {
     if (stepId === null) {
         activeTimeRemainingSeconds.value = null;
         stopCountdown();
@@ -316,7 +316,7 @@ const syncActiveTimeRemaining = (stepId: number | null) => {
         : null;
 
     startCountdownIfNeeded();
-};
+}
 
 function completeTest(results: any) {
     if (typeof activeStepId.value !== 'number') return;
