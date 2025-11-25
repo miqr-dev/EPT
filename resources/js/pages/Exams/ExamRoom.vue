@@ -79,6 +79,7 @@ const testComponents: Record<string, unknown> = {
     LMT2: LMT2,
     'BIT-2': BIT2,
     AVEM: AVEM,
+    Konzentrationstest: KONZ,
     628: KONZ,
 };
 
