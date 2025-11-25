@@ -76,13 +76,6 @@ const page1Correct = ['13', '26', '133', '39', '125', '50', '480', '210', '11,25
 import page2Png from '@/assets/konz/page2tall.png'
 import page3Png from '@/assets/konz/page3tall.png'
 
-const page2NaturalWidth = ref<number>(0)
-const onPage2ImgLoad = (e: Event) => {
-  const img = e.target as HTMLImageElement
-  page2NaturalWidth.value = img.naturalWidth || 760
-}
-const containerWidth = computed(() => Math.min(page2NaturalWidth.value || 760, 1100))
-
 const page2Answers = ref<string[]>(Array(10).fill(''))
 const rowStart = 4.7
 const rowGap = 10
@@ -630,7 +623,7 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
   <div class="w-full max-w-none px-3 md:px-8">
 
     <!-- ======================== PAGE 1 ======================== -->
-    <div v-if="page === 1">
+    <div v-if="page === 1" class="mx-auto w-full max-w-5xl flex flex-col items-center text-center">
       <div class="flex items-baseline gap-3">
         <span class="text-3xl font-semibold">1</span>
         <span class="text-base">(je 1 Fehlerpunkt)</span>
@@ -647,13 +640,10 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
         Tragen Sie bitte die entsprechende Zahl in das jeweils dafür vorgesehene Kästchen ein.
       </p>
 
-      <ul class="list-disc pl-8 space-y-6">
-        <li v-for="(row, i) in page1Series" :key="i" class="grid grid-cols-[1fr_auto] items-center gap-4">
-          <div class="flex flex-wrap items-center">
-            <span class="whitespace-pre text-[18px]">{{ row.join(' . ') }} . ?</span>
-          </div>
-          <input v-model="page1Inputs[i]" class="answer-box justify-self-end w-12 h-8 text-[18px]"
-            inputmode="numeric" />
+      <ul class="list-disc pl-6 md:pl-10 space-y-6 w-full max-w-3xl text-left">
+        <li v-for="(row, i) in page1Series" :key="i" class="flex items-center justify-between gap-3">
+          <span class="whitespace-pre text-[18px] flex-1 text-center">{{ row.join(' . ') }} . ?</span>
+          <input v-model="page1Inputs[i]" class="answer-box w-12 h-8 text-[18px]" inputmode="numeric" />
         </li>
       </ul>
     </div>
@@ -672,16 +662,15 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
         Kästchen ein.
       </p>
 
-      <div class="relative mt-6 grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <div class="relative mt-6 grid grid-cols-1 lg:grid-cols-2 gap-10 justify-items-center">
         <!-- middle divider -->
         <div class="hidden lg:block absolute inset-y-0 left-1/2 w-[2px] bg-black/60 pointer-events-none"></div>
 
         <!-- LEFT: Bilderreihen (+ overlay inputs) -->
-        <section class="pr-4">
+        <section class="pr-4 w-full max-w-[1100px]">
           <div class="text-red-600 font-semibold text-2xl mb-3">➔ Bilderreihen</div>
-          <div class="relative mx-auto" :style="{ width: containerWidth + 'px' }">
-            <img :src="page2Png" alt="Bilderreihen (Fragen)" class="w-full h-auto block select-none test-img"
-              @load="onPage2ImgLoad" />
+          <div class="relative mx-auto w-full max-w-[1100px]">
+            <img :src="page2Png" alt="Bilderreihen (Fragen)" class="w-full h-auto block select-none test-img" />
             <template v-for="(top, i) in rowTopOffsets" :key="i">
               <input v-model="page2Answers[i]" class="answer-box absolute text-[18px]" inputmode="numeric" maxlength="1"
                 :style="{
@@ -703,9 +692,9 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
         </section>
 
         <!-- RIGHT: Antworttafeln -->
-        <section class="pl-4">
+        <section class="pl-4 w-full max-w-[1100px]">
           <div class="text-red-600 font-semibold text-2xl mb-3">➔ Antworttafeln [1]–[4]</div>
-          <div class="mt-1 mx-auto max-w-[1100px]">
+          <div class="mt-1 mx-auto max-w-[1100px] w-full">
             <img :src="page3Png" alt="Antwortspalten [1]–[4]" class="w-full h-auto block select-none" />
           </div>
         </section>
@@ -819,7 +808,7 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
     </div>
 
     <!-- ======================== PAGE 5 (Zeichen zählen) ======================== -->
-    <div v-else-if="page === 5">
+    <div v-else-if="page === 5" class="mx-auto w-full max-w-5xl flex flex-col items-center text-center">
       <div class="flex items-baseline gap-3">
         <span class="text-3xl font-semibold">5</span>
         <span class="text-base">(je 1 Fehlerpunkt)</span>
@@ -848,7 +837,8 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
             </span>
           </div>
           <!-- right input -->
-          <Input v-model="page5TickSums[r]" class="inline w-16 h-9 text-[18px]" placeholder="" />
+          <Input v-model="page5TickSums[r]" class="inline w-16 h-9 text-[18px] border border-gray-400 bg-white"
+            placeholder="" />
         </div>
       </div>
 
