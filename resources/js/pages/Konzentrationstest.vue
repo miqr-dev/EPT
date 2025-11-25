@@ -105,7 +105,7 @@ const page5Correct = ['7', '4', '8', '5', '7', '9', '7', '10', '10', '9']
 type RowParts = [string, string, string, string]
 
 const originalRows: Array<{ letter: string; parts: RowParts }> = [
-  { letter: 'a', parts: ['Friedrich Berlenbeck', '445527 Hattingen', 'An der Hunsebeck 27', 'Tel. 0421 455773'] },
+  { letter: 'a', parts: ['Friedrich Berlenbeck', '45527 Hattingen', 'An der Hunsebeck 27', 'Tel. 0421 455773'] },
   { letter: 'b', parts: ['Friedel Feschner', '80768 Maienheim', 'Heissenstr. 4', 'Tel. 0943 557834'] },
   { letter: 'c', parts: ['Kordula Karlsferch', '47605 Kittenberg', 'Rellinghauser Str. 248', 'Tel. 0213 329823'] },
   { letter: 'd', parts: ['Dr. Mara Müller-Meerfeld', '20657 Bammenbach', 'Meracher Weg 3', 'Tel. 02592 2578-43'] },
@@ -115,7 +115,7 @@ const originalRows: Array<{ letter: string; parts: RowParts }> = [
   { letter: 'h', parts: ['Maschinen Bortenbycks', '84932 Sahlfeeden', 'Bergerbeek 5-12', 'Tel. 0432 567409-0'] },
   { letter: 'i', parts: ['Dr. Sybille Schyrzyk', '87645 Mühlhausen', 'Bergerfeldstr. 5', 'Tel. 0876 786543'] },
   { letter: 'j', parts: ['Christoph Pehrmann', '56478 Esslingen', 'Mausegattstr. 5', 'Tel. 045 7874547'] },
-  { letter: 'k', parts: ['Alicia Jablonski', '545632 Velbert', 'Johänntegesbrucher 8b', 'Tel. 0212 3840421'] },
+  { letter: 'k', parts: ['Alicia Jablonski', '45632 Velbert', 'Johänntegesbrucher 8b', 'Tel. 0212 3840421'] },
   { letter: 'l', parts: ['Patrizia Iserloh-Konegen', '37273 Lethmate', 'Hacketäuerstr. 4', 'Tel. 0245 2248799'] },
   { letter: 'm', parts: ['Turkovic Elektro Fachhandel', '76321 Schöppingen', 'Obenrüdener Kotten 4', 'Tel. 03234 43973-3'] },
   { letter: 'n', parts: ['Slavica Kumarasamy', '54689 Meirhofen', 'Ernst-Woltmann-Str. 8', 'Tel. 0879 345345'] },
@@ -130,7 +130,7 @@ const originalRows: Array<{ letter: string; parts: RowParts }> = [
 ]
 
 const copyRows: Array<{ letter: string; parts: RowParts }> = [
-  { letter: 'a', parts: ['Friedrich Berllenbeck', '45527 Hattingen', 'An der Hunsebeek 27', 'Tel. 0421 455773'] },
+  { letter: 'a', parts: ['Friedrich Berlenbeck', '45527 Hattingen', 'An der Hunsebeek 27', 'Tel. 0421 455773'] },
   { letter: 'b', parts: ['Friedel Fechner', '80768 Meienheim', 'Heisssenstr. 4', 'Tel. 0943 567834'] },
   { letter: 'c', parts: ['Kordula Kalsferch', '47605 Kittenberg', 'Relllinghauser Str. 248', 'Tel. 0213 32982'] },
   { letter: 'd', parts: ['Dr. Mara Müller-Mehrfeld', '20657 Bammenbach', 'Meracher Weg 3', 'Tel. 02592 2578-43'] },
