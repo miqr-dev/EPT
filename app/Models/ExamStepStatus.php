@@ -43,15 +43,26 @@ class ExamStepStatus extends Model
 
   public function getTimeRemainingAttribute()
   {
-    if ($this->status !== 'in_progress' || !$this->started_at) {
-      return null;
+    $durationMinutes = $this->step->duration ?? $this->step->test->duration_minutes ?? 0;
+    $totalDurationSeconds = max(
+      0,
+      (int) $durationMinutes * 60 + (int) $this->extra_time * 60 + (int) $this->grace_period_seconds,
+    );
+
+    if ($this->status === 'paused') {
+      return max(0, (int) ($this->time_remaining_seconds ?? $totalDurationSeconds));
     }
 
-    $durationInSeconds = ($this->step->test->duration_minutes ?? 0) * 60;
-    $extraTimeInSeconds = $this->grace_period_seconds ?? 0;
-    $totalDuration = $durationInSeconds + $extraTimeInSeconds;
-    $elapsedSeconds = now()->diffInSeconds($this->started_at);
+    if ($this->status === 'not_started') {
+      return $totalDurationSeconds;
+    }
 
-    return max(0, $totalDuration - $elapsedSeconds);
+    if ($this->started_at) {
+      $endTime = $this->started_at->copy()->addSeconds($totalDurationSeconds);
+
+      return max(0, now()->diffInSeconds($endTime, false));
+    }
+
+    return 0;
   }
 }
