@@ -263,27 +263,14 @@ const activeComponentProps = computed<Record<string, unknown>>(() => {
     return baseProps;
 });
 
-watch(
-    () => activeStepId.value,
-    (stepId) => {
-        syncActiveTimeRemaining(typeof stepId === 'number' ? stepId : null);
-    },
-    { immediate: true },
-);
-
-watch(
-    () => isTestDialogOpen.value,
-    () => startCountdownIfNeeded(),
-);
-
-const stopCountdown = () => {
+function stopCountdown() {
     if (countdownInterval) {
         clearInterval(countdownInterval);
         countdownInterval = null;
     }
-};
+}
 
-const startCountdownIfNeeded = () => {
+function startCountdownIfNeeded() {
     if (!isTestDialogOpen.value || typeof activeStepId.value !== 'number') {
         stopCountdown();
         return;
@@ -301,7 +288,7 @@ const startCountdownIfNeeded = () => {
         if (activeTimeRemainingSeconds.value === null) return;
         activeTimeRemainingSeconds.value = Math.max(0, activeTimeRemainingSeconds.value - 1);
     }, 1000);
-};
+}
 
 function syncActiveTimeRemaining(stepId: number | null) {
     if (stepId === null) {
@@ -317,6 +304,19 @@ function syncActiveTimeRemaining(stepId: number | null) {
 
     startCountdownIfNeeded();
 }
+
+watch(
+    () => activeStepId.value,
+    (stepId) => {
+        syncActiveTimeRemaining(typeof stepId === 'number' ? stepId : null);
+    },
+    { immediate: true },
+);
+
+watch(
+    () => isTestDialogOpen.value,
+    () => startCountdownIfNeeded(),
+);
 
 function completeTest(results: any) {
     if (typeof activeStepId.value !== 'number') return;
