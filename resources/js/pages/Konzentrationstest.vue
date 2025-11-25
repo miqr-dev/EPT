@@ -648,7 +648,7 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
       </p>
 
       <ul class="list-disc pl-8 space-y-6">
-        <li v-for="(row, i) in page1Series" :key="i" class="flex items-center gap-4">
+        <li v-for="(row, i) in page1Series" :key="i" class="flex items-center gap-2">
           <span class="whitespace-pre text-[18px]">{{ row.join(' . ') }} . ?</span>
           <input v-model="page1Inputs[i]" class="answer-box w-12 h-8 text-[18px]" inputmode="numeric" />
         </li>
@@ -816,7 +816,7 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
     </div>
 
     <!-- ======================== PAGE 5 (Zeichen zählen) ======================== -->
-    <div v-else-if="page === 5" class="mx-auto w-full max-w-5xl flex flex-col items-center text-center">
+    <div v-else-if="page === 5" class="w-full">
       <div class="flex items-baseline gap-3">
         <span class="text-3xl font-semibold">5</span>
         <span class="text-base">(je 1 Fehlerpunkt)</span>
@@ -857,7 +857,7 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
     <div class="mt-8 flex gap-3">
       <Button @click="prevPage" v-if="page > 1">Zurück</Button>
       <Button @click="nextPage" v-if="page < MAX_PAGE">Weiter</Button>
-      <Button @click="finishTest" v-if="page === MAX_PAGE">Test beenden</Button>
+      <Button variant="destructive" @click="finishTest" v-if="page === MAX_PAGE">Test beenden</Button>
     </div>
   </div>
 </template>
