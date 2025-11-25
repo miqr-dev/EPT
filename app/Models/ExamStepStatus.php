@@ -41,17 +41,30 @@ class ExamStepStatus extends Model
     return $this->belongsTo(ExamStep::class, 'exam_step_id');
   }
 
+  public function getTotalDurationInSecondsAttribute()
+  {
+    $durationMinutes = $this->step->duration ?? $this->step->test->duration_minutes ?? 0;
+    return max(
+      0,
+      (int) $durationMinutes * 60 + (int) $this->extra_time * 60 + (int) $this->grace_period_seconds,
+    );
+  }
+
   public function getTimeRemainingAttribute()
   {
-    if ($this->status !== 'in_progress' || !$this->started_at) {
-      return null;
+    if ($this->status === 'paused') {
+      return max(0, (int) ($this->time_remaining_seconds ?? $this->total_duration_in_seconds));
     }
 
-    $durationInSeconds = ($this->step->test->duration_minutes ?? 0) * 60;
-    $extraTimeInSeconds = $this->grace_period_seconds ?? 0;
-    $totalDuration = $durationInSeconds + $extraTimeInSeconds;
-    $elapsedSeconds = now()->diffInSeconds($this->started_at);
+    if ($this->status === 'not_started') {
+      return $this->total_duration_in_seconds;
+    }
 
-    return max(0, $totalDuration - $elapsedSeconds);
+    if ($this->started_at) {
+      $endTime = $this->started_at->copy()->addSeconds($this->total_duration_in_seconds);
+      return max(0, now()->diffInSeconds($endTime, false));
+    }
+
+    return 0;
   }
 }

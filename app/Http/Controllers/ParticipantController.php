@@ -338,32 +338,37 @@ class ParticipantController extends Controller
     $results = $request->input('results');
 
     if ($results) {
-      $examStep = $examStepStatus->step;
-      if ($examStep && $examStep->test) {
-        $assignment = TestAssignment::firstOrCreate(
-          [
-            'participant_id' => $user->id,
-            'test_id' => $examStep->test->id,
-          ],
-          [
-            'status' => 'assigned',
-          ]
-        );
+        $examStep = $examStepStatus->step;
+        if ($examStep && $examStep->test) {
+            $assignment = TestAssignment::firstOrCreate(
+                [
+                    'participant_id' => $user->id,
+                    'test_id' => $examStep->test->id,
+                ],
+                [
+                    'status' => 'assigned',
+                ]
+            );
 
-        $exam = Exam::find($examStepStatus->exam_id);
-        $teacherId = $exam ? $exam->teacher_id : null;
+            $exam = Exam::find($examStepStatus->exam_id);
+            $teacherId = $exam ? $exam->teacher_id : null;
 
-        TestResult::updateOrCreate(
-          [
-            'assignment_id' => $assignment->id,
-          ],
-          [
-            'result_json' => $results,
-            'teacher_id' => $teacherId,
-          ]
-        );
-      }
+            TestResult::updateOrCreate(
+                [
+                    'assignment_id' => $assignment->id,
+                ],
+                [
+                    'result_json' => $results,
+                    'teacher_id' => $teacherId,
+                ]
+            );
+        }
     }
+
+    // Also update the time remaining
+    $examStepStatus->update([
+        'time_remaining_seconds' => $examStepStatus->time_remaining,
+    ]);
 
     return back(303);
   }
