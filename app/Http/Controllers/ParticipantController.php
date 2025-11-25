@@ -12,6 +12,7 @@ use App\Models\ExamParticipant;
 use App\Models\ExamStepStatus;
 use App\Models\TestAssignment;
 use App\Models\TestResult;
+use Carbon\Carbon;
 use Inertia\Inertia;
 
 class ParticipantController extends Controller
@@ -100,6 +101,7 @@ class ParticipantController extends Controller
     // Eager load all step statuses for this participant in this exam.
     $stepStatuses = ExamStepStatus::where('exam_id', $exam->id)
       ->where('participant_id', $user->id)
+      ->with('step')
       ->get()
       ->keyBy('exam_step_id');
 
@@ -114,6 +116,28 @@ class ParticipantController extends Controller
         ]);
         $stepStatuses[$step->id] = $newStatus;
       }
+    }
+
+    foreach ($stepStatuses as $status) {
+      $durationMinutes = $status->step->duration ?? $exam->steps->firstWhere('id', $status->exam_step_id)?->duration ?? 0;
+
+      $totalDurationSeconds = max(0, (int) $durationMinutes * 60
+        + (int) $status->extra_time * 60
+        + (int) $status->grace_period_seconds);
+
+      if ($status->status === 'paused') {
+        $timeRemaining = max(0, (int) ($status->time_remaining_seconds ?? $totalDurationSeconds));
+      } elseif ($status->status === 'not_started') {
+        $timeRemaining = $totalDurationSeconds;
+      } elseif ($status->started_at) {
+        $startTime = Carbon::parse($status->started_at);
+        $endTime = $startTime->copy()->addSeconds($totalDurationSeconds);
+        $timeRemaining = $startTime ? now()->diffInSeconds($endTime, false) : $totalDurationSeconds;
+      } else {
+        $timeRemaining = $totalDurationSeconds;
+      }
+
+      $status->time_remaining_seconds = max(0, (int) $timeRemaining);
     }
 
 

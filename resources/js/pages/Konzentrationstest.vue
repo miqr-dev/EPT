@@ -4,6 +4,9 @@ import { Head } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue'
+
+const props = defineProps<{ timeRemainingSeconds?: number | null }>()
 
 /* =========================================================
    NAV
@@ -625,6 +628,10 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
 <template>
 
   <Head title="628 Test" />
+
+  <div class="mb-4">
+    <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
+  </div>
 
   <!-- FULL WIDTH PAGE WRAPPER -->
   <div class="w-full max-w-none px-3 md:px-8">

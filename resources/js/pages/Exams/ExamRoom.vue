@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { cn } from '@/lib/utils';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 
 // Import test components
 import AVEM from '@/pages/AVEM.vue';
@@ -30,6 +31,7 @@ type StepStatusEntry = {
     status: StepStatus;
     force_finish_requested_at?: string | null;
     force_finish_deadline?: string | null;
+    time_remaining_seconds?: number | null;
     [key: string]: any;
 };
 
@@ -61,6 +63,7 @@ const activeTestComponent = shallowRef<unknown>(null);
 const isTestDialogOpen = ref(false);
 const activeStepId = ref<number | null>(null);
 const localPausedResults = ref<Record<string, unknown>>({});
+const activeTimeRemainingSeconds = ref<number | null>(null);
 const pausedTestResults = computed<Record<string, unknown>>(() => {
     const serverResults = (props.pausedTestResults ?? {}) as Record<string, unknown>;
     return {
@@ -68,6 +71,8 @@ const pausedTestResults = computed<Record<string, unknown>>(() => {
         ...serverResults,
     };
 });
+
+let countdownInterval: ReturnType<typeof setInterval> | null = null;
 
 const testComponents: Record<string, unknown> = {
     'BRT-A': BRTA,
@@ -188,6 +193,7 @@ function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
 
     activeStepId.value = step.id;
     activeTestComponent.value = component;
+    syncActiveTimeRemaining(step.id);
 
     const showDialog = () => {
         finishing.value = false;
@@ -246,12 +252,71 @@ const activeComponentProps = computed<Record<string, unknown>>(() => {
         return {};
     }
 
+    const baseProps: Record<string, unknown> = {
+        timeRemainingSeconds: activeTimeRemainingSeconds.value ?? null,
+    };
+
     if (testsWithPauseSupport.has(step.test.name) && activePausedTestResult.value) {
-        return { pausedTestResult: activePausedTestResult.value };
+        return { ...baseProps, pausedTestResult: activePausedTestResult.value };
     }
 
-    return {};
+    return baseProps;
 });
+
+watch(
+    () => activeStepId.value,
+    (stepId) => {
+        syncActiveTimeRemaining(typeof stepId === 'number' ? stepId : null);
+    },
+    { immediate: true },
+);
+
+watch(
+    () => isTestDialogOpen.value,
+    () => startCountdownIfNeeded(),
+);
+
+const stopCountdown = () => {
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+    }
+};
+
+const startCountdownIfNeeded = () => {
+    if (!isTestDialogOpen.value || typeof activeStepId.value !== 'number') {
+        stopCountdown();
+        return;
+    }
+
+    const status = stepStatuses.value[activeStepId.value];
+    if (!status || status.status !== 'in_progress') {
+        stopCountdown();
+        return;
+    }
+
+    if (countdownInterval) return;
+
+    countdownInterval = setInterval(() => {
+        if (activeTimeRemainingSeconds.value === null) return;
+        activeTimeRemainingSeconds.value = Math.max(0, activeTimeRemainingSeconds.value - 1);
+    }, 1000);
+};
+
+const syncActiveTimeRemaining = (stepId: number | null) => {
+    if (stepId === null) {
+        activeTimeRemainingSeconds.value = null;
+        stopCountdown();
+        return;
+    }
+
+    const status = stepStatuses.value[stepId];
+    activeTimeRemainingSeconds.value = typeof status?.time_remaining_seconds === 'number'
+        ? Math.max(0, Math.floor(status.time_remaining_seconds))
+        : null;
+
+    startCountdownIfNeeded();
+};
 
 function completeTest(results: any) {
     if (typeof activeStepId.value !== 'number') return;
@@ -293,6 +358,9 @@ function closeTestDialog({ resetActive = false }: { resetActive?: boolean } = {}
     }
 
     cleanupAfterTest();
+
+    stopCountdown();
+    activeTimeRemainingSeconds.value = null;
 
     if (resetActive) {
         const stepId = typeof activeStepId.value === 'number' ? activeStepId.value : null;
@@ -448,6 +516,7 @@ onMounted(() => {
 onUnmounted(() => {
     if (polling) clearInterval(polling);
     cleanupAfterTest();
+    stopCountdown();
 });
 
 let hasSyncedInitialStatuses = false;
@@ -458,6 +527,10 @@ watch(
         const previous = stepStatuses.value;
 
         stepStatuses.value = normalized;
+
+        if (typeof activeStepId.value === 'number') {
+            syncActiveTimeRemaining(activeStepId.value);
+        }
 
         const ids = new Set([
             ...Object.keys(previous),
@@ -628,17 +701,22 @@ watch(
                 <template #top-right>
                     <div class="absolute top-4 right-4 font-semibold">{{ userName }}</div>
                 </template>
-                <div class="h-full w-full">
-                    <KeepAlive>
-                        <component
-                            v-if="activeTestComponent"
-                            :is="activeTestComponent"
-                            :key="activeStepId ?? 'inactive'"
-                            v-bind="activeComponentProps"
-                            @complete="completeTest"
-                            @update:answers="activeTestAnswers = $event"
-                        />
-                    </KeepAlive>
+                <div class="h-full w-full flex flex-col gap-4">
+                    <div class="px-4 pt-4 sm:px-6">
+                        <TimeRemainingAlerts :time-remaining-seconds="activeTimeRemainingSeconds" />
+                    </div>
+                    <div class="flex-1">
+                        <KeepAlive>
+                            <component
+                                v-if="activeTestComponent"
+                                :is="activeTestComponent"
+                                :key="activeStepId ?? 'inactive'"
+                                v-bind="activeComponentProps"
+                                @complete="completeTest"
+                                @update:answers="activeTestAnswers = $event"
+                            />
+                        </KeepAlive>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>

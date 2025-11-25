@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
+import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 
 import { watch } from 'vue';
 
@@ -20,6 +21,7 @@ const props = defineProps<{
         answers: { number: number; answer: 'stimmt' | 'stimmtNicht' | null }[];
         blockIndex?: number;
     };
+    timeRemainingSeconds?: number | null;
 }>();
 
 const emit = defineEmits(['complete', 'update:answers']);
@@ -209,6 +211,9 @@ function finishTest() {
   <div class="p-4">
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">FPI-R</h1>
+    </div>
+    <div class="mb-4">
+      <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
     </div>
     <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
 

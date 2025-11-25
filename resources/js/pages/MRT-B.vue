@@ -13,6 +13,7 @@ import {
 import MrtBResult from '@/components/MrtBResult.vue';
 import { useMrtB } from '@/composables/useMrtB';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
+import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 
 const { mrtQuestions, calculateScores } = useMrtB();
 
@@ -51,6 +52,7 @@ const props = defineProps<{
         answers: { user_answer: string | null; time_seconds: number }[];
         currentQuestionIndex?: number;
     };
+    timeRemainingSeconds?: number | null;
 }>();
 
 const emit = defineEmits(['complete', 'update:answers']);
@@ -295,6 +297,9 @@ const startTest = () => {
   <div class="p-4">
     <div class="flex justify-between items-center mb-4">
       <h1 class="text-2xl font-bold">MRT-B</h1>
+    </div>
+    <div class="mb-4">
+      <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
     </div>
     <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
       <div class="flex-1 flex flex-col gap-4">

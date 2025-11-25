@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BIT2_QUESTIONS } from '@/pages/Questions/BIT2Questions';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
+import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 import { Head } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
@@ -11,6 +12,7 @@ const props = defineProps<{
     answers: { number: number; answer: number | null }[];
     pageIndex?: number;
   };
+  timeRemainingSeconds?: number | null;
 }>();
 
 const emit = defineEmits(['complete', 'update:answers']);
@@ -108,6 +110,9 @@ function confirmEnd() {
   <div class="p-4">
     <div class="mb-4 flex items-center justify-between">
       <h1 class="text-2xl font-bold">BIT-2</h1>
+    </div>
+    <div class="mb-4">
+      <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
     </div>
     <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4">
       <div class="flex flex-1 flex-col gap-4">

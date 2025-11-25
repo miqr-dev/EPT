@@ -7,6 +7,8 @@ const props = defineProps<{
   exam: any
 }>()
 
+const MAX_EXTRA_MINUTES = 30
+
 const formatTime = (seconds?: number) => {
   if (typeof seconds !== 'number' || seconds < 0) return '00:00'
   const whole = Math.floor(seconds)
@@ -43,6 +45,8 @@ const getParticipantStatusFromExam = (exam: any, participant: any) => {
 
 const getParticipantStatus = (participant: any) =>
   getParticipantStatusFromExam(localExam.value, participant)
+
+const extraTimeState = ref<Record<number, { expanded: boolean; minutes: string; error: string | null; loading: boolean }>>({})
 
 let timerInterval: any = null
 
@@ -147,6 +151,81 @@ const setParticipantAction = (participant: any, action: 'pause' | 'resume' | 'fi
     }),
     { action },
     { preserveScroll: true, preserveState: true },
+  )
+}
+
+const getExtraTimeState = (participantId: number) => extraTimeState.value[participantId]
+
+const canAddExtraTime = (participant: any) => {
+  const status = getParticipantStatus(participant)
+  if (!status) return false
+  if (localExam.value?.status !== 'in_progress') return false
+  return !['completed', 'paused', 'broken'].includes(status.status)
+}
+
+const toggleExtraTime = (participant: any) => {
+  const participantId = getParticipantUserId(participant)
+  if (!participantId) return
+
+  const current = getExtraTimeState(participantId) ?? { expanded: false, minutes: '', error: null, loading: false }
+  extraTimeState.value = {
+    ...extraTimeState.value,
+    [participantId]: { ...current, expanded: !current.expanded, error: null },
+  }
+}
+
+const submitExtraTime = (participant: any) => {
+  const participantId = getParticipantUserId(participant)
+  const status = getParticipantStatus(participant)
+
+  if (!participantId || !status?.id) return
+
+  const current = getExtraTimeState(participantId) ?? { expanded: true, minutes: '', error: null, loading: false }
+  const minutes = parseInt(current.minutes, 10)
+
+  if (Number.isNaN(minutes) || minutes <= 0) {
+    extraTimeState.value[participantId] = { ...current, error: 'Bitte geben Sie eine gültige Minutenanzahl ein.' }
+    return
+  }
+
+  if (minutes > MAX_EXTRA_MINUTES) {
+    extraTimeState.value[participantId] = {
+      ...current,
+      error: `Es können maximal ${MAX_EXTRA_MINUTES} Minuten hinzugefügt werden.`,
+    }
+    return
+  }
+
+  extraTimeState.value[participantId] = { ...current, error: null, loading: true }
+
+  router.post(
+    route('exam-step-status.add-time', { status: status.id }),
+    { minutes },
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        const updatedStatus = getParticipantStatus(participant)
+        if (updatedStatus && typeof updatedStatus.time_remaining === 'number') {
+          updatedStatus.time_remaining += minutes * 60
+        }
+
+        extraTimeState.value[participantId] = { expanded: false, minutes: '', error: null, loading: false }
+      },
+      onError: (errors) => {
+        const errorMessage = (errors && (errors as Record<string, string>).minutes) || null
+        extraTimeState.value[participantId] = {
+          ...current,
+          loading: false,
+          error: errorMessage ?? 'Zeit konnte nicht hinzugefügt werden.',
+        }
+      },
+      onFinish: () => {
+        const existing = getExtraTimeState(participantId)
+        if (existing) {
+          extraTimeState.value[participantId] = { ...existing, loading: false }
+        }
+      },
+    },
   )
 }
 
@@ -265,19 +344,43 @@ const canForceFinishParticipant = (participant: any) => {
               {{ formatTime(getParticipantStatus(participant)?.time_remaining) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-              <div class="flex justify-end gap-2">
-                <Button v-if="canPauseParticipant(participant)"
-                  variant="secondary" size="sm" @click="setParticipantAction(participant, 'pause')">
-                  Pausieren
-                </Button>
-                <Button v-if="canResumeParticipant(participant)"
-                  size="sm" @click="setParticipantAction(participant, 'resume')">
-                  Fortsetzen
-                </Button>
-                <Button v-if="canForceFinishParticipant(participant)"
-                  variant="destructive" size="sm" @click="setParticipantAction(participant, 'finish')">
-                  Test beenden
-                </Button>
+              <div class="flex flex-col items-end gap-2">
+                <div class="flex justify-end gap-2">
+                  <Button v-if="canPauseParticipant(participant)"
+                    variant="secondary" size="sm" @click="setParticipantAction(participant, 'pause')">
+                    Pausieren
+                  </Button>
+                  <Button v-if="canResumeParticipant(participant)"
+                    size="sm" @click="setParticipantAction(participant, 'resume')">
+                    Fortsetzen
+                  </Button>
+                  <Button v-if="canForceFinishParticipant(participant)"
+                    variant="destructive" size="sm" @click="setParticipantAction(participant, 'finish')">
+                    Test beenden
+                  </Button>
+                </div>
+                <div v-if="canAddExtraTime(participant)" class="flex flex-col items-end gap-1">
+                  <div class="flex items-center gap-2">
+                    <Button variant="outline" size="sm" @click="toggleExtraTime(participant)">
+                      + Zeit
+                    </Button>
+                    <div v-if="getExtraTimeState(getParticipantUserId(participant))?.expanded"
+                      class="flex items-center gap-2">
+                      <input type="number" min="1" :max="MAX_EXTRA_MINUTES"
+                        class="w-20 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 focus:border-blue-500 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                        v-model="extraTimeState[getParticipantUserId(participant)]?.minutes" />
+                      <Button size="sm"
+                        :disabled="getExtraTimeState(getParticipantUserId(participant))?.loading"
+                        @click="submitExtraTime(participant)">
+                        Hinzufügen
+                      </Button>
+                    </div>
+                  </div>
+                  <p v-if="getExtraTimeState(getParticipantUserId(participant))?.error"
+                    class="text-xs text-red-600 dark:text-red-400">
+                    {{ getExtraTimeState(getParticipantUserId(participant))?.error }}
+                  </p>
+                </div>
               </div>
             </td>
           </tr>

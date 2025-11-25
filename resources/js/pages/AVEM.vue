@@ -7,8 +7,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Head } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import { Info } from 'lucide-vue-next'
+import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue'
 
 const emit = defineEmits(['complete'])
+const props = defineProps<{ timeRemainingSeconds?: number | null }>()
 
 const showTest = ref(false)
 const answers = ref<Record<number, number | null>>({})
@@ -98,6 +100,9 @@ const borderClass = (qnum: number) =>
   <div class="p-4">
     <div class="mb-4 flex items-center justify-between">
       <h1 class="text-2xl font-bold">AVEM</h1>
+    </div>
+    <div class="mb-4">
+      <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
     </div>
 
     <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4">
