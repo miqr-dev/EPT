@@ -20,10 +20,10 @@ const prevPage = () => {
 
 const finishTest = () => {
   const unanswered = page1Inputs.value.some(ans => ans === '') ||
-                     page2Answers.value.some(ans => ans === '') ||
-                     copyCounts.value.some(ans => ans === '') ||
-                     page4Answers.value.some(ans => ans === '') ||
-                     page5TickSums.value.some(ans => ans === '')
+    page2Answers.value.some(ans => ans === '') ||
+    copyCounts.value.some(ans => ans === '') ||
+    page4Answers.value.some(ans => ans === '') ||
+    page5TickSums.value.some(ans => ans === '')
 
   const proceed = () => {
     const results = {
@@ -799,8 +799,16 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
 
     <!-- ======================== PAGE 4 (6er zählen) ======================== -->
     <div v-else-if="page === 4">
-      <h1 class="text-3xl font-bold mb-4">4</h1>
-      <p class="mb-3 text-[18px]">Zählen Sie die Anzahl der 6er in jeder Zeile.</p>
+      <div class="flex items-baseline gap-3">
+        <span class="text-3xl font-semibold">4</span>
+        <span class="text-base">(je 1 Fehlerpunkt)</span>
+      </div>
+      <div class="h-[3px] bg-black my-2"></div>
+
+      <p class="text-[18px] leading-snug">
+      Bei den folgenden 14 Zahlenreihen müssen jeweils alle 6-en pro Zahlenreihe gezählt werden.</p>
+      <p class="text-[18px] leading-snug mb-10">
+      Bitte notieren Sie in den Lösungskästchen die jeweilige Anzahl an 6-en pro Zeile!</p>
       <div v-for="(row, i) in page4Rows" :key="i" class="mb-3 flex items-center gap-3">
         <div class="font-mono tracking-wider text-[18px] whitespace-nowrap">
           <span v-for="(ch, idx) in getPage4Chars(i)" :key="idx" @click="togglePage4Char(i, idx)"
@@ -812,7 +820,10 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
 
     <!-- ======================== PAGE 5 (Zeichen zählen) ======================== -->
     <div v-else-if="page === 5">
-      <h1 class="text-3xl font-bold mb-4">5</h1>
+      <div class="flex items-baseline gap-3">
+        <span class="text-3xl font-semibold">5</span>
+        <span class="text-base">(je 1 Fehlerpunkt)</span>
+      </div>
       <div class="h-[3px] bg-black my-2"></div>
 
       <p class="text-[18px] leading-snug mb-10">
