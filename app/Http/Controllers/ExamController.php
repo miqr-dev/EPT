@@ -221,9 +221,47 @@ class ExamController extends Controller
       'status' => 'required|in:not_started,in_progress,paused,completed',
     ]);
 
-    $exam->update(['status' => $data['status']]);
+    $updates = ['status' => $data['status']];
+
+    if ($data['status'] !== 'in_progress') {
+      $updates['pdf_visible'] = false;
+    }
+
+    $exam->update($updates);
 
     return back(303)->with('success', 'Exam status updated.');
+  }
+
+  public function showPdf(Request $request, Exam $exam)
+  {
+    $data = $request->validate([
+      'page' => 'nullable|integer|min:1',
+    ]);
+
+    $exam->update([
+      'pdf_visible' => true,
+      'pdf_page' => $data['page'] ?? $exam->pdf_page ?? 1,
+    ]);
+
+    return back(303)->with('success', 'PDF für Teilnehmende angezeigt.');
+  }
+
+  public function hidePdf(Exam $exam)
+  {
+    $exam->update(['pdf_visible' => false]);
+
+    return back(303)->with('success', 'PDF ausgeblendet.');
+  }
+
+  public function setPdfPage(Request $request, Exam $exam)
+  {
+    $data = $request->validate([
+      'page' => 'required|integer|min:1',
+    ]);
+
+    $exam->update(['pdf_page' => $data['page']]);
+
+    return back(303)->with('success', 'PDF-Seite aktualisiert.');
   }
 
   public function setStep(Request $request, Exam $exam)

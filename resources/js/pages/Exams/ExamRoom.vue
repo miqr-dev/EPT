@@ -69,6 +69,14 @@ const pausedTestResults = computed<Record<string, unknown>>(() => {
     };
 });
 
+const pdfVisible = computed(() => props.exam.status === 'in_progress' && props.exam.pdf_visible);
+const pdfPage = computed(() => props.exam.pdf_page ?? 1);
+const pdfSrc = computed(() => {
+    if (!pdfVisible.value) return '';
+
+    return `/my-exam/pdf#page=${pdfPage.value}`;
+});
+
 const testComponents: Record<string, unknown> = {
     'BRT-A': BRTA,
     'BRT-B': BRTB,
@@ -546,6 +554,21 @@ watch(
 
             <!-- Exam Steps Table -->
             <div v-else class="space-y-4">
+                <div v-if="pdfVisible" class="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-4 shadow-sm dark:border-blue-800 dark:bg-blue-950/40">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xl font-semibold text-blue-900 dark:text-blue-100">Ihre Unterlagen</h2>
+                        <p class="text-xs text-blue-800 dark:text-blue-200">Seite {{ pdfPage }}</p>
+                    </div>
+                    <p class="text-sm text-blue-900 dark:text-blue-100">Der Prüfer steuert, welche Seite angezeigt wird.</p>
+                    <div class="h-[70vh] w-full overflow-hidden rounded border border-blue-200 bg-white shadow-inner dark:border-blue-800 dark:bg-gray-900">
+                        <iframe
+                            :key="pdfSrc"
+                            :src="pdfSrc"
+                            class="h-full w-full"
+                            title="Teilnehmer-PDF"
+                        ></iframe>
+                    </div>
+                </div>
                 <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">Testübersicht</h2>
                 <div
                     v-if="hasPausedStep"

@@ -49,6 +49,9 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::post('/exams/{exam}/set-step', [ExamController::class, 'setStep'])->name('exams.set-step');
     Route::post('/exams/{exam}/participants/{participant}/step-status', [ExamController::class, 'setParticipantStepStatus'])
         ->name('exams.participants.set-step-status');
+    Route::post('/exams/{exam}/pdf/show', [ExamController::class, 'showPdf'])->name('exams.pdf.show');
+    Route::post('/exams/{exam}/pdf/hide', [ExamController::class, 'hidePdf'])->name('exams.pdf.hide');
+    Route::post('/exams/{exam}/pdf/page', [ExamController::class, 'setPdfPage'])->name('exams.pdf.page');
 
     Route::post('/exams', [ExamController::class, 'store'])->name('exams.store');
     Route::post('/exams/store-with-participants', [ExamController::class, 'storeWithParticipants'])->name('exams.storeWithParticipants');
@@ -56,6 +59,8 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('/api/active-exams', [ExamController::class, 'getActiveExams'])->name('api.active-exams');
     Route::get('/participants', [ParticipantController::class, 'list'])->name('participants.list');
     Route::put('/test-results/{testResult}', [TestResultController::class, 'update'])->name('test-results.update');
+    Route::get('/my-exam/pdf', [ParticipantController::class, 'streamPdf'])->name('my-exam.pdf');
+    Route::get('/participants/{participant}/pdf', [ParticipantController::class, 'streamPdf'])->name('participants.pdf');
 });
 
 Route::get('/login', function () {

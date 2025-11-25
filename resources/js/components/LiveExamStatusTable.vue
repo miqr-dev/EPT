@@ -17,6 +17,15 @@ const formatTime = (seconds?: number) => {
 
 // We need a local copy of the exam to update the timer
 const localExam = ref(JSON.parse(JSON.stringify(props.exam)))
+const pdfPage = ref<number>(props.exam.pdf_page ?? 1)
+
+watch(
+  () => props.exam,
+  (exam) => {
+    pdfPage.value = exam.pdf_page ?? 1
+  },
+  { deep: true },
+)
 
 const stepRows = computed(() => {
   const steps = Array.isArray(localExam.value?.steps) ? localExam.value.steps : []
@@ -172,6 +181,26 @@ const canForceFinishParticipant = (participant: any) => {
   return !status.force_finish_requested_at
 }
 
+const showPdf = () => {
+  router.post(
+    route('exams.pdf.show', { exam: props.exam.id }),
+    { page: pdfPage.value },
+    { preserveScroll: true },
+  )
+}
+
+const hidePdf = () => {
+  router.post(route('exams.pdf.hide', { exam: props.exam.id }), {}, { preserveScroll: true })
+}
+
+const updatePdfPage = () => {
+  router.post(
+    route('exams.pdf.page', { exam: props.exam.id }),
+    { page: pdfPage.value },
+    { preserveScroll: true },
+  )
+}
+
 </script>
 
 <template>
@@ -208,6 +237,34 @@ const canForceFinishParticipant = (participant: any) => {
             </Button>
           </div>
         </template>
+      </div>
+    </div>
+    <div class="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/40">
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <p class="text-sm font-semibold text-blue-900 dark:text-blue-100">Teilnehmer-PDF anzeigen</p>
+          <p class="text-xs text-blue-800 dark:text-blue-200">Der Name muss dem Schema Nachname-Vorname.pdf entsprechen.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="text-xs font-medium text-blue-900 dark:text-blue-100" for="pdf-page">Seite</label>
+          <input
+            id="pdf-page"
+            v-model.number="pdfPage"
+            min="1"
+            type="number"
+            class="w-20 rounded border border-blue-200 px-2 py-1 text-sm shadow-sm focus:border-blue-400 focus:outline-none dark:border-blue-700 dark:bg-blue-900 dark:text-blue-100"
+            :disabled="exam.status !== 'in_progress'"
+          />
+          <Button size="sm" variant="outline" @click="updatePdfPage" :disabled="exam.status !== 'in_progress'">
+            Seite aktualisieren
+          </Button>
+          <Button size="sm" @click="showPdf" :disabled="exam.status !== 'in_progress'">
+            PDF öffnen
+          </Button>
+          <Button size="sm" variant="secondary" @click="hidePdf">
+            PDF ausblenden
+          </Button>
+        </div>
       </div>
     </div>
     <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg">
