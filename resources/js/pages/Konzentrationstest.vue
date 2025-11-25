@@ -655,12 +655,11 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
       </p>
 
       <ul class="list-disc pl-8 space-y-6">
-        <li v-for="(row, i) in page1Series" :key="i" class="grid grid-cols-[1fr_auto] items-center gap-4">
-          <div class="flex flex-wrap items-center">
-            <span class="whitespace-pre text-[18px]">{{ row.join(' . ') }} . ?</span>
-          </div>
-          <input v-model="page1Inputs[i]" class="answer-box justify-self-end w-12 h-8 text-[18px]"
-            inputmode="numeric" />
+        <li v-for="(row, i) in page1Series" :key="i" class="flex items-center gap-2">
+
+          <span class="whitespace-pre text-[18px]">{{ row.join(' . ') }} . ?</span>
+
+          <input v-model="page1Inputs[i]" class="answer-box w-12 h-8 text-[18px]" inputmode="numeric" />
         </li>
       </ul>
     </div>
@@ -813,9 +812,9 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
       <div class="h-[3px] bg-black my-2"></div>
 
       <p class="text-[18px] leading-snug">
-      Bei den folgenden 14 Zahlenreihen müssen jeweils alle 6-en pro Zahlenreihe gezählt werden.</p>
+        Bei den folgenden 14 Zahlenreihen müssen jeweils alle 6-en pro Zahlenreihe gezählt werden.</p>
       <p class="text-[18px] leading-snug mb-10">
-      Bitte notieren Sie in den Lösungskästchen die jeweilige Anzahl an 6-en pro Zeile!</p>
+        Bitte notieren Sie in den Lösungskästchen die jeweilige Anzahl an 6-en pro Zeile!</p>
       <div v-for="(row, i) in page4Rows" :key="i" class="mb-3 flex items-center gap-3">
         <div class="font-mono tracking-wider text-[18px] whitespace-nowrap">
           <span v-for="(ch, idx) in getPage4Chars(i)" :key="idx" @click="togglePage4Char(i, idx)"
@@ -839,15 +838,14 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
       </p>
 
       <div class="space-y-4">
-        <div v-for="(row, r) in page5TickRows" :key="'p5r' + r"
-          class="grid grid-cols-[24px_minmax(0,1fr)_auto] items-start gap-3 mb-12">
+        <div v-for="(row, r) in page5TickRows" :key="'p5r' + r" class="flex flex-wrap items-start gap-3 mb-12">
           <!-- left label -->
-          <div class="row-label text-[22px] pr-1">
+          <div class="row-label text-[22px] pr-1 shrink-0">
             {{ rowLabel(r) }})
           </div>
 
           <!-- the letters with ticks -->
-          <div class="tick-line text-[22px] leading-[1.35]">
+          <div class="tick-line text-[22px] leading-[1.35] inline-block">
             <span v-for="(t, i) in row" :key="i" class="tk inline-block cursor-pointer select-none"
               :class="[{ marked: page5TickMarks[r][i] }, hasGapAfter(i) ? 'gap' : '']" :data-top="t.top ?? 0"
               :data-bot="t.bot ?? 0" @click="toggleTick(r, i)">
@@ -855,7 +853,7 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
             </span>
           </div>
           <!-- right input -->
-          <Input v-model="page5TickSums[r]" class="inline w-16 h-9 text-[18px]" placeholder="" />
+          <Input v-model="page5TickSums[r]" class="inline w-16 h-9 text-[18px] border border-gray-400 bg-white" placeholder="" />
         </div>
       </div>
 
@@ -863,10 +861,10 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
 
 
     <!-- NAV -->
-    <div class="mt-8 flex gap-3">
+    <div class="my-8 flex gap-3">
       <Button @click="prevPage" v-if="page > 1">Zurück</Button>
       <Button @click="nextPage" v-if="page < MAX_PAGE">Weiter</Button>
-      <Button @click="finishTest" v-if="page === MAX_PAGE">Test beenden</Button>
+      <Button variant="destructive" @click="finishTest" v-if="page === MAX_PAGE">Test beenden</Button>
     </div>
   </div>
 </template>
