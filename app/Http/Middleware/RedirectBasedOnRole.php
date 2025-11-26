@@ -70,6 +70,7 @@ class RedirectBasedOnRole
         'participants.list',
         'test-results.download',
         'test-results.pdf',
+        'exam-step-status.add-time',
       ];
 
       if ($user->role === 'participant') {
@@ -88,7 +89,7 @@ class RedirectBasedOnRole
             'my-exam.start-step',
             'my-exam.complete-step',
             'participant.no-exam',
-            'my-exam.pause-step',
+            'my-exam.pause-step'
           ]);
         }
 
