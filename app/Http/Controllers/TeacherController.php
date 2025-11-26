@@ -31,43 +31,8 @@ class TeacherController extends Controller
       ->orderBy('created_at', 'desc')
       ->get();
 
-    // New: Fetch all exams and calculate time remaining for active ones
-    $exams = Exam::with(['city', 'teacher', 'participants.user', 'steps.test', 'participants.stepStatuses', 'currentStep.test'])->get();
-
-    foreach ($exams as $exam) {
-      if (!in_array($exam->status, ['in_progress', 'paused'])) {
-        continue;
-      }
-
-      if ($exam->currentStep) {
-        $duration = $exam->currentStep->duration; // duration in minutes
-        foreach ($exam->participants as $participant) {
-          $status = $participant->stepStatuses->where('exam_step_id', $exam->current_exam_step_id)->first();
-
-          if (!$status) {
-            continue;
-          }
-
-          $totalDurationSeconds = max(0, ($duration ?? 0) * 60
-            + (int) $status->extra_time * 60
-            + (int) $status->grace_period_seconds);
-
-          if ($status->status === 'paused') {
-            $status->time_remaining = $status->time_remaining_seconds ?? $totalDurationSeconds;
-          } elseif ($status->status === 'not_started') {
-            $status->time_remaining = $totalDurationSeconds;
-          } elseif ($status->started_at) {
-            $startTime = Carbon::parse($status->started_at);
-            $endTime = $startTime->copy()->addSeconds($totalDurationSeconds);
-            $status->time_remaining = now()->diffInSeconds($endTime, false);
-          }
-
-          if (isset($status->time_remaining)) {
-            $status->time_remaining = max(0, (int) $status->time_remaining);
-          }
-        }
-      }
-    }
+    // New: Fetch all exams
+    $exams = Exam::with(['city', 'teacher', 'participants.user', 'steps.test'])->get();
 
     $tests = Test::all();
 

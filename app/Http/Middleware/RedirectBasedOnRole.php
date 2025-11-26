@@ -70,6 +70,7 @@ class RedirectBasedOnRole
         'participants.list',
         'test-results.download',
         'test-results.pdf',
+        'exam-step-status.add-time',
       ];
 
       if ($user->role === 'participant') {
