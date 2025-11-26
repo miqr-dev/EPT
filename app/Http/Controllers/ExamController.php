@@ -288,6 +288,10 @@ class ExamController extends Controller
             $status->time_remaining = $status->time_remaining_seconds ?? $totalDurationSeconds;
           } elseif ($status->status === 'not_started') {
             $status->time_remaining = $totalDurationSeconds;
+          } elseif (!is_null($status->time_remaining_seconds)) {
+            $lastUpdated = $status->updated_at ?? $status->created_at ?? now();
+            $elapsedSinceUpdate = now()->diffInSeconds($lastUpdated, false);
+            $status->time_remaining = ($status->time_remaining_seconds ?? $totalDurationSeconds) - $elapsedSinceUpdate;
           } elseif ($status->started_at) {
             $startTime = Carbon::parse($status->started_at);
             $endTime = $startTime->copy()->addSeconds($totalDurationSeconds);
