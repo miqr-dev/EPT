@@ -32,7 +32,7 @@ class TeacherController extends Controller
       ->get();
 
     // New: Fetch all exams
-    $exams = Exam::with(['city', 'teacher', 'participants.user', 'steps.test'])->get();
+    $exams = Exam::with(['city', 'teacher', 'participants.user', 'steps.test', 'participants.stepStatuses'])->get();
 
     $tests = Test::all();
 
