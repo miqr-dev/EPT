@@ -99,7 +99,7 @@ watch(
                   : existingStatus.time_remaining
               updatedStatus.time_remaining =
                 existingStatus.time_remaining > 0
-                  ? Math.min(newTime, existingStatus.time_remaining)
+                  ? Math.max(newTime, existingStatus.time_remaining)
                   : newTime
             }
             if (updatedStatus.status === 'paused') {

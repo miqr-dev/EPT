@@ -19,12 +19,24 @@ const { showFiveMinuteBanner, showOneMinuteBanner } = useTimeRemainingWarnings(n
 </script>
 
 <template>
-  <div class="space-y-2">
-    <TimeRemainingBanner v-if="showFiveMinuteBanner" tone="success">
-      Noch 5 Minuten verbleiben.
-    </TimeRemainingBanner>
-    <TimeRemainingBanner v-if="showOneMinuteBanner" tone="warning">
-      Letzte Minute! Bitte schließen Sie den Test ab.
-    </TimeRemainingBanner>
-  </div>
+  <Teleport to="body">
+    <div class="fixed inset-x-0 top-4 z-50 flex justify-center px-4">
+      <div class="pointer-events-none w-full max-w-3xl space-y-2">
+        <TimeRemainingBanner
+          v-if="showOneMinuteBanner"
+          tone="warning"
+          class="pointer-events-auto"
+        >
+          Letzte Minute! Bitte schließen Sie den Test ab.
+        </TimeRemainingBanner>
+        <TimeRemainingBanner
+          v-else-if="showFiveMinuteBanner"
+          tone="success"
+          class="pointer-events-auto"
+        >
+          Noch 5 Minuten verbleiben.
+        </TimeRemainingBanner>
+      </div>
+    </div>
+  </Teleport>
 </template>
