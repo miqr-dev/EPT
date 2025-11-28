@@ -3,8 +3,6 @@ import { ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import TestResultModal from '@/components/TestResultModal.vue';
 
 defineProps<{
@@ -40,30 +38,21 @@ function closeModal() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>E-Mail</TableHead>
                 <TableHead>Tests</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow v-for="participant in participants" :key="participant.id">
                 <TableCell>{{ participant.name }}</TableCell>
-                <TableCell>{{ participant.email }}</TableCell>
                 <TableCell>
                   <div v-if="participant.test_assignments.length > 0">
-                    <div v-for="assignment in participant.test_assignments" :key="assignment.id" class="mb-2">
-                      <div class="flex items-center justify-between">
-                        <div>
-                          <p class="font-semibold">{{ assignment.test.name }}</p>
-                          <Badge :variant="assignment.status === 'completed' ? 'default' : 'secondary'">
-                            {{ assignment.status }}
-                          </Badge>
-                        </div>
-                        <div v-if="assignment.results.length > 0">
-                          <Button @click="viewTestResult(assignment, participant)" size="sm">
-                            Ergebnisse anzeigen
-                          </Button>
-                        </div>
-                      </div>
+                    <div class="flex flex-wrap gap-3">
+                      <button v-for="assignment in participant.test_assignments" :key="assignment.id"
+                        class="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-400"
+                        :disabled="assignment.results.length === 0"
+                        @click="assignment.results.length > 0 && viewTestResult(assignment, participant)">
+                        {{ assignment.test.name }}
+                      </button>
                     </div>
                   </div>
                   <div v-else>
