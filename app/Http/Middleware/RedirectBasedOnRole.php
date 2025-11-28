@@ -39,7 +39,8 @@ class RedirectBasedOnRole
         'participant',
         'participant.onboarding',
         'participant.onboarding.save',
-        'logout'
+        'logout',
+        'my.pdf'
       ];
 
       // Allowed routes for teachers/admins
