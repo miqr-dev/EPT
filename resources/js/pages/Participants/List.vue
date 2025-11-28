@@ -90,8 +90,14 @@ function closeModal() {
           <div v-if="participants.links.length > 3" class="mt-6 flex justify-center">
             <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
               <template v-for="(link, key) in participants.links" :key="key">
+<<<<<<< HEAD
                 <Link
                   :href="link.url!"
+=======
+                <component
+                  :is="link.url ? Link : 'span'"
+                  v-bind="link.url ? { href: link.url } : {}"
+>>>>>>> codex/update-participant-view-to-use-table-layout-4l9gzo
                   class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
                   :class="{
                     'z-10 bg-indigo-50 border-indigo-500 text-indigo-600': link.active,
@@ -99,11 +105,20 @@ function closeModal() {
                     'rounded-l-md': key === 0,
                     'rounded-r-md': key === participants.links.length - 1,
                     'hidden md:inline-flex': !(link.active || key === 0 || key === participants.links.length - 1 || (link.label.includes('Previous') || link.label.includes('Next'))),
+<<<<<<< HEAD
                   }"
                   :disabled="!link.url"
                 >
                   <span v-html="link.label" />
                 </Link>
+=======
+                    'cursor-default text-gray-400': !link.url,
+                  }"
+                  :aria-disabled="!link.url"
+                >
+                  <span v-html="link.label" />
+                </component>
+>>>>>>> codex/update-participant-view-to-use-table-layout-4l9gzo
               </template>
             </nav>
           </div>
