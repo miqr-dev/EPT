@@ -31,8 +31,11 @@ class TeacherController extends Controller
       ->orderBy('created_at', 'desc')
       ->get();
 
-    // New: Fetch all exams and calculate time remaining for active ones
-    $exams = Exam::with(['city', 'teacher', 'participants.user', 'steps.test', 'participants.stepStatuses', 'currentStep.test'])->get();
+    // New: Fetch exams from the teacher's city created within the last 30 days
+    $exams = Exam::with(['city', 'teacher', 'participants.user', 'steps.test', 'participants.stepStatuses', 'currentStep.test'])
+      ->where('created_at', '>=', Carbon::now()->subDays(30))
+      ->where('city_id', $cityId)
+      ->get();
 
     foreach ($exams as $exam) {
       if (!in_array($exam->status, ['in_progress', 'paused'])) {
