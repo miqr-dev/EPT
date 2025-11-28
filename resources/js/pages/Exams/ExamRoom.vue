@@ -46,6 +46,7 @@ const props = defineProps<{
     id: number;
     name: string;
     status: ExamStatus;
+    contract_view_enabled?: boolean;
     steps: ExamStepInfo[];
     current_step?: {
       id: number;
@@ -62,6 +63,7 @@ const userName = computed(() => page.props.auth?.user?.name);
 const activeTestComponent = shallowRef<unknown>(null);
 const isTestDialogOpen = ref(false);
 const activeStepId = ref<number | null>(null);
+const isContractDialogOpen = ref(false);
 const localPausedResults = ref<Record<string, unknown>>({});
 const activeTimeRemainingSeconds = ref<number | null>(null);
 const pausedTestResults = computed<Record<string, unknown>>(() => {
@@ -71,6 +73,10 @@ const pausedTestResults = computed<Record<string, unknown>>(() => {
     ...serverResults,
   };
 });
+const contractSrc = computed(
+  () => `${route('my.pdf')}#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&view=FitH`,
+);
+const isContractAvailable = computed(() => !!props.exam.contract_view_enabled);
 
 let countdownInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -164,6 +170,22 @@ function getStepActionLabel(stepId: number) {
   }
 
   return 'Test starten';
+}
+
+const handleContractHotkeys = (event: KeyboardEvent) => {
+  const key = event.key.toLowerCase();
+  if ((event.ctrlKey || event.metaKey) && (key === 'p' || key === 's')) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+};
+
+function openContract() {
+  isContractDialogOpen.value = true;
+}
+
+function closeContract() {
+  isContractDialogOpen.value = false;
 }
 
 function isStepActionDisabled(step: ExamStepInfo) {
@@ -517,6 +539,7 @@ onUnmounted(() => {
   if (polling) clearInterval(polling);
   cleanupAfterTest();
   stopCountdown();
+  window.removeEventListener('keydown', handleContractHotkeys, true);
 });
 
 let hasSyncedInitialStatuses = false;
@@ -598,6 +621,24 @@ watch(
   },
   { immediate: true },
 );
+
+watch(isContractDialogOpen, (isOpen) => {
+  if (isOpen) {
+    window.addEventListener('keydown', handleContractHotkeys, true);
+  } else {
+    window.removeEventListener('keydown', handleContractHotkeys, true);
+  }
+});
+
+watch(
+  () => props.exam.contract_view_enabled,
+  (enabled) => {
+    if (!enabled) {
+      isContractDialogOpen.value = false;
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -606,9 +647,8 @@ watch(
   <div class="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
     <div class="w-full max-w-2xl space-y-6 rounded-lg bg-white p-8 shadow-md dark:bg-gray-800">
       <h1 class="text-center text-2xl font-bold text-gray-800 dark:text-gray-100">{{ exam.name }}</h1>
-
-      <div class="w-full h-[80vh]">
-        <iframe :src="route('my.pdf')" class="w-full h-full boder rounded-lg" />
+      <div v-if="isContractAvailable" class="flex justify-end">
+        <Button variant="outline" @click="openContract">Vertrag anzeigen</Button>
       </div>
       <!-- General Status Messages -->
       <div v-if="exam.status === 'not_started'" class="text-center">
@@ -686,6 +726,29 @@ watch(
         </div>
       </div>
     </div>
+    <Dialog v-model:open="isContractDialogOpen">
+      <DialogContent
+        class="inset-0 top-0 left-0 h-screen w-screen max-w-none translate-x-0 translate-y-0 overflow-hidden rounded-none border-none bg-white p-0 text-black sm:max-w-none dark:bg-gray-900 dark:text-white"
+        @contextmenu.prevent
+      >
+        <DialogHeader class="sr-only">
+          <DialogTitle>Vertragsansicht</DialogTitle>
+          <DialogDescription>Vertragsdetails im Vollbild anzeigen.</DialogDescription>
+        </DialogHeader>
+        <div class="absolute top-4 left-4 flex items-center gap-2">
+          <Button variant="ghost" size="sm" @click="closeContract">✕</Button>
+          <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Vertrag</span>
+        </div>
+        <div class="h-full w-full pt-12">
+          <iframe
+            :src="contractSrc"
+            class="h-full w-full border-0"
+            allowfullscreen
+            sandbox="allow-same-origin allow-scripts"
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
     <Dialog v-model:open="isTestDialogOpen">
       <DialogContent
         class="inset-0 top-0 left-0 h-screen w-screen max-w-none translate-x-0 translate-y-0 overflow-auto rounded-none border-none bg-white p-0 text-black sm:max-w-none dark:bg-gray-900 dark:text-white">

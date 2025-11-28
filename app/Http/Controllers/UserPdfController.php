@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Exam;
+use App\Models\ExamParticipant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -12,8 +14,13 @@ class UserPdfController extends Controller
   {
     $user = $request->user();
 
+    $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
+    $exam = $examParticipant ? Exam::find($examParticipant->exam_id) : null;
+
+    abort_unless($exam && $exam->contract_view_enabled, 403);
+
     // e.g. "J.Doe"
-    $base = \Illuminate\Support\Str::of($user->username)->trim();
+    $base = Str::of($user->username)->trim();
 
     // "J.Doe.pdf"
     $fileName = $base . '.pdf';

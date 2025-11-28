@@ -46,6 +46,14 @@ const getParticipantStatusFromExam = (exam: any, participant: any) => {
 const getParticipantStatus = (participant: any) =>
   getParticipantStatusFromExam(localExam.value, participant)
 
+const toggleContractVisibility = (enabled: boolean) => {
+  router.post(
+    route('exams.set-contract-visibility', { exam: props.exam.id }),
+    { enabled },
+    { preserveScroll: true },
+  )
+}
+
 const extraTimeState = ref<Record<number, { expanded: boolean; minutes: string; error: string | null; loading: boolean }>>({})
 
 let timerInterval: any = null
@@ -286,6 +294,13 @@ const canForceFinishParticipant = (participant: any) => {
           </Button>
           <Button v-if="exam.status !== 'completed'" @click="setStatus('completed')">
             Prüfung beenden
+          </Button>
+          <Button
+            v-if="exam.status !== 'completed'"
+            :variant="localExam?.contract_view_enabled ? 'destructive' : 'outline'"
+            @click="toggleContractVisibility(!localExam?.contract_view_enabled)"
+          >
+            {{ localExam?.contract_view_enabled ? 'Vertragsansicht sperren' : 'Vertrag freigeben' }}
           </Button>
           <template v-if="exam.status === 'in_progress'">
             <Button v-for="step in firstStepRow" :key="step.id" @click="setStep(step.id)"

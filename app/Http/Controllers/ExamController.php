@@ -226,6 +226,17 @@ class ExamController extends Controller
     return back(303)->with('success', 'Exam status updated.');
   }
 
+  public function setContractVisibility(Request $request, Exam $exam)
+  {
+    $data = $request->validate([
+      'enabled' => 'required|boolean',
+    ]);
+
+    $exam->update(['contract_view_enabled' => $data['enabled']]);
+
+    return back(303)->with('success', 'Contract visibility updated.');
+  }
+
   public function setStep(Request $request, Exam $exam)
   {
     $data = $request->validate([

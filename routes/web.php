@@ -47,6 +47,8 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::post('/exams/{exam}/start', [ExamController::class, 'start'])->name('exams.start');
     Route::post('/exams/{exam}/next-step', [ExamController::class, 'nextStep'])->name('exams.next-step');
     Route::post('/exams/{exam}/set-status', [ExamController::class, 'setStatus'])->name('exams.set-status');
+    Route::post('/exams/{exam}/set-contract-visibility', [ExamController::class, 'setContractVisibility'])
+        ->name('exams.set-contract-visibility');
     Route::post('/exams/{exam}/set-step', [ExamController::class, 'setStep'])->name('exams.set-step');
     Route::post('/exams/{exam}/participants/{participant}/step-status', [ExamController::class, 'setParticipantStepStatus'])
         ->name('exams.participants.set-step-status');
