@@ -743,8 +743,8 @@ watch(
           <iframe
             :src="contractSrc"
             class="h-full w-full border-0"
+            allow="fullscreen"
             allowfullscreen
-            sandbox="allow-same-origin allow-scripts"
           />
         </div>
       </DialogContent>
