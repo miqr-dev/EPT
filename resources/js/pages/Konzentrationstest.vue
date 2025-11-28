@@ -4,6 +4,7 @@ import { Head } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue'
 
 const props = defineProps<{ timeRemainingSeconds?: number | null }>()
@@ -21,36 +22,60 @@ const prevPage = () => {
   if (page.value > 1) page.value--
 }
 
+const showUnansweredDialog = ref(false)
+const unansweredNotes = ref<string[]>([])
+
+const buildResults = () => ({
+  page1: page1Inputs.value,
+  page2: page2Answers.value,
+  page3: copyCounts.value,
+  page4: page4Answers.value,
+  page5: page5TickSums.value,
+  wrong_count: wrongCount.value,
+  performance_category: performanceCategory.value
+})
+
+const countEmpty = (answers: string[]) => answers.filter(a => a.trim() === '').length
+
+const getUnansweredNotes = () => {
+  const notes: string[] = []
+
+  const page1Missing = countEmpty(page1Inputs.value)
+  if (page1Missing) notes.push(`${page1Missing} offene Antwort${page1Missing > 1 ? 'en' : ''} in Aufgabe 1 (Zahlenreihen)`)
+
+  const page2Missing = countEmpty(page2Answers.value)
+  if (page2Missing) notes.push(`${page2Missing} offene Antwort${page2Missing > 1 ? 'en' : ''} in Aufgabe 2 (Zuordnung)`)
+
+  const page3Missing = countEmpty(copyCounts.value)
+  if (page3Missing) notes.push(`${page3Missing} offene Antwort${page3Missing > 1 ? 'en' : ''} in Aufgabe 3 (Abschrift)`)
+
+  const page4Missing = countEmpty(page4Answers.value)
+  if (page4Missing) notes.push(`${page4Missing} offene Antwort${page4Missing > 1 ? 'en' : ''} in Aufgabe 4 (Ziffern zählen)`)
+
+  const page5Missing = countEmpty(page5TickSums.value)
+  if (page5Missing) notes.push(`${page5Missing} offene Antwort${page5Missing > 1 ? 'en' : ''} in Aufgabe 5 (Zeichen zählen)`)
+
+  return notes
+}
+
+const submitResults = () => {
+  emit('complete', buildResults())
+}
+
 const finishTest = () => {
-  const unanswered = page1Inputs.value.some(ans => ans === '') ||
-    page2Answers.value.some(ans => ans === '') ||
-    copyCounts.value.some(ans => ans === '') ||
-    page4Answers.value.some(ans => ans === '') ||
-    page5TickSums.value.some(ans => ans === '')
-
-  const proceed = () => {
-    const results = {
-      page1: page1Inputs.value,
-      page2: page2Answers.value,
-      page3: copyCounts.value,
-      page4: page4Answers.value,
-      page5: page5TickSums.value,
-      wrong_count: wrongCount.value,
-      performance_category: performanceCategory.value
-    }
-    emit('complete', results)
+  const notes = getUnansweredNotes()
+  if (notes.length) {
+    unansweredNotes.value = notes
+    showUnansweredDialog.value = true
+    return
   }
 
-  if (unanswered) {
-    const message = 'Some answers are left empty.'
-    const confirmText = 'Trotzdem beenden'
-    const cancelText = 'Abbrechen'
-    if (confirm(`${message}\n\n${confirmText} / ${cancelText}`)) {
-      proceed()
-    }
-  } else {
-    proceed()
-  }
+  submitResults()
+}
+
+const confirmFinishDespiteUnanswered = () => {
+  showUnansweredDialog.value = false
+  submitResults()
 }
 const emit = defineEmits(['complete'])
 const toggleMark = (marks: boolean[], i: number) => (marks[i] = !marks[i])
@@ -866,6 +891,27 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
       <Button @click="nextPage" v-if="page < MAX_PAGE">Weiter</Button>
       <Button variant="destructive" @click="finishTest" v-if="page === MAX_PAGE">Test beenden</Button>
     </div>
+
+    <Dialog :open="showUnansweredDialog" @update:open="val => (showUnansweredDialog = val)">
+      <DialogContent class="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Nicht alle Antworten sind ausgefüllt</DialogTitle>
+          <DialogDescription>
+            Bitte prüfen Sie die offenen Felder. Leere Eingaben werden als unbeantwortet gespeichert.
+          </DialogDescription>
+        </DialogHeader>
+        <div class="space-y-3">
+          <p class="text-base">Offene Bereiche:</p>
+          <ul class="list-disc space-y-1 pl-5 text-base">
+            <li v-for="note in unansweredNotes" :key="note">{{ note }}</li>
+          </ul>
+        </div>
+        <DialogFooter class="gap-2">
+          <Button variant="outline" @click="showUnansweredDialog = false">Zurück zum Test</Button>
+          <Button variant="destructive" @click="confirmFinishDespiteUnanswered">Trotzdem beenden</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
 
