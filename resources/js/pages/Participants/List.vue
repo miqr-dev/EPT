@@ -1,17 +1,31 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { Link } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import TestResultModal from '@/components/TestResultModal.vue';
 
 defineProps<{
-  participants: any[];
+  participants: {
+    data: any[];
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+  };
 }>();
 
 const isModalOpen = ref(false);
 const selectedAssignment = ref(null);
 const selectedParticipant = ref(null);
+
+const dateFormatter = computed(() =>
+  new Intl.DateTimeFormat('de-DE', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+);
 
 function viewTestResult(assignment, participant) {
   selectedAssignment.value = assignment;
@@ -38,12 +52,22 @@ function closeModal() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Prüfung erstellt am</TableHead>
                 <TableHead>Tests</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow v-for="participant in participants" :key="participant.id">
+              <TableRow v-if="participants.data.length === 0">
+                <TableCell colspan="3" class="text-center text-gray-500 py-4">Keine Teilnehmer:innen gefunden.</TableCell>
+              </TableRow>
+              <TableRow v-for="participant in participants.data" :key="participant.id">
                 <TableCell>{{ participant.name }}</TableCell>
+                <TableCell>
+                  <span v-if="participant.latest_exam_created_at">
+                    {{ dateFormatter.format(new Date(participant.latest_exam_created_at)) }}
+                  </span>
+                  <span v-else>–</span>
+                </TableCell>
                 <TableCell>
                   <div v-if="participant.test_assignments.length > 0">
                     <div class="flex flex-wrap gap-3">
@@ -62,6 +86,27 @@ function closeModal() {
               </TableRow>
             </TableBody>
           </Table>
+
+          <div v-if="participants.links.length > 3" class="mt-6 flex justify-center">
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+              <template v-for="(link, key) in participants.links" :key="key">
+                <Link
+                  :href="link.url!"
+                  class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
+                  :class="{
+                    'z-10 bg-indigo-50 border-indigo-500 text-indigo-600': link.active,
+                    'bg-white border-gray-300 text-gray-500 hover:bg-gray-50': !link.active,
+                    'rounded-l-md': key === 0,
+                    'rounded-r-md': key === participants.links.length - 1,
+                    'hidden md:inline-flex': !(link.active || key === 0 || key === participants.links.length - 1 || (link.label.includes('Previous') || link.label.includes('Next'))),
+                  }"
+                  :disabled="!link.url"
+                >
+                  <span v-html="link.label" />
+                </Link>
+              </template>
+            </nav>
+          </div>
         </CardContent>
       </Card>
     </div>

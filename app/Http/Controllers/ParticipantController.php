@@ -323,7 +323,16 @@ class ParticipantController extends Controller
         },
         'tests',
       ])
-      ->get();
+      ->addSelect([
+        'latest_exam_created_at' => Exam::select('created_at')
+          ->join('exam_participants', 'exams.id', '=', 'exam_participants.exam_id')
+          ->whereColumn('exam_participants.participant_id', 'users.id')
+          ->latest('exams.created_at')
+          ->limit(1),
+      ])
+      ->orderByDesc('latest_exam_created_at')
+      ->paginate(15)
+      ->withQueryString();
 
     $examTestIdsByParticipant = ExamParticipant::whereIn('participant_id', $participants->pluck('id'))
       ->join('exam_steps', 'exam_participants.exam_id', '=', 'exam_steps.exam_id')
@@ -334,7 +343,7 @@ class ParticipantController extends Controller
         return $rows->pluck('test_id')->filter()->unique();
       });
 
-    $participants->transform(function ($participant) use ($examTestIdsByParticipant) {
+    $participants->getCollection()->transform(function ($participant) use ($examTestIdsByParticipant) {
       $allowedTestIds = $examTestIdsByParticipant->get($participant->id, collect());
       $filteredAssignments = $participant->testAssignments->whereIn('test_id', $allowedTestIds);
       $participant->setRelation('testAssignments', $filteredAssignments->values());
