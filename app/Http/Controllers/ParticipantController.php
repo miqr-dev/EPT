@@ -324,7 +324,7 @@ class ParticipantController extends Controller
         'tests',
       ])
       ->addSelect([
-        'latest_exam_created_at' => Exam::select('created_at')
+        'latest_exam_created_at' => Exam::select('exams.created_at')
           ->join('exam_participants', 'exams.id', '=', 'exam_participants.exam_id')
           ->whereColumn('exam_participants.participant_id', 'users.id')
           ->latest('exams.created_at')
