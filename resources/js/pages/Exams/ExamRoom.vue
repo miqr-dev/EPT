@@ -64,6 +64,13 @@ const isTestDialogOpen = ref(false);
 const activeStepId = ref<number | null>(null);
 const localPausedResults = ref<Record<string, unknown>>({});
 const activeTimeRemainingSeconds = ref<number | null>(null);
+const contractDialogOpen = ref(false);
+const isContractAvailable = computed(() =>
+  ['in_progress', 'paused'].includes(props.exam.status),
+);
+const contractUrl = computed(
+  () => `${route('my.pdf')}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&statusbar=0&messages=0`,
+);
 const pausedTestResults = computed<Record<string, unknown>>(() => {
   const serverResults = (props.pausedTestResults ?? {}) as Record<string, unknown>;
   return {
@@ -578,7 +585,7 @@ watch(
     });
 
     hasSyncedInitialStatuses = true;
-  },
+},
   { deep: true, immediate: true },
 );
 
@@ -586,6 +593,10 @@ let previousExamStatus: ExamStatus | null = null;
 watch(
   () => props.exam.status,
   (newStatus) => {
+    if (!isContractAvailable.value && contractDialogOpen.value) {
+      contractDialogOpen.value = false;
+    }
+
     if (previousExamStatus && newStatus !== previousExamStatus) {
       if (newStatus === 'paused') {
         closeTestDialog();
@@ -598,6 +609,25 @@ watch(
   },
   { immediate: true },
 );
+
+const preventPrintShortcut = (event: KeyboardEvent) => {
+  if ((event.ctrlKey || event.metaKey) && event.key?.toLowerCase() === 'p') {
+    event.preventDefault();
+  }
+};
+
+function openContractDialog() {
+  if (!isContractAvailable.value) return;
+  contractDialogOpen.value = true;
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', preventPrintShortcut);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', preventPrintShortcut);
+});
 </script>
 
 <template>
@@ -607,8 +637,24 @@ watch(
     <div class="w-full max-w-2xl space-y-6 rounded-lg bg-white p-8 shadow-md dark:bg-gray-800">
       <h1 class="text-center text-2xl font-bold text-gray-800 dark:text-gray-100">{{ exam.name }}</h1>
 
-      <div class="w-full h-[80vh]">
-        <iframe :src="route('my.pdf')" class="w-full h-full boder rounded-lg" />
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">Vertrag</h2>
+          <Button variant="outline" size="sm" :disabled="!isContractAvailable" @click="openContractDialog">
+            Vertrag im Vollbild
+          </Button>
+        </div>
+        <div class="relative w-full h-[80vh]" @contextmenu.prevent>
+          <div v-if="!isContractAvailable"
+            class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-lg bg-gray-50/90 text-center text-sm text-gray-700 backdrop-blur dark:bg-gray-900/70 dark:text-gray-200">
+            <p>Der Vertrag wird freigeschaltet, sobald die Prüfung gestartet wurde.</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Bitte warten Sie auf die Aktivierung durch die Prüfungsleitung.</p>
+          </div>
+          <iframe :src="contractUrl"
+            class="w-full h-full rounded-lg border border-gray-200 bg-white shadow-sm transition-opacity duration-200 dark:border-gray-700 dark:bg-gray-800"
+            :class="{ 'pointer-events-none opacity-40': !isContractAvailable }" sandbox="allow-same-origin"
+            loading="lazy" />
+        </div>
       </div>
       <!-- General Status Messages -->
       <div v-if="exam.status === 'not_started'" class="text-center">
@@ -706,6 +752,19 @@ watch(
                 v-bind="activeComponentProps" @complete="completeTest" @update:answers="activeTestAnswers = $event" />
             </KeepAlive>
           </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+    <Dialog v-model:open="contractDialogOpen">
+      <DialogContent
+        class="inset-0 top-0 left-0 h-screen w-screen max-w-none translate-x-0 translate-y-0 overflow-hidden rounded-none border-none bg-white p-0 text-black sm:max-w-none dark:bg-gray-900 dark:text-white">
+        <DialogHeader class="sr-only">
+          <DialogTitle>Vertrag im Vollbild</DialogTitle>
+          <DialogDescription>Der Prüfungsvertrag ohne Druck- oder Downloadoptionen.</DialogDescription>
+        </DialogHeader>
+        <div class="h-full w-full" @contextmenu.prevent>
+          <iframe :src="contractUrl"
+            class="h-full w-full border-0" sandbox="allow-same-origin" loading="lazy" />
         </div>
       </DialogContent>
     </Dialog>
