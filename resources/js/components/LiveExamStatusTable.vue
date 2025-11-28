@@ -279,37 +279,49 @@ const canForceFinishParticipant = (participant: any) => {
 
 <template>
   <div class="mt-8">
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ exam.name }}</h2>
+    <div class="flex flex-col gap-3 mb-4">
+      <div class="flex items-start justify-between gap-4">
+        <h2
+          class="text-xl font-bold text-gray-900 dark:text-gray-100 px-2 py-1 rounded-md bg-gray-50 dark:bg-gray-900 mb-1"
+        >
+          {{ exam.name }}
+        </h2>
+      </div>
       <div class="flex flex-col gap-2">
-        <div class="flex flex-wrap items-center gap-2">
-          <Button v-if="exam.status === 'not_started'" @click="startExam">
-            Prüfung starten
-          </Button>
-          <Button v-if="exam.status === 'in_progress'" @click="setStatus('paused')">
-            Prüfung pausieren
-          </Button>
-          <Button v-else-if="exam.status === 'paused'" @click="setStatus('in_progress')">
-            Prüfung fortsetzen
-          </Button>
-          <Button v-if="exam.status !== 'completed'" @click="setStatus('completed')">
-            Prüfung beenden
-          </Button>
+        <div class="flex items-center gap-2">
           <Button
             v-if="exam.status !== 'completed'"
-            :variant="localExam?.contract_view_enabled ? 'destructive' : 'outline'"
+            size="sm"
+            :class="localExam?.contract_view_enabled
+              ? 'bg-red-600 hover:bg-red-700 text-white'
+              : 'bg-green-600 hover:bg-green-700 text-white'"
+            variant="outline"
             @click="toggleContractVisibility(!localExam?.contract_view_enabled)"
           >
             {{ localExam?.contract_view_enabled ? 'Vertragsansicht sperren' : 'Vertrag freigeben' }}
           </Button>
-          <template v-if="exam.status === 'in_progress'">
+          <div class="flex items-center gap-2 ml-auto">
+            <Button v-if="exam.status === 'not_started'" size="sm" @click="startExam">
+              Prüfung starten
+            </Button>
+            <Button v-if="exam.status === 'in_progress'" size="sm" @click="setStatus('paused')">
+              Prüfung pausieren
+            </Button>
+            <Button v-else-if="exam.status === 'paused'" size="sm" @click="setStatus('in_progress')">
+              Prüfung fortsetzen
+            </Button>
+            <Button v-if="exam.status !== 'completed'" size="sm" @click="setStatus('completed')">
+              Prüfung beenden
+            </Button>
+          </div>
+        </div>
+        <template v-if="exam.status === 'in_progress'">
+          <div class="flex flex-wrap items-center gap-2">
             <Button v-for="step in firstStepRow" :key="step.id" @click="setStep(step.id)"
               :disabled="exam.current_exam_step_id === step.id">
               {{ step.test.name }} starten
             </Button>
-          </template>
-        </div>
-        <template v-if="exam.status === 'in_progress'">
+          </div>
           <div v-for="(row, rowIndex) in additionalStepRows" :key="`step-row-${rowIndex}`"
             class="flex flex-wrap items-center gap-2">
             <Button v-for="step in row" :key="step.id" @click="setStep(step.id)"
