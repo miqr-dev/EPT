@@ -763,6 +763,9 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
         Links: Original – Rechts: Abschrift. Jede Position steht in <b>zwei Zeilen</b>; markieren Sie Fehler in der
         Abschrift und tragen Sie die Anzahl rechts ein.
       </p>
+      <p class="text-[18px] leading-snug mt-2">
+        <b>Linksklick</b>: Falschen Buchstaben markieren. <b>Rechtsklick</b>: Fehlenden Buchstaben danach markieren.
+      </p>
 
       <div class="relative mt-6 grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div class="hidden lg:block absolute inset-y-0 left-1/2 w-[2px] bg-black/60 pointer-events-none"></div>
