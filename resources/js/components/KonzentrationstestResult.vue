@@ -9,6 +9,17 @@ const page3Correct = ['7', '1', '4', '3', '1', '3', '3', '0', '2', '2', '5', '2'
 const page4Correct = ['12', '11', '13', '10', '11', '9', '16', '14', '13', '10', '15', '15', '12', '13']
 const page5Correct = ['7', '4', '8', '5', '7', '9', '7', '10', '10', '9']
 
+const correctAnswers = [page1Correct, page2Correct, page3Correct, page4Correct, page5Correct]
+
+const isCorrectAnswer = (pageIndex: number, questionIndex: number, answer: string | number) => {
+  const correctAnswer = correctAnswers[pageIndex]?.[questionIndex]
+  return String(answer ?? '').trim() === String(correctAnswer ?? '').trim()
+}
+
+const getAnswerClass = (pageIndex: number, questionIndex: number, answer: string | number) => {
+  return isCorrectAnswer(pageIndex, questionIndex, answer) ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'
+}
+
 </script>
 
 <template>
@@ -46,7 +57,7 @@ const page5Correct = ['7', '4', '8', '5', '7', '9', '7', '10', '10', '9']
               <tr>
                 <td class="px-2 py-1">1</td>
                 <td class="px-2 py-1">{{ idx + 1 }}</td>
-                <td class="px-2 py-1">{{ answer }}</td>
+                <td class="px-2 py-1" :class="getAnswerClass(0, idx, answer)">{{ answer }}</td>
                 <td class="px-2 py-1">{{ page1Correct[idx] }}</td>
               </tr>
             </template>
@@ -54,7 +65,7 @@ const page5Correct = ['7', '4', '8', '5', '7', '9', '7', '10', '10', '9']
               <tr>
                 <td class="px-2 py-1">2</td>
                 <td class="px-2 py-1">{{ idx + 1 }}</td>
-                <td class="px-2 py-1">{{ answer }}</td>
+                <td class="px-2 py-1" :class="getAnswerClass(1, idx, answer)">{{ answer }}</td>
                 <td class="px-2 py-1">{{ page2Correct[idx] }}</td>
               </tr>
             </template>
@@ -62,7 +73,7 @@ const page5Correct = ['7', '4', '8', '5', '7', '9', '7', '10', '10', '9']
               <tr>
                 <td class="px-2 py-1">3</td>
                 <td class="px-2 py-1">{{ idx + 1 }}</td>
-                <td class="px-2 py-1">{{ answer }}</td>
+                <td class="px-2 py-1" :class="getAnswerClass(2, idx, answer)">{{ answer }}</td>
                 <td class="px-2 py-1">{{ page3Correct[idx] }}</td>
               </tr>
             </template>
@@ -70,7 +81,7 @@ const page5Correct = ['7', '4', '8', '5', '7', '9', '7', '10', '10', '9']
               <tr>
                 <td class="px-2 py-1">4</td>
                 <td class="px-2 py-1">{{ idx + 1 }}</td>
-                <td class="px-2 py-1">{{ answer }}</td>
+                <td class="px-2 py-1" :class="getAnswerClass(3, idx, answer)">{{ answer }}</td>
                 <td class="px-2 py-1">{{ page4Correct[idx] }}</td>
               </tr>
             </template>
@@ -78,7 +89,7 @@ const page5Correct = ['7', '4', '8', '5', '7', '9', '7', '10', '10', '9']
               <tr>
                 <td class="px-2 py-1">5</td>
                 <td class="px-2 py-1">{{ idx + 1 }}</td>
-                <td class="px-2 py-1">{{ answer }}</td>
+                <td class="px-2 py-1" :class="getAnswerClass(4, idx, answer)">{{ answer }}</td>
                 <td class="px-2 py-1">{{ page5Correct[idx] }}</td>
               </tr>
             </template>
