@@ -42,16 +42,16 @@ const getAnswerClass = (pageIndex: number, questionIndex: number, answer: string
 
 <template>
   <div class="p-6 bg-background border rounded-lg">
-    <h2 class="text-xl font-semibold mb-4">628 Results</h2>
+    <h2 class="text-xl font-semibold mb-4">628 Ergebnisse</h2>
     <div class="mb-6 w-full max-w-md">
       <table class="w-full text-sm border rounded-lg overflow-hidden shadow">
         <tbody>
           <tr class="bg-muted/40">
-            <td class="font-semibold px-3 py-2 w-1/2">Wrong Answers</td>
+            <td class="font-semibold px-3 py-2 w-1/2">Falsche Antworten</td>
             <td class="px-3 py-2">{{ results.wrong_count }}</td>
           </tr>
           <tr>
-            <td class="font-semibold px-3 py-2">Performance Category</td>
+            <td class="font-semibold px-3 py-2">Leistungskategorie</td>
             <td class="px-3 py-2">{{ results.performance_category.category }} ({{ results.performance_category.range }})</td>
           </tr>
         </tbody>
@@ -59,16 +59,16 @@ const getAnswerClass = (pageIndex: number, questionIndex: number, answer: string
     </div>
 
     <div class="mb-6 w-full max-w-4xl">
-      <h3 class="font-bold mb-2">Wrong Answers per Page</h3>
+      <h3 class="font-bold mb-2">Falsche Antworten pro Seite</h3>
       <div class="overflow-x-auto">
         <table class="min-w-full text-sm border rounded-lg shadow">
           <thead class="bg-muted/40">
             <tr>
-              <th class="px-3 py-2 text-left font-semibold">Page 1</th>
-              <th class="px-3 py-2 text-left font-semibold">Page 2</th>
-              <th class="px-3 py-2 text-left font-semibold">Page 3</th>
-              <th class="px-3 py-2 text-left font-semibold">Pages 4 &amp; 5</th>
-              <th class="px-3 py-2 text-left font-semibold">Total</th>
+              <th class="px-3 py-2 text-left font-semibold">Seite 1</th>
+              <th class="px-3 py-2 text-left font-semibold">Seite 2</th>
+              <th class="px-3 py-2 text-left font-semibold">Seite 3</th>
+              <th class="px-3 py-2 text-left font-semibold">Seiten 4 &amp; 5</th>
+              <th class="px-3 py-2 text-left font-semibold">Gesamt</th>
             </tr>
           </thead>
           <tbody>
@@ -95,15 +95,15 @@ const getAnswerClass = (pageIndex: number, questionIndex: number, answer: string
     </div>
 
     <div>
-      <h3 class="font-bold mb-2">Detailed Answers</h3>
+      <h3 class="font-bold mb-2">Detaillierte Antworten</h3>
       <div class="overflow-x-auto">
         <table class="min-w-full text-sm border rounded-lg shadow">
           <thead class="bg-muted/40">
             <tr>
-              <th class="px-2 py-1 text-left font-semibold">Page</th>
-              <th class="px-2 py-1 text-left font-semibold">Question #</th>
-              <th class="px-2 py-1 text-left font-semibold">Your Answer</th>
-              <th class="px-2 py-1 text-left font-semibold">Correct Answer</th>
+              <th class="px-2 py-1 text-left font-semibold">Seite</th>
+              <th class="px-2 py-1 text-left font-semibold">Frage #</th>
+              <th class="px-2 py-1 text-left font-semibold">Ihre Antwort</th>
+              <th class="px-2 py-1 text-left font-semibold">Richtige Antwort</th>
             </tr>
           </thead>
           <tbody>
