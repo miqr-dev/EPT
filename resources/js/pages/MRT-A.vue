@@ -307,7 +307,7 @@ const startTest = () => {
         <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
           <h2 class="text-2xl font-bold mb-4">Willkommen zum Mannheimer Rechtschreibtest</h2>
           <p class="mb-6 text-base text-center max-w-xl">
-            Mit diesem Verfahren wollen wir wissen, wie Ihre Rechtschreibkenntnisse sind. Jede Aufgabe enthält 4 Wörter.
+            Mit diesem Verfahren wollen wir wissen, wie Ihre Rechtschreibkenntnisse sind. Jede Aufgabe enthält vier Wörter.
             Wählen Sie das richtig geschriebene Wort aus.
           </p>
           <p class="font-semibold">Beispielaufgabe:</p>
