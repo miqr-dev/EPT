@@ -184,10 +184,14 @@ const copyRows: Array<{ letter: string; parts: RowParts }> = [
 
 // click-to-strike matrix & per-row error counts
 const copyMarks = ref(copyRows.map(r => r.parts.map(p => Array.from(p).map(() => false))))
+const copyGapMarks = ref(copyRows.map(r => r.parts.map(p => Array.from({ length: Array.from(p).length + 1 }).map(() => false))))
 const copyCounts = ref<string[]>(Array(copyRows.length).fill(''))
 
 const toggleCopyChar = (r: number, p: number, c: number) => {
   copyMarks.value[r][p][c] = !copyMarks.value[r][p][c]
+}
+const toggleCopyGap = (r: number, p: number, gap: number) => {
+  copyGapMarks.value[r][p][gap] = !copyGapMarks.value[r][p][gap]
 }
 const getChars = (r: number, p: number) => Array.from(copyRows[r].parts[p])
 
@@ -755,6 +759,10 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
         Links: Original – Rechts: Abschrift. Jede Position steht in <b>zwei Zeilen</b>; markieren Sie Fehler in der
         Abschrift und tragen Sie die Anzahl rechts ein.
       </p>
+      <p class="text-[16px] leading-snug text-gray-700 mt-2">
+        Für ausgelassene Buchstaben können Sie die kleinen Punkte zwischen den Zeichen anklicken, so wie die Linie im
+        Papierbogen zwischen zwei Buchstaben gesetzt würde.
+      </p>
 
       <div class="relative mt-6 grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div class="hidden lg:block absolute inset-y-0 left-1/2 w-[2px] bg-black/60 pointer-events-none"></div>
@@ -791,16 +799,26 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
 
                 <!-- Row 1 -->
                 <div>
-                  <span v-for="(ch, cIdx) in getChars(rIdx, 0)" :key="'r' + rIdx + 'p0c' + cIdx"
-                    @click="toggleCopyChar(rIdx, 0, cIdx)" :class="['letter', { marked: copyMarks[rIdx][0][cIdx] }]">
-                    {{ ch }}
-                  </span>
+                  <template v-for="(ch, cIdx) in getChars(rIdx, 0)" :key="'r' + rIdx + 'p0c' + cIdx">
+                    <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][0][cIdx] }"
+                      @click="toggleCopyGap(rIdx, 0, cIdx)"></button>
+                    <span @click="toggleCopyChar(rIdx, 0, cIdx)" :class="['letter', { marked: copyMarks[rIdx][0][cIdx] }]">
+                      {{ ch }}
+                    </span>
+                  </template>
+                  <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][0][getChars(rIdx, 0).length] }"
+                    @click="toggleCopyGap(rIdx, 0, getChars(rIdx, 0).length)"></button>
                 </div>
                 <div>
-                  <span v-for="(ch, cIdx) in getChars(rIdx, 1)" :key="'r' + rIdx + 'p1c' + cIdx"
-                    @click="toggleCopyChar(rIdx, 1, cIdx)" :class="['letter', { marked: copyMarks[rIdx][1][cIdx] }]">
-                    {{ ch }}
-                  </span>
+                  <template v-for="(ch, cIdx) in getChars(rIdx, 1)" :key="'r' + rIdx + 'p1c' + cIdx">
+                    <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][1][cIdx] }"
+                      @click="toggleCopyGap(rIdx, 1, cIdx)"></button>
+                    <span @click="toggleCopyChar(rIdx, 1, cIdx)" :class="['letter', { marked: copyMarks[rIdx][1][cIdx] }]">
+                      {{ ch }}
+                    </span>
+                  </template>
+                  <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][1][getChars(rIdx, 1).length] }"
+                    @click="toggleCopyGap(rIdx, 1, getChars(rIdx, 1).length)"></button>
                 </div>
 
                 <!-- Count -->
@@ -810,16 +828,26 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
 
                 <!-- Row 2 -->
                 <div class="col-start-2 mt-1">
-                  <span v-for="(ch, cIdx) in getChars(rIdx, 2)" :key="'r' + rIdx + 'p2c' + cIdx"
-                    @click="toggleCopyChar(rIdx, 2, cIdx)" :class="['letter', { marked: copyMarks[rIdx][2][cIdx] }]">
-                    {{ ch }}
-                  </span>
+                  <template v-for="(ch, cIdx) in getChars(rIdx, 2)" :key="'r' + rIdx + 'p2c' + cIdx">
+                    <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][2][cIdx] }"
+                      @click="toggleCopyGap(rIdx, 2, cIdx)"></button>
+                    <span @click="toggleCopyChar(rIdx, 2, cIdx)" :class="['letter', { marked: copyMarks[rIdx][2][cIdx] }]">
+                      {{ ch }}
+                    </span>
+                  </template>
+                  <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][2][getChars(rIdx, 2).length] }"
+                    @click="toggleCopyGap(rIdx, 2, getChars(rIdx, 2).length)"></button>
                 </div>
                 <div class="col-start-3 mt-1">
-                  <span v-for="(ch, cIdx) in getChars(rIdx, 3)" :key="'r' + rIdx + 'p3c' + cIdx"
-                    @click="toggleCopyChar(rIdx, 3, cIdx)" :class="['letter', { marked: copyMarks[rIdx][3][cIdx] }]">
-                    {{ ch }}
-                  </span>
+                  <template v-for="(ch, cIdx) in getChars(rIdx, 3)" :key="'r' + rIdx + 'p3c' + cIdx">
+                    <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][3][cIdx] }"
+                      @click="toggleCopyGap(rIdx, 3, cIdx)"></button>
+                    <span @click="toggleCopyChar(rIdx, 3, cIdx)" :class="['letter', { marked: copyMarks[rIdx][3][cIdx] }]">
+                      {{ ch }}
+                    </span>
+                  </template>
+                  <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][3][getChars(rIdx, 3).length] }"
+                    @click="toggleCopyGap(rIdx, 3, getChars(rIdx, 3).length)"></button>
                 </div>
               </div>
             </div>
@@ -941,6 +969,36 @@ ul .answer-box {
 .letter {
   cursor: pointer;
   padding: 0 0.25px;
+}
+
+.gap-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.6em;
+  height: 1.1em;
+  margin: 0 0.07em;
+  border-radius: 999px;
+  border: 1px dashed transparent;
+  cursor: pointer;
+}
+
+.gap-marker::before {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #d1d5db;
+}
+
+.gap-marker.marked {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.gap-marker.marked::before {
+  background: #ef4444;
 }
 
 .marked {
