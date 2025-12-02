@@ -759,10 +759,10 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
         Links: Original – Rechts: Abschrift. Jede Position steht in <b>zwei Zeilen</b>; markieren Sie Fehler in der
         Abschrift und tragen Sie die Anzahl rechts ein.
       </p>
-      <p class="text-[16px] leading-snug text-gray-700 mt-2">
-        Für ausgelassene Buchstaben können Sie die kleinen Punkte zwischen den Zeichen anklicken, so wie die Linie im
-        Papierbogen zwischen zwei Buchstaben gesetzt würde.
-      </p>
+        <p class="text-[16px] leading-snug text-gray-700 mt-2">
+          Fehlt ein Buchstabe, können Sie die unsichtbaren Zwischenräume anklicken, ohne dass sich das Schriftbild von der
+          Vorlage unterscheidet.
+        </p>
 
       <div class="relative mt-6 grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div class="hidden lg:block absolute inset-y-0 left-1/2 w-[2px] bg-black/60 pointer-events-none"></div>
@@ -798,27 +798,31 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
                 </div>
 
                 <!-- Row 1 -->
-                <div>
-                  <template v-for="(ch, cIdx) in getChars(rIdx, 0)" :key="'r' + rIdx + 'p0c' + cIdx">
-                    <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][0][cIdx] }"
-                      @click="toggleCopyGap(rIdx, 0, cIdx)"></button>
-                    <span @click="toggleCopyChar(rIdx, 0, cIdx)" :class="['letter', { marked: copyMarks[rIdx][0][cIdx] }]">
+                <div class="copy-part" :style="{ '--cols': getChars(rIdx, 0).length + 1 }">
+                  <div class="copy-line">
+                    <span v-for="(ch, cIdx) in getChars(rIdx, 0)" :key="'r' + rIdx + 'p0c' + cIdx"
+                      @click="toggleCopyChar(rIdx, 0, cIdx)" :class="['letter', { marked: copyMarks[rIdx][0][cIdx] }]">
                       {{ ch }}
                     </span>
-                  </template>
-                  <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][0][getChars(rIdx, 0).length] }"
-                    @click="toggleCopyGap(rIdx, 0, getChars(rIdx, 0).length)"></button>
+                  </div>
+                  <div class="gap-overlay">
+                    <button v-for="gapIdx in getChars(rIdx, 0).length + 1" type="button" :key="'g' + rIdx + 'p0g' + gapIdx"
+                      class="gap-marker" :class="{ marked: copyGapMarks[rIdx][0][gapIdx - 1] }"
+                      @click="toggleCopyGap(rIdx, 0, gapIdx - 1)"></button>
+                  </div>
                 </div>
-                <div>
-                  <template v-for="(ch, cIdx) in getChars(rIdx, 1)" :key="'r' + rIdx + 'p1c' + cIdx">
-                    <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][1][cIdx] }"
-                      @click="toggleCopyGap(rIdx, 1, cIdx)"></button>
-                    <span @click="toggleCopyChar(rIdx, 1, cIdx)" :class="['letter', { marked: copyMarks[rIdx][1][cIdx] }]">
+                <div class="copy-part" :style="{ '--cols': getChars(rIdx, 1).length + 1 }">
+                  <div class="copy-line">
+                    <span v-for="(ch, cIdx) in getChars(rIdx, 1)" :key="'r' + rIdx + 'p1c' + cIdx"
+                      @click="toggleCopyChar(rIdx, 1, cIdx)" :class="['letter', { marked: copyMarks[rIdx][1][cIdx] }]">
                       {{ ch }}
                     </span>
-                  </template>
-                  <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][1][getChars(rIdx, 1).length] }"
-                    @click="toggleCopyGap(rIdx, 1, getChars(rIdx, 1).length)"></button>
+                  </div>
+                  <div class="gap-overlay">
+                    <button v-for="gapIdx in getChars(rIdx, 1).length + 1" type="button" :key="'g' + rIdx + 'p1g' + gapIdx"
+                      class="gap-marker" :class="{ marked: copyGapMarks[rIdx][1][gapIdx - 1] }"
+                      @click="toggleCopyGap(rIdx, 1, gapIdx - 1)"></button>
+                  </div>
                 </div>
 
                 <!-- Count -->
@@ -827,27 +831,31 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
                   maxlength="2" />
 
                 <!-- Row 2 -->
-                <div class="col-start-2 mt-1">
-                  <template v-for="(ch, cIdx) in getChars(rIdx, 2)" :key="'r' + rIdx + 'p2c' + cIdx">
-                    <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][2][cIdx] }"
-                      @click="toggleCopyGap(rIdx, 2, cIdx)"></button>
-                    <span @click="toggleCopyChar(rIdx, 2, cIdx)" :class="['letter', { marked: copyMarks[rIdx][2][cIdx] }]">
+                <div class="copy-part col-start-2 mt-1" :style="{ '--cols': getChars(rIdx, 2).length + 1 }">
+                  <div class="copy-line">
+                    <span v-for="(ch, cIdx) in getChars(rIdx, 2)" :key="'r' + rIdx + 'p2c' + cIdx"
+                      @click="toggleCopyChar(rIdx, 2, cIdx)" :class="['letter', { marked: copyMarks[rIdx][2][cIdx] }]">
                       {{ ch }}
                     </span>
-                  </template>
-                  <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][2][getChars(rIdx, 2).length] }"
-                    @click="toggleCopyGap(rIdx, 2, getChars(rIdx, 2).length)"></button>
+                  </div>
+                  <div class="gap-overlay">
+                    <button v-for="gapIdx in getChars(rIdx, 2).length + 1" type="button" :key="'g' + rIdx + 'p2g' + gapIdx"
+                      class="gap-marker" :class="{ marked: copyGapMarks[rIdx][2][gapIdx - 1] }"
+                      @click="toggleCopyGap(rIdx, 2, gapIdx - 1)"></button>
+                  </div>
                 </div>
-                <div class="col-start-3 mt-1">
-                  <template v-for="(ch, cIdx) in getChars(rIdx, 3)" :key="'r' + rIdx + 'p3c' + cIdx">
-                    <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][3][cIdx] }"
-                      @click="toggleCopyGap(rIdx, 3, cIdx)"></button>
-                    <span @click="toggleCopyChar(rIdx, 3, cIdx)" :class="['letter', { marked: copyMarks[rIdx][3][cIdx] }]">
+                <div class="copy-part col-start-3 mt-1" :style="{ '--cols': getChars(rIdx, 3).length + 1 }">
+                  <div class="copy-line">
+                    <span v-for="(ch, cIdx) in getChars(rIdx, 3)" :key="'r' + rIdx + 'p3c' + cIdx"
+                      @click="toggleCopyChar(rIdx, 3, cIdx)" :class="['letter', { marked: copyMarks[rIdx][3][cIdx] }]">
                       {{ ch }}
                     </span>
-                  </template>
-                  <button type="button" class="gap-marker" :class="{ marked: copyGapMarks[rIdx][3][getChars(rIdx, 3).length] }"
-                    @click="toggleCopyGap(rIdx, 3, getChars(rIdx, 3).length)"></button>
+                  </div>
+                  <div class="gap-overlay">
+                    <button v-for="gapIdx in getChars(rIdx, 3).length + 1" type="button" :key="'g' + rIdx + 'p3g' + gapIdx"
+                      class="gap-marker" :class="{ marked: copyGapMarks[rIdx][3][gapIdx - 1] }"
+                      @click="toggleCopyGap(rIdx, 3, gapIdx - 1)"></button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -966,6 +974,27 @@ ul .answer-box {
 }
 
 /* Abschrift clickable letters */
+.copy-part {
+  position: relative;
+  display: inline-block;
+  padding: 0.05em 0;
+}
+
+.copy-line {
+  position: relative;
+  z-index: 1;
+}
+
+.gap-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  align-items: center;
+  justify-items: center;
+  pointer-events: none;
+}
+
 .letter {
   cursor: pointer;
   padding: 0 0.25px;
@@ -975,19 +1004,22 @@ ul .answer-box {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 0.6em;
-  height: 1.1em;
-  margin: 0 0.07em;
+  width: 0.9em;
+  height: 1.4em;
   border-radius: 999px;
   border: 1px dashed transparent;
+  background: transparent;
   cursor: pointer;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
 }
 
 .gap-marker::before {
   content: '';
   display: block;
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 999px;
   background: #d1d5db;
 }
@@ -999,6 +1031,12 @@ ul .answer-box {
 
 .gap-marker.marked::before {
   background: #ef4444;
+}
+
+.copy-part:hover .gap-marker,
+.copy-part:focus-within .gap-marker,
+.gap-marker.marked {
+  opacity: 1;
 }
 
 .marked {
