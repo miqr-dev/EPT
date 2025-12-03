@@ -57,6 +57,7 @@ class RedirectBasedOnRole
         'fpi-r',
         'lmt',
         'lmt2',
+        'lps',
         'avem',
         'assign.tests',
         'remove.tests',

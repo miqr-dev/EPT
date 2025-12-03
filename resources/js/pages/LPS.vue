@@ -287,169 +287,178 @@ const page1MaxScore = computed(() =>
 <template>
   <Head title="LPS" />
 
-  <div class="p-4">
-    <div class="mb-4 flex items-center justify-between">
-      <h1 class="text-2xl font-bold">LPS</h1>
-      <div class="text-sm text-muted-foreground" v-if="showTest">
-        Seite {{ pageIndex + 1 }} / 3
-      </div>
-    </div>
+  <!-- Whole page scrolls -->
+  <div class="min-h-screen overflow-x-auto bg-muted/15 p-4">
+    <div class="mx-auto w-[1120px] max-w-none">
+      <!-- Top bar -->
+      <div class="mb-4 flex items-end justify-between gap-4">
+        <div class="space-y-1">
+          <h1 class="text-xl font-bold tracking-tight">LPS</h1>
+          <div class="text-xs text-muted-foreground" v-if="showTest">Seite {{ pageIndex + 1 }} / 3</div>
+        </div>
 
-    <div class="mb-4">
-      <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
-    </div>
-
-    <div class="rounded-xl border bg-background p-6 shadow-sm">
-      <div v-if="!showTest" class="flex flex-col items-center gap-4 text-center">
-        <p class="max-w-2xl text-lg text-muted-foreground">
-          Der LPS-Test umfasst drei Seiten. Beginnen Sie mit der ersten Seite. Die Spalten 1 und 2 sind
-          zusammengefasst, die Spalten 3, 4 und 5 stehen getrennt nebeneinander. Arbeiten Sie jede Zeile von oben
-          nach unten durch.
-        </p>
-        <Button class="mt-2" @click="startTest">Test starten</Button>
-      </div>
-
-      <div v-else>
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-4 text-sm text-muted-foreground">
-            <span>Benötigte Zeit: {{ formatTime(totalElapsed) }}</span>
+        <div class="flex flex-col items-end gap-2">
+          <div class="w-[520px]">
+            <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
+          </div>
+          <div v-if="showTest" class="flex items-center gap-3 text-xs text-muted-foreground">
+            <span class="font-medium text-foreground">Zeit: {{ formatTime(totalElapsed) }}</span>
             <span v-if="isForcedFinish" class="font-semibold text-destructive">
               Test wird beendet in {{ forcedFinishCountdown }}s
             </span>
           </div>
+        </div>
+      </div>
+
+      <!-- Start screen -->
+      <div v-if="!showTest" class="rounded-2xl border bg-background p-8 shadow-sm">
+        <div class="mx-auto max-w-3xl space-y-4 text-center">
+          <p class="text-base text-muted-foreground">
+            Der LPS-Test umfasst drei Seiten. Beginnen Sie mit der ersten Seite. Die Spalten 1 und 2 sind
+            zusammengefasst, die Spalten 3, 4 und 5 stehen getrennt nebeneinander. Arbeiten Sie jede Zeile von oben
+            nach unten durch.
+          </p>
+          <Button class="px-8" @click="startTest">Test starten</Button>
+        </div>
+      </div>
+
+      <!-- Test -->
+      <div v-else class="space-y-4">
+        <!-- Controls -->
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2">
-            <Button variant="outline" :disabled="pageIndex === 0 || isAnyColumnActive" @click="prevPage">
+            <Button variant="outline" size="sm" :disabled="pageIndex === 0 || isAnyColumnActive" @click="prevPage">
               Zurück
             </Button>
-            <Button variant="secondary" :disabled="pageIndex >= 2 || isAnyColumnActive" @click="nextPage">
+            <Button variant="secondary" size="sm" :disabled="pageIndex >= 2 || isAnyColumnActive" @click="nextPage">
               Weiter
             </Button>
-            <Button variant="destructive" @click="finishTest">Test beenden</Button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <Button variant="destructive" size="sm" @click="finishTest">Test beenden</Button>
           </div>
         </div>
 
-        <div v-if="pageIndex === 0" class="overflow-x-auto rounded-lg border">
-          <div class="grid grid-cols-1 gap-3 border-b bg-muted/30 p-4 text-sm md:grid-cols-2">
-            <div class="space-y-1">
-              <div class="font-semibold">Spalten-Steuerung</div>
-              <p class="text-muted-foreground">
-                Nur eine Spalte kann gleichzeitig bearbeitet werden. Jede gestartete Spalte schließt sich nach 1:00
-                Minute und gibt die nächste Spalte frei.
-              </p>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div
-                v-for="(state, idx) in columnStates.slice(0, 2)"
-                :key="`column-state-${idx}`"
-                class="rounded-lg border bg-background p-3 shadow-sm"
-              >
-                <div class="flex items-center justify-between text-sm font-semibold">
-                  <span>Spalte {{ idx + 1 }}</span>
-                  <span
-                    v-if="state.status === 'active'"
-                    class="text-destructive"
-                    aria-live="polite"
-                    aria-atomic="true"
+        <!-- Page 1 -->
+        <div v-if="pageIndex === 0" class="space-y-3">
+          <!-- Column timers / start buttons -->
+          <div class="rounded-xl border bg-background px-4 py-3 shadow-sm">
+            <div class="flex items-center justify-between gap-4">
+              <div class="text-xs text-muted-foreground">
+                Spalte starten (je 1:00). Nur eine Spalte gleichzeitig.
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div v-for="(state, idx) in columnStates.slice(0, 2)" :key="`column-state-${idx}`" class="flex items-center gap-2">
+                  <div
+                    class="rounded-lg border px-3 py-2 text-xs"
+                    :class="state.status === 'active'
+                      ? 'border-destructive/50 bg-destructive/5 text-destructive'
+                      : state.status === 'ready'
+                        ? 'border-foreground/20 bg-background text-foreground'
+                        : state.status === 'finished'
+                          ? 'border-foreground/10 bg-muted/30 text-muted-foreground'
+                          : 'border-foreground/10 bg-muted/20 text-muted-foreground'"
                   >
-                    {{ formatColumnRemaining(state.remaining) }}
-                  </span>
-                  <span v-else-if="state.status === 'finished'" class="text-muted-foreground">Abgeschlossen</span>
-                  <span v-else-if="state.status === 'ready'" class="text-muted-foreground">Bereit</span>
-                  <span v-else class="text-muted-foreground">Gesperrt</span>
-                </div>
-                <div class="mt-2 flex flex-wrap gap-2">
+                    <div class="flex items-center gap-2">
+                      <span class="font-semibold">Sp {{ idx + 1 }}</span>
+                      <span v-if="state.status === 'active'" class="tabular-nums font-semibold">
+                        {{ formatColumnRemaining(state.remaining) }}
+                      </span>
+                      <span v-else-if="state.status === 'ready'">bereit</span>
+                      <span v-else-if="state.status === 'finished'">fertig</span>
+                      <span v-else>gesperrt</span>
+                    </div>
+                  </div>
+
                   <Button
                     v-if="state.status === 'ready'"
                     size="sm"
                     :disabled="isAnyColumnActive"
                     @click="startColumn(idx)"
                   >
-                    Spalte starten
+                    Start
                   </Button>
-                  <div v-else-if="state.status === 'active'" class="text-sm text-muted-foreground">
-                    Läuft …
-                  </div>
-                  <div v-else-if="state.status === 'finished'" class="text-sm text-muted-foreground">Beendet</div>
-                  <div v-else class="text-sm text-muted-foreground">Noch gesperrt</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <table class="min-w-[960px] w-full border-collapse text-sm">
-            <thead>
-              <tr class="bg-muted/40 text-left">
-                <th colspan="2" class="px-4 py-3 text-center text-base font-semibold">1 + 2</th>
-                <th class="px-4 py-3 text-center text-base font-semibold">3</th>
-                <th class="px-4 py-3 text-center text-base font-semibold">4</th>
-                <th class="px-4 py-3 text-center text-base font-semibold">5</th>
-              </tr>
-              <tr class="bg-muted/20 text-left">
-                <th class="px-4 py-2 text-center font-semibold">1</th>
-                <th class="px-4 py-2 text-center font-semibold">2</th>
-                <th class="px-4 py-2 text-center font-semibold">3</th>
-                <th class="px-4 py-2 text-center font-semibold">4</th>
-                <th class="px-4 py-2 text-center font-semibold">5</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(row, idx) in LPS_PAGE1_ROWS" :key="row.id" class="border-t">
-                <td class="px-3 py-3 align-top">
-                  <div class="flex flex-wrap gap-2" role="group" :aria-label="`Zeile ${idx + 1} Spalte 1`">
+          <!-- Minimal “letter sheet”: no boxes, no row lines -->
+          <div class="rounded-2xl border bg-background p-4 shadow-sm">
+            <!-- header (optional, minimal) -->
+            <div class="mb-3 grid grid-cols-5 text-center text-[13px] font-extrabold tracking-wide text-foreground">
+              <div class="col-span-2">1 + 2</div>
+              <div>3</div>
+              <div>4</div>
+              <div>5</div>
+            </div>
+
+            <!-- content -->
+            <div class="grid grid-cols-5 gap-x-3">
+              <!-- Columns 1/2 area -->
+              <div class="col-span-1">
+                <div v-for="(row, idx) in LPS_PAGE1_ROWS" :key="`${row.id}-c1`" class="py-[3px]">
+                  <div class="lps-letters">
                     <button
                       v-for="(char, charIdx) in row.column1.split('')"
                       :key="`${row.id}-1-${charIdx}`"
                       type="button"
-                      class="relative flex h-9 w-9 items-center justify-center rounded-full border bg-white font-semibold transition hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-                      :class="page1Responses[idx].col1[charIdx] ? 'border-destructive bg-destructive/10' : ''"
+                      class="lps-letter"
+                      :class="page1Responses[idx].col1[charIdx] ? 'lps-letter--selected' : ''"
                       :disabled="!isColumnInteractive(1)"
                       :aria-pressed="page1Responses[idx].col1[charIdx]"
                       @click="toggleSelection(idx, 'col1', charIdx)"
                     >
-                      <span class="text-base leading-none">{{ char }}</span>
-                      <span v-if="page1Responses[idx].col1[charIdx]" class="absolute text-xl font-bold leading-none text-destructive">
-                        /
-                      </span>
+                      {{ char }}
                     </button>
                   </div>
-                </td>
-                <td class="px-3 py-3 align-top">
-                  <div class="flex flex-wrap gap-2" role="group" :aria-label="`Zeile ${idx + 1} Spalte 2`">
+                </div>
+              </div>
+
+              <div class="col-span-1 lps-sep">
+                <div v-for="(row, idx) in LPS_PAGE1_ROWS" :key="`${row.id}-c2`" class="py-[3px]">
+                  <div class="lps-letters">
                     <button
                       v-for="(char, charIdx) in row.column2.split('')"
                       :key="`${row.id}-2-${charIdx}`"
                       type="button"
-                      class="relative flex h-9 w-9 items-center justify-center rounded-full border bg-white font-semibold transition hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-                      :class="page1Responses[idx].col2[charIdx] ? 'border-destructive bg-destructive/10' : ''"
+                      class="lps-letter"
+                      :class="page1Responses[idx].col2[charIdx] ? 'lps-letter--selected' : ''"
                       :disabled="!isColumnInteractive(2)"
                       :aria-pressed="page1Responses[idx].col2[charIdx]"
                       @click="toggleSelection(idx, 'col2', charIdx)"
                     >
-                      <span class="text-base leading-none">{{ char }}</span>
-                      <span v-if="page1Responses[idx].col2[charIdx]" class="absolute text-xl font-bold leading-none text-destructive">
-                        /
-                      </span>
+                      {{ char }}
                     </button>
                   </div>
-                </td>
-                <td class="px-3 py-3 align-top text-center text-muted-foreground">–</td>
-                <td class="px-3 py-3 align-top text-center text-muted-foreground">–</td>
-                <td class="px-3 py-3 align-top text-center text-muted-foreground">–</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="flex items-center justify-between border-t bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+                </div>
+              </div>
+
+              <!-- 3/4/5 empty placeholders (keep structure like original test page) -->
+              <div class="text-center text-muted-foreground/50">–</div>
+              <div class="text-center text-muted-foreground/50">–</div>
+              <div class="text-center text-muted-foreground/50">–</div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between rounded-xl border bg-background px-4 py-3 text-xs text-muted-foreground shadow-sm">
             <div>
               Punkte gesamt:
               <span class="font-semibold text-foreground">
                 {{ page1MaxScore ? `${page1Score} / ${page1MaxScore}` : '–' }}
               </span>
             </div>
-            <div class="text-xs">Spalten 3–5 sind derzeit leer und werden später ergänzt.</div>
+            <div class="text-[11px]">Spalten 3–5 sind derzeit leer und werden später ergänzt.</div>
           </div>
         </div>
 
-        <div v-else class="flex min-h-[200px] items-center justify-center rounded-lg border border-dashed p-8 text-muted-foreground">
+        <!-- Other pages placeholder -->
+        <div
+          v-else
+          class="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed bg-background p-8 text-muted-foreground"
+        >
           Weitere Seiten dieses Tests werden in den nächsten Schritten ergänzt.
         </div>
       </div>
@@ -469,3 +478,63 @@ const page1MaxScore = computed(() =>
     </DialogContent>
   </Dialog>
 </template>
+
+<style scoped>
+/* Letters packed close, bold, no boxes/lines */
+.lps-letters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px; /* very close */
+  align-items: baseline;
+}
+
+.lps-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 20px;
+  padding: 0 1px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-weight: 900;
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  user-select: none;
+}
+
+.lps-letter:focus-visible {
+  outline: 2px solid rgb(59 130 246 / 0.6);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
+.lps-letter:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Selected mark: red pencil-like slash */
+.lps-letter--selected {
+  position: relative;
+}
+
+.lps-letter--selected::after {
+  content: '';
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  top: 50%;
+  border-top: 3px solid rgb(220 38 38);
+  transform: rotate(-35deg);
+  transform-origin: center;
+}
+
+/* Vertical separator between column 1 and 2 */
+.lps-sep {
+  border-left: 2px solid rgb(17 17 17 / 0.9);
+  padding-left: 5px;
+}
+</style>
