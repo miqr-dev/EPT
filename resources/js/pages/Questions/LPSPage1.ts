@@ -45,11 +45,23 @@ export const LPS_PAGE1_ROWS: LpsPage1Row[] = [
   { id: 23, column1: 'Massen', column2: 'Egrast' },
 ];
 
-// TODO: populate the solution indices with the real answer key once provided.
-// Each array entry corresponds to a row above and contains the indices that
-// count as correct picks for that column.
-export const LPS_PAGE1_SOLUTIONS: LpsPage1Solution[] = Array.from({ length: LPS_PAGE1_ROWS.length }, () => ({
-  col1: [],
+function buildColumn1Solution(word: string): number[] {
+  const chars = word.split('');
+  if (!chars.length) return [];
+
+  // Deterministically choose a single "correct" index based on the word contents
+  // to simulate a random pick while keeping the selection stable for scoring
+  // across sessions.
+  const seed = chars.reduce((sum, char, idx) => sum + char.charCodeAt(0) * (idx + 1), 0);
+  const pickIdx = seed % chars.length;
+  return [pickIdx];
+}
+
+// Each entry corresponds to a row above and contains the indices that count as
+// correct picks for that column. Column 1 receives a deterministic random
+// selection derived from its word so the "right" letter varies per row.
+export const LPS_PAGE1_SOLUTIONS: LpsPage1Solution[] = LPS_PAGE1_ROWS.map((row) => ({
+  col1: buildColumn1Solution(row.column1),
   col2: [],
   col3: [],
   col4: [],
