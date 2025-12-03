@@ -13,7 +13,7 @@ type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = 60;
+const COLUMN_DURATION_SECONDS = [60, 120, 60, 60, 60];
 
 const props = defineProps<{
   pausedTestResult?: {
@@ -47,7 +47,7 @@ const page1Responses = ref<LpsPage1ResponseRow[]>(
       col1: buildSelection(row.column1, pausedRow?.col1),
       col2: buildSelection(row.column2, pausedRow?.col2),
       col3: pausedRow?.col3 ?? [],
-      col4: pausedRow?.col4 ?? [],
+      col4: buildSelection(row.column4, pausedRow?.col4),
       col5: pausedRow?.col5 ?? [],
     };
   }),
@@ -56,13 +56,7 @@ const page1Responses = ref<LpsPage1ResponseRow[]>(
 const columnStates = ref<LpsColumnState[]>(
   props.pausedTestResult?.columnStates?.length === 5
     ? props.pausedTestResult.columnStates
-    : [
-        { status: 'ready', remaining: COLUMN_DURATION_SECONDS },
-        { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-        { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-        { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-        { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-      ],
+    : createInitialColumnStates(),
 );
 
 const activeColumnIndex = computed(() => columnStates.value.findIndex((c) => c.status === 'active'));
@@ -132,6 +126,14 @@ watch(
   { deep: true },
 );
 
+watch(
+  page1Responses,
+  () => {
+    maybeReactivateColumn1FromColumn2();
+  },
+  { deep: true },
+);
+
 function startTest() {
   showTest.value = true;
   pageIndex.value = 0;
@@ -193,20 +195,17 @@ function toggleSelection(rowIdx: number, column: 'col1' | 'col2', charIdx: numbe
 
 function resetColumns() {
   stopColumnTimer();
-  columnStates.value = [
-    { status: 'ready', remaining: COLUMN_DURATION_SECONDS },
-    { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-    { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-    { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-    { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-  ];
+  columnStates.value = createInitialColumnStates();
 }
 
 function startColumn(columnIdx: number) {
   const currentState = columnStates.value[columnIdx];
   if (!currentState || currentState.status !== 'ready' || isAnyColumnActive.value) return;
   stopColumnTimer();
-  columnStates.value[columnIdx] = { status: 'active', remaining: COLUMN_DURATION_SECONDS };
+  columnStates.value[columnIdx] = {
+    status: 'active',
+    remaining: currentState.remaining || getColumnDuration(columnIdx),
+  };
   beginColumnCountdown(columnIdx);
 }
 
@@ -217,7 +216,8 @@ function stopColumnTimer() {
   }
 }
 
-function beginColumnCountdown(columnIdx: number) {
+function beginColumnCountdown(columnIdx: number, options: { unlockNext?: boolean } = {}) {
+  const { unlockNext = true } = options;
   stopColumnTimer();
   columnTimerHandle.value = window.setInterval(() => {
     const activeState = columnStates.value[columnIdx];
@@ -227,19 +227,28 @@ function beginColumnCountdown(columnIdx: number) {
     }
     activeState.remaining = Math.max(activeState.remaining - 1, 0);
     if (activeState.remaining === 0) {
-      finishColumn(columnIdx);
+      finishColumn(columnIdx, unlockNext);
     }
   }, 1000);
 }
 
-function finishColumn(columnIdx: number) {
+function finishColumn(columnIdx: number, unlockNext = true) {
   const currentState = columnStates.value[columnIdx];
   if (!currentState) return;
   columnStates.value[columnIdx] = { status: 'finished', remaining: 0 };
   stopColumnTimer();
+  if (!unlockNext) {
+    if (columnIdx === 0 && columnStates.value[1]?.status === 'finished') {
+      columnStates.value[1] = { ...columnStates.value[1], remaining: 0 };
+    }
+    return;
+  }
   const nextState = columnStates.value[columnIdx + 1];
   if (nextState && nextState.status === 'locked') {
-    columnStates.value[columnIdx + 1] = { status: 'ready', remaining: COLUMN_DURATION_SECONDS };
+    columnStates.value[columnIdx + 1] = {
+      status: 'ready',
+      remaining: nextState.remaining || getColumnDuration(columnIdx + 1),
+    };
   }
 }
 
@@ -250,6 +259,41 @@ function isColumnInteractive(columnNumber: number) {
 
 function formatColumnRemaining(seconds: number) {
   return formatTime(seconds);
+}
+
+function getColumnDuration(columnIdx: number) {
+  return COLUMN_DURATION_SECONDS[columnIdx] ?? COLUMN_DURATION_SECONDS[0];
+}
+
+function createInitialColumnStates(): LpsColumnState[] {
+  return COLUMN_DURATION_SECONDS.map((duration, idx) => ({
+    status: idx === 0 ? 'ready' : 'locked',
+    remaining: duration,
+  }));
+}
+
+function isColumnFullyAnswered(columnKey: 'col1' | 'col2') {
+  return LPS_PAGE1_ROWS.every((row, idx) => {
+    const word = columnKey === 'col1' ? row.column1 : row.column2;
+    if (!word.length) return true;
+    const picks = page1Responses.value[idx]?.[columnKey];
+    return picks?.some(Boolean) ?? false;
+  });
+}
+
+function maybeReactivateColumn1FromColumn2() {
+  const column2State = columnStates.value[1];
+  if (!column2State || column2State.status !== 'active') return;
+  if (!isColumnFullyAnswered('col2')) return;
+  if (column2State.remaining <= 0) return;
+
+  const column1State = columnStates.value[0];
+  if (column1State?.status === 'active') return;
+
+  stopColumnTimer();
+  columnStates.value[1] = { status: 'finished', remaining: column2State.remaining };
+  columnStates.value[0] = { status: 'active', remaining: column2State.remaining };
+  beginColumnCountdown(0, { unlockNext: false });
 }
 
 function scoreRow(rowIdx: number, solutions: LpsPage1Solution, responses: LpsPage1ResponseRow) {
@@ -285,6 +329,7 @@ const page1MaxScore = computed(() =>
 </script>
 
 <template>
+
   <Head title="LPS" />
 
   <!-- Whole page scrolls -->
@@ -346,21 +391,20 @@ const page1MaxScore = computed(() =>
           <div class="rounded-xl border bg-background px-4 py-3 shadow-sm">
             <div class="flex items-center justify-between gap-4">
               <div class="text-xs text-muted-foreground">
-                Spalte starten (je 1:00). Nur eine Spalte gleichzeitig.
+                Spalte starten (Sp 1: {{ formatTime(getColumnDuration(0)) }}, Sp 2:
+                {{ formatTime(getColumnDuration(1)) }}). Nur eine Spalte gleichzeitig.
               </div>
 
               <div class="flex items-center gap-3">
-                <div v-for="(state, idx) in columnStates.slice(0, 2)" :key="`column-state-${idx}`" class="flex items-center gap-2">
-                  <div
-                    class="rounded-lg border px-3 py-2 text-xs"
-                    :class="state.status === 'active'
-                      ? 'border-destructive/50 bg-destructive/5 text-destructive'
-                      : state.status === 'ready'
-                        ? 'border-foreground/20 bg-background text-foreground'
-                        : state.status === 'finished'
-                          ? 'border-foreground/10 bg-muted/30 text-muted-foreground'
-                          : 'border-foreground/10 bg-muted/20 text-muted-foreground'"
-                  >
+                <div v-for="(state, idx) in columnStates.slice(0, 2)" :key="`column-state-${idx}`"
+                  class="flex items-center gap-2">
+                  <div class="rounded-lg border px-3 py-2 text-xs" :class="state.status === 'active'
+                    ? 'border-destructive/50 bg-destructive/5 text-destructive'
+                    : state.status === 'ready'
+                      ? 'border-foreground/20 bg-background text-foreground'
+                      : state.status === 'finished'
+                        ? 'border-foreground/10 bg-muted/30 text-muted-foreground'
+                        : 'border-foreground/10 bg-muted/20 text-muted-foreground'">
                     <div class="flex items-center gap-2">
                       <span class="font-semibold">Sp {{ idx + 1 }}</span>
                       <span v-if="state.status === 'active'" class="tabular-nums font-semibold">
@@ -372,12 +416,8 @@ const page1MaxScore = computed(() =>
                     </div>
                   </div>
 
-                  <Button
-                    v-if="state.status === 'ready'"
-                    size="sm"
-                    :disabled="isAnyColumnActive"
-                    @click="startColumn(idx)"
-                  >
+                  <Button v-if="state.status === 'ready'" size="sm" :disabled="isAnyColumnActive"
+                    @click="startColumn(idx)">
                     Start
                   </Button>
                 </div>
@@ -396,21 +436,16 @@ const page1MaxScore = computed(() =>
             </div>
 
             <!-- content -->
-            <div class="grid grid-cols-5 gap-x-3">
+            <div class="inline-grid grid-cols-5 gap-x-2">
               <!-- Columns 1/2 area -->
-              <div class="col-span-1">
+              <div class="col-span-1 border-solid border-4">
                 <div v-for="(row, idx) in LPS_PAGE1_ROWS" :key="`${row.id}-c1`" class="py-[3px]">
                   <div class="lps-letters">
-                    <button
-                      v-for="(char, charIdx) in row.column1.split('')"
-                      :key="`${row.id}-1-${charIdx}`"
-                      type="button"
-                      class="lps-letter"
+                    <button v-for="(char, charIdx) in row.column1.split('')" :key="`${row.id}-1-${charIdx}`"
+                      type="button" class="lps-letter"
                       :class="page1Responses[idx].col1[charIdx] ? 'lps-letter--selected' : ''"
-                      :disabled="!isColumnInteractive(1)"
-                      :aria-pressed="page1Responses[idx].col1[charIdx]"
-                      @click="toggleSelection(idx, 'col1', charIdx)"
-                    >
+                      :disabled="!isColumnInteractive(1)" :aria-pressed="page1Responses[idx].col1[charIdx]"
+                      @click="toggleSelection(idx, 'col1', charIdx)">
                       {{ char }}
                     </button>
                   </div>
@@ -420,16 +455,11 @@ const page1MaxScore = computed(() =>
               <div class="col-span-1 lps-sep">
                 <div v-for="(row, idx) in LPS_PAGE1_ROWS" :key="`${row.id}-c2`" class="py-[3px]">
                   <div class="lps-letters">
-                    <button
-                      v-for="(char, charIdx) in row.column2.split('')"
-                      :key="`${row.id}-2-${charIdx}`"
-                      type="button"
-                      class="lps-letter"
+                    <button v-for="(char, charIdx) in row.column2.split('')" :key="`${row.id}-2-${charIdx}`"
+                      type="button" class="lps-letter"
                       :class="page1Responses[idx].col2[charIdx] ? 'lps-letter--selected' : ''"
-                      :disabled="!isColumnInteractive(2)"
-                      :aria-pressed="page1Responses[idx].col2[charIdx]"
-                      @click="toggleSelection(idx, 'col2', charIdx)"
-                    >
+                      :disabled="!isColumnInteractive(2)" :aria-pressed="page1Responses[idx].col2[charIdx]"
+                      @click="toggleSelection(idx, 'col2', charIdx)">
                       {{ char }}
                     </button>
                   </div>
@@ -437,13 +467,27 @@ const page1MaxScore = computed(() =>
               </div>
 
               <!-- 3/4/5 empty placeholders (keep structure like original test page) -->
-              <div class="text-center text-muted-foreground/50">–</div>
-              <div class="text-center text-muted-foreground/50">–</div>
-              <div class="text-center text-muted-foreground/50">–</div>
+              <div class="text-center text-muted-foreground/50">–blabla 3 </div>
+              <!-- Columns 4 area -->
+              <div class="col-span-1 lps-sep">
+                <div v-for="(row, idx) in LPS_PAGE1_ROWS" :key="`${row.id}-c2`" class="py-[3px]">
+                  <div class="lps-letters">
+                    <button v-for="(char, charIdx) in row.column4.split('')" :key="`${row.id}-4-${charIdx}`"
+                      type="button" class="lps-letter"
+                      :class="page1Responses[idx].col4[charIdx] ? 'lps-letter--selected' : ''"
+                      :disabled="!isColumnInteractive(2)" :aria-pressed="page1Responses[idx].col4[charIdx]"
+                      @click="toggleSelection(idx, 'col4', charIdx)">
+                      {{ char }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="text-center text-muted-foreground/50">–5</div>
             </div>
           </div>
 
-          <div class="flex items-center justify-between rounded-xl border bg-background px-4 py-3 text-xs text-muted-foreground shadow-sm">
+          <div
+            class="flex items-center justify-between rounded-xl border bg-background px-4 py-3 text-xs text-muted-foreground shadow-sm">
             <div>
               Punkte gesamt:
               <span class="font-semibold text-foreground">
@@ -455,10 +499,8 @@ const page1MaxScore = computed(() =>
         </div>
 
         <!-- Other pages placeholder -->
-        <div
-          v-else
-          class="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed bg-background p-8 text-muted-foreground"
-        >
+        <div v-else
+          class="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed bg-background p-8 text-muted-foreground">
           Weitere Seiten dieses Tests werden in den nächsten Schritten ergänzt.
         </div>
       </div>
@@ -484,7 +526,8 @@ const page1MaxScore = computed(() =>
 .lps-letters {
   display: flex;
   flex-wrap: wrap;
-  gap: 1px; /* very close */
+  gap: 10px;
+  /* very close */
   align-items: baseline;
 }
 
@@ -533,8 +576,8 @@ const page1MaxScore = computed(() =>
 }
 
 /* Vertical separator between column 1 and 2 */
-.lps-sep {
+/* .lps-sep {
   border-left: 2px solid rgb(17 17 17 / 0.9);
   padding-left: 5px;
-}
+} */
 </style>
