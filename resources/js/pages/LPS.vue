@@ -13,7 +13,7 @@ type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = 60;
+const COLUMN_DURATION_SECONDS = [60, 120, 60, 60, 60];
 
 const props = defineProps<{
   pausedTestResult?: {
@@ -56,13 +56,7 @@ const page1Responses = ref<LpsPage1ResponseRow[]>(
 const columnStates = ref<LpsColumnState[]>(
   props.pausedTestResult?.columnStates?.length === 5
     ? props.pausedTestResult.columnStates
-    : [
-        { status: 'ready', remaining: COLUMN_DURATION_SECONDS },
-        { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-        { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-        { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-        { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-      ],
+    : createInitialColumnStates(),
 );
 
 const activeColumnIndex = computed(() => columnStates.value.findIndex((c) => c.status === 'active'));
@@ -132,6 +126,14 @@ watch(
   { deep: true },
 );
 
+watch(
+  page1Responses,
+  () => {
+    maybeReactivateColumn1FromColumn2();
+  },
+  { deep: true },
+);
+
 function startTest() {
   showTest.value = true;
   pageIndex.value = 0;
@@ -193,20 +195,17 @@ function toggleSelection(rowIdx: number, column: 'col1' | 'col2', charIdx: numbe
 
 function resetColumns() {
   stopColumnTimer();
-  columnStates.value = [
-    { status: 'ready', remaining: COLUMN_DURATION_SECONDS },
-    { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-    { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-    { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-    { status: 'locked', remaining: COLUMN_DURATION_SECONDS },
-  ];
+  columnStates.value = createInitialColumnStates();
 }
 
 function startColumn(columnIdx: number) {
   const currentState = columnStates.value[columnIdx];
   if (!currentState || currentState.status !== 'ready' || isAnyColumnActive.value) return;
   stopColumnTimer();
-  columnStates.value[columnIdx] = { status: 'active', remaining: COLUMN_DURATION_SECONDS };
+  columnStates.value[columnIdx] = {
+    status: 'active',
+    remaining: currentState.remaining || getColumnDuration(columnIdx),
+  };
   beginColumnCountdown(columnIdx);
 }
 
@@ -217,7 +216,8 @@ function stopColumnTimer() {
   }
 }
 
-function beginColumnCountdown(columnIdx: number) {
+function beginColumnCountdown(columnIdx: number, options: { unlockNext?: boolean } = {}) {
+  const { unlockNext = true } = options;
   stopColumnTimer();
   columnTimerHandle.value = window.setInterval(() => {
     const activeState = columnStates.value[columnIdx];
@@ -227,19 +227,28 @@ function beginColumnCountdown(columnIdx: number) {
     }
     activeState.remaining = Math.max(activeState.remaining - 1, 0);
     if (activeState.remaining === 0) {
-      finishColumn(columnIdx);
+      finishColumn(columnIdx, unlockNext);
     }
   }, 1000);
 }
 
-function finishColumn(columnIdx: number) {
+function finishColumn(columnIdx: number, unlockNext = true) {
   const currentState = columnStates.value[columnIdx];
   if (!currentState) return;
   columnStates.value[columnIdx] = { status: 'finished', remaining: 0 };
   stopColumnTimer();
+  if (!unlockNext) {
+    if (columnIdx === 0 && columnStates.value[1]?.status === 'finished') {
+      columnStates.value[1] = { ...columnStates.value[1], remaining: 0 };
+    }
+    return;
+  }
   const nextState = columnStates.value[columnIdx + 1];
   if (nextState && nextState.status === 'locked') {
-    columnStates.value[columnIdx + 1] = { status: 'ready', remaining: COLUMN_DURATION_SECONDS };
+    columnStates.value[columnIdx + 1] = {
+      status: 'ready',
+      remaining: nextState.remaining || getColumnDuration(columnIdx + 1),
+    };
   }
 }
 
@@ -250,6 +259,41 @@ function isColumnInteractive(columnNumber: number) {
 
 function formatColumnRemaining(seconds: number) {
   return formatTime(seconds);
+}
+
+function getColumnDuration(columnIdx: number) {
+  return COLUMN_DURATION_SECONDS[columnIdx] ?? COLUMN_DURATION_SECONDS[0];
+}
+
+function createInitialColumnStates(): LpsColumnState[] {
+  return COLUMN_DURATION_SECONDS.map((duration, idx) => ({
+    status: idx === 0 ? 'ready' : 'locked',
+    remaining: duration,
+  }));
+}
+
+function isColumnFullyAnswered(columnKey: 'col1' | 'col2') {
+  return LPS_PAGE1_ROWS.every((row, idx) => {
+    const word = columnKey === 'col1' ? row.column1 : row.column2;
+    if (!word.length) return true;
+    const picks = page1Responses.value[idx]?.[columnKey];
+    return picks?.some(Boolean) ?? false;
+  });
+}
+
+function maybeReactivateColumn1FromColumn2() {
+  const column2State = columnStates.value[1];
+  if (!column2State || column2State.status !== 'active') return;
+  if (!isColumnFullyAnswered('col2')) return;
+  if (column2State.remaining <= 0) return;
+
+  const column1State = columnStates.value[0];
+  if (column1State?.status === 'active') return;
+
+  stopColumnTimer();
+  columnStates.value[1] = { status: 'finished', remaining: column2State.remaining };
+  columnStates.value[0] = { status: 'active', remaining: column2State.remaining };
+  beginColumnCountdown(0, { unlockNext: false });
 }
 
 function scoreRow(rowIdx: number, solutions: LpsPage1Solution, responses: LpsPage1ResponseRow) {
@@ -343,11 +387,12 @@ const page1MaxScore = computed(() =>
         <!-- Page 1 -->
         <div v-if="pageIndex === 0" class="space-y-3">
           <!-- Column timers / start buttons -->
-          <div class="rounded-xl border bg-background px-4 py-3 shadow-sm">
-            <div class="flex items-center justify-between gap-4">
-              <div class="text-xs text-muted-foreground">
-                Spalte starten (je 1:00). Nur eine Spalte gleichzeitig.
-              </div>
+              <div class="rounded-xl border bg-background px-4 py-3 shadow-sm">
+                <div class="flex items-center justify-between gap-4">
+                  <div class="text-xs text-muted-foreground">
+                    Spalte starten (Sp 1: {{ formatTime(getColumnDuration(0)) }}, Sp 2:
+                    {{ formatTime(getColumnDuration(1)) }}). Nur eine Spalte gleichzeitig.
+                  </div>
 
               <div class="flex items-center gap-3">
                 <div v-for="(state, idx) in columnStates.slice(0, 2)" :key="`column-state-${idx}`" class="flex items-center gap-2">
