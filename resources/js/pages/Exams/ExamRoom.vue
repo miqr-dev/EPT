@@ -86,6 +86,8 @@ const testComponents: Record<string, unknown> = {
   'BRT-B': BRTB,
   'FPI-R': FPI,
   LMT: LMT,
+  'LPS-A': LPS,
+  'LPS-B': LPS,
   LPS: LPS,
   'MRT-A': MRTA,
   'MRT-B': MRTB,
@@ -97,7 +99,7 @@ const testComponents: Record<string, unknown> = {
 };
 
 const stepStatuses = ref<Record<number, StepStatusEntry>>(normalizeStepStatuses(props.stepStatuses));
-const testsWithPauseSupport = new Set(['BIT-2', 'FPI-R', 'MRT-A', 'MRT-B', 'LPS']);
+const testsWithPauseSupport = new Set(['BIT-2', 'FPI-R', 'MRT-A', 'MRT-B', 'LPS', 'LPS-A', 'LPS-B']);
 const visibleSteps = computed(() =>
   props.exam.steps.filter((step) => {
     if (props.exam.current_step?.id === step.id) {
@@ -278,6 +280,7 @@ const activeComponentProps = computed<Record<string, unknown>>(() => {
 
   const baseProps: Record<string, unknown> = {
     timeRemainingSeconds: activeTimeRemainingSeconds.value ?? null,
+    testName: step.test.name,
   };
 
   if (testsWithPauseSupport.has(step.test.name) && activePausedTestResult.value) {

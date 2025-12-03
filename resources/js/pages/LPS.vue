@@ -23,6 +23,7 @@ const props = defineProps<{
     columnStates?: LpsColumnState[];
   };
   timeRemainingSeconds?: number | null;
+  testName?: string;
 }>();
 
 const emit = defineEmits(['complete', 'update:answers']);
@@ -77,6 +78,7 @@ if (props.pausedTestResult) {
 const totalElapsed = computed(() => elapsedSecondsBeforeResume.value + runningElapsedSeconds.value);
 
 const endConfirmOpen = ref(false);
+const testLabel = computed(() => props.testName ?? 'LPS');
 const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
   isActive: () => showTest.value,
   onStart: () => {
@@ -330,7 +332,7 @@ const page1MaxScore = computed(() =>
 
 <template>
 
-  <Head title="LPS" />
+  <Head :title="testLabel" />
 
   <!-- Whole page scrolls -->
   <div class="min-h-screen overflow-x-auto bg-muted/15 p-4">
@@ -338,7 +340,7 @@ const page1MaxScore = computed(() =>
       <!-- Top bar -->
       <div class="mb-4 flex items-end justify-between gap-4">
         <div class="space-y-1">
-          <h1 class="text-xl font-bold tracking-tight">LPS</h1>
+          <h1 class="text-xl font-bold tracking-tight">{{ testLabel }}</h1>
           <div class="text-xs text-muted-foreground" v-if="showTest">Seite {{ pageIndex + 1 }} / 3</div>
         </div>
 
@@ -359,7 +361,7 @@ const page1MaxScore = computed(() =>
       <div v-if="!showTest" class="rounded-2xl border bg-background p-8 shadow-sm">
         <div class="mx-auto max-w-3xl space-y-4 text-center">
           <p class="text-base text-muted-foreground">
-            Der LPS-Test umfasst drei Seiten. Beginnen Sie mit der ersten Seite. Die Spalten 1 und 2 sind
+            Der {{ testLabel }}-Test umfasst drei Seiten. Beginnen Sie mit der ersten Seite. Die Spalten 1 und 2 sind
             zusammengefasst, die Spalten 3, 4 und 5 stehen getrennt nebeneinander. Arbeiten Sie jede Zeile von oben
             nach unten durch.
           </p>
