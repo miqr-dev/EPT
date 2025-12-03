@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { LPS_PAGE1_ROWS } from '@/pages/Questions/LPSPage1';
+import { getLpsDataset } from '@/pages/Questions/LPSPage1';
 
-const props = defineProps<{ results: Record<string, any> | null }>();
+const props = defineProps<{ results: Record<string, any> | null; testName?: string }>();
 
 const page1 = computed(() => props.results?.page1 ?? []);
+const lpsRows = computed(() => getLpsDataset(props.testName).rows);
 const displayRows = computed(() =>
-  LPS_PAGE1_ROWS.map((row, idx) => ({
+  lpsRows.value.map((row, idx) => ({
     row,
     response:
       page1.value[idx] ?? {
@@ -21,6 +22,7 @@ const displayRows = computed(() =>
 const totalTime = computed(() => props.results?.total_time_seconds ?? null);
 const page1Score = computed(() => props.results?.page1_score ?? null);
 const page1MaxScore = computed(() => props.results?.page1_max_score ?? null);
+const testLabel = computed(() => props.testName ?? 'LPS');
 
 function formatTime(seconds?: number | null) {
   if (seconds == null) return '–';
@@ -33,7 +35,7 @@ function formatTime(seconds?: number | null) {
 <template>
   <div class="space-y-4">
     <div class="rounded-lg border bg-background">
-      <div class="border-b px-4 py-3 text-base font-semibold">LPS – Seite 1</div>
+      <div class="border-b px-4 py-3 text-base font-semibold">{{ testLabel }} – Seite 1</div>
       <div class="overflow-x-auto">
         <table class="min-w-[960px] w-full border-collapse text-sm">
           <thead>

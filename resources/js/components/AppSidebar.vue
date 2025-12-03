@@ -50,8 +50,13 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid, // Placeholder icon, can be changed later
     },
     {
-        title: 'LPS',
-        href: '/lps',
+        title: 'LPS-A',
+        href: '/lps-a',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'LPS-B',
+        href: '/lps-b',
         icon: LayoutGrid,
     },
     {

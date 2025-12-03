@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
-import { LPS_PAGE1_ROWS, LPS_PAGE1_SOLUTIONS, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
+import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
 
@@ -23,9 +23,12 @@ const props = defineProps<{
     columnStates?: LpsColumnState[];
   };
   timeRemainingSeconds?: number | null;
+  testName?: string;
 }>();
 
 const emit = defineEmits(['complete', 'update:answers']);
+
+const { rows: lpsRows, solutions: lpsSolutions } = getLpsDataset(props.testName);
 
 const showTest = ref(false);
 const pageIndex = ref(0);
@@ -41,7 +44,7 @@ function buildSelection(word: string, saved?: boolean[]) {
 }
 
 const page1Responses = ref<LpsPage1ResponseRow[]>(
-  LPS_PAGE1_ROWS.map((row, idx) => {
+  lpsRows.map((row, idx) => {
     const pausedRow = props.pausedTestResult?.page1?.[idx];
     return {
       col1: buildSelection(row.column1, pausedRow?.col1),
@@ -77,6 +80,7 @@ if (props.pausedTestResult) {
 const totalElapsed = computed(() => elapsedSecondsBeforeResume.value + runningElapsedSeconds.value);
 
 const endConfirmOpen = ref(false);
+const testLabel = computed(() => props.testName ?? 'LPS');
 const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
   isActive: () => showTest.value,
   onStart: () => {
@@ -273,7 +277,7 @@ function createInitialColumnStates(): LpsColumnState[] {
 }
 
 function isColumnFullyAnswered(columnKey: 'col1' | 'col2') {
-  return LPS_PAGE1_ROWS.every((row, idx) => {
+  return lpsRows.every((row, idx) => {
     const word = columnKey === 'col1' ? row.column1 : row.column2;
     if (!word.length) return true;
     const picks = page1Responses.value[idx]?.[columnKey];
@@ -309,13 +313,13 @@ function scoreRow(rowIdx: number, solutions: LpsPage1Solution, responses: LpsPag
 
 const page1Score = computed(() =>
   page1Responses.value.reduce((total, response, idx) => {
-    const solutions = LPS_PAGE1_SOLUTIONS[idx] ?? {};
+    const solutions = lpsSolutions[idx] ?? {};
     return total + scoreRow(idx, solutions, response);
   }, 0),
 );
 
 const page1MaxScore = computed(() =>
-  LPS_PAGE1_SOLUTIONS.reduce(
+  lpsSolutions.reduce(
     (total, solution) =>
       total +
       (solution.col1?.length ?? 0) +
@@ -330,7 +334,7 @@ const page1MaxScore = computed(() =>
 
 <template>
 
-  <Head title="LPS" />
+  <Head :title="testLabel" />
 
   <!-- Whole page scrolls -->
   <div class="min-h-screen overflow-x-auto bg-muted/15 p-4">
@@ -338,7 +342,7 @@ const page1MaxScore = computed(() =>
       <!-- Top bar -->
       <div class="mb-4 flex items-end justify-between gap-4">
         <div class="space-y-1">
-          <h1 class="text-xl font-bold tracking-tight">LPS</h1>
+          <h1 class="text-xl font-bold tracking-tight">{{ testLabel }}</h1>
           <div class="text-xs text-muted-foreground" v-if="showTest">Seite {{ pageIndex + 1 }} / 3</div>
         </div>
 
@@ -359,7 +363,7 @@ const page1MaxScore = computed(() =>
       <div v-if="!showTest" class="rounded-2xl border bg-background p-8 shadow-sm">
         <div class="mx-auto max-w-3xl space-y-4 text-center">
           <p class="text-base text-muted-foreground">
-            Der LPS-Test umfasst drei Seiten. Beginnen Sie mit der ersten Seite. Die Spalten 1 und 2 sind
+            Der {{ testLabel }}-Test umfasst drei Seiten. Beginnen Sie mit der ersten Seite. Die Spalten 1 und 2 sind
             zusammengefasst, die Spalten 3, 4 und 5 stehen getrennt nebeneinander. Arbeiten Sie jede Zeile von oben
             nach unten durch.
           </p>
@@ -439,7 +443,7 @@ const page1MaxScore = computed(() =>
             <div class="inline-grid grid-cols-5 gap-x-2">
               <!-- Columns 1/2 area -->
               <div class="col-span-1 border-solid border-4">
-                <div v-for="(row, idx) in LPS_PAGE1_ROWS" :key="`${row.id}-c1`" class="py-[3px]">
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c1`" class="py-[3px]">
                   <div class="lps-letters">
                     <button v-for="(char, charIdx) in row.column1.split('')" :key="`${row.id}-1-${charIdx}`"
                       type="button" class="lps-letter"
@@ -453,7 +457,7 @@ const page1MaxScore = computed(() =>
               </div>
 
               <div class="col-span-1 lps-sep">
-                <div v-for="(row, idx) in LPS_PAGE1_ROWS" :key="`${row.id}-c2`" class="py-[3px]">
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[3px]">
                   <div class="lps-letters">
                     <button v-for="(char, charIdx) in row.column2.split('')" :key="`${row.id}-2-${charIdx}`"
                       type="button" class="lps-letter"
@@ -470,7 +474,7 @@ const page1MaxScore = computed(() =>
               <div class="text-center text-muted-foreground/50">–blabla 3 </div>
               <!-- Columns 4 area -->
               <div class="col-span-1 lps-sep">
-                <div v-for="(row, idx) in LPS_PAGE1_ROWS" :key="`${row.id}-c2`" class="py-[3px]">
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[3px]">
                   <div class="lps-letters">
                     <button v-for="(char, charIdx) in row.column4.split('')" :key="`${row.id}-4-${charIdx}`"
                       type="button" class="lps-letter"

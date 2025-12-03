@@ -29,6 +29,11 @@ export type LpsPage1Solution = {
   col5?: number[];
 };
 
+export type LpsDataset = {
+  rows: LpsPage1Row[];
+  solutions: LpsPage1Solution[];
+};
+
 export const LPS_PAGE1_COLUMN1: LpsColumnEntry[] = [
   { id: 1, word: 'Auyzug', correctIndex: 0 },
   { id: 2, word: 'Freute', correctIndex: 0 },
@@ -158,10 +163,10 @@ export const LPS_PAGE1_COLUMN4: LpsColumnEntry[] = [
   { id: 40, word: 'Anubes', correctIndex: 0 },
 ];
 
-function buildRow(rowIdx: number): LpsPage1Row {
-  const col1 = LPS_PAGE1_COLUMN1[rowIdx];
-  const col2 = LPS_PAGE1_COLUMN2[rowIdx];
-  const col4 = LPS_PAGE1_COLUMN4[rowIdx];
+function buildRow(rowIdx: number, column1: LpsColumnEntry[], column2: LpsColumnEntry[], column4: LpsColumnEntry[]): LpsPage1Row {
+  const col1 = column1[rowIdx];
+  const col2 = column2[rowIdx];
+  const col4 = column4[rowIdx];
   const fallbackId = rowIdx + 1;
   return {
     id: col1?.id ?? col2?.id ?? fallbackId,
@@ -173,12 +178,10 @@ function buildRow(rowIdx: number): LpsPage1Row {
   };
 }
 
-const rowCount = Math.max(
-  LPS_PAGE1_COLUMN1.length,
-  LPS_PAGE1_COLUMN2.length,
-);
-
-export const LPS_PAGE1_ROWS: LpsPage1Row[] = Array.from({ length: rowCount }, (_, idx) => buildRow(idx));
+function buildRows(column1: LpsColumnEntry[], column2: LpsColumnEntry[], column4: LpsColumnEntry[]) {
+  const rowCount = Math.max(column1.length, column2.length);
+  return Array.from({ length: rowCount }, (_, idx) => buildRow(idx, column1, column2, column4));
+}
 
 function extractSolution(entry?: LpsColumnEntry): number[] {
   if (!entry || typeof entry.correctIndex !== 'number') return [];
@@ -186,10 +189,66 @@ function extractSolution(entry?: LpsColumnEntry): number[] {
   return [entry.correctIndex];
 }
 
-export const LPS_PAGE1_SOLUTIONS: LpsPage1Solution[] = LPS_PAGE1_ROWS.map((_, idx) => ({
-  col1: extractSolution(LPS_PAGE1_COLUMN1[idx]),
-  col2: extractSolution(LPS_PAGE1_COLUMN2[idx]),
-  col3: [],
-  col4: extractSolution(LPS_PAGE1_COLUMN4[idx]),
-  col5: [],
-}));
+function buildSolutions(column1: LpsColumnEntry[], column2: LpsColumnEntry[], column4: LpsColumnEntry[]) {
+  return buildRows(column1, column2, column4).map((_, idx) => ({
+    col1: extractSolution(column1[idx]),
+    col2: extractSolution(column2[idx]),
+    col3: [],
+    col4: extractSolution(column4[idx]),
+    col5: [],
+  }));
+}
+
+export const LPS_PAGE1_ROWS: LpsPage1Row[] = buildRows(
+  LPS_PAGE1_COLUMN1,
+  LPS_PAGE1_COLUMN2,
+  LPS_PAGE1_COLUMN4,
+);
+
+export const LPS_PAGE1_SOLUTIONS: LpsPage1Solution[] = buildSolutions(
+  LPS_PAGE1_COLUMN1,
+  LPS_PAGE1_COLUMN2,
+  LPS_PAGE1_COLUMN4,
+);
+
+const LPS_PAGE1_COLUMN1_A = LPS_PAGE1_COLUMN1.slice(0, 20);
+const LPS_PAGE1_COLUMN2_A = LPS_PAGE1_COLUMN2.slice(0, 20);
+const LPS_PAGE1_COLUMN4_A = LPS_PAGE1_COLUMN4.slice(0, 20);
+
+export const LPS_PAGE1_ROWS_A: LpsPage1Row[] = buildRows(
+  LPS_PAGE1_COLUMN1_A,
+  LPS_PAGE1_COLUMN2_A,
+  LPS_PAGE1_COLUMN4_A,
+);
+
+export const LPS_PAGE1_SOLUTIONS_A: LpsPage1Solution[] = buildSolutions(
+  LPS_PAGE1_COLUMN1_A,
+  LPS_PAGE1_COLUMN2_A,
+  LPS_PAGE1_COLUMN4_A,
+);
+
+const LPS_PAGE1_COLUMN1_B = LPS_PAGE1_COLUMN1.slice(20);
+const LPS_PAGE1_COLUMN2_B = LPS_PAGE1_COLUMN2.slice(20);
+const LPS_PAGE1_COLUMN4_B = LPS_PAGE1_COLUMN4.slice(20);
+
+export const LPS_PAGE1_ROWS_B: LpsPage1Row[] = buildRows(
+  LPS_PAGE1_COLUMN1_B,
+  LPS_PAGE1_COLUMN2_B,
+  LPS_PAGE1_COLUMN4_B,
+);
+
+export const LPS_PAGE1_SOLUTIONS_B: LpsPage1Solution[] = buildSolutions(
+  LPS_PAGE1_COLUMN1_B,
+  LPS_PAGE1_COLUMN2_B,
+  LPS_PAGE1_COLUMN4_B,
+);
+
+export function getLpsDataset(testName?: string): LpsDataset {
+  if (testName === 'LPS-A') {
+    return { rows: LPS_PAGE1_ROWS_A, solutions: LPS_PAGE1_SOLUTIONS_A };
+  }
+  if (testName === 'LPS-B') {
+    return { rows: LPS_PAGE1_ROWS_B, solutions: LPS_PAGE1_SOLUTIONS_B };
+  }
+  return { rows: LPS_PAGE1_ROWS, solutions: LPS_PAGE1_SOLUTIONS };
+}
