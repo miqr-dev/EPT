@@ -187,7 +187,8 @@ function toggleSelection(rowIdx: number, column: 'col1' | 'col2', charIdx: numbe
   if (!isColumnInteractive(columnNumber)) return;
   const row = page1Responses.value[rowIdx];
   if (!row || !row[column]?.length) return;
-  row[column][charIdx] = !row[column][charIdx];
+  const currentlySelected = row[column][charIdx];
+  row[column] = row[column].map((_, idx) => (idx === charIdx ? !currentlySelected : false));
 }
 
 function resetColumns() {

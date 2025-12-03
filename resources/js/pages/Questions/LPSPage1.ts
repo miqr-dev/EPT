@@ -46,6 +46,10 @@ export const LPS_PAGE1_ROWS: LpsPage1Row[] = [
 ];
 
 function buildColumn1Solution(word: string): number[] {
+  if (word === 'Kreide') {
+    return [2];
+  }
+
   const chars = word.split('');
   if (!chars.length) return [];
 
