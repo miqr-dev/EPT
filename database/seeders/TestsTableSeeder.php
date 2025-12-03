@@ -18,6 +18,7 @@ class TestsTableSeeder extends Seeder
       ['name' => 'MRT-B', 'code' => 'MRT-B', 'duration' => 30],
       ['name' => 'FPI-R', 'code' => 'FPI-R', 'duration' => 30],
       ['name' => 'LMT',   'code' => 'LMT', 'duration' => 20],
+      ['name' => 'LPS',   'code' => 'LPS', 'duration' => 25],
       ['name' => 'BIT-2', 'code' => 'BIT-2', 'duration' => 15],
       ['name' => 'AVEM', 'code' => 'AVEM', 'duration' => 20],
       ['name' => 'Konzentrationstest', 'code' => 'Konzentrationstest', 'duration' => 6],

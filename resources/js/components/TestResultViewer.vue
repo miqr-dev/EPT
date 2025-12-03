@@ -19,6 +19,7 @@ import { norms_male_45_59 } from '@/pages/Scores/FPI/norms_male_45_59';
 import { norms_male_60up } from '@/pages/Scores/FPI/norms_male_60up';
 import { computed, ref, watch } from 'vue';
 import BIT2Result from '@/components/BIT2Result.vue';
+import LpsResult from '@/components/LpsResult.vue';
 
 interface Answer {
   question: string;
@@ -155,6 +156,7 @@ const fpiRohwerte = computed(() => {
         <LmtResult v-else-if="test.name === 'LMT'" :results="local" :show-answers="showAnswers" />
         <FpiResult v-else-if="test.name === 'FPI-R'" :stanines="fpiStanines" :rohwerte="fpiRohwerte" :answers="local.answers" :show-answers="showAnswers" />
         <BIT2Result v-else-if="test.name === 'BIT-2'" :results="local" :participantProfile="participantProfile" :show-answers="showAnswers" />
+        <LpsResult v-else-if="test.name === 'LPS'" :results="local" />
         <AvemResult v-else-if="test.name === 'AVEM'" :results="local" />
     <template v-else>
       <table class="mb-4 w-full overflow-hidden rounded-lg border text-sm shadow">

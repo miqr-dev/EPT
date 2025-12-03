@@ -50,6 +50,11 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid, // Placeholder icon, can be changed later
     },
     {
+        title: 'LPS',
+        href: '/lps',
+        icon: LayoutGrid,
+    },
+    {
         title: 'BIT-2',
         href: '/bit-2', // The new route for the Tests page
         icon: LayoutGrid, // Placeholder icon, can be changed later
