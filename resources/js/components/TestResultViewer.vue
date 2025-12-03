@@ -156,7 +156,11 @@ const fpiRohwerte = computed(() => {
         <LmtResult v-else-if="test.name === 'LMT'" :results="local" :show-answers="showAnswers" />
         <FpiResult v-else-if="test.name === 'FPI-R'" :stanines="fpiStanines" :rohwerte="fpiRohwerte" :answers="local.answers" :show-answers="showAnswers" />
         <BIT2Result v-else-if="test.name === 'BIT-2'" :results="local" :participantProfile="participantProfile" :show-answers="showAnswers" />
-        <LpsResult v-else-if="test.name === 'LPS'" :results="local" />
+        <LpsResult
+          v-else-if="['LPS', 'LPS-A', 'LPS-B'].includes(test.name)"
+          :results="local"
+          :test-name="test.name"
+        />
         <AvemResult v-else-if="test.name === 'AVEM'" :results="local" />
     <template v-else>
       <table class="mb-4 w-full overflow-hidden rounded-lg border text-sm shadow">

@@ -70,7 +70,7 @@ class ImportUser
     $eloquentUser->save();
     if ($role === 'participant') {
       if (TestAssignment::where('participant_id', $eloquentUser->id)->count() === 0) {
-        $defaultCodes = ['BRT-A','BRT-B', 'MRT-A', 'FPI-R', 'LMT', 'LPS', 'BIT-2', 'AVEM', '628 08.03'];
+        $defaultCodes = ['BRT-A','BRT-B', 'MRT-A', 'FPI-R', 'LMT', 'LPS-A', 'LPS-B', 'LPS', 'BIT-2', 'AVEM', '628 08.03'];
         $defaultTests = Test::whereIn('code', $defaultCodes)->get();
 
         foreach ($defaultTests as $test) {
