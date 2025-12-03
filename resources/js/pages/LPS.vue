@@ -3,7 +3,6 @@ import { Head } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { LPS_PAGE1_ROWS } from '@/pages/Questions/LPSPage1';
@@ -12,7 +11,7 @@ const props = defineProps<{
   pausedTestResult?: {
     pageIndex?: number;
     total_time_seconds?: number;
-    page1?: Array<{ col1: string; col2: string; col3: string; col4: string; col5: string }>;
+    page1?: Array<{ col1: boolean[]; col2: boolean[]; col3?: boolean[]; col4?: boolean[]; col5?: boolean[] }>;
   };
   timeRemainingSeconds?: number | null;
 }>();
@@ -25,15 +24,22 @@ const elapsedSecondsBeforeResume = ref(props.pausedTestResult?.total_time_second
 const runningElapsedSeconds = ref(0);
 const timerHandle = ref<number | null>(null);
 
+function buildSelection(word: string, saved?: boolean[]) {
+  const base = word.split('').map(() => false);
+  if (!saved) return base;
+  if (saved.length === base.length) return saved;
+  return base.map((_, idx) => saved[idx] ?? false);
+}
+
 const page1Responses = ref(
-  LPS_PAGE1_ROWS.map((_, idx) => {
+  LPS_PAGE1_ROWS.map((row, idx) => {
     const pausedRow = props.pausedTestResult?.page1?.[idx];
     return {
-      col1: pausedRow?.col1 ?? '',
-      col2: pausedRow?.col2 ?? '',
-      col3: pausedRow?.col3 ?? '',
-      col4: pausedRow?.col4 ?? '',
-      col5: pausedRow?.col5 ?? '',
+      col1: buildSelection(row.column1, pausedRow?.col1),
+      col2: buildSelection(row.column2, pausedRow?.col2),
+      col3: pausedRow?.col3 ?? [],
+      col4: pausedRow?.col4 ?? [],
+      col5: pausedRow?.col5 ?? [],
     };
   }),
 );
@@ -138,6 +144,12 @@ function formatTime(seconds: number) {
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
+
+function toggleSelection(rowIdx: number, column: 'col1' | 'col2', charIdx: number) {
+  const row = page1Responses.value[rowIdx];
+  if (!row || !row[column]?.length) return;
+  row[column][charIdx] = !row[column][charIdx];
+}
 </script>
 
 <template>
@@ -200,35 +212,44 @@ function formatTime(seconds: number) {
             <tbody>
               <tr v-for="(row, idx) in LPS_PAGE1_ROWS" :key="row.id" class="border-t">
                 <td class="px-3 py-3 align-top">
-                  <div class="flex items-center justify-between gap-3">
-                    <span class="font-mono text-lg leading-none">{{ row.column12[0] }}</span>
-                    <Input v-model="page1Responses[idx].col1" placeholder="Antwort" class="w-28" />
+                  <div class="flex flex-wrap gap-2" role="group" :aria-label="`Zeile ${idx + 1} Spalte 1`">
+                    <button
+                      v-for="(char, charIdx) in row.column1.split('')"
+                      :key="`${row.id}-1-${charIdx}`"
+                      type="button"
+                      class="relative flex h-9 w-9 items-center justify-center rounded-full border bg-white font-semibold transition hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                      :class="page1Responses[idx].col1[charIdx] ? 'border-destructive bg-destructive/10' : ''"
+                      :aria-pressed="page1Responses[idx].col1[charIdx]"
+                      @click="toggleSelection(idx, 'col1', charIdx)"
+                    >
+                      <span class="text-base leading-none">{{ char }}</span>
+                      <span v-if="page1Responses[idx].col1[charIdx]" class="absolute text-xl font-bold leading-none text-destructive">
+                        /
+                      </span>
+                    </button>
                   </div>
                 </td>
                 <td class="px-3 py-3 align-top">
-                  <div class="flex items-center justify-between gap-3">
-                    <span class="font-mono text-lg leading-none">{{ row.column12[1] }}</span>
-                    <Input v-model="page1Responses[idx].col2" placeholder="Antwort" class="w-28" />
+                  <div class="flex flex-wrap gap-2" role="group" :aria-label="`Zeile ${idx + 1} Spalte 2`">
+                    <button
+                      v-for="(char, charIdx) in row.column2.split('')"
+                      :key="`${row.id}-2-${charIdx}`"
+                      type="button"
+                      class="relative flex h-9 w-9 items-center justify-center rounded-full border bg-white font-semibold transition hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                      :class="page1Responses[idx].col2[charIdx] ? 'border-destructive bg-destructive/10' : ''"
+                      :aria-pressed="page1Responses[idx].col2[charIdx]"
+                      @click="toggleSelection(idx, 'col2', charIdx)"
+                    >
+                      <span class="text-base leading-none">{{ char }}</span>
+                      <span v-if="page1Responses[idx].col2[charIdx]" class="absolute text-xl font-bold leading-none text-destructive">
+                        /
+                      </span>
+                    </button>
                   </div>
                 </td>
-                <td class="px-3 py-3 align-top">
-                  <div class="flex items-center justify-between gap-3">
-                    <span class="font-mono text-lg leading-none">{{ row.column3 }}</span>
-                    <Input v-model="page1Responses[idx].col3" placeholder="Antwort" class="w-28" />
-                  </div>
-                </td>
-                <td class="px-3 py-3 align-top">
-                  <div class="flex items-center justify-between gap-3">
-                    <span class="font-mono text-lg leading-none">{{ row.column4 }}</span>
-                    <Input v-model="page1Responses[idx].col4" placeholder="Antwort" class="w-28" />
-                  </div>
-                </td>
-                <td class="px-3 py-3 align-top">
-                  <div class="flex items-center justify-between gap-3">
-                    <span class="font-mono text-lg leading-none">{{ row.column5 }}</span>
-                    <Input v-model="page1Responses[idx].col5" placeholder="Antwort" class="w-28" />
-                  </div>
-                </td>
+                <td class="px-3 py-3 align-top text-center text-muted-foreground">–</td>
+                <td class="px-3 py-3 align-top text-center text-muted-foreground">–</td>
+                <td class="px-3 py-3 align-top text-center text-muted-foreground">–</td>
               </tr>
             </tbody>
           </table>

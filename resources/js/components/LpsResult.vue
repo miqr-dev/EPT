@@ -5,6 +5,19 @@ import { LPS_PAGE1_ROWS } from '@/pages/Questions/LPSPage1';
 const props = defineProps<{ results: Record<string, any> | null }>();
 
 const page1 = computed(() => props.results?.page1 ?? []);
+const displayRows = computed(() =>
+  LPS_PAGE1_ROWS.map((row, idx) => ({
+    row,
+    response:
+      page1.value[idx] ?? {
+        col1: [],
+        col2: [],
+        col3: [],
+        col4: [],
+        col5: [],
+      },
+  })),
+);
 const totalTime = computed(() => props.results?.total_time_seconds ?? null);
 
 function formatTime(seconds?: number | null) {
@@ -37,47 +50,38 @@ function formatTime(seconds?: number | null) {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(row, idx) in page1" :key="idx" class="border-t align-top">
+            <tr v-for="row in displayRows" :key="row.row.id" class="border-t align-top">
               <td class="px-3 py-3">
-                <div class="flex items-center justify-between gap-3">
-                  <span class="font-mono text-lg leading-none">{{ LPS_PAGE1_ROWS[idx]?.column12[0] }}</span>
-                  <span class="w-32 rounded border bg-muted/30 px-2 py-1 font-mono text-sm">
-                    {{ row.col1 || '–' }}
-                  </span>
+                <div class="flex flex-wrap gap-2">
+                  <div
+                    v-for="(char, charIdx) in row.row.column1.split('')"
+                    :key="`${row.row.id}-1-${charIdx}`"
+                    class="relative flex h-8 w-8 items-center justify-center rounded-full border bg-muted/20 font-semibold"
+                  >
+                    <span class="text-sm leading-none">{{ char }}</span>
+                    <span v-if="row.response.col1?.[charIdx]" class="absolute text-lg font-bold leading-none text-destructive">
+                      /
+                    </span>
+                  </div>
                 </div>
               </td>
               <td class="px-3 py-3">
-                <div class="flex items-center justify-between gap-3">
-                  <span class="font-mono text-lg leading-none">{{ LPS_PAGE1_ROWS[idx]?.column12[1] }}</span>
-                  <span class="w-32 rounded border bg-muted/30 px-2 py-1 font-mono text-sm">
-                    {{ row.col2 || '–' }}
-                  </span>
+                <div class="flex flex-wrap gap-2">
+                  <div
+                    v-for="(char, charIdx) in row.row.column2.split('')"
+                    :key="`${row.row.id}-2-${charIdx}`"
+                    class="relative flex h-8 w-8 items-center justify-center rounded-full border bg-muted/20 font-semibold"
+                  >
+                    <span class="text-sm leading-none">{{ char }}</span>
+                    <span v-if="row.response.col2?.[charIdx]" class="absolute text-lg font-bold leading-none text-destructive">
+                      /
+                    </span>
+                  </div>
                 </div>
               </td>
-              <td class="px-3 py-3">
-                <div class="flex items-center justify-between gap-3">
-                  <span class="font-mono text-lg leading-none">{{ LPS_PAGE1_ROWS[idx]?.column3 }}</span>
-                  <span class="w-32 rounded border bg-muted/30 px-2 py-1 font-mono text-sm">
-                    {{ row.col3 || '–' }}
-                  </span>
-                </div>
-              </td>
-              <td class="px-3 py-3">
-                <div class="flex items-center justify-between gap-3">
-                  <span class="font-mono text-lg leading-none">{{ LPS_PAGE1_ROWS[idx]?.column4 }}</span>
-                  <span class="w-32 rounded border bg-muted/30 px-2 py-1 font-mono text-sm">
-                    {{ row.col4 || '–' }}
-                  </span>
-                </div>
-              </td>
-              <td class="px-3 py-3">
-                <div class="flex items-center justify-between gap-3">
-                  <span class="font-mono text-lg leading-none">{{ LPS_PAGE1_ROWS[idx]?.column5 }}</span>
-                  <span class="w-32 rounded border bg-muted/30 px-2 py-1 font-mono text-sm">
-                    {{ row.col5 || '–' }}
-                  </span>
-                </div>
-              </td>
+              <td class="px-3 py-3 text-center text-muted-foreground">–</td>
+              <td class="px-3 py-3 text-center text-muted-foreground">–</td>
+              <td class="px-3 py-3 text-center text-muted-foreground">–</td>
             </tr>
           </tbody>
         </table>

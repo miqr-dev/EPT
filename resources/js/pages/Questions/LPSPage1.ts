@@ -1,33 +1,34 @@
 export type LpsPage1Row = {
   id: number;
-  column12: [string, string];
-  column3: string;
-  column4: string;
-  column5: string;
+  column1: string;
+  column2: string;
+  column3?: string;
+  column4?: string;
+  column5?: string;
 };
 
 export const LPS_PAGE1_ROWS: LpsPage1Row[] = [
-  { id: 1, column12: ['▲ ▲ ▲', '◇'], column3: '□ ○ □', column4: '▲ ○', column5: '◇ □ ◇' },
-  { id: 2, column12: ['□ □ ○', '□ □ ○'], column3: '◇ ○', column4: '□ □ □', column5: '◆ ◆' },
-  { id: 3, column12: ['◇', '◇'], column3: '◆ ◆ ◆', column4: '▲ □', column5: '□ □ □' },
-  { id: 4, column12: ['□ □ □', '○ ○'], column3: '◇ □ □', column4: '◇ ○', column5: '◇ □ □' },
-  { id: 5, column12: ['□ □ ○', '○ ○'], column3: '□ □ ◇', column4: '□ ◇', column5: '□ □' },
-  { id: 6, column12: ['□ □', '▲ ○ □'], column3: '◇ □ □', column4: '□ □ □', column5: '◇ ○ □' },
-  { id: 7, column12: ['□ □', '□ □ ○'], column3: '○ □ □', column4: '▲ ○ □', column5: '□ □ □' },
-  { id: 8, column12: ['□ ○', '□ □ □'], column3: '□ □', column4: '◇ ○ □', column5: '○ □ □' },
-  { id: 9, column12: ['□ □ □', '○ □'], column3: '□ □ □', column4: '□ ○', column5: '□ □' },
-  { id: 10, column12: ['○ ○ ○', '□ □ □'], column3: '□ □ □', column4: '○ ◇', column5: '□ □ □' },
-  { id: 11, column12: ['○ ○ □', '□ □ ○'], column3: '□ □ □', column4: '◇ □', column5: '○ □ □' },
-  { id: 12, column12: ['□ □ □', '○ ○'], column3: '□ □ □', column4: '□ □', column5: '□ □ □' },
-  { id: 13, column12: ['□ □', '□ ○ □'], column3: '□ □', column4: '□ □ □', column5: '□ □ □' },
-  { id: 14, column12: ['○ □ ○', '□ □ □'], column3: '○ □ □', column4: '○ □ □', column5: '□ □ ○' },
-  { id: 15, column12: ['□ □ □', '○ ○ □'], column3: '◇ ○', column4: '□ □ □', column5: '□ □ □' },
-  { id: 16, column12: ['□ □ ○', '□ □ □'], column3: '○ □', column4: '□ □ □', column5: '○ □ □' },
-  { id: 17, column12: ['○ □ □', '□ □ □'], column3: '□ □ □', column4: '○ □ □', column5: '○ □ □' },
-  { id: 18, column12: ['□ □ □', '○ □ □'], column3: '□ □ □', column4: '□ □ □', column5: '□ □ □' },
-  { id: 19, column12: ['○ □ □', '□ □ □'], column3: '□ □ □', column4: '○ □ □', column5: '○ □ □' },
-  { id: 20, column12: ['□ □ □', '○ □ □'], column3: '□ □ □', column4: '□ □ □', column5: '□ □ □' },
-  { id: 21, column12: ['○ □ □', '□ □ □'], column3: '□ □ □', column4: '○ □ □', column5: '○ □ □' },
-  { id: 22, column12: ['□ □ □', '○ □ □'], column3: '□ □ □', column4: '□ □ □', column5: '□ □ □' },
-  { id: 23, column12: ['□ □ ○', '□ □ □'], column3: '○ □ □', column4: '□ □ □', column5: '○ □ □' },
+  { id: 1, column1: 'Kreide', column2: 'Kreife' },
+  { id: 2, column1: 'Raufer', column2: 'Schreier' },
+  { id: 3, column1: 'Artiest', column2: 'Elucher' },
+  { id: 4, column1: 'Eagrost', column2: 'Grehaud' },
+  { id: 5, column1: 'Gameson', column2: 'Regben' },
+  { id: 6, column1: 'Gruber', column2: 'Banresh' },
+  { id: 7, column1: 'Kammon', column2: 'Grobter' },
+  { id: 8, column1: 'Krumen', column2: 'Montins' },
+  { id: 9, column1: 'Gulpe', column2: 'Schalusm' },
+  { id: 10, column1: 'Blourd', column2: 'Margt' },
+  { id: 11, column1: 'Dackke', column2: 'Morsure' },
+  { id: 12, column1: 'Grusan', column2: 'Malorn' },
+  { id: 13, column1: 'Kusper', column2: 'Monsier' },
+  { id: 14, column1: 'Menerl', column2: 'Aregaus' },
+  { id: 15, column1: 'Peaot', column2: 'Aragark' },
+  { id: 16, column1: 'Trubste', column2: 'Drage' },
+  { id: 17, column1: 'Craven', column2: 'Midore' },
+  { id: 18, column1: 'Maswer', column2: 'Rangnor' },
+  { id: 19, column1: 'Bierod', column2: 'Aloron' },
+  { id: 20, column1: 'Gold', column2: 'Kradka' },
+  { id: 21, column1: 'Ruchner', column2: 'Osver' },
+  { id: 22, column1: 'Glauben', column2: 'Remberg' },
+  { id: 23, column1: 'Massen', column2: 'Egrast' },
 ];
