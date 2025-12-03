@@ -7,6 +7,18 @@ export type LpsPage1Row = {
   column5?: string;
 };
 
+export type LpsPage1Solution = {
+  /**
+   * Zero-based indices that represent the incorrect characters for each column entry.
+   * Selecting one of these indices awards a point for the row/column.
+   */
+  col1?: number[];
+  col2?: number[];
+  col3?: number[];
+  col4?: number[];
+  col5?: number[];
+};
+
 export const LPS_PAGE1_ROWS: LpsPage1Row[] = [
   { id: 1, column1: 'Kreide', column2: 'Kreife' },
   { id: 2, column1: 'Raufer', column2: 'Schreier' },
@@ -32,3 +44,14 @@ export const LPS_PAGE1_ROWS: LpsPage1Row[] = [
   { id: 22, column1: 'Glauben', column2: 'Remberg' },
   { id: 23, column1: 'Massen', column2: 'Egrast' },
 ];
+
+// TODO: populate the solution indices with the real answer key once provided.
+// Each array entry corresponds to a row above and contains the indices that
+// count as correct picks for that column.
+export const LPS_PAGE1_SOLUTIONS: LpsPage1Solution[] = Array.from({ length: LPS_PAGE1_ROWS.length }, () => ({
+  col1: [],
+  col2: [],
+  col3: [],
+  col4: [],
+  col5: [],
+}));

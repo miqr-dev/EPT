@@ -19,6 +19,8 @@ const displayRows = computed(() =>
   })),
 );
 const totalTime = computed(() => props.results?.total_time_seconds ?? null);
+const page1Score = computed(() => props.results?.page1_score ?? null);
+const page1MaxScore = computed(() => props.results?.page1_max_score ?? null);
 
 function formatTime(seconds?: number | null) {
   if (seconds == null) return '–';
@@ -88,6 +90,11 @@ function formatTime(seconds?: number | null) {
       </div>
     </div>
 
-    <div class="text-sm text-muted-foreground">Benötigte Zeit: {{ formatTime(totalTime) }}</div>
+    <div class="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+      <div>Benötigte Zeit: {{ formatTime(totalTime) }}</div>
+      <div>
+        Punkte: <span class="text-foreground font-semibold">{{ page1MaxScore ? `${page1Score} / ${page1MaxScore}` : '–' }}</span>
+      </div>
+    </div>
   </div>
 </template>
