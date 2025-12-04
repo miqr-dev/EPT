@@ -1,8 +1,10 @@
+export type LpsColumn3Option = { id: string; src: string };
+
 export type LpsPage1Row = {
   id: number;
   column1: string;
   column2: string;
-  column3?: string;
+  column3?: LpsColumn3Option[];
   column4: string;
   column5: string;
 };
@@ -28,6 +30,8 @@ export type LpsPage1Solution = {
   col4?: number[];
   col5?: number[];
 };
+
+type LpsColumn3Row = { id: number; options: LpsColumn3Option[]; correctIndex?: number };
 
 export type LpsDataset = {
   rows: LpsPage1Row[];
@@ -170,25 +174,66 @@ export const LPS_PAGE1_COLUMN5: LpsColumnEntry[] = [
   { id: 4, word: 'xxxxxxxox', correctIndex: 0 },
 ];
 
-function buildRow(rowIdx: number, column1: LpsColumnEntry[], column2: LpsColumnEntry[], column4: LpsColumnEntry[], column5: LpsColumnEntry[]): LpsPage1Row {
+const LPS_PAGE1_COLUMN3_B_ROW1_OPTIONS = Array.from({ length: 8 }, (_, idx) =>
+  new URL(`../../images/lps-b/column3/row-01/option-0${idx + 1}.svg`, import.meta.url).href,
+);
+
+const LPS_PAGE1_COLUMN3_B_ROW2_OPTIONS = Array.from({ length: 8 }, (_, idx) =>
+  new URL(`../../images/lps-b/column3/row-02/option-0${idx + 1}.svg`, import.meta.url).href,
+);
+
+const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
+  {
+    id: 1,
+    options: LPS_PAGE1_COLUMN3_B_ROW1_OPTIONS.map((src, idx) => ({
+      id: `lps-b-r1-opt${idx + 1}`,
+      src,
+    })),
+    correctIndex: 6,
+  },
+  {
+    id: 2,
+    options: LPS_PAGE1_COLUMN3_B_ROW2_OPTIONS.map((src, idx) => ({
+      id: `lps-b-r2-opt${idx + 1}`,
+      src,
+    })),
+    correctIndex: 5,
+  },
+];
+
+function buildRow(
+  rowIdx: number,
+  column1: LpsColumnEntry[],
+  column2: LpsColumnEntry[],
+  column4: LpsColumnEntry[],
+  column5: LpsColumnEntry[],
+  column3Rows?: LpsColumn3Row[],
+): LpsPage1Row {
   const col1 = column1[rowIdx];
   const col2 = column2[rowIdx];
   const col4 = column4[rowIdx];
   const col5 = column5[rowIdx];
+  const col3 = column3Rows?.[rowIdx];
   const fallbackId = rowIdx + 1;
   return {
-    id: col1?.id ?? col2?.id ?? col4?.id ?? col5?.id ??  fallbackId,
+    id: col1?.id ?? col2?.id ?? col4?.id ?? col5?.id ?? col3?.id ?? fallbackId,
     column1: col1?.word ?? '',
     column2: col2?.word ?? '',
-    column3: '',
+    column3: col3?.options,
     column4: col4?.word ?? '',
     column5: col5?.word ?? '',
   };
 }
 
-function buildRows(column1: LpsColumnEntry[], column2: LpsColumnEntry[], column4: LpsColumnEntry[], column5: LpsColumnEntry[]) {
-  const rowCount = Math.max(column1.length, column2.length, column4.length, column5.length);
-  return Array.from({ length: rowCount }, (_, idx) => buildRow(idx, column1, column2, column4, column5));
+function buildRows(
+  column1: LpsColumnEntry[],
+  column2: LpsColumnEntry[],
+  column4: LpsColumnEntry[],
+  column5: LpsColumnEntry[],
+  column3Rows?: LpsColumn3Row[],
+) {
+  const rowCount = Math.max(column1.length, column2.length, column4.length, column5.length, column3Rows?.length ?? 0);
+  return Array.from({ length: rowCount }, (_, idx) => buildRow(idx, column1, column2, column4, column5, column3Rows));
 }
 
 function extractSolution(entry?: LpsColumnEntry): number[] {
@@ -197,22 +242,29 @@ function extractSolution(entry?: LpsColumnEntry): number[] {
   return [entry.correctIndex];
 }
 
-function buildSolutions(column1: LpsColumnEntry[], column2: LpsColumnEntry[], column4: LpsColumnEntry[],  column5: LpsColumnEntry[]) {
-  return buildRows(column1, column2, column4, column5).map((_, idx) => ({
+function extractColumn3Solution(entry?: LpsColumn3Row): number[] {
+  if (!entry || typeof entry.correctIndex !== 'number') return [];
+  if (entry.correctIndex < 0 || entry.correctIndex >= entry.options.length) return [];
+  return [entry.correctIndex];
+}
+
+function buildSolutions(
+  column1: LpsColumnEntry[],
+  column2: LpsColumnEntry[],
+  column4: LpsColumnEntry[],
+  column5: LpsColumnEntry[],
+  column3Rows?: LpsColumn3Row[],
+) {
+  return buildRows(column1, column2, column4, column5, column3Rows).map((_, idx) => ({
     col1: extractSolution(column1[idx]),
     col2: extractSolution(column2[idx]),
-    col3: [],
+    col3: extractColumn3Solution(column3Rows?.[idx]),
     col4: extractSolution(column4[idx]),
     col5: extractSolution(column5[idx]),
   }));
 }
 
-export const LPS_PAGE1_ROWS: LpsPage1Row[] = buildRows(
-  LPS_PAGE1_COLUMN1,
-  LPS_PAGE1_COLUMN2,
-  LPS_PAGE1_COLUMN4,
-  LPS_PAGE1_COLUMN5,
-);
+export const LPS_PAGE1_ROWS: LpsPage1Row[] = buildRows(LPS_PAGE1_COLUMN1, LPS_PAGE1_COLUMN2, LPS_PAGE1_COLUMN4, LPS_PAGE1_COLUMN5);
 
 export const LPS_PAGE1_SOLUTIONS: LpsPage1Solution[] = buildSolutions(
   LPS_PAGE1_COLUMN1,
@@ -416,6 +468,7 @@ export const LPS_PAGE1_ROWS_B: LpsPage1Row[] = buildRows(
   LPS_PAGE1_COLUMN2_B,
   LPS_PAGE1_COLUMN4_B,
   LPS_PAGE1_COLUMN5_B,
+  LPS_PAGE1_COLUMN3_B,
 );
 
 export const LPS_PAGE1_SOLUTIONS_B: LpsPage1Solution[] = buildSolutions(
@@ -423,6 +476,7 @@ export const LPS_PAGE1_SOLUTIONS_B: LpsPage1Solution[] = buildSolutions(
   LPS_PAGE1_COLUMN2_B,
   LPS_PAGE1_COLUMN4_B,
   LPS_PAGE1_COLUMN5_B,
+  LPS_PAGE1_COLUMN3_B,
 );
 
 export function getLpsDataset(testName?: string): LpsDataset {
