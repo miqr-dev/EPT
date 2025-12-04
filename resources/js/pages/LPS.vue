@@ -13,7 +13,7 @@ type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = [60, 120, 60, 60, 60];
+const COLUMN_DURATION_SECONDS = [120, 120, 60, 60, 60];
 
 const props = defineProps<{
   pausedTestResult?: {
@@ -51,7 +51,7 @@ const page1Responses = ref<LpsPage1ResponseRow[]>(
       col2: buildSelection(row.column2, pausedRow?.col2),
       col3: pausedRow?.col3 ?? [],
       col4: buildSelection(row.column4, pausedRow?.col4),
-      col5: pausedRow?.col5 ?? [],
+      col5: buildSelection(row.column5, pausedRow?.col5),
     };
   }),
 );
@@ -486,7 +486,19 @@ const page1MaxScore = computed(() =>
                   </div>
                 </div>
               </div>
-              <div class="text-center text-muted-foreground/50">–5</div>
+              <div class="col-span-1 lps-sep">
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[3px]">
+                  <div class="lps-letters">
+                    <button v-for="(char, charIdx) in row.column5.split('')" :key="`${row.id}-4-${charIdx}`"
+                      type="button" class="lps-letter"
+                      :class="page1Responses[idx].col5[charIdx] ? 'lps-letter--selected' : ''"
+                      :disabled="!isColumnInteractive(2)" :aria-pressed="page1Responses[idx].col5[charIdx]"
+                      @click="toggleSelection(idx, 'col5', charIdx)">
+                      {{ char }}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -4,7 +4,7 @@ export type LpsPage1Row = {
   column2: string;
   column3?: string;
   column4: string;
-  column5?: string;
+  column5: string;
 };
 
 export type LpsColumnEntry = {
@@ -35,7 +35,7 @@ export type LpsDataset = {
 };
 
 export const LPS_PAGE1_COLUMN1: LpsColumnEntry[] = [
-  { id: 1, word: 'Auyzug', correctIndex: 0 },
+  { id: 1, word: 'Auvzug', correctIndex: 0 },
   { id: 2, word: 'Freute', correctIndex: 0 },
   { id: 3, word: 'Alaske', correctIndex: 0 },
   { id: 4, word: 'Bezirg', correctIndex: 0 },
@@ -163,24 +163,32 @@ export const LPS_PAGE1_COLUMN4: LpsColumnEntry[] = [
   { id: 40, word: 'Anubes', correctIndex: 0 },
 ];
 
-function buildRow(rowIdx: number, column1: LpsColumnEntry[], column2: LpsColumnEntry[], column4: LpsColumnEntry[]): LpsPage1Row {
+export const LPS_PAGE1_COLUMN5: LpsColumnEntry[] = [
+  { id: 1, word: 'xxxxxxxox', correctIndex: 0 },
+  { id: 2, word: 'xxxxxxxox', correctIndex: 0 },
+  { id: 3, word: 'xxxxxxxox', correctIndex: 0 },
+  { id: 4, word: 'xxxxxxxox', correctIndex: 0 },
+];
+
+function buildRow(rowIdx: number, column1: LpsColumnEntry[], column2: LpsColumnEntry[], column4: LpsColumnEntry[], column5: LpsColumnEntry[]): LpsPage1Row {
   const col1 = column1[rowIdx];
   const col2 = column2[rowIdx];
   const col4 = column4[rowIdx];
+  const col5 = column5[rowIdx];
   const fallbackId = rowIdx + 1;
   return {
-    id: col1?.id ?? col2?.id ?? fallbackId,
+    id: col1?.id ?? col2?.id ?? col4?.id ?? col5?.id ??  fallbackId,
     column1: col1?.word ?? '',
     column2: col2?.word ?? '',
     column3: '',
     column4: col4?.word ?? '',
-    column5: '',
+    column5: col5?.word ?? '',
   };
 }
 
-function buildRows(column1: LpsColumnEntry[], column2: LpsColumnEntry[], column4: LpsColumnEntry[]) {
-  const rowCount = Math.max(column1.length, column2.length);
-  return Array.from({ length: rowCount }, (_, idx) => buildRow(idx, column1, column2, column4));
+function buildRows(column1: LpsColumnEntry[], column2: LpsColumnEntry[], column4: LpsColumnEntry[], column5: LpsColumnEntry[]) {
+  const rowCount = Math.max(column1.length, column2.length, column4.length, column5.length);
+  return Array.from({ length: rowCount }, (_, idx) => buildRow(idx, column1, column2, column4, column5));
 }
 
 function extractSolution(entry?: LpsColumnEntry): number[] {
@@ -189,13 +197,13 @@ function extractSolution(entry?: LpsColumnEntry): number[] {
   return [entry.correctIndex];
 }
 
-function buildSolutions(column1: LpsColumnEntry[], column2: LpsColumnEntry[], column4: LpsColumnEntry[]) {
-  return buildRows(column1, column2, column4).map((_, idx) => ({
+function buildSolutions(column1: LpsColumnEntry[], column2: LpsColumnEntry[], column4: LpsColumnEntry[],  column5: LpsColumnEntry[]) {
+  return buildRows(column1, column2, column4, column5).map((_, idx) => ({
     col1: extractSolution(column1[idx]),
     col2: extractSolution(column2[idx]),
     col3: [],
     col4: extractSolution(column4[idx]),
-    col5: [],
+    col5: extractSolution(column5[idx]),
   }));
 }
 
@@ -203,169 +211,218 @@ export const LPS_PAGE1_ROWS: LpsPage1Row[] = buildRows(
   LPS_PAGE1_COLUMN1,
   LPS_PAGE1_COLUMN2,
   LPS_PAGE1_COLUMN4,
+  LPS_PAGE1_COLUMN5,
 );
 
 export const LPS_PAGE1_SOLUTIONS: LpsPage1Solution[] = buildSolutions(
   LPS_PAGE1_COLUMN1,
   LPS_PAGE1_COLUMN2,
   LPS_PAGE1_COLUMN4,
+  LPS_PAGE1_COLUMN5,
 );
 
 const LPS_PAGE1_COLUMN1_A = LPS_PAGE1_COLUMN1.slice(0, 20);
 const LPS_PAGE1_COLUMN2_A = LPS_PAGE1_COLUMN2.slice(0, 20);
 const LPS_PAGE1_COLUMN4_A = LPS_PAGE1_COLUMN4.slice(0, 20);
+const LPS_PAGE1_COLUMN5_A = LPS_PAGE1_COLUMN4.slice(0, 20);
 
 export const LPS_PAGE1_ROWS_A: LpsPage1Row[] = buildRows(
   LPS_PAGE1_COLUMN1_A,
   LPS_PAGE1_COLUMN2_A,
   LPS_PAGE1_COLUMN4_A,
+  LPS_PAGE1_COLUMN5_A,
 );
 
 export const LPS_PAGE1_SOLUTIONS_A: LpsPage1Solution[] = buildSolutions(
   LPS_PAGE1_COLUMN1_A,
   LPS_PAGE1_COLUMN2_A,
   LPS_PAGE1_COLUMN4_A,
+  LPS_PAGE1_COLUMN5_A,
 );
 
 const LPS_PAGE1_COLUMN1_B: LpsColumnEntry[] = [
-  { id: 1, word: 'Auyzug', correctIndex: 0 },
-  { id: 2, word: 'Freute', correctIndex: 0 },
-  { id: 3, word: 'Alaske', correctIndex: 0 },
-  { id: 4, word: 'Bezirg', correctIndex: 0 },
-  { id: 5, word: 'Ardist', correctIndex: 0 },
-  { id: 6, word: 'Waknis', correctIndex: 0 },
-  { id: 7, word: 'Gewaih', correctIndex: 0 },
-  { id: 8, word: 'Magmet', correctIndex: 0 },
-  { id: 9, word: 'Legiom', correctIndex: 0 },
-  { id: 10, word: 'Jasmim', correctIndex: 0 },
+  { id: 1, word: 'Auyzug', correctIndex: 2 },
+  { id: 2, word: 'Freute', correctIndex: 4 },
+  { id: 3, word: 'Alaske', correctIndex: 5 },
+  { id: 4, word: 'Bezirg', correctIndex: 5 },
+  { id: 5, word: 'Ardist', correctIndex: 2 },
+  { id: 6, word: 'Waknis', correctIndex: 2 },
+  { id: 7, word: 'Gewaih', correctIndex: 3 },
+  { id: 8, word: 'Magmet', correctIndex: 3 },
+  { id: 9, word: 'Legiom', correctIndex: 5 },
+  { id: 10, word: 'Jasmim', correctIndex: 5 },
   { id: 11, word: 'Tiskus', correctIndex: 0 },
-  { id: 12, word: 'Panema', correctIndex: 0 },
-  { id: 13, word: 'Heliun', correctIndex: 0 },
-  { id: 14, word: 'Ratium', correctIndex: 0 },
+  { id: 12, word: 'Panema', correctIndex: 3 },
+  { id: 13, word: 'Heliun', correctIndex: 5 },
+  { id: 14, word: 'Ratium', correctIndex: 2 },
   { id: 15, word: 'Vugger', correctIndex: 0 },
-  { id: 16, word: 'Etison', correctIndex: 0 },
+  { id: 16, word: 'Etison', correctIndex: 1 },
   { id: 17, word: 'Vright', correctIndex: 0 },
   { id: 18, word: 'Prokat', correctIndex: 0 },
-  { id: 19, word: 'Attilo', correctIndex: 0 },
-  { id: 20, word: 'Dnjebr', correctIndex: 0 },
-  { id: 21, word: 'Toulom', correctIndex: 0 },
-  { id: 22, word: 'Amatom', correctIndex: 0 },
-  { id: 23, word: 'Namtes', correctIndex: 0 },
+  { id: 19, word: 'Attilo', correctIndex: 5 },
+  { id: 20, word: 'Dnjebr', correctIndex: 4 },
+  { id: 21, word: 'Toulom', correctIndex: 5 },
+  { id: 22, word: 'Amatom', correctIndex: 1 },
+  { id: 23, word: 'Namtes', correctIndex: 2 },
   { id: 24, word: 'Naffia', correctIndex: 0 },
   { id: 25, word: 'Garies', correctIndex: 0 },
-  { id: 26, word: 'Virkil', correctIndex: 0 },
-  { id: 27, word: 'Grachd', correctIndex: 0 },
-  { id: 28, word: 'Armika', correctIndex: 0 },
-  { id: 29, word: 'Mohavk', correctIndex: 0 },
-  { id: 30, word: 'Hamgar', correctIndex: 0 },
-  { id: 31, word: 'Prodon', correctIndex: 0 },
-  { id: 32, word: 'Emplem', correctIndex: 0 },
-  { id: 33, word: 'Anemie', correctIndex: 0 },
-  { id: 34, word: 'Osires', correctIndex: 0 },
+  { id: 26, word: 'Virkil', correctIndex: 3 },
+  { id: 27, word: 'Grachd', correctIndex: 5 },
+  { id: 28, word: 'Armika', correctIndex: 2 },
+  { id: 29, word: 'Mohavk', correctIndex: 4 },
+  { id: 30, word: 'Hamgar', correctIndex: 2 },
+  { id: 31, word: 'Prodon', correctIndex: 3 },
+  { id: 32, word: 'Emplem', correctIndex: 2 },
+  { id: 33, word: 'Anemie', correctIndex: 2 },
+  { id: 34, word: 'Osires', correctIndex: 4 },
   { id: 35, word: 'Sharge', correctIndex: 0 },
-  { id: 36, word: 'Druite', correctIndex: 0 },
-  { id: 37, word: 'Behain', correctIndex: 0 },
-  { id: 38, word: 'Kaulin', correctIndex: 0 },
-  { id: 39, word: 'Läsiom', correctIndex: 0 },
-  { id: 40, word: 'Gounot', correctIndex: 0 },
+  { id: 36, word: 'Druite', correctIndex: 4 },
+  { id: 37, word: 'Behain', correctIndex: 5 },
+  { id: 38, word: 'Kaulin', correctIndex: 2 },
+  { id: 39, word: 'Läsiom', correctIndex: 5 },
+  { id: 40, word: 'Gounot', correctIndex: 5 }
 ];
 
 const LPS_PAGE1_COLUMN2_B: LpsColumnEntry[] = [
-  { id: 1, word: 'Heimad', correctIndex: 0 },
-  { id: 2, word: 'Herink', correctIndex: 0 },
-  { id: 3, word: 'Expord', correctIndex: 0 },
-  { id: 4, word: 'Pulwer', correctIndex: 0 },
-  { id: 5, word: 'Jeguar', correctIndex: 0 },
+  { id: 1, word: 'Heimad', correctIndex: 5 },
+  { id: 2, word: 'Herink', correctIndex: 5 },
+  { id: 3, word: 'Expord', correctIndex: 5 },
+  { id: 4, word: 'Pulwer', correctIndex: 3 },
+  { id: 5, word: 'Jeguar', correctIndex: 1 },
   { id: 6, word: 'Penzin', correctIndex: 0 },
   { id: 7, word: 'Gasino', correctIndex: 0 },
-  { id: 8, word: 'Disdel', correctIndex: 0 },
-  { id: 9, word: 'Madred', correctIndex: 0 },
-  { id: 10, word: 'Rikrut', correctIndex: 0 },
+  { id: 8, word: 'Disdel', correctIndex: 3 },
+  { id: 9, word: 'Madred', correctIndex: 4 },
+  { id: 10, word: 'Rikrut', correctIndex: 1 },
   { id: 11, word: 'Kegend', correctIndex: 0 },
   { id: 12, word: 'Barole', correctIndex: 0 },
-  { id: 13, word: 'Rokoke', correctIndex: 0 },
-  { id: 14, word: 'Ottawe', correctIndex: 0 },
-  { id: 15, word: 'Spagad', correctIndex: 0 },
-  { id: 16, word: 'Dewise', correctIndex: 0 },
-  { id: 17, word: 'Riflex', correctIndex: 0 },
-  { id: 18, word: 'Bombai', correctIndex: 0 },
-  { id: 19, word: 'Tegris', correctIndex: 0 },
-  { id: 20, word: 'Nimphe', correctIndex: 0 },
-  { id: 21, word: 'Delfhi', correctIndex: 0 },
-  { id: 22, word: 'Beuxit', correctIndex: 0 },
-  { id: 23, word: 'Okolar', correctIndex: 0 },
+  { id: 13, word: 'Rokoke', correctIndex: 5 },
+  { id: 14, word: 'Ottawe', correctIndex: 5 },
+  { id: 15, word: 'Spagad', correctIndex: 5 },
+  { id: 16, word: 'Dewise', correctIndex: 2 },
+  { id: 17, word: 'Riflex', correctIndex: 1 },
+  { id: 18, word: 'Bombai', correctIndex: 5 },
+  { id: 19, word: 'Tegris', correctIndex: 1 },
+  { id: 20, word: 'Nimphe', correctIndex: 1 },
+  { id: 21, word: 'Delfhi', correctIndex: 3 },
+  { id: 22, word: 'Beuxit', correctIndex: 1 },
+  { id: 23, word: 'Okolar', correctIndex: 2 },
   { id: 24, word: 'Gheops', correctIndex: 0 },
-  { id: 25, word: 'Kripta', correctIndex: 0 },
-  { id: 26, word: 'Netrat', correctIndex: 0 },
-  { id: 27, word: 'Smirna', correctIndex: 0 },
-  { id: 28, word: 'Akelai', correctIndex: 0 },
-  { id: 29, word: 'Budgot', correctIndex: 0 },
-  { id: 30, word: 'Amelfi', correctIndex: 0 },
-  { id: 31, word: 'Alippo', correctIndex: 0 },
-  { id: 32, word: 'Komdur', correctIndex: 0 },
-  { id: 33, word: 'Bowist', correctIndex: 0 },
-  { id: 34, word: 'Prokob', correctIndex: 0 },
-  { id: 35, word: 'Honwed', correctIndex: 0 },
-  { id: 36, word: 'Laudom', correctIndex: 0 },
-  { id: 37, word: 'Pantur', correctIndex: 0 },
+  { id: 25, word: 'Kripta', correctIndex: 2 },
+  { id: 26, word: 'Netrat', correctIndex: 1 },
+  { id: 27, word: 'Smirna', correctIndex: 2 },
+  { id: 28, word: 'Akelai', correctIndex: 4 },
+  { id: 29, word: 'Budgot', correctIndex: 4 },
+  { id: 30, word: 'Amelfi', correctIndex: 2 },
+  { id: 31, word: 'Alippo', correctIndex: 2 },
+  { id: 32, word: 'Komdur', correctIndex: 3 },
+  { id: 33, word: 'Bowist', correctIndex: 2 },
+  { id: 34, word: 'Prokob', correctIndex: 5 },
+  { id: 35, word: 'Honwed', correctIndex: 3 },
+  { id: 36, word: 'Laudom', correctIndex: 5 },
+  { id: 37, word: 'Pantur', correctIndex: 3 },
   { id: 38, word: 'Ascudo', correctIndex: 0 },
-  { id: 39, word: 'Hoplid', correctIndex: 0 },
-  { id: 40, word: 'Anubes', correctIndex: 0 },
+  { id: 39, word: 'Hoplid', correctIndex: 5 },
+  { id: 40, word: 'Anubes', correctIndex: 4 },
+];
+const LPS_PAGE1_COLUMN4_B: LpsColumnEntry[] = [
+  { id: 1, word: 'xxxxxxxox', correctIndex: 7 },
+  { id: 2, word: 'ababababb', correctIndex: 8 },
+  { id: 3, word: 'xoxoxoxoo', correctIndex: 8 },
+  { id: 4, word: '123123423', correctIndex: 6 },
+  { id: 5, word: '00n00n000', correctIndex: 8 },
+  { id: 6, word: 'abcdefchi', correctIndex: 6 },
+  { id: 7, word: 'aBaBaBaba', correctIndex: 7 },
+  { id: 8, word: '2468912141618', correctIndex: 4 },
+  { id: 9, word: 'abcabcdbc', correctIndex: 6 },
+  { id: 10, word: '121222121', correctIndex: 4 },
+  { id: 11, word: '5105205306405', correctIndex: 6 },
+  { id: 12, word: '19171513118753', correctIndex: 5 },
+  { id: 13, word: 'abcdeFghi', correctIndex: 5 },
+  { id: 14, word: 'jklmnopqs', correctIndex: 8 },
+  { id: 15, word: 'BBaBaBaBa', correctIndex: 0 },
+  { id: 16, word: 'rqtuvwxyz', correctIndex: 1 },
+  { id: 17, word: '349121518212427', correctIndex: 1 },
+  { id: 18, word: 'xxoxxoxoo', correctIndex: 7 },
+  { id: 19, word: 'ijkLmnopq', correctIndex: 3 },
+  { id: 20, word: 'bbcddefghhijj', correctIndex: 4 },
+  { id: 21, word: 'ihgfeDcba', correctIndex: 5 },
+  { id: 22, word: 'abbcddeeffghhi', correctIndex: 4 },
+  { id: 23, word: 'dcedcbdcb', correctIndex: 2 },
+  { id: 24, word: '10128146163182', correctIndex: 6 },
+  { id: 25, word: 'bCdEFGhIj', correctIndex: 4 },
+  { id: 26, word: '151812219245273', correctIndex: 6 },
+  { id: 27, word: '234567432', correctIndex: 5 },
+  { id: 28, word: '124787421', correctIndex: 4 },
+  { id: 29, word: '1fg2dc3ba', correctIndex: 2 },
+  { id: 30, word: '125344352', correctIndex: 0 },
+  { id: 31, word: 'abegikmoq', correctIndex: 1 },
+  { id: 32, word: 'aaceefiikmmoqq', correctIndex: 3 },
+  { id: 33, word: '5a4c3d2e1', correctIndex: 1 },
+  { id: 34, word: 'rPmLjHfDb', correctIndex: 2 },
+  { id: 35, word: '1124394166', correctIndex: 8 },
+  { id: 36, word: 'abccadaea', correctIndex: 2 },
+  { id: 37, word: 'baedhgkln', correctIndex: 7 },
+  { id: 38, word: 'cbfeihjko', correctIndex: 6 },
+  { id: 39, word: '1123711162229', correctIndex: 3 },
+  { id: 40, word: 'aAbCdEgGh', correctIndex: 8 },
 ];
 
-const LPS_PAGE1_COLUMN4_B: LpsColumnEntry[] = [
-  { id: 1, word: 'xxxxxxxox', correctIndex: 0 },
-  { id: 2, word: 'Herink', correctIndex: 0 },
-  { id: 3, word: 'Expord', correctIndex: 0 },
-  { id: 4, word: 'Pulwer', correctIndex: 0 },
-  { id: 5, word: 'Jeguar', correctIndex: 0 },
-  { id: 6, word: 'Penzin', correctIndex: 0 },
-  { id: 7, word: 'Gasino', correctIndex: 0 },
-  { id: 8, word: 'Disdel', correctIndex: 0 },
-  { id: 9, word: 'Madred', correctIndex: 0 },
-  { id: 10, word: 'Rikrut', correctIndex: 0 },
-  { id: 11, word: 'Kegend', correctIndex: 0 },
-  { id: 12, word: 'Barole', correctIndex: 0 },
-  { id: 13, word: 'Rokoke', correctIndex: 0 },
-  { id: 14, word: 'Ottawe', correctIndex: 0 },
-  { id: 15, word: 'Spagad', correctIndex: 0 },
-  { id: 16, word: 'Dewise', correctIndex: 0 },
-  { id: 17, word: 'Riflex', correctIndex: 0 },
-  { id: 18, word: 'Bombai', correctIndex: 0 },
-  { id: 19, word: 'Tegris', correctIndex: 0 },
-  { id: 20, word: 'Nimphe', correctIndex: 0 },
-  { id: 21, word: 'Delfhi', correctIndex: 0 },
-  { id: 22, word: 'Beuxit', correctIndex: 0 },
-  { id: 23, word: 'Okolar', correctIndex: 0 },
-  { id: 24, word: 'Gheops', correctIndex: 0 },
-  { id: 25, word: 'Kripta', correctIndex: 0 },
-  { id: 26, word: 'Netrat', correctIndex: 0 },
-  { id: 27, word: 'Smirna', correctIndex: 0 },
-  { id: 28, word: 'Akelai', correctIndex: 0 },
-  { id: 29, word: 'Budgot', correctIndex: 0 },
-  { id: 30, word: 'Amelfi', correctIndex: 0 },
-  { id: 31, word: 'Alippo', correctIndex: 0 },
-  { id: 32, word: 'Komdur', correctIndex: 0 },
-  { id: 33, word: 'Bowist', correctIndex: 0 },
-  { id: 34, word: 'Prokob', correctIndex: 0 },
-  { id: 35, word: 'Honwed', correctIndex: 0 },
-  { id: 36, word: 'Laudom', correctIndex: 0 },
-  { id: 37, word: 'Pantur', correctIndex: 0 },
-  { id: 38, word: 'Ascudo', correctIndex: 0 },
-  { id: 39, word: 'Hoplid', correctIndex: 0 },
-  { id: 40, word: 'Anubes', correctIndex: 0 },
+const LPS_PAGE1_COLUMN5_B: LpsColumnEntry[] = [
+  { id: 1, word: 'xxxxxxxox', correctIndex: 7 },
+  { id: 2, word: 'ababababb', correctIndex: 8 },
+  { id: 3, word: 'xoxoxoxoo', correctIndex: 8 },
+  { id: 4, word: '123123423', correctIndex: 6 },
+  { id: 5, word: '00n00n000', correctIndex: 8 },
+  { id: 6, word: 'abcdefchi', correctIndex: 6 },
+  { id: 7, word: 'aBaBaBaba', correctIndex: 7 },
+  { id: 8, word: '2468912141618', correctIndex: 4 },
+  { id: 9, word: 'abcabcdbc', correctIndex: 6 },
+  { id: 10, word: '121222121', correctIndex: 4 },
+  { id: 11, word: '5105205306405', correctIndex: 6 },
+  { id: 12, word: '19171513118753', correctIndex: 5 },
+  { id: 13, word: 'abcdeFghi', correctIndex: 5 },
+  { id: 14, word: 'jklmnopqs', correctIndex: 8 },
+  { id: 15, word: 'BBaBaBaBa', correctIndex: 0 },
+  { id: 16, word: 'rqtuvwxyz', correctIndex: 1 },
+  { id: 17, word: '349121518212427', correctIndex: 1 },
+  { id: 18, word: 'xxoxxoxoo', correctIndex: 7 },
+  { id: 19, word: 'ijkLmnopq', correctIndex: 3 },
+  { id: 20, word: 'bbcddefghhijj', correctIndex: 4 },
+  { id: 21, word: 'ihgfeDcba', correctIndex: 5 },
+  { id: 22, word: 'abbcddeeffghhi', correctIndex: 4 },
+  { id: 23, word: 'dcedcbdcb', correctIndex: 2 },
+  { id: 24, word: '10128146163182', correctIndex: 6 },
+  { id: 25, word: 'bCdEFGhIj', correctIndex: 4 },
+  { id: 26, word: '151812219245273', correctIndex: 6 },
+  { id: 27, word: '234567432', correctIndex: 5 },
+  { id: 28, word: '124787421', correctIndex: 4 },
+  { id: 29, word: '1fg2dc3ba', correctIndex: 2 },
+  { id: 30, word: '125344352', correctIndex: 0 },
+  { id: 31, word: 'abegikmoq', correctIndex: 1 },
+  { id: 32, word: 'aaceefiikmmoqq', correctIndex: 3 },
+  { id: 33, word: '5a4c3d2e1', correctIndex: 1 },
+  { id: 34, word: 'rPmLjHfDb', correctIndex: 2 },
+  { id: 35, word: '1124394166', correctIndex: 8 },
+  { id: 36, word: 'abccadaea', correctIndex: 2 },
+  { id: 37, word: 'baedhgkln', correctIndex: 7 },
+  { id: 38, word: 'cbfeihjko', correctIndex: 6 },
+  { id: 39, word: '1123711162229', correctIndex: 3 },
+  { id: 40, word: 'aAbCdEgGh', correctIndex: 8 },
 ];
 
 export const LPS_PAGE1_ROWS_B: LpsPage1Row[] = buildRows(
   LPS_PAGE1_COLUMN1_B,
   LPS_PAGE1_COLUMN2_B,
   LPS_PAGE1_COLUMN4_B,
+  LPS_PAGE1_COLUMN5_B,
 );
 
 export const LPS_PAGE1_SOLUTIONS_B: LpsPage1Solution[] = buildSolutions(
   LPS_PAGE1_COLUMN1_B,
   LPS_PAGE1_COLUMN2_B,
   LPS_PAGE1_COLUMN4_B,
+  LPS_PAGE1_COLUMN5_B,
 );
 
 export function getLpsDataset(testName?: string): LpsDataset {
@@ -377,3 +434,5 @@ export function getLpsDataset(testName?: string): LpsDataset {
   }
   return { rows: LPS_PAGE1_ROWS, solutions: LPS_PAGE1_SOLUTIONS };
 }
+
+
