@@ -174,12 +174,14 @@ export const LPS_PAGE1_COLUMN5: LpsColumnEntry[] = [
   { id: 4, word: 'xxxxxxxox', correctIndex: 0 },
 ];
 
-const LPS_PAGE1_COLUMN3_B_ROW1_OPTIONS = Array.from({ length: 8 }, (_, idx) =>
-  new URL(`../../images/lps-b/column3/row-01/option-0${idx + 1}.svg`, import.meta.url).href,
+const LPS_PAGE1_COLUMN3_B_ROW1_OPTIONS = Array.from(
+  { length: 8 },
+  (_, idx) => `/images/lps-b/column3/row-01/option-0${idx + 1}.svg`,
 );
 
-const LPS_PAGE1_COLUMN3_B_ROW2_OPTIONS = Array.from({ length: 8 }, (_, idx) =>
-  new URL(`../../images/lps-b/column3/row-02/option-0${idx + 1}.svg`, import.meta.url).href,
+const LPS_PAGE1_COLUMN3_B_ROW2_OPTIONS = Array.from(
+  { length: 8 },
+  (_, idx) => `/images/lps-b/column3/row-02/option-0${idx + 1}.svg`,
 );
 
 const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
