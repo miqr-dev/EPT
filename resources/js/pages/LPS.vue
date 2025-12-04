@@ -402,13 +402,13 @@ const page1MaxScore = computed(() =>
           <div class="rounded-xl border bg-background px-4 py-3 shadow-sm">
             <div class="flex items-center justify-between gap-4">
               <div class="text-xs text-muted-foreground">
-                Spalte starten (Sp 1: {{ formatTime(getColumnDuration(0)) }}, Sp 2:
-                {{ formatTime(getColumnDuration(1)) }}). Nur eine Spalte gleichzeitig.
+                Spalte starten (Dauer: Sp 1 {{ formatTime(getColumnDuration(0)) }}, Sp 2
+                {{ formatTime(getColumnDuration(1)) }}, Sp 3–5 {{ formatTime(getColumnDuration(2)) }}).
+                Nur eine Spalte gleichzeitig.
               </div>
 
               <div class="flex items-center gap-3">
-                <div v-for="(state, idx) in columnStates.slice(0, 2)" :key="`column-state-${idx}`"
-                  class="flex items-center gap-2">
+                <div v-for="(state, idx) in columnStates" :key="`column-state-${idx}`" class="flex items-center gap-2">
                   <div class="rounded-lg border px-3 py-2 text-xs" :class="state.status === 'active'
                     ? 'border-destructive/50 bg-destructive/5 text-destructive'
                     : state.status === 'ready'
