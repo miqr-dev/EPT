@@ -674,7 +674,6 @@ const page1MaxScore = computed(() =>
 
 .lps-figure-shape {
   transition: opacity 120ms ease, transform 120ms ease;
-  pointer-events: none;
 }
 
 .lps-figure-shape-group:hover .lps-figure-shape {
