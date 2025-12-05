@@ -480,20 +480,54 @@ const page1MaxScore = computed(() =>
               <!-- 3/4/5 empty placeholders (keep structure like original test page) -->
               <div class="col-span-1 lps-sep">
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[3px]">
-                  <div v-if="row.column3?.length" class="grid grid-cols-8 gap-1">
-                    <button
-                      v-for="(option, optionIdx) in row.column3"
-                      :id="option.id"
-                      :key="option.id"
-                      type="button"
-                      class="lps-figure"
-                      :class="page1Responses[idx].col3[optionIdx] ? 'lps-figure--selected' : ''"
-                      :disabled="!isColumnInteractive('col3')"
-                      :aria-pressed="page1Responses[idx].col3[optionIdx]"
-                      @click="toggleSelection(idx, 'col3', optionIdx)"
+                  <div v-if="row.column3?.length">
+                    <div
+                      v-if="row.column3SvgMeta && row.column3.every((option) => option.pathData)"
+                      class="flex justify-center"
                     >
-                      <img :src="option.src" class="mx-auto h-9 w-9" alt="" />
-                    </button>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        version="1.1"
+                        class="select-none"
+                        :viewBox="row.column3SvgMeta.viewBox"
+                        :width="row.column3SvgMeta.width"
+                        :height="row.column3SvgMeta.height"
+                      >
+                        <path
+                          v-for="(option, optionIdx) in row.column3"
+                          :id="option.id"
+                          :key="option.id"
+                          role="button"
+                          :tabindex="isColumnInteractive('col3') ? 0 : -1"
+                          :aria-pressed="page1Responses[idx].col3[optionIdx]"
+                          fill="#090d0e"
+                          class="lps-figure-shape"
+                          :class="[
+                            page1Responses[idx].col3[optionIdx] ? 'lps-figure-shape--selected' : '',
+                            !isColumnInteractive('col3') ? 'lps-figure-shape--disabled' : '',
+                          ]"
+                          :d="option.pathData"
+                          @click="isColumnInteractive('col3') && toggleSelection(idx, 'col3', optionIdx)"
+                          @keydown.enter.prevent="toggleSelection(idx, 'col3', optionIdx)"
+                          @keydown.space.prevent="toggleSelection(idx, 'col3', optionIdx)"
+                        />
+                      </svg>
+                    </div>
+                    <div v-else class="grid grid-cols-8 gap-1">
+                      <button
+                        v-for="(option, optionIdx) in row.column3"
+                        :id="option.id"
+                        :key="option.id"
+                        type="button"
+                        class="lps-figure"
+                        :class="page1Responses[idx].col3[optionIdx] ? 'lps-figure--selected' : ''"
+                        :disabled="!isColumnInteractive('col3')"
+                        :aria-pressed="page1Responses[idx].col3[optionIdx]"
+                        @click="toggleSelection(idx, 'col3', optionIdx)"
+                      >
+                        <img :src="option.src" class="mx-auto h-9 w-9" alt="" />
+                      </button>
+                    </div>
                   </div>
                   <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
                 </div>
@@ -615,6 +649,30 @@ const page1MaxScore = computed(() =>
   border-top: 3px solid rgb(220 38 38);
   transform: rotate(-35deg);
   transform-origin: center;
+}
+
+.lps-figure-shape {
+  cursor: pointer;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.lps-figure-shape:hover {
+  opacity: 0.85;
+}
+
+.lps-figure-shape:focus-visible {
+  outline: none;
+  opacity: 0.7;
+}
+
+.lps-figure-shape--selected {
+  opacity: 0.6;
+}
+
+.lps-figure-shape--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .lps-figure {
