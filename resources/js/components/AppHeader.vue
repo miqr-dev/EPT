@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * @file AppHeader.vue - The main header component for the application.
+ */
 import AppLogo from '@/components/AppLogo.vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
@@ -15,6 +18,9 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-vue-next';
 import { computed } from 'vue';
 
+/**
+ * @props {BreadcrumbItem[]} [breadcrumbs] - An array of breadcrumb items to display.
+ */
 interface Props {
     breadcrumbs?: BreadcrumbItem[];
 }
@@ -26,12 +32,24 @@ const props = withDefaults(defineProps<Props>(), {
 const page = usePage();
 const auth = computed(() => page.props.auth);
 
+/**
+ * A computed property that returns a function to check if a given URL is the current route.
+ * @returns {(url: string) => boolean}
+ */
 const isCurrentRoute = computed(() => (url: string) => page.url === url);
 
+/**
+ * A computed property that returns a function to get the active item styles for a given URL.
+ * @returns {(url: string) => string}
+ */
 const activeItemStyles = computed(
     () => (url: string) => (isCurrentRoute.value(url) ? 'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100' : ''),
 );
 
+/**
+ * The main navigation items.
+ * @type {NavItem[]}
+ */
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -40,6 +58,10 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+/**
+ * The right-aligned navigation items.
+ * @type {NavItem[]}
+ */
 const rightNavItems: NavItem[] = [
     {
         title: 'Repository',

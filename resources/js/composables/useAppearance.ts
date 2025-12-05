@@ -1,7 +1,18 @@
 import { onMounted, ref } from 'vue';
 
+/**
+ * @fileoverview Composable for managing theme appearance (light/dark/system).
+ */
+
+/**
+ * Represents the possible appearance settings.
+ */
 type Appearance = 'light' | 'dark' | 'system';
 
+/**
+ * Updates the theme of the application based on the provided appearance value.
+ * @param {Appearance} value - The desired appearance ('light', 'dark', or 'system').
+ */
 export function updateTheme(value: Appearance) {
     if (typeof window === 'undefined') {
         return;
@@ -17,6 +28,12 @@ export function updateTheme(value: Appearance) {
     }
 }
 
+/**
+ * Sets a cookie in the browser.
+ * @param {string} name - The name of the cookie.
+ * @param {string} value - The value of the cookie.
+ * @param {number} [days=365] - The number of days until the cookie expires.
+ */
 const setCookie = (name: string, value: string, days = 365) => {
     if (typeof document === 'undefined') {
         return;
@@ -27,6 +44,10 @@ const setCookie = (name: string, value: string, days = 365) => {
     document.cookie = `${name}=${value};path=/;max-age=${maxAge};SameSite=Lax`;
 };
 
+/**
+ * Returns a media query list for detecting the user's preferred color scheme.
+ * @returns {MediaQueryList | null} The media query list, or null if not in a browser environment.
+ */
 const mediaQuery = () => {
     if (typeof window === 'undefined') {
         return null;
@@ -35,6 +56,10 @@ const mediaQuery = () => {
     return window.matchMedia('(prefers-color-scheme: dark)');
 };
 
+/**
+ * Retrieves the stored appearance setting from local storage.
+ * @returns {Appearance | null} The stored appearance, or null if not set or not in a browser.
+ */
 const getStoredAppearance = () => {
     if (typeof window === 'undefined') {
         return null;
@@ -43,12 +68,18 @@ const getStoredAppearance = () => {
     return localStorage.getItem('appearance') as Appearance | null;
 };
 
+/**
+ * Handles changes to the system's theme preference.
+ */
 const handleSystemThemeChange = () => {
     const currentAppearance = getStoredAppearance();
 
     updateTheme(currentAppearance || 'system');
 };
 
+/**
+ * Initializes the theme based on stored preferences or system settings.
+ */
 export function initializeTheme() {
     if (typeof window === 'undefined') {
         return;
@@ -62,8 +93,19 @@ export function initializeTheme() {
     mediaQuery()?.addEventListener('change', handleSystemThemeChange);
 }
 
+/**
+ * A ref to hold the current appearance value.
+ * @type {import('vue').Ref<Appearance>}
+ */
 const appearance = ref<Appearance>('system');
 
+/**
+ * A composable function for managing the application's theme appearance.
+ * @returns {{
+ *   appearance: import('vue').Ref<Appearance>,
+ *   updateAppearance: (value: Appearance) => void
+ * }} An object containing the current appearance and a function to update it.
+ */
 export function useAppearance() {
     onMounted(() => {
         const savedAppearance = localStorage.getItem('appearance') as Appearance | null;
@@ -73,6 +115,10 @@ export function useAppearance() {
         }
     });
 
+    /**
+     * Updates the current appearance setting.
+     * @param {Appearance} value - The new appearance value.
+     */
     function updateAppearance(value: Appearance) {
         appearance.value = value;
 

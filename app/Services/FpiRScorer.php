@@ -2,12 +2,34 @@
 
 namespace App\Services;
 
+/**
+ * Calculates scores for the FPI-R test.
+ */
 class FpiRScorer
 {
+    /**
+     * Cache for the questions data.
+     * @var array<int, array<string, mixed>>|null
+     */
     protected static ?array $questions = null;
-    protected static array $categoryKeys = [1,2,3,4,5,6,7,8,9,10,'E','N'];
-    protected static array $stanineKeys = ['LEB','SOZ','LEI','GEH','ERR','AGGR','BEAN','KORP','GES','OFF','EXTR','EMOT'];
 
+    /**
+     * The keys for the score categories.
+     * @var array<int|string>
+     */
+    protected static array $categoryKeys = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'E', 'N'];
+
+    /**
+     * The keys for the Stanine values.
+     * @var array<string>
+     */
+    protected static array $stanineKeys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
+
+    /**
+     * Loads the questions from the JSON file.
+     *
+     * @return array<int, array<string, mixed>> The questions data.
+     */
     protected static function loadQuestions(): array
     {
         if (self::$questions === null) {
@@ -17,6 +39,13 @@ class FpiRScorer
         return self::$questions;
     }
 
+    /**
+     * Gets the norm table based on sex and age.
+     *
+     * @param  string|null  $sex The sex of the participant.
+     * @param  int|null  $age The age of the participant.
+     * @return array<string, mixed>|null The norm table, or null if not found.
+     */
     protected static function getNormTable(?string $sex, ?int $age): ?array
     {
         if (!$sex || !$age) {
@@ -39,6 +68,15 @@ class FpiRScorer
         return json_decode(file_get_contents($file), true);
     }
 
+    /**
+     * Scores the FPI-R test.
+     *
+     * @param  array<int, array<string, mixed>>  $answers The user's answers.
+     * @param  string|null  $sex The user's sex.
+     * @param  int|null  $age The user's age.
+     * @param  int|null  $totalTimeSeconds The total time taken in seconds.
+     * @return array<string, mixed> The scored results.
+     */
     public static function score(array $answers, ?string $sex, ?int $age, ?int $totalTimeSeconds = null): array
     {
         $questions = self::loadQuestions();

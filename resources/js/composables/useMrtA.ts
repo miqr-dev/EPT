@@ -1,6 +1,14 @@
 import { computed } from 'vue';
 
+/**
+ * @fileoverview Composable for MRT-A test logic and scoring.
+ */
+
 // --- Static Data ---
+/**
+ * Array of questions for the MRT-A test.
+ * @type {Array<Object>}
+ */
 const mrtQuestions = [
     { number: 1, options: ["Drehohrgel", "Dreohrgel", "Dreorgel", "Drehorgel"], correct: ["D"] },
   { number: 2, options: ["Spülmaschine", "Spühlmaschiene", "Spülmaschiene", "Spühlmaschine"], correct: ["A"] },
@@ -64,6 +72,10 @@ const mrtQuestions = [
   { number: 60, options: ["Interwiew", "Interviev", "Interwiu", "Interview"], correct: ["D"] },
 ];
 
+/**
+ * Maps question indices to their respective groups.
+ * @type {Array<Array<number>>}
+ */
 const groupMap = [
     [0, 1, 2, 3, 4, 15, 16, 17, 18, 19],       // U1
     [5, 6, 7, 8, 9, 20, 21, 22, 23, 24],       // U2
@@ -73,6 +85,10 @@ const groupMap = [
     [40, 41, 42, 43, 44, 55, 56, 57, 58, 59],  // U6
 ];
 
+/**
+ * Stanine values matrix for age group 18-30.
+ * @type {Array<Array<number>>}
+ */
 const SN_WERTE_MATRIX_18_30 = [
     // 0  1  2  3  4  5  6  7  8  9  10
     [1, 1, 1, 1, 2, 3, 3, 4, 5, 6, 9], // U1
@@ -83,6 +99,10 @@ const SN_WERTE_MATRIX_18_30 = [
     [1, 1, 1, 1, 2, 3, 3, 4, 5, 7, 9], // U6
 ];
 
+/**
+ * Stanine values matrix for age group 31-50.
+ * @type {Array<Array<number>>}
+ */
 const SN_WERTE_MATRIX_31_50 = [
     // 0  1  2  3  4  5  6  7  8  9  10
     [1, 1, 1, 2, 2, 3, 4, 5, 5, 7, 9], // U1
@@ -93,15 +113,43 @@ const SN_WERTE_MATRIX_31_50 = [
     [1, 1, 1, 2, 3, 3, 4, 5, 6, 7, 9], // U6
 ];
 
+/**
+ * Percentile rank table for age group 18-30.
+ * @type {Array<Object>}
+ */
 const prTable_18_30 = [{ rwgs: 9, PR: 0 }, { rwgs: 10, PR: 0 }, { rwgs: 11, PR: 0 }, { rwgs: 12, PR: 0 }, { rwgs: 13, PR: 0 }, { rwgs: 14, PR: 0 }, { rwgs: 15, PR: 0 }, { rwgs: 16, PR: 0 }, { rwgs: 17, PR: 0 }, { rwgs: 18, PR: 1 }, { rwgs: 19, PR: 1 }, { rwgs: 20, PR: 1 }, { rwgs: 21, PR: 2 }, { rwgs: 22, PR: 2 }, { rwgs: 23, PR: 3 }, { rwgs: 24, PR: 3 }, { rwgs: 25, PR: 3 }, { rwgs: 26, PR: 3 }, { rwgs: 27, PR: 3 }, { rwgs: 28, PR: 4 }, { rwgs: 29, PR: 5 }, { rwgs: 30, PR: 7 }, { rwgs: 31, PR: 8 }, { rwgs: 32, PR: 10 }, { rwgs: 33, PR: 12 }, { rwgs: 34, PR: 13 }, { rwgs: 35, PR: 16 }, { rwgs: 36, PR: 18 }, { rwgs: 37, PR: 18 }, { rwgs: 38, PR: 21 }, { rwgs: 39, PR: 24 }, { rwgs: 40, PR: 27 }, { rwgs: 41, PR: 31 }, { rwgs: 42, PR: 34 }, { rwgs: 43, PR: 38 }, { rwgs: 44, PR: 42 }, { rwgs: 45, PR: 46 }, { rwgs: 46, PR: 50 }, { rwgs: 47, PR: 54 }, { rwgs: 48, PR: 58 }, { rwgs: 49, PR: 62 }, { rwgs: 50, PR: 69 }, { rwgs: 51, PR: 73 }, { rwgs: 52, PR: 79 }, { rwgs: 53, PR: 84 }, { rwgs: 54, PR: 88 }, { rwgs: 55, PR: 93 }, { rwgs: 56, PR: 96 }, { rwgs: 57, PR: 98 }, { rwgs: 58, PR: 99 }, { rwgs: 59, PR: 100 }, { rwgs: 60, PR: 100 }];
+/**
+ * Percentile rank table for age group 31-50.
+ * @type {Array<Object>}
+ */
 const prTable_31_50 = [{ rwgs: 9, PR: 0 }, { rwgs: 10, PR: 0 }, { rwgs: 11, PR: 0 }, { rwgs: 12, PR: 0 }, { rwgs: 13, PR: 0 }, { rwgs: 14, PR: 0 }, { rwgs: 15, PR: 1 }, { rwgs: 16, PR: 1 }, { rwgs: 17, PR: 1 }, { rwgs: 18, PR: 1 }, { rwgs: 19, PR: 3 }, { rwgs: 20, PR: 3 }, { rwgs: 21, PR: 3 }, { rwgs: 22, PR: 3 }, { rwgs: 23, PR: 4 }, { rwgs: 24, PR: 5 }, { rwgs: 25, PR: 5 }, { rwgs: 26, PR: 7 }, { rwgs: 27, PR: 8 }, { rwgs: 28, PR: 10 }, { rwgs: 29, PR: 10 }, { rwgs: 30, PR: 12 }, { rwgs: 31, PR: 13 }, { rwgs: 32, PR: 13 }, { rwgs: 33, PR: 16 }, { rwgs: 34, PR: 18 }, { rwgs: 35, PR: 21 }, { rwgs: 36, PR: 21 }, { rwgs: 37, PR: 24 }, { rwgs: 38, PR: 27 }, { rwgs: 39, PR: 31 }, { rwgs: 40, PR: 34 }, { rwgs: 41, PR: 38 }, { rwgs: 42, PR: 42 }, { rwgs: 43, PR: 42 }, { rwgs: 44, PR: 46 }, { rwgs: 45, PR: 50 }, { rwgs: 46, PR: 58 }, { rwgs: 47, PR: 62 }, { rwgs: 48, PR: 62 }, { rwgs: 49, PR: 66 }, { rwgs: 50, PR: 79 }, { rwgs: 51, PR: 79 }, { rwgs: 52, PR: 82 }, { rwgs: 53, PR: 84 }, { rwgs: 54, PR: 86 }, { rwgs: 55, PR: 90 }, { rwgs: 56, PR: 95 }, { rwgs: 57, PR: 98 }, { rwgs: 58, PR: 99 }, { rwgs: 59, PR: 100 }, { rwgs: 60, PR: 100 }];
 
+/**
+ * A composable function that provides MRT-A test data and scoring logic.
+ *
+ * @returns {{
+ *   mrtQuestions: Array<Object>,
+ *   calculateScores: (answers: { user_answer: string | null }[], userAge: number | null) => Object
+ * }}
+ */
 export function useMrtA() {
+    /**
+     * Checks if a user's answer is correct.
+     * @param {string | null} userAnswer - The user's answer.
+     * @param {string[]} validAnswers - An array of correct answers.
+     * @returns {boolean} - True if the answer is correct, otherwise false.
+     */
     function isCorrectAnswer(userAnswer: string | null, validAnswers: string[]): boolean {
         if (!userAnswer) return false;
         return validAnswers.map(a => a.toUpperCase()).includes(userAnswer.toUpperCase());
     }
 
+    /**
+     * Calculates the scores for the MRT-A test.
+     * @param {{ user_answer: string | null }[]} answers - An array of user answers.
+     * @param {number | null} userAge - The age of the user.
+     * @returns {Object} - The calculated scores.
+     */
     const calculateScores = (
         answers: { user_answer: string | null }[],
         userAge: number | null

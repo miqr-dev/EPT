@@ -2,22 +2,37 @@
 
 namespace App\Services;
 
+/**
+ * Calculates scores for the BIT-2 test based on user answers and norms.
+ */
 class Bit2Scorer
 {
-    protected static array $groups = ['TH','GH','TN','EH','LF','KB','VB','LG','SE'];
+    /**
+     * The groups of questions in the BIT-2 test.
+     * @var array<string>
+     */
+    protected static array $groups = ['TH', 'GH', 'TN', 'EH', 'LF', 'KB', 'VB', 'LG', 'SE'];
 
+    /**
+     * Mapping of question numbers to their respective groups.
+     * @var array<int, string>
+     */
     protected static array $questionGroups = [
-        1=>'TH',2=>'EH',3=>'VB',4=>'GH',5=>'LF',6=>'LG',7=>'TN',8=>'KB',9=>'SE',
-        10=>'TH',11=>'EH',12=>'VB',13=>'GH',14=>'LF',15=>'LG',16=>'TN',17=>'KB',18=>'SE',
-        19=>'TH',20=>'EH',21=>'VB',22=>'GH',23=>'LF',24=>'LG',25=>'TN',26=>'KB',27=>'SE',
-        28=>'TH',29=>'EH',30=>'VB',31=>'GH',32=>'LF',33=>'LG',34=>'TN',35=>'KB',36=>'SE',
-        37=>'TH',38=>'EH',39=>'VB',40=>'GH',41=>'LF',42=>'LG',43=>'TN',44=>'KB',45=>'SE',
-        46=>'TH',47=>'EH',48=>'VB',49=>'GH',50=>'LF',51=>'LG',52=>'TN',53=>'KB',54=>'SE',
-        55=>'TH',56=>'EH',57=>'VB',58=>'GH',59=>'LF',60=>'LG',61=>'TN',62=>'KB',63=>'SE',
-        64=>'TH',65=>'EH',66=>'VB',67=>'GH',68=>'LF',69=>'LG',70=>'TN',71=>'KB',72=>'SE',
-        73=>'TH',74=>'EH',75=>'VB',76=>'GH',77=>'LF',78=>'LG',79=>'TN',80=>'KB',81=>'SE',
+        1 => 'TH', 2 => 'EH', 3 => 'VB', 4 => 'GH', 5 => 'LF', 6 => 'LG', 7 => 'TN', 8 => 'KB', 9 => 'SE',
+        10 => 'TH', 11 => 'EH', 12 => 'VB', 13 => 'GH', 14 => 'LF', 15 => 'LG', 16 => 'TN', 17 => 'KB', 18 => 'SE',
+        19 => 'TH', 20 => 'EH', 21 => 'VB', 22 => 'GH', 23 => 'LF', 24 => 'LG', 25 => 'TN', 26 => 'KB', 27 => 'SE',
+        28 => 'TH', 29 => 'EH', 30 => 'VB', 31 => 'GH', 32 => 'LF', 33 => 'LG', 34 => 'TN', 35 => 'KB', 36 => 'SE',
+        37 => 'TH', 38 => 'EH', 39 => 'VB', 40 => 'GH', 41 => 'LF', 42 => 'LG', 43 => 'TN', 44 => 'KB', 45 => 'SE',
+        46 => 'TH', 47 => 'EH', 48 => 'VB', 49 => 'GH', 50 => 'LF', 51 => 'LG', 52 => 'TN', 53 => 'KB', 54 => 'SE',
+        55 => 'TH', 56 => 'EH', 57 => 'VB', 58 => 'GH', 59 => 'LF', 60 => 'LG', 61 => 'TN', 62 => 'KB', 63 => 'SE',
+        64 => 'TH', 65 => 'EH', 66 => 'VB', 67 => 'GH', 68 => 'LF', 69 => 'LG', 70 => 'TN', 71 => 'KB', 72 => 'SE',
+        73 => 'TH', 74 => 'EH', 75 => 'VB', 76 => 'GH', 77 => 'LF', 78 => 'LG', 79 => 'TN', 80 => 'KB', 81 => 'SE',
     ];
 
+    /**
+     * Norm table for male participants.
+     * @var array<int, array<string, mixed>>
+     */
     protected static array $maleNormTable = [
         ['percentile' => 100, 'TH' => 41, 'GH' => 44, 'TN' => 45, 'EH' => 44, 'LF' => 45, 'KB' => 43, 'VB' => 43, 'LG' => 44, 'SE' => 45],
         ['percentile' => 95, 'TH' => 35, 'GH' => 38, 'TN' => 42, 'EH' => 37, 'LF' => 41, 'KB' => 36, 'VB' => 32, 'LG' => 37, 'SE' => 40],
@@ -38,10 +53,14 @@ class Bit2Scorer
         ['percentile' => 20, 'TH' => 14, 'GH' => 17, 'TN' => 19, 'EH' => 18, 'LF' => 18, 'KB' => 16, 'VB' => 14, 'LG' => 16, 'SE' => 17],
         ['percentile' => 15, 'TH' => 13, 'GH' => 15, 'TN' => 18, 'EH' => 17, 'LF' => 17, 'KB' => 15, 'VB' => 12, 'LG' => 15, 'SE' => 15],
         ['percentile' => 10, 'TH' => 10, 'GH' => 14, 'TN' => 16, 'EH' => 15, 'LF' => 15, 'KB' => 13, 'VB' => 11, 'LG' => 14, 'SE' => 14],
-        ['percentile' => 5,  'TH' => 9,  'GH' => 13, 'TN' => 13, 'EH' => 13, 'LF' => 13, 'KB' => 11, 'VB' => 9,  'LG' => 11, 'SE' => 12],
-        ['percentile' => 0,  'TH' => null, 'GH' => 9,  'TN' => 9,  'EH' => 9,  'LF' => 9,  'KB' => 9,  'VB' => null, 'LG' => 9,  'SE' => 9],
+        ['percentile' => 5, 'TH' => 9, 'GH' => 13, 'TN' => 13, 'EH' => 13, 'LF' => 13, 'KB' => 11, 'VB' => 9, 'LG' => 11, 'SE' => 12],
+        ['percentile' => 0, 'TH' => null, 'GH' => 9, 'TN' => 9, 'EH' => 9, 'LF' => 9, 'KB' => 9, 'VB' => null, 'LG' => 9, 'SE' => 9],
     ];
 
+    /**
+     * Norm table for female participants.
+     * @var array<int, array<string, mixed>>
+     */
     protected static array $femaleNormTable = [
         ['percentile' => 100, 'TH' => 43, 'GH' => 45, 'TN' => 45, 'EH' => 44, 'LF' => 45, 'KB' => 42, 'VB' => 45, 'LG' => 44, 'SE' => 45],
         ['percentile' => 95, 'TH' => 27, 'GH' => 41, 'TN' => 36, 'EH' => 38, 'LF' => 39, 'KB' => 34, 'VB' => 34, 'LG' => 37, 'SE' => 42],
@@ -60,17 +79,30 @@ class Bit2Scorer
         ['percentile' => 30, 'TH' => null, 'GH' => 24, 'TN' => 17, 'EH' => 22, 'LF' => 21, 'KB' => 20, 'VB' => 18, 'LG' => 18, 'SE' => 29],
         ['percentile' => 25, 'TH' => 11, 'GH' => 23, 'TN' => 16, 'EH' => 21, 'LF' => 20, 'KB' => 19, 'VB' => 16, 'LG' => 17, 'SE' => 27],
         ['percentile' => 20, 'TH' => 10, 'GH' => 21, 'TN' => 15, 'EH' => 20, 'LF' => 18, 'KB' => 18, 'VB' => 15, 'LG' => 16, 'SE' => 26],
-        ['percentile' => 15, 'TH' => 9,  'GH' => 20, 'TN' => 14, 'EH' => 19, 'LF' => 17, 'KB' => 17, 'VB' => 13, 'LG' => 15, 'SE' => 24],
+        ['percentile' => 15, 'TH' => 9, 'GH' => 20, 'TN' => 14, 'EH' => 19, 'LF' => 17, 'KB' => 17, 'VB' => 13, 'LG' => 15, 'SE' => 24],
         ['percentile' => 10, 'TH' => null, 'GH' => 17, 'TN' => 12, 'EH' => 17, 'LF' => 16, 'KB' => 15, 'VB' => 11, 'LG' => 14, 'SE' => 22],
-        ['percentile' => 5,  'TH' => null, 'GH' => 15, 'TN' => 11, 'EH' => 14, 'LF' => 14, 'KB' => 13, 'VB' => 9,  'LG' => 12, 'SE' => 18],
-        ['percentile' => 0,  'TH' => null, 'GH' => 9,  'TN' => 9,  'EH' => 9,  'LF' => 9,  'KB' => 9,  'VB' => null, 'LG' => 9,  'SE' => 10],
+        ['percentile' => 5, 'TH' => null, 'GH' => 15, 'TN' => 11, 'EH' => 14, 'LF' => 14, 'KB' => 13, 'VB' => 9, 'LG' => 12, 'SE' => 18],
+        ['percentile' => 0, 'TH' => null, 'GH' => 9, 'TN' => 9, 'EH' => 9, 'LF' => 9, 'KB' => 9, 'VB' => null, 'LG' => 9, 'SE' => 10],
     ];
 
+    /**
+     * Get the norm table based on the participant's sex.
+     *
+     * @param  string|null  $sex The sex of the participant ('f' for female, otherwise male).
+     * @return array<int, array<string, mixed>>
+     */
     protected static function normTable(?string $sex): array
     {
         return $sex === 'f' ? self::$femaleNormTable : self::$maleNormTable;
     }
 
+    /**
+     * Score the BIT-2 test answers.
+     *
+     * @param  array<int, array<string, mixed>>  $answers The participant's answers.
+     * @param  string|null  $sex The sex of the participant.
+     * @return array<string, mixed> The scored results, including group totals and percentiles.
+     */
     public static function score(array $answers, ?string $sex): array
     {
         $totals = array_fill_keys(self::$groups, 0);

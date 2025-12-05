@@ -1,14 +1,25 @@
 <script setup lang="ts">
+/**
+ * @file LiveExamStatusTable.vue - Component for displaying and managing the live status of an exam.
+ */
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 
+/**
+ * @props {any} exam - The exam object.
+ */
 const props = defineProps<{
   exam: any
 }>()
 
 const MAX_EXTRA_MINUTES = 30
 
+/**
+ * Formats a number of seconds into a mm:ss string.
+ * @param {number} [seconds] - The number of seconds to format.
+ * @returns {string} The formatted time string.
+ */
 const formatTime = (seconds?: number) => {
   if (typeof seconds !== 'number' || seconds < 0) return '00:00'
   const whole = Math.floor(seconds)
@@ -20,6 +31,10 @@ const formatTime = (seconds?: number) => {
 // We need a local copy of the exam to update the timer
 const localExam = ref(JSON.parse(JSON.stringify(props.exam)))
 
+/**
+ * A computed property that splits the exam steps into rows of 5.
+ * @returns {any[][]}
+ */
 const stepRows = computed(() => {
   const steps = Array.isArray(localExam.value?.steps) ? localExam.value.steps : []
   const rows: any[][] = []
@@ -29,9 +44,23 @@ const stepRows = computed(() => {
   return rows
 })
 
+/**
+ * A computed property for the first row of steps.
+ * @returns {any[]}
+ */
 const firstStepRow = computed(() => stepRows.value[0] ?? [])
+/**
+ * A computed property for the additional rows of steps.
+ * @returns {any[][]}
+ */
 const additionalStepRows = computed(() => stepRows.value.slice(1))
 
+/**
+ * Gets the status of a participant for the current exam step.
+ * @param {any} exam - The exam object.
+ * @param {any} participant - The participant object.
+ * @returns {any | null}
+ */
 const getParticipantStatusFromExam = (exam: any, participant: any) => {
   if (!exam.current_step) {
     return null
@@ -43,9 +72,18 @@ const getParticipantStatusFromExam = (exam: any, participant: any) => {
   return statuses.find((s: any) => s.exam_step_id === exam.current_exam_step_id)
 }
 
+/**
+ * Gets the status of a participant from the local exam state.
+ * @param {any} participant - The participant object.
+ * @returns {any | null}
+ */
 const getParticipantStatus = (participant: any) =>
   getParticipantStatusFromExam(localExam.value, participant)
 
+/**
+ * Toggles the visibility of the contract for the exam.
+ * @param {boolean} enabled - Whether the contract should be visible.
+ */
 const toggleContractVisibility = (enabled: boolean) => {
   router.post(
     route('exams.set-contract-visibility', { exam: props.exam.id }),
@@ -54,6 +92,10 @@ const toggleContractVisibility = (enabled: boolean) => {
   )
 }
 
+/**
+ * State for the extra time input fields.
+ * @type {import('vue').Ref<Record<number, { expanded: boolean; minutes: string; error: string | null; loading: boolean }>>}
+ */
 const extraTimeState = ref<Record<number, { expanded: boolean; minutes: string; error: string | null; loading: boolean }>>({})
 
 let timerInterval: any = null
@@ -128,27 +170,48 @@ watch(
   { deep: true },
 )
 
+/**
+ * Starts the exam.
+ */
 const startExam = () => {
   router.post(route('exams.start', { exam: props.exam.id }), {}, {
     preserveScroll: true,
   })
 }
 
+/**
+ * Sets the current step of the exam.
+ * @param {number} stepId - The ID of the step to set.
+ */
 const setStep = (stepId: number) => {
   router.post(route('exams.set-step', { exam: props.exam.id }), { step_id: stepId }, {
     preserveScroll: true,
   })
 }
 
+/**
+ * Sets the status of the exam.
+ * @param {string} status - The status to set.
+ */
 const setStatus = (status: string) => {
   router.post(route('exams.set-status', { exam: props.exam.id }), { status }, {
     preserveScroll: true,
   })
 }
 
+/**
+ * Gets the user ID of a participant.
+ * @param {any} participant - The participant object.
+ * @returns {number | undefined}
+ */
 const getParticipantUserId = (participant: any) =>
   participant.participant_id ?? participant.user?.id
 
+/**
+ * Sets an action for a participant.
+ * @param {any} participant - The participant object.
+ * @param {'pause' | 'resume' | 'finish'} action - The action to perform.
+ */
 const setParticipantAction = (participant: any, action: 'pause' | 'resume' | 'finish') => {
   const participantId = getParticipantUserId(participant)
   if (!participantId) return
@@ -162,8 +225,18 @@ const setParticipantAction = (participant: any, action: 'pause' | 'resume' | 'fi
   )
 }
 
+/**
+ * Gets the state of the extra time input for a participant.
+ * @param {number} participantId - The ID of the participant.
+ * @returns {{ expanded: boolean; minutes: string; error: string | null; loading: boolean } | undefined}
+ */
 const getExtraTimeState = (participantId: number) => extraTimeState.value[participantId]
 
+/**
+ * Checks if extra time can be added for a participant.
+ * @param {any} participant - The participant object.
+ * @returns {boolean}
+ */
 const canAddExtraTime = (participant: any) => {
   const status = getParticipantStatus(participant)
   if (!status) return false
@@ -171,6 +244,10 @@ const canAddExtraTime = (participant: any) => {
   return !['completed', 'paused', 'broken'].includes(status.status)
 }
 
+/**
+ * Toggles the extra time input for a participant.
+ * @param {any} participant - The participant object.
+ */
 const toggleExtraTime = (participant: any) => {
   const participantId = getParticipantUserId(participant)
   if (!participantId) return
@@ -182,6 +259,11 @@ const toggleExtraTime = (participant: any) => {
   }
 }
 
+/**
+ * Handles input for the extra time minutes.
+ * @param {any} participant - The participant object.
+ * @param {Event} event - The input event.
+ */
 const onExtraTimeMinutesInput = (participant: any, event: Event) => {
   const participantId = getParticipantUserId(participant)
   if (!participantId) return
@@ -198,6 +280,10 @@ const onExtraTimeMinutesInput = (participant: any, event: Event) => {
   }
 }
 
+/**
+ * Submits the extra time for a participant.
+ * @param {any} participant - The participant object.
+ */
 const submitExtraTime = (participant: any) => {
   const participantId = getParticipantUserId(participant)
   const status = getParticipantStatus(participant)
@@ -253,6 +339,11 @@ const submitExtraTime = (participant: any) => {
   )
 }
 
+/**
+ * Checks if a participant can be paused.
+ * @param {any} participant - The participant object.
+ * @returns {boolean}
+ */
 const canPauseParticipant = (participant: any) => {
   const status = getParticipantStatus(participant)
   if (!status) return false
@@ -260,6 +351,11 @@ const canPauseParticipant = (participant: any) => {
   return !['paused', 'completed', 'broken'].includes(status.status)
 }
 
+/**
+ * Checks if a participant can be resumed.
+ * @param {any} participant - The participant object.
+ * @returns {boolean}
+ */
 const canResumeParticipant = (participant: any) => {
   const status = getParticipantStatus(participant)
   if (!status) return false
@@ -267,6 +363,11 @@ const canResumeParticipant = (participant: any) => {
   return status.status === 'paused'
 }
 
+/**
+ * Checks if a participant can be force-finished.
+ * @param {any} participant - The participant object.
+ * @returns {boolean}
+ */
 const canForceFinishParticipant = (participant: any) => {
   const status = getParticipantStatus(participant)
   if (!status) return false

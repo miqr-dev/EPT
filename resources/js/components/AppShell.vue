@@ -2,6 +2,13 @@
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { usePage } from '@inertiajs/vue3';
 
+/**
+ * @file AppShell.vue - A component that provides a basic layout shell for the application.
+ */
+
+/**
+ * @props {('header' | 'sidebar')} [variant] - The layout variant to use.
+ */
 interface Props {
     variant?: 'header' | 'sidebar';
 }

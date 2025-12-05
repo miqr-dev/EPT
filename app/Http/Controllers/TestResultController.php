@@ -3,13 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\TestResult;
-use Illuminate\Http\Request;
 use App\Services\MrtAScorer;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
+/**
+ * Handles actions related to test results, such as updating them.
+ */
 class TestResultController extends Controller
 {
-    public function update(Request $request, TestResult $testResult)
+    /**
+     * Update the specified test result in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\TestResult  $testResult
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function update(Request $request, TestResult $testResult): RedirectResponse
     {
         // Eager load relationships for efficiency
         $testResult->load('assignment.test', 'assignment.participant.participantProfile');
@@ -34,15 +44,13 @@ class TestResultController extends Controller
 
             // The scorer returns a result object that includes an 'answers' key.
             // We need to merge the existing time_seconds back into this new structure.
-             $newAnswersWithTimes = array_map(function($newAnswer, $oldAnswer) {
+            $newAnswersWithTimes = array_map(function ($newAnswer, $oldAnswer) {
                 $newAnswer['time_seconds'] = $oldAnswer['time_seconds'] ?? 0;
                 return $newAnswer;
             }, $resultData['answers'], $originalAnswers);
 
             $resultData['answers'] = $newAnswersWithTimes;
             $resultData['total_time_seconds'] = $testResult->result_json['total_time_seconds'] ?? array_sum($questionTimes);
-
-
         } else {
             // For other tests, keep the old behavior for now.
             $validatedData = $request->validate([

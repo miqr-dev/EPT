@@ -2,8 +2,15 @@
 
 namespace App\Services;
 
+/**
+ * Calculates scores for the MRT-A test.
+ */
 class MrtAScorer
 {
+    /**
+     * The questions for the MRT-A test.
+     * @var array<int, array<string, mixed>>
+     */
     protected static array $mrtQuestions = [
         ['number' => 1, 'options' => ["Drehohrgel", "Dreohrgel", "Dreorgel", "Drehorgel"], 'correct' => ["D"]],
         ['number' => 2, 'options' => ["Spülmaschine", "Spühlmaschiene", "Spülmaschiene", "Spühlmaschine"], 'correct' => ["A"]],
@@ -67,6 +74,10 @@ class MrtAScorer
         ['number' => 60, 'options' => ["Interwiew", "Interviev", "Interwiu", "Interview"], 'correct' => ["D"]],
     ];
 
+    /**
+     * Mapping of question indices to groups.
+     * @var array<int, array<int>>
+     */
     protected static array $groupMap = [
         [0, 1, 2, 3, 4, 15, 16, 17, 18, 19],
         [5, 6, 7, 8, 9, 20, 21, 22, 23, 24],
@@ -76,6 +87,10 @@ class MrtAScorer
         [40, 41, 42, 43, 44, 55, 56, 57, 58, 59],
     ];
 
+    /**
+     * Stanine values matrix for age group 18-30.
+     * @var array<int, array<int>>
+     */
     protected static array $SN_WERTE_MATRIX_18_30 = [
         [1, 1, 1, 1, 2, 3, 3, 4, 5, 6, 9],
         [1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -85,6 +100,10 @@ class MrtAScorer
         [1, 1, 1, 1, 2, 3, 3, 4, 5, 7, 9],
     ];
 
+    /**
+     * Stanine values matrix for age group 31-50.
+     * @var array<int, array<int>>
+     */
     protected static array $SN_WERTE_MATRIX_31_50 = [
         [1, 1, 1, 2, 2, 3, 4, 5, 5, 7, 9],
         [1, 1, 1, 1, 2, 3, 4, 4, 5, 6, 9],
@@ -94,9 +113,26 @@ class MrtAScorer
         [1, 1, 1, 2, 3, 3, 4, 5, 6, 7, 9],
     ];
 
+    /**
+     * Percentile rank table for age group 18-30.
+     * @var array<int, array<string, int>>
+     */
     protected static array $prTable_18_30 = [['rwgs' => 9, 'PR' => 0], ['rwgs' => 10, 'PR' => 0], ['rwgs' => 11, 'PR' => 0], ['rwgs' => 12, 'PR' => 0], ['rwgs' => 13, 'PR' => 0], ['rwgs' => 14, 'PR' => 0], ['rwgs' => 15, 'PR' => 0], ['rwgs' => 16, 'PR' => 0], ['rwgs' => 17, 'PR' => 0], ['rwgs' => 18, 'PR' => 1], ['rwgs' => 19, 'PR' => 1], ['rwgs' => 20, 'PR' => 1], ['rwgs' => 21, 'PR' => 2], ['rwgs' => 22, 'PR' => 2], ['rwgs' => 23, 'PR' => 3], ['rwgs' => 24, 'PR' => 3], ['rwgs' => 25, 'PR' => 3], ['rwgs' => 26, 'PR' => 3], ['rwgs' => 27, 'PR' => 3], ['rwgs' => 28, 'PR' => 4], ['rwgs' => 29, 'PR' => 5], ['rwgs' => 30, 'PR' => 7], ['rwgs' => 31, 'PR' => 8], ['rwgs' => 32, 'PR' => 10], ['rwgs' => 33, 'PR' => 12], ['rwgs' => 34, 'PR' => 13], ['rwgs' => 35, 'PR' => 16], ['rwgs' => 36, 'PR' => 18], ['rwgs' => 37, 'PR' => 18], ['rwgs' => 38, 'PR' => 21], ['rwgs' => 39, 'PR' => 24], ['rwgs' => 40, 'PR' => 27], ['rwgs' => 41, 'PR' => 31], ['rwgs' => 42, 'PR' => 34], ['rwgs' => 43, 'PR' => 38], ['rwgs' => 44, 'PR' => 42], ['rwgs' => 45, 'PR' => 46], ['rwgs' => 46, 'PR' => 50], ['rwgs' => 47, 'PR' => 54], ['rwgs' => 48, 'PR' => 58], ['rwgs' => 49, 'PR' => 62], ['rwgs' => 50, 'PR' => 69], ['rwgs' => 51, 'PR' => 73], ['rwgs' => 52, 'PR' => 79], ['rwgs' => 53, 'PR' => 84], ['rwgs' => 54, 'PR' => 88], ['rwgs' => 55, 'PR' => 93], ['rwgs' => 56, 'PR' => 96], ['rwgs' => 57, 'PR' => 98], ['rwgs' => 58, 'PR' => 99], ['rwgs' => 59, 'PR' => 100], ['rwgs' => 60, 'PR' => 100]];
+
+    /**
+     * Percentile rank table for age group 31-50.
+     * @var array<int, array<string, int>>
+     */
     protected static array $prTable_31_50 = [['rwgs' => 9, 'PR' => 0], ['rwgs' => 10, 'PR' => 0], ['rwgs' => 11, 'PR' => 0], ['rwgs' => 12, 'PR' => 0], ['rwgs' => 13, 'PR' => 0], ['rwgs' => 14, 'PR' => 0], ['rwgs' => 15, 'PR' => 1], ['rwgs' => 16, 'PR' => 1], ['rwgs' => 17, 'PR' => 1], ['rwgs' => 18, 'PR' => 1], ['rwgs' => 19, 'PR' => 3], ['rwgs' => 20, 'PR' => 3], ['rwgs' => 21, 'PR' => 3], ['rwgs' => 22, 'PR' => 3], ['rwgs' => 23, 'PR' => 4], ['rwgs' => 24, 'PR' => 5], ['rwgs' => 25, 'PR' => 5], ['rwgs' => 26, 'PR' => 7], ['rwgs' => 27, 'PR' => 8], ['rwgs' => 28, 'PR' => 10], ['rwgs' => 29, 'PR' => 10], ['rwgs' => 30, 'PR' => 12], ['rwgs' => 31, 'PR' => 13], ['rwgs' => 32, 'PR' => 13], ['rwgs' => 33, 'PR' => 16], ['rwgs' => 34, 'PR' => 18], ['rwgs' => 35, 'PR' => 21], ['rwgs' => 36, 'PR' => 21], ['rwgs' => 37, 'PR' => 24], ['rwgs' => 38, 'PR' => 27], ['rwgs' => 39, 'PR' => 31], ['rwgs' => 40, 'PR' => 34], ['rwgs' => 41, 'PR' => 38], ['rwgs' => 42, 'PR' => 42], ['rwgs' => 43, 'PR' => 42], ['rwgs' => 44, 'PR' => 46], ['rwgs' => 45, 'PR' => 50], ['rwgs' => 46, 'PR' => 58], ['rwgs' => 47, 'PR' => 62], ['rwgs' => 48, 'PR' => 62], ['rwgs' => 49, 'PR' => 66], ['rwgs' => 50, 'PR' => 79], ['rwgs' => 51, 'PR' => 79], ['rwgs' => 52, 'PR' => 82], ['rwgs' => 53, 'PR' => 84], ['rwgs' => 54, 'PR' => 86], ['rwgs' => 55, 'PR' => 90], ['rwgs' => 56, 'PR' => 95], ['rwgs' => 57, 'PR' => 98], ['rwgs' => 58, 'PR' => 99], ['rwgs' => 59, 'PR' => 100], ['rwgs' => 60, 'PR' => 100]];
 
+    /**
+     * Scores the MRT-A test.
+     *
+     * @param  array<string|null>  $userAnswers The user's answers.
+     * @param  int|null  $userAge The user's age.
+     * @param  array<int>  $questionTimes The time taken for each question.
+     * @return array<string, mixed> The scored results.
+     */
     public static function score(array $userAnswers, ?int $userAge, array $questionTimes): array
     {
         $groupScores = self::calculateGroupScores($userAnswers);
@@ -131,6 +167,12 @@ class MrtAScorer
         ];
     }
 
+    /**
+     * Calculates the scores for each group.
+     *
+     * @param  array<string|null>  $userAnswers The user's answers.
+     * @return array<int> The scores for each group.
+     */
     private static function calculateGroupScores(array $userAnswers): array
     {
         $groupScores = [];
@@ -147,6 +189,13 @@ class MrtAScorer
         return $groupScores;
     }
 
+    /**
+     * Calculates the stanine values for each group.
+     *
+     * @param  array<int>  $groupScores The scores for each group.
+     * @param  array<int, array<int>>  $matrix The stanine matrix to use.
+     * @return array<int> The stanine values.
+     */
     private static function calculateGroupStanines(array $groupScores, array $matrix): array
     {
         $stanines = [];
@@ -157,6 +206,13 @@ class MrtAScorer
         return $stanines;
     }
 
+    /**
+     * Gets the percentile rank for a total score.
+     *
+     * @param  int  $rwgs The total score.
+     * @param  array<int, array<string, int>>  $prTable The percentile rank table to use.
+     * @return int The percentile rank.
+     */
     private static function getPR(int $rwgs, array $prTable): int
     {
         foreach ($prTable as $row) {
@@ -167,6 +223,13 @@ class MrtAScorer
         return 0;
     }
 
+    /**
+     * Checks if a user's answer is correct.
+     *
+     * @param  string|null  $userAnswer The user's answer.
+     * @param  array<string>  $validAnswers The valid answers.
+     * @return bool True if the answer is correct, false otherwise.
+     */
     private static function isCorrectAnswer(?string $userAnswer, array $validAnswers): bool
     {
         if (!$userAnswer) {

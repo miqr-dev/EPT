@@ -1,4 +1,7 @@
 <script setup lang="ts">
+/**
+ * @file AppSidebar.vue - The main sidebar component for the application.
+ */
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -8,6 +11,10 @@ import { Link } from '@inertiajs/vue3';
 import { BookOpen, Folder, LayoutGrid, Settings, Users } from 'lucide-vue-next'; // Added Settings
 import AppLogo from './AppLogo.vue';
 
+/**
+ * The main navigation items to be displayed in the sidebar.
+ * @type {NavItem[]}
+ */
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
@@ -76,6 +83,10 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+/**
+ * The footer navigation items to be displayed in the sidebar.
+ * @type {NavItem[]}
+ */
 const footerNavItems: NavItem[] = [
     {
         title: 'Einstellungen',
