@@ -1,3 +1,5 @@
+import type { LpsColumn3Row } from '@/data/lpsColumn3';
+
 export type LpsPage1Row = {
   id: number;
   column1: string;
@@ -32,6 +34,7 @@ export type LpsPage1Solution = {
 export type LpsDataset = {
   rows: LpsPage1Row[];
   solutions: LpsPage1Solution[];
+  loadColumn3Rows: () => Promise<LpsColumn3Row[]>;
 };
 
 export const LPS_PAGE1_COLUMN1: LpsColumnEntry[] = [
@@ -424,14 +427,16 @@ export const LPS_PAGE1_SOLUTIONS_B: LpsPage1Solution[] = buildSolutions(
   LPS_PAGE1_COLUMN5_B,
 );
 
+const loadColumn3Rows = async () => (await import('@/data/lpsColumn3')).lpsColumn3Rows;
+
 export function getLpsDataset(testName?: string): LpsDataset {
   if (testName === 'LPS-A') {
-    return { rows: LPS_PAGE1_ROWS_A, solutions: LPS_PAGE1_SOLUTIONS_A };
+    return { rows: LPS_PAGE1_ROWS_A, solutions: LPS_PAGE1_SOLUTIONS_A, loadColumn3Rows };
   }
   if (testName === 'LPS-B') {
-    return { rows: LPS_PAGE1_ROWS_B, solutions: LPS_PAGE1_SOLUTIONS_B };
+    return { rows: LPS_PAGE1_ROWS_B, solutions: LPS_PAGE1_SOLUTIONS_B, loadColumn3Rows };
   }
-  return { rows: LPS_PAGE1_ROWS, solutions: LPS_PAGE1_SOLUTIONS };
+  return { rows: LPS_PAGE1_ROWS, solutions: LPS_PAGE1_SOLUTIONS, loadColumn3Rows };
 }
 
 
