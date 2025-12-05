@@ -671,10 +671,14 @@ const page1MaxScore = computed(() =>
 .lps-figure-shape-group {
   cursor: pointer;
   outline: none;
+  /* Allow clicks anywhere inside the shape's bounding box. */
+  pointer-events: bounding-box;
 }
 
 .lps-figure-shape {
   transition: opacity 120ms ease, transform 120ms ease;
+  /* Ensure the entire painted area (not just the outline) captures pointer events. */
+  pointer-events: visibleFill;
 }
 
 .lps-figure-shape-group:hover .lps-figure-shape {
