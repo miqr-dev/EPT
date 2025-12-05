@@ -466,13 +466,14 @@ const LPS_PAGE1_COLUMN3_B_ROW3_SHAPES = [
         L 39.55 13.47
         Z
       `,
-
+];
 const BASE_CIRCLE_PATH = `
   M 50 32
   A 18 18 0 1 1 14 32
   A 18 18 0 1 1 50 32
   Z
 `;
+
 
 const LPS_PAGE1_COLUMN3_B_ROW2_SHAPES = [
   `${BASE_CIRCLE_PATH} M 32 10 L 24 22 L 40 22 Z`,
