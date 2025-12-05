@@ -36,8 +36,8 @@ const elapsedSecondsBeforeResume = ref(props.pausedTestResult?.total_time_second
 const runningElapsedSeconds = ref(0);
 const timerHandle = ref<number | null>(null);
 
-function buildSelection(word: string, saved?: boolean[]) {
-  const base = word.split('').map(() => false);
+function buildSelection(length: number, saved?: boolean[]) {
+  const base = Array.from({ length }, () => false);
   if (!saved) return base;
   if (saved.length === base.length) return saved;
   return base.map((_, idx) => saved[idx] ?? false);
@@ -47,11 +47,11 @@ const page1Responses = ref<LpsPage1ResponseRow[]>(
   lpsRows.map((row, idx) => {
     const pausedRow = props.pausedTestResult?.page1?.[idx];
     return {
-      col1: buildSelection(row.column1, pausedRow?.col1),
-      col2: buildSelection(row.column2, pausedRow?.col2),
-      col3: pausedRow?.col3 ?? [],
-      col4: buildSelection(row.column4, pausedRow?.col4),
-      col5: buildSelection(row.column5, pausedRow?.col5),
+      col1: buildSelection(row.column1.length, pausedRow?.col1),
+      col2: buildSelection(row.column2.length, pausedRow?.col2),
+      col3: buildSelection(row.column3?.length ?? 0, pausedRow?.col3),
+      col4: buildSelection(row.column4.length, pausedRow?.col4),
+      col5: buildSelection(row.column5.length, pausedRow?.col5),
     };
   }),
 );
@@ -188,9 +188,16 @@ function formatTime(seconds: number) {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-function toggleSelection(rowIdx: number, column: 'col1' | 'col2', charIdx: number) {
-  const columnNumber = column === 'col1' ? 1 : 2;
-  if (!isColumnInteractive(columnNumber)) return;
+const COLUMN_INDEX_BY_KEY: Record<keyof LpsPage1ResponseRow, number> = {
+  col1: 0,
+  col2: 1,
+  col3: 2,
+  col4: 3,
+  col5: 4,
+};
+
+function toggleSelection(rowIdx: number, column: keyof LpsPage1ResponseRow, charIdx: number) {
+  if (!isColumnInteractive(column)) return;
   const row = page1Responses.value[rowIdx];
   if (!row || !row[column]?.length) return;
   const currentlySelected = row[column][charIdx];
@@ -256,8 +263,8 @@ function finishColumn(columnIdx: number, unlockNext = true) {
   }
 }
 
-function isColumnInteractive(columnNumber: number) {
-  const state = columnStates.value[columnNumber - 1];
+function isColumnInteractive(columnKey: keyof LpsPage1ResponseRow) {
+  const state = columnStates.value[COLUMN_INDEX_BY_KEY[columnKey]];
   return state?.status === 'active';
 }
 
@@ -395,13 +402,13 @@ const page1MaxScore = computed(() =>
           <div class="rounded-xl border bg-background px-4 py-3 shadow-sm">
             <div class="flex items-center justify-between gap-4">
               <div class="text-xs text-muted-foreground">
-                Spalte starten (Sp 1: {{ formatTime(getColumnDuration(0)) }}, Sp 2:
-                {{ formatTime(getColumnDuration(1)) }}). Nur eine Spalte gleichzeitig.
+                Spalte starten (Dauer: Sp 1 {{ formatTime(getColumnDuration(0)) }}, Sp 2
+                {{ formatTime(getColumnDuration(1)) }}, Sp 3–5 {{ formatTime(getColumnDuration(2)) }}).
+                Nur eine Spalte gleichzeitig.
               </div>
 
               <div class="flex items-center gap-3">
-                <div v-for="(state, idx) in columnStates.slice(0, 2)" :key="`column-state-${idx}`"
-                  class="flex items-center gap-2">
+                <div v-for="(state, idx) in columnStates" :key="`column-state-${idx}`" class="flex items-center gap-2">
                   <div class="rounded-lg border px-3 py-2 text-xs" :class="state.status === 'active'
                     ? 'border-destructive/50 bg-destructive/5 text-destructive'
                     : state.status === 'ready'
@@ -448,7 +455,7 @@ const page1MaxScore = computed(() =>
                     <button v-for="(char, charIdx) in row.column1.split('')" :key="`${row.id}-1-${charIdx}`"
                       type="button" class="lps-letter"
                       :class="page1Responses[idx].col1[charIdx] ? 'lps-letter--selected' : ''"
-                      :disabled="!isColumnInteractive(1)" :aria-pressed="page1Responses[idx].col1[charIdx]"
+                      :disabled="!isColumnInteractive('col1')" :aria-pressed="page1Responses[idx].col1[charIdx]"
                       @click="toggleSelection(idx, 'col1', charIdx)">
                       {{ char }}
                     </button>
@@ -462,7 +469,7 @@ const page1MaxScore = computed(() =>
                     <button v-for="(char, charIdx) in row.column2.split('')" :key="`${row.id}-2-${charIdx}`"
                       type="button" class="lps-letter"
                       :class="page1Responses[idx].col2[charIdx] ? 'lps-letter--selected' : ''"
-                      :disabled="!isColumnInteractive(2)" :aria-pressed="page1Responses[idx].col2[charIdx]"
+                      :disabled="!isColumnInteractive('col2')" :aria-pressed="page1Responses[idx].col2[charIdx]"
                       @click="toggleSelection(idx, 'col2', charIdx)">
                       {{ char }}
                     </button>
@@ -471,7 +478,77 @@ const page1MaxScore = computed(() =>
               </div>
 
               <!-- 3/4/5 empty placeholders (keep structure like original test page) -->
-              <div class="text-center text-muted-foreground/50">–blabla 3 </div>
+              <div class="col-span-1 lps-sep">
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[3px]">
+                  <div v-if="row.column3?.length">
+                    <div
+                      v-if="row.column3SvgMeta && row.column3.every((option) => option.pathData)"
+                      class="flex justify-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        version="1.1"
+                        class="select-none"
+                        :viewBox="row.column3SvgMeta.viewBox"
+                        :width="row.column3SvgMeta.width"
+                        :height="row.column3SvgMeta.height"
+                      >
+                        <g
+                          v-for="(option, optionIdx) in row.column3"
+                          :id="option.id"
+                          :key="option.id"
+                          role="button"
+                          class="lps-figure-shape-group"
+                          :transform="option.transform"
+                          :tabindex="isColumnInteractive('col3') ? 0 : -1"
+                          :aria-pressed="page1Responses[idx].col3[optionIdx]"
+                          :class="!isColumnInteractive('col3') ? 'lps-figure-shape--disabled' : ''"
+                          @click="isColumnInteractive('col3') && toggleSelection(idx, 'col3', optionIdx)"
+                          @keydown.enter.prevent="toggleSelection(idx, 'col3', optionIdx)"
+                          @keydown.space.prevent="toggleSelection(idx, 'col3', optionIdx)"
+                        >
+                          <path
+                            fill="#090d0e"
+                            class="lps-figure-shape"
+                            :class="[
+                              page1Responses[idx].col3[optionIdx] ? 'lps-figure-shape--selected' : '',
+                            ]"
+                            :d="option.pathData"
+                          />
+                          <clipPath :id="`${option.id}-clip`">
+                            <path :d="option.pathData" :transform="option.transform" />
+                          </clipPath>
+                          <line
+                            v-if="page1Responses[idx].col3[optionIdx]"
+                            class="lps-figure-slash"
+                            :clip-path="`url(#${option.id}-clip)`"
+                            x1="0"
+                            :y1="row.column3SvgMeta.height - 6"
+                            :x2="row.column3SvgMeta.width"
+                            y2="6"
+                          />
+                        </g>
+                      </svg>
+                    </div>
+                    <div v-else class="grid grid-cols-8 gap-1">
+                      <button
+                        v-for="(option, optionIdx) in row.column3"
+                        :id="option.id"
+                        :key="option.id"
+                        type="button"
+                        class="lps-figure"
+                        :class="page1Responses[idx].col3[optionIdx] ? 'lps-figure--selected' : ''"
+                        :disabled="!isColumnInteractive('col3')"
+                        :aria-pressed="page1Responses[idx].col3[optionIdx]"
+                        @click="toggleSelection(idx, 'col3', optionIdx)"
+                      >
+                        <img :src="option.src" class="mx-auto h-9 w-9" alt="" />
+                      </button>
+                    </div>
+                  </div>
+                  <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
+                </div>
+              </div>
               <!-- Columns 4 area -->
               <div class="col-span-1 lps-sep">
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[3px]">
@@ -479,7 +556,7 @@ const page1MaxScore = computed(() =>
                     <button v-for="(char, charIdx) in row.column4.split('')" :key="`${row.id}-4-${charIdx}`"
                       type="button" class="lps-letter"
                       :class="page1Responses[idx].col4[charIdx] ? 'lps-letter--selected' : ''"
-                      :disabled="!isColumnInteractive(2)" :aria-pressed="page1Responses[idx].col4[charIdx]"
+                      :disabled="!isColumnInteractive('col4')" :aria-pressed="page1Responses[idx].col4[charIdx]"
                       @click="toggleSelection(idx, 'col4', charIdx)">
                       {{ char }}
                     </button>
@@ -492,7 +569,7 @@ const page1MaxScore = computed(() =>
                     <button v-for="(char, charIdx) in row.column5.split('')" :key="`${row.id}-4-${charIdx}`"
                       type="button" class="lps-letter"
                       :class="page1Responses[idx].col5[charIdx] ? 'lps-letter--selected' : ''"
-                      :disabled="!isColumnInteractive(2)" :aria-pressed="page1Responses[idx].col5[charIdx]"
+                      :disabled="!isColumnInteractive('col5')" :aria-pressed="page1Responses[idx].col5[charIdx]"
                       @click="toggleSelection(idx, 'col5', charIdx)">
                       {{ char }}
                     </button>
@@ -510,7 +587,7 @@ const page1MaxScore = computed(() =>
                 {{ page1MaxScore ? `${page1Score} / ${page1MaxScore}` : '–' }}
               </span>
             </div>
-            <div class="text-[11px]">Spalten 3–5 sind derzeit leer und werden später ergänzt.</div>
+            <div class="text-[11px]">Spalte 3 enthält jetzt die Bildauswahl für LPS-B; weitere Reihen folgen.</div>
           </div>
         </div>
 
@@ -589,6 +666,73 @@ const page1MaxScore = computed(() =>
   border-top: 3px solid rgb(220 38 38);
   transform: rotate(-35deg);
   transform-origin: center;
+}
+
+.lps-figure-shape-group {
+  cursor: pointer;
+  outline: none;
+  /* Allow clicks anywhere inside the shape's bounding box. */
+  pointer-events: bounding-box;
+}
+
+.lps-figure-shape {
+  transition: opacity 120ms ease, transform 120ms ease;
+  /* Ensure the entire painted area (not just the outline) captures pointer events. */
+  pointer-events: visibleFill;
+}
+
+.lps-figure-shape-group:hover .lps-figure-shape {
+  opacity: 0.85;
+}
+
+.lps-figure-shape-group:focus-visible .lps-figure-shape {
+  opacity: 0.7;
+}
+
+.lps-figure-shape--selected {
+  opacity: 0.95;
+  fill: rgb(220 38 38);
+  stroke: rgb(220 38 38);
+}
+
+.lps-figure-shape--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.lps-figure-slash {
+  stroke: rgb(220 38 38);
+  stroke-width: 4;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.lps-figure {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  width: 46px;
+  padding: 4px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--background));
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.lps-figure img {
+  pointer-events: none;
+}
+
+.lps-figure:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.lps-figure--selected {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsla(var(--primary), 0.25);
 }
 
 /* Vertical separator between column 1 and 2 */

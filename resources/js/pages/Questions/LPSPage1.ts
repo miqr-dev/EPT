@@ -1,8 +1,11 @@
+export type LpsColumn3Option = { id: string; src?: string; pathData?: string; transform?: string };
+
 export type LpsPage1Row = {
   id: number;
   column1: string;
   column2: string;
-  column3?: string;
+  column3?: LpsColumn3Option[];
+  column3SvgMeta?: { viewBox: string; width: number; height: number };
   column4: string;
   column5: string;
 };
@@ -27,6 +30,13 @@ export type LpsPage1Solution = {
   col3?: number[];
   col4?: number[];
   col5?: number[];
+};
+
+type LpsColumn3Row = {
+  id: number;
+  options: LpsColumn3Option[];
+  correctIndex?: number;
+  svgMeta?: { viewBox: string; width: number; height: number };
 };
 
 export type LpsDataset = {
@@ -170,25 +180,376 @@ export const LPS_PAGE1_COLUMN5: LpsColumnEntry[] = [
   { id: 4, word: 'xxxxxxxox', correctIndex: 0 },
 ];
 
-function buildRow(rowIdx: number, column1: LpsColumnEntry[], column2: LpsColumnEntry[], column4: LpsColumnEntry[], column5: LpsColumnEntry[]): LpsPage1Row {
+const LPS_PAGE1_COLUMN3_B_ROW1_SHAPES = [
+  `
+        M 269.4023 37.3704
+        A 1.79 1.79 0.0 0 1 267.6092 39.1573
+        L 236.3292 39.1027
+        A 1.79 1.79 0.0 0 1 234.5423 37.3096
+        L 234.5977 5.5696
+        A 1.79 1.79 0.0 0 1 236.3908 3.7827
+        L 267.6708 3.8373
+        A 1.79 1.79 0.0 0 1 269.4577 5.6304
+        L 269.4023 37.3704
+        Z
+        M 250.3643 8.9124
+        A 1.40 1.40 0.0 0 0 248.9692 7.5075
+        L 238.9892 7.4727
+        A 1.40 1.40 0.0 0 0 237.5844 8.8678
+        L 237.4957 34.2676
+        A 1.40 1.40 0.0 0 0 238.8908 35.6725
+        L 248.8708 35.7073
+        A 1.40 1.40 0.0 0 0 250.2756 34.3122
+        L 250.3643 8.9124
+        Z
+        M 266.5148 9.2649
+        A 1.63 1.63 0.0 0 0 264.8933 7.6264
+        L 254.8935 7.5740
+        A 1.63 1.63 0.0 0 0 253.2550 9.1955
+        L 253.1252 33.9751
+        A 1.63 1.63 0.0 0 0 254.7467 35.6136
+        L 264.7465 35.6660
+        A 1.63 1.63 0.0 0 0 266.3850 34.0445
+        L 266.5148 9.2649
+        Z
+      `,
+  `
+        M 6.01 21.34
+        L 23.21 4.14
+        A 1.83 1.83 0.0 0 1 25.79 4.14
+        L 43.46 21.81
+        A 1.83 1.83 0.0 0 1 43.46 24.39
+        L 26.26 41.59
+        A 1.83 1.83 0.0 0 1 23.68 41.59
+        L 6.01 23.92
+        A 1.83 1.83 0.0 0 1 6.01 21.34
+        Z
+        M 24.6348 8.4914
+        A 0.26 0.26 0.0 0 0 24.2671 8.4882
+        L 10.0307 22.4783
+        A 0.26 0.26 0.0 0 0 10.0275 22.8460
+        L 15.9852 28.9086
+        A 0.26 0.26 0.0 0 0 16.3529 28.9118
+        L 30.5893 14.9217
+        A 0.26 0.26 0.0 0 0 30.5925 14.5540
+        L 24.6348 8.4914
+        Z
+        M 24.44 37.11
+        A 0.89 0.89 0.0 0 0 25.70 37.11
+        L 39.01 23.81
+        A 0.89 0.89 0.0 0 0 39.01 22.55
+        L 34.07 17.61
+        A 0.89 0.89 0.0 0 0 32.81 17.61
+        L 19.51 30.92
+        A 0.89 0.89 0.0 0 0 19.51 32.18
+        L 24.44 37.11
+        Z
+      `,
+  `
+        M 325.98 39.07
+        L 291.25 39.07
+        A 0.63 0.63 0.0 0 1 290.62 38.44
+        L 290.62 4.49
+        A 0.63 0.63 0.0 0 1 291.25 3.86
+        L 325.98 3.86
+        A 0.63 0.63 0.0 0 1 326.61 4.49
+        L 326.61 38.44
+        A 0.63 0.63 0.0 0 1 325.98 39.07
+        Z
+        M 307.4134 9.0444
+        A 1.53 1.53 0.0 0 0 305.8887 7.5091
+        L 294.9888 7.4711
+        A 1.53 1.53 0.0 0 0 293.4535 8.9957
+        L 293.3666 33.8756
+        A 1.53 1.53 0.0 0 0 294.8913 35.4109
+        L 305.7912 35.4489
+        A 1.53 1.53 0.0 0 0 307.3265 33.9243
+        L 307.4134 9.0444
+        Z
+        M 323.7953 8.5536
+        A 1.11 1.11 0.0 0 0 322.6892 7.4398
+        L 311.4093 7.4004
+        A 1.11 1.11 0.0 0 0 310.2954 8.5065
+        L 310.2047 34.4864
+        A 1.11 1.11 0.0 0 0 311.3108 35.6002
+        L 322.5907 35.6396
+        A 1.11 1.11 0.0 0 0 323.7046 34.5335
+        L 323.7953 8.5536
+        Z
+      `,
+  `
+        M 98.2516 38.3806
+        A 1.75 1.75 0.0 0 1 96.4986 40.1276
+        L 64.8786 40.0724
+        A 1.75 1.75 0.0 0 1 63.1317 38.3193
+        L 63.1884 5.8394
+        A 1.75 1.75 0.0 0 1 64.9414 4.0924
+        L 96.5614 4.1476
+        A 1.75 1.75 0.0 0 1 98.3083 5.9007
+        L 98.2516 38.3806
+        Z
+        M 95.3888 9.9690
+        A 1.86 1.86 0.0 0 0 93.5255 8.1123
+        L 84.6456 8.1278
+        A 1.86 1.86 0.0 0 0 82.7888 9.9910
+        L 82.8312 34.2910
+        A 1.86 1.86 0.0 0 0 84.6945 36.1477
+        L 93.5744 36.1322
+        A 1.86 1.86 0.0 0 0 95.4312 34.2690
+        L 95.3888 9.9690
+        Z
+        M 79.8516 9.7721
+        A 1.72 1.72 0.0 0 0 78.1346 8.0491
+        L 67.7547 8.0310
+        A 1.72 1.72 0.0 0 0 66.0317 9.7480
+        L 65.9884 34.5479
+        A 1.72 1.72 0.0 0 0 67.7054 36.2709
+        L 78.0853 36.2890
+        A 1.72 1.72 0.0 0 0 79.8083 34.5720
+        L 79.8516 9.7721
+        Z
+      `,
+  `
+        M 177.12 37.78
+        L 177.12 5.81
+        A 1.67 1.67 0.0 0 1 178.79 4.14
+        L 212.11 4.14
+        A 1.67 1.67 0.0 0 1 213.78 5.81
+        L 213.78 37.78
+        A 1.67 1.67 0.0 0 1 212.11 39.45
+        L 178.79 39.45
+        A 1.67 1.67 0.0 0 1 177.12 37.78
+        Z
+        M 210.92 9.69
+        A 2.01 2.01 0.0 0 0 208.91 7.68
+        L 198.63 7.68
+        A 2.01 2.01 0.0 0 0 196.62 9.69
+        L 196.62 33.79
+        A 2.01 2.01 0.0 0 0 198.63 35.80
+        L 208.91 35.80
+        A 2.01 2.01 0.0 0 0 210.92 33.79
+        L 210.92 9.69
+        Z
+        M 193.6649 9.5159
+        A 1.68 1.68 0.0 0 0 191.9938 7.8272
+        L 181.6939 7.7732
+        A 1.68 1.68 0.0 0 0 180.0051 9.4444
+        L 179.8751 34.2841
+        A 1.68 1.68 0.0 0 0 181.5462 35.9728
+        L 191.8461 36.0268
+        A 1.68 1.68 0.0 0 0 193.5349 34.3556
+        L 193.6649 9.5159
+        Z
+      `,
+  `
+        M 156.1382 38.1279
+        A 1.55 1.55 0.0 0 1 154.5909 39.6806
+        L 120.8909 39.7394
+        A 1.55 1.55 0.0 0 1 119.3382 38.1921
+        L 119.2818 5.8721
+        A 1.55 1.55 0.0 0 1 120.8291 4.3194
+        L 154.5291 4.2606
+        A 1.55 1.55 0.0 0 1 156.0818 5.8079
+        L 156.1382 38.1279
+        Z
+        M 136.4539 9.5651
+        A 1.52 1.52 0.0 0 0 134.9393 8.0398
+        L 123.6593 8.0004
+        A 1.52 1.52 0.0 0 0 122.1340 9.5151
+        L 122.0461 34.7149
+        A 1.52 1.52 0.0 0 0 123.5607 36.2402
+        L 134.8407 36.2796
+        A 1.52 1.52 0.0 0 0 136.3660 34.7649
+        L 136.4539 9.5651
+        Z
+        M 152.9325 9.1650
+        A 1.22 1.22 0.0 0 0 151.7061 7.9514
+        L 140.7063 8.0090
+        A 1.22 1.22 0.0 0 0 139.4927 9.2354
+        L 139.6275 34.9750
+        A 1.22 1.22 0.0 0 0 140.8539 36.1886
+        L 151.8537 36.1310
+        A 1.22 1.22 0.0 0 0 153.0673 34.9046
+        L 152.9325 9.1650
+        Z
+      `,
+  `
+        M 348.89 37.81
+        L 348.89 6.16
+        A 1.74 1.74 0.0 0 1 350.63 4.42
+        L 382.73 4.42
+        A 1.74 1.74 0.0 0 1 384.47 6.16
+        L 384.47 37.81
+        A 1.74 1.74 0.0 0 1 382.73 39.55
+        L 350.63 39.55
+        A 1.74 1.74 0.0 0 1 348.89 37.81
+        Z
+        M 351.93 9.23
+        L 351.89 34.81
+        A 1.21 1.21 0.0 0 0 353.10 36.02
+        L 362.83 36.04
+        A 2.78 1.97 0.1 0 0 365.61 34.07
+        L 365.65 10.01
+        A 2.78 1.97 0.1 0 0 362.87 8.04
+        L 353.14 8.02
+        A 1.21 1.21 0.0 0 0 351.93 9.23
+        Z
+        M 381.6842 9.6532
+        A 1.15 1.15 0.0 0 0 380.5382 8.4992
+        L 369.5983 8.4610
+        A 1.15 1.15 0.0 0 0 368.4443 9.6070
+        L 368.3558 34.9668
+        A 1.15 1.15 0.0 0 0 369.5018 36.1208
+        L 380.4417 36.1590
+        A 1.15 1.15 0.0 0 0 381.5957 35.0130
+        L 381.6842 9.6532
+        Z
+      `,
+  `
+        M 441.6722 38.6611
+        A 1.74 1.74 0.0 0 1 439.9291 40.3981
+        L 407.7492 40.3419
+        A 1.74 1.74 0.0 0 1 406.0122 38.5989
+        L 406.0678 6.7189
+        A 1.74 1.74 0.0 0 1 407.8109 4.9819
+        L 439.9908 5.0381
+        A 1.74 1.74 0.0 0 1 441.7278 6.7811
+        L 441.6722 38.6611
+        Z
+        M 409.50 9.27
+        Q 408.96 13.91 408.95 15.25
+        Q 408.83 28.28 409.02 35.50
+        A 0.95 0.95 0.0 0 0 409.97 36.42
+        L 420.69 36.42
+        A 1.16 1.16 0.0 0 0 421.81 35.56
+        C 422.71 32.18 421.85 29.03 422.15 25.84
+        Q 422.53 21.87 422.24 12.35
+        Q 422.17 9.94 421.47 9.43
+        C 419.37 7.88 417.62 9.05 416.07 10.80
+        A 1.13 1.12 52.8 0 1 414.21 10.54
+        Q 413.15 8.35 410.11 8.67
+        A 0.68 0.67 -89.5 0 0 409.50 9.27
+        Z
+        M 438.7321 10.7353
+        A 1.91 1.91 0.0 0 0 436.8321 8.8154
+        L 427.2122 8.7650
+        A 1.91 1.91 0.0 0 0 425.2922 10.6650
+        L 425.1679 34.4047
+        A 1.91 1.91 0.0 0 0 427.0679 36.3246
+        L 436.6878 36.3750
+        A 1.91 1.91 0.0 0 0 438.6078 34.4750
+        L 438.7321 10.7353
+        Z
+      `,
+];
+
+const LPS_PAGE1_COLUMN3_B_ROW3_SHAPES = [
+  `
+        M 42.3723 41.5322
+        A 1.64 1.64 0.0 0 1 40.7294 43.1693
+        L 7.0694 43.1106
+        A 1.64 1.64 0.0 0 1 5.4323 41.4677
+        L 5.4877 9.7078
+        A 1.64 1.64 0.0 0 1 7.1306 8.0707
+        L 40.7906 8.1294
+        A 1.64 1.64 0.0 0 1 42.4277 9.7723
+        L 42.3723 41.5322
+        Z
+        M 39.55 13.47
+        A 1.62 1.62 0.0 0 0 37.93 11.85
+        L 10.01 11.85
+        A 1.62 1.62 0.0 0 0 8.39 13.47
+        L 8.39 37.91
+        A 1.62 1.62 0.0 0 0 10.01 39.53
+        L 37.93 39.53
+        A 1.62 1.62 0.0 0 0 39.55 37.91
+        L 39.55 13.47
+        Z
+      `,
+
+const BASE_CIRCLE_PATH = `
+  M 50 32
+  A 18 18 0 1 1 14 32
+  A 18 18 0 1 1 50 32
+  Z
+`;
+
+const LPS_PAGE1_COLUMN3_B_ROW2_SHAPES = [
+  `${BASE_CIRCLE_PATH} M 32 10 L 24 22 L 40 22 Z`,
+  `${BASE_CIRCLE_PATH} M 24 42 L 40 42 L 32 54 Z`,
+  `${BASE_CIRCLE_PATH} M 10 32 L 22 24 L 22 40 Z`,
+  `${BASE_CIRCLE_PATH} M 54 32 L 42 24 L 42 40 Z`,
+  `${BASE_CIRCLE_PATH} M 32 20 L 24 32 L 40 32 Z`,
+  `${BASE_CIRCLE_PATH} M 24 32 L 40 32 L 32 44 Z`,
+  `${BASE_CIRCLE_PATH} M 24 22 L 40 22 L 32 14 Z M 24 42 L 40 42 L 32 50 Z`,
+  `${BASE_CIRCLE_PATH}`,
+];
+
+const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
+  {
+    id: 1,
+    options: LPS_PAGE1_COLUMN3_B_ROW1_SHAPES.map((pathData, idx) => ({
+      id: `lps-b-r1-shape${idx + 1}`,
+      pathData,
+    })),
+    correctIndex: 0,
+    svgMeta: { viewBox: '0 0 447 43', width: 447, height: 43 },
+  },
+  {
+    id: 2,
+    options: LPS_PAGE1_COLUMN3_B_ROW2_SHAPES.map((pathData, idx) => ({
+      id: `lps-b-r2-shape${idx + 1}`,
+      pathData,
+      transform: `translate(${idx * 64} 0)`,
+    })),
+    correctIndex: 0,
+    svgMeta: { viewBox: '0 0 512 64', width: 512, height: 64 },
+  },
+  {
+    id: 3,
+    options: LPS_PAGE1_COLUMN3_B_ROW3_SHAPES.map((pathData, idx) => ({
+      id: `lps-b-r3-shape${idx + 1}`,
+      pathData,
+    })),
+    correctIndex: 7,
+    svgMeta: { viewBox: '0 0 446 54', width: 446, height: 54 },
+  },
+];
+
+function buildRow(
+  rowIdx: number,
+  column1: LpsColumnEntry[],
+  column2: LpsColumnEntry[],
+  column4: LpsColumnEntry[],
+  column5: LpsColumnEntry[],
+  column3Rows?: LpsColumn3Row[],
+): LpsPage1Row {
   const col1 = column1[rowIdx];
   const col2 = column2[rowIdx];
   const col4 = column4[rowIdx];
   const col5 = column5[rowIdx];
+  const col3 = column3Rows?.[rowIdx];
   const fallbackId = rowIdx + 1;
   return {
-    id: col1?.id ?? col2?.id ?? col4?.id ?? col5?.id ??  fallbackId,
+    id: col1?.id ?? col2?.id ?? col4?.id ?? col5?.id ?? col3?.id ?? fallbackId,
     column1: col1?.word ?? '',
     column2: col2?.word ?? '',
-    column3: '',
+    column3: col3?.options,
+    column3SvgMeta: col3?.svgMeta,
     column4: col4?.word ?? '',
     column5: col5?.word ?? '',
   };
 }
 
-function buildRows(column1: LpsColumnEntry[], column2: LpsColumnEntry[], column4: LpsColumnEntry[], column5: LpsColumnEntry[]) {
-  const rowCount = Math.max(column1.length, column2.length, column4.length, column5.length);
-  return Array.from({ length: rowCount }, (_, idx) => buildRow(idx, column1, column2, column4, column5));
+function buildRows(
+  column1: LpsColumnEntry[],
+  column2: LpsColumnEntry[],
+  column4: LpsColumnEntry[],
+  column5: LpsColumnEntry[],
+  column3Rows?: LpsColumn3Row[],
+) {
+  const rowCount = Math.max(column1.length, column2.length, column4.length, column5.length, column3Rows?.length ?? 0);
+  return Array.from({ length: rowCount }, (_, idx) => buildRow(idx, column1, column2, column4, column5, column3Rows));
 }
 
 function extractSolution(entry?: LpsColumnEntry): number[] {
@@ -197,22 +558,29 @@ function extractSolution(entry?: LpsColumnEntry): number[] {
   return [entry.correctIndex];
 }
 
-function buildSolutions(column1: LpsColumnEntry[], column2: LpsColumnEntry[], column4: LpsColumnEntry[],  column5: LpsColumnEntry[]) {
-  return buildRows(column1, column2, column4, column5).map((_, idx) => ({
+function extractColumn3Solution(entry?: LpsColumn3Row): number[] {
+  if (!entry || typeof entry.correctIndex !== 'number') return [];
+  if (entry.correctIndex < 0 || entry.correctIndex >= entry.options.length) return [];
+  return [entry.correctIndex];
+}
+
+function buildSolutions(
+  column1: LpsColumnEntry[],
+  column2: LpsColumnEntry[],
+  column4: LpsColumnEntry[],
+  column5: LpsColumnEntry[],
+  column3Rows?: LpsColumn3Row[],
+) {
+  return buildRows(column1, column2, column4, column5, column3Rows).map((_, idx) => ({
     col1: extractSolution(column1[idx]),
     col2: extractSolution(column2[idx]),
-    col3: [],
+    col3: extractColumn3Solution(column3Rows?.[idx]),
     col4: extractSolution(column4[idx]),
     col5: extractSolution(column5[idx]),
   }));
 }
 
-export const LPS_PAGE1_ROWS: LpsPage1Row[] = buildRows(
-  LPS_PAGE1_COLUMN1,
-  LPS_PAGE1_COLUMN2,
-  LPS_PAGE1_COLUMN4,
-  LPS_PAGE1_COLUMN5,
-);
+export const LPS_PAGE1_ROWS: LpsPage1Row[] = buildRows(LPS_PAGE1_COLUMN1, LPS_PAGE1_COLUMN2, LPS_PAGE1_COLUMN4, LPS_PAGE1_COLUMN5);
 
 export const LPS_PAGE1_SOLUTIONS: LpsPage1Solution[] = buildSolutions(
   LPS_PAGE1_COLUMN1,
@@ -415,6 +783,7 @@ export const LPS_PAGE1_ROWS_B: LpsPage1Row[] = buildRows(
   LPS_PAGE1_COLUMN2_B,
   LPS_PAGE1_COLUMN4_B,
   LPS_PAGE1_COLUMN5_B,
+  LPS_PAGE1_COLUMN3_B,
 );
 
 export const LPS_PAGE1_SOLUTIONS_B: LpsPage1Solution[] = buildSolutions(
@@ -422,6 +791,7 @@ export const LPS_PAGE1_SOLUTIONS_B: LpsPage1Solution[] = buildSolutions(
   LPS_PAGE1_COLUMN2_B,
   LPS_PAGE1_COLUMN4_B,
   LPS_PAGE1_COLUMN5_B,
+  LPS_PAGE1_COLUMN3_B,
 );
 
 export function getLpsDataset(testName?: string): LpsDataset {
