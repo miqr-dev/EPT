@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
+import type { LpsColumn3Row } from '@/data/lpsColumn3';
 import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
@@ -28,13 +29,15 @@ const props = defineProps<{
 
 const emit = defineEmits(['complete', 'update:answers']);
 
-const { rows: lpsRows, solutions: lpsSolutions } = getLpsDataset(props.testName);
+const { rows: lpsRows, solutions: lpsSolutions, loadColumn3Rows } = getLpsDataset(props.testName);
+const column3Rows = ref<LpsColumn3Row[]>([]);
 
 const showTest = ref(false);
 const pageIndex = ref(0);
 const elapsedSecondsBeforeResume = ref(props.pausedTestResult?.total_time_seconds ?? 0);
 const runningElapsedSeconds = ref(0);
 const timerHandle = ref<number | null>(null);
+const hasColumn3Rows = computed(() => column3Rows.value.length > 0);
 
 function buildSelection(word: string, saved?: boolean[]) {
   const base = word.split('').map(() => false);
@@ -71,6 +74,7 @@ if (props.pausedTestResult) {
     pageIndex.value = props.pausedTestResult.pageIndex;
   }
   showTest.value = true;
+  ensureColumn3Rows();
   startTimer();
   if (activeColumnIndex.value !== -1) {
     beginColumnCountdown(activeColumnIndex.value);
@@ -143,6 +147,7 @@ function startTest() {
   pageIndex.value = 0;
   elapsedSecondsBeforeResume.value = 0;
   runningElapsedSeconds.value = 0;
+  ensureColumn3Rows();
   resetColumns();
   startTimer();
 }
@@ -195,6 +200,11 @@ function toggleSelection(rowIdx: number, column: 'col1' | 'col2', charIdx: numbe
   if (!row || !row[column]?.length) return;
   const currentlySelected = row[column][charIdx];
   row[column] = row[column].map((_, idx) => (idx === charIdx ? !currentlySelected : false));
+}
+
+async function ensureColumn3Rows() {
+  if (column3Rows.value.length) return;
+  column3Rows.value = await loadColumn3Rows();
 }
 
 function resetColumns() {
@@ -510,7 +520,10 @@ const page1MaxScore = computed(() =>
                 {{ page1MaxScore ? `${page1Score} / ${page1MaxScore}` : '–' }}
               </span>
             </div>
-            <div class="text-[11px]">Spalten 3–5 sind derzeit leer und werden später ergänzt.</div>
+            <div class="text-[11px]">
+              Spalten 3–5 sind derzeit leer und werden später ergänzt.
+              <span v-if="!hasColumn3Rows">Die Grafiken für Spalte 3 werden separat geladen.</span>
+            </div>
           </div>
         </div>
 
