@@ -1,4 +1,4 @@
-export type LpsColumn3Option = { id: string; src?: string; pathData?: string };
+export type LpsColumn3Option = { id: string; src?: string; pathData?: string; transform?: string };
 
 export type LpsPage1Row = {
   id: number;
@@ -180,11 +180,6 @@ export const LPS_PAGE1_COLUMN5: LpsColumnEntry[] = [
   { id: 4, word: 'xxxxxxxox', correctIndex: 0 },
 ];
 
-const LPS_PAGE1_COLUMN3_B_ROW2_OPTIONS = Array.from(
-  { length: 8 },
-  (_, idx) => `/images/lps-b/column3/row-02/option-0${idx + 1}.svg`,
-);
-
 const LPS_PAGE1_COLUMN3_B_ROW1_SHAPES = [
   `
         M 42.3723 41.5322
@@ -364,6 +359,24 @@ const LPS_PAGE1_COLUMN3_B_ROW1_SHAPES = [
       `,
 ];
 
+const BASE_CIRCLE_PATH = `
+  M 50 32
+  A 18 18 0 1 1 14 32
+  A 18 18 0 1 1 50 32
+  Z
+`;
+
+const LPS_PAGE1_COLUMN3_B_ROW2_SHAPES = [
+  `${BASE_CIRCLE_PATH} M 32 10 L 24 22 L 40 22 Z`,
+  `${BASE_CIRCLE_PATH} M 24 42 L 40 42 L 32 54 Z`,
+  `${BASE_CIRCLE_PATH} M 10 32 L 22 24 L 22 40 Z`,
+  `${BASE_CIRCLE_PATH} M 54 32 L 42 24 L 42 40 Z`,
+  `${BASE_CIRCLE_PATH} M 32 20 L 24 32 L 40 32 Z`,
+  `${BASE_CIRCLE_PATH} M 24 32 L 40 32 L 32 44 Z`,
+  `${BASE_CIRCLE_PATH} M 24 22 L 40 22 L 32 14 Z M 24 42 L 40 42 L 32 50 Z`,
+  `${BASE_CIRCLE_PATH}`,
+];
+
 const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
   {
     id: 1,
@@ -376,11 +389,13 @@ const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
   },
   {
     id: 2,
-    options: LPS_PAGE1_COLUMN3_B_ROW2_OPTIONS.map((src, idx) => ({
-      id: `lps-b-r2-opt${idx + 1}`,
-      src,
+    options: LPS_PAGE1_COLUMN3_B_ROW2_SHAPES.map((pathData, idx) => ({
+      id: `lps-b-r2-shape${idx + 1}`,
+      pathData,
+      transform: `translate(${idx * 64} 0)`,
     })),
     correctIndex: 0,
+    svgMeta: { viewBox: '0 0 512 64', width: 512, height: 64 },
   },
 ];
 

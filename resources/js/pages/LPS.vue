@@ -499,6 +499,7 @@ const page1MaxScore = computed(() =>
                           :key="option.id"
                           role="button"
                           class="lps-figure-shape-group"
+                          :transform="option.transform"
                           :tabindex="isColumnInteractive('col3') ? 0 : -1"
                           :aria-pressed="page1Responses[idx].col3[optionIdx]"
                           :class="!isColumnInteractive('col3') ? 'lps-figure-shape--disabled' : ''"
@@ -515,15 +516,15 @@ const page1MaxScore = computed(() =>
                             :d="option.pathData"
                           />
                           <clipPath :id="`${option.id}-clip`">
-                            <path :d="option.pathData" />
+                            <path :d="option.pathData" :transform="option.transform" />
                           </clipPath>
                           <line
                             v-if="page1Responses[idx].col3[optionIdx]"
                             class="lps-figure-slash"
                             :clip-path="`url(#${option.id}-clip)`"
                             x1="0"
-                            y1="48"
-                            x2="446"
+                            :y1="row.column3SvgMeta.height - 6"
+                            :x2="row.column3SvgMeta.width"
                             y2="6"
                           />
                         </g>
@@ -685,7 +686,9 @@ const page1MaxScore = computed(() =>
 }
 
 .lps-figure-shape--selected {
-  opacity: 0.6;
+  opacity: 0.95;
+  fill: rgb(220 38 38);
+  stroke: rgb(220 38 38);
 }
 
 .lps-figure-shape--disabled {
