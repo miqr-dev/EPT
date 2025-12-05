@@ -191,7 +191,7 @@ const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
       id: `lps-b-r1-opt${idx + 1}`,
       src,
     })),
-    correctIndex: 6,
+    correctIndex: 0,
   },
   {
     id: 2,
@@ -199,7 +199,7 @@ const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
       id: `lps-b-r2-opt${idx + 1}`,
       src,
     })),
-    correctIndex: 5,
+    correctIndex: 0,
   },
 ];
 
