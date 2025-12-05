@@ -371,7 +371,7 @@ const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
       id: `lps-b-r1-shape${idx + 1}`,
       pathData,
     })),
-    correctIndex: 0,
+    correctIndex: 7,
     svgMeta: { viewBox: '0 0 446 54', width: 446, height: 54 },
   },
   {

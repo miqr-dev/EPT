@@ -493,24 +493,40 @@ const page1MaxScore = computed(() =>
                         :width="row.column3SvgMeta.width"
                         :height="row.column3SvgMeta.height"
                       >
-                        <path
+                        <g
                           v-for="(option, optionIdx) in row.column3"
                           :id="option.id"
                           :key="option.id"
                           role="button"
+                          class="lps-figure-shape-group"
                           :tabindex="isColumnInteractive('col3') ? 0 : -1"
                           :aria-pressed="page1Responses[idx].col3[optionIdx]"
-                          fill="#090d0e"
-                          class="lps-figure-shape"
-                          :class="[
-                            page1Responses[idx].col3[optionIdx] ? 'lps-figure-shape--selected' : '',
-                            !isColumnInteractive('col3') ? 'lps-figure-shape--disabled' : '',
-                          ]"
-                          :d="option.pathData"
+                          :class="!isColumnInteractive('col3') ? 'lps-figure-shape--disabled' : ''"
                           @click="isColumnInteractive('col3') && toggleSelection(idx, 'col3', optionIdx)"
                           @keydown.enter.prevent="toggleSelection(idx, 'col3', optionIdx)"
                           @keydown.space.prevent="toggleSelection(idx, 'col3', optionIdx)"
-                        />
+                        >
+                          <path
+                            fill="#090d0e"
+                            class="lps-figure-shape"
+                            :class="[
+                              page1Responses[idx].col3[optionIdx] ? 'lps-figure-shape--selected' : '',
+                            ]"
+                            :d="option.pathData"
+                          />
+                          <clipPath :id="`${option.id}-clip`">
+                            <path :d="option.pathData" />
+                          </clipPath>
+                          <line
+                            v-if="page1Responses[idx].col3[optionIdx]"
+                            class="lps-figure-slash"
+                            :clip-path="`url(#${option.id}-clip)`"
+                            x1="0"
+                            y1="48"
+                            x2="446"
+                            y2="6"
+                          />
+                        </g>
                       </svg>
                     </div>
                     <div v-else class="grid grid-cols-8 gap-1">
@@ -651,17 +667,21 @@ const page1MaxScore = computed(() =>
   transform-origin: center;
 }
 
-.lps-figure-shape {
+.lps-figure-shape-group {
   cursor: pointer;
-  transition: opacity 120ms ease, transform 120ms ease;
+  outline: none;
 }
 
-.lps-figure-shape:hover {
+.lps-figure-shape {
+  transition: opacity 120ms ease, transform 120ms ease;
+  pointer-events: none;
+}
+
+.lps-figure-shape-group:hover .lps-figure-shape {
   opacity: 0.85;
 }
 
-.lps-figure-shape:focus-visible {
-  outline: none;
+.lps-figure-shape-group:focus-visible .lps-figure-shape {
   opacity: 0.7;
 }
 
@@ -672,6 +692,13 @@ const page1MaxScore = computed(() =>
 .lps-figure-shape--disabled {
   opacity: 0.45;
   cursor: not-allowed;
+  pointer-events: none;
+}
+
+.lps-figure-slash {
+  stroke: rgb(220 38 38);
+  stroke-width: 4;
+  stroke-linecap: round;
   pointer-events: none;
 }
 
