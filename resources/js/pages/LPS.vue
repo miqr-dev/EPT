@@ -480,7 +480,7 @@ const page1MaxScore = computed(() =>
               <!-- 3/4/5 empty placeholders (keep structure like original test page) -->
               <div class="col-span-1 lps-sep">
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[3px]">
-                  <div v-if="row.column3?.length" class="grid grid-cols-4 gap-2">
+                  <div v-if="row.column3?.length" class="grid grid-cols-8 gap-1">
                     <button
                       v-for="(option, optionIdx) in row.column3"
                       :id="option.id"
@@ -492,7 +492,7 @@ const page1MaxScore = computed(() =>
                       :aria-pressed="page1Responses[idx].col3[optionIdx]"
                       @click="toggleSelection(idx, 'col3', optionIdx)"
                     >
-                      <img :src="option.src" class="mx-auto h-10 w-10" alt="" />
+                      <img :src="option.src" class="mx-auto h-9 w-9" alt="" />
                     </button>
                   </div>
                   <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
@@ -621,9 +621,9 @@ const page1MaxScore = computed(() =>
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 52px;
-  width: 52px;
-  padding: 6px;
+  height: 46px;
+  width: 46px;
+  padding: 4px;
   border: 1px solid hsl(var(--border));
   border-radius: 10px;
   background: hsl(var(--background));
