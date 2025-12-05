@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
-import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
+import LpsColumn3Svg from '@/components/LpsColumn3Svg.vue';
+import { getLpsDataset, type LpsColumnEntrySvg, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
 
-type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
+type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: number | null; col4: boolean[]; col5: boolean[] };
 
 type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
@@ -49,7 +50,7 @@ const page1Responses = ref<LpsPage1ResponseRow[]>(
     return {
       col1: buildSelection(row.column1, pausedRow?.col1),
       col2: buildSelection(row.column2, pausedRow?.col2),
-      col3: pausedRow?.col3 ?? [],
+      col3: pausedRow?.col3 ?? null,
       col4: buildSelection(row.column4, pausedRow?.col4),
       col5: buildSelection(row.column5, pausedRow?.col5),
     };
@@ -188,13 +189,21 @@ function formatTime(seconds: number) {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-function toggleSelection(rowIdx: number, column: 'col1' | 'col2', charIdx: number) {
-  const columnNumber = column === 'col1' ? 1 : 2;
+function toggleSelection(rowIdx: number, column: 'col1' | 'col2' | 'col4' | 'col5', charIdx: number) {
+  const columnMap = { col1: 1, col2: 2, col4: 4, col5: 5 };
+  const columnNumber = columnMap[column];
   if (!isColumnInteractive(columnNumber)) return;
   const row = page1Responses.value[rowIdx];
   if (!row || !row[column]?.length) return;
   const currentlySelected = row[column][charIdx];
   row[column] = row[column].map((_, idx) => (idx === charIdx ? !currentlySelected : false));
+}
+
+function toggleSvgSelection(rowIdx: number, pathIdx: number) {
+  if (!isColumnInteractive(3)) return;
+  const row = page1Responses.value[rowIdx];
+  if (!row) return;
+  row.col3 = row.col3 === pathIdx ? null : pathIdx;
 }
 
 function resetColumns() {
@@ -301,14 +310,29 @@ function maybeReactivateColumn1FromColumn2() {
 }
 
 function scoreRow(rowIdx: number, solutions: LpsPage1Solution, responses: LpsPage1ResponseRow) {
-  const cols: Array<keyof LpsPage1Solution> = ['col1', 'col2', 'col3', 'col4', 'col5'];
-  return cols.reduce((sum, colKey) => {
+  let sum = 0;
+
+  // Score col1, col2, col4, col5 (boolean arrays)
+  const textCols: Array<'col1' | 'col2' | 'col4' | 'col5'> = ['col1', 'col2', 'col4', 'col5'];
+  for (const colKey of textCols) {
     const correctIndices = solutions[colKey] ?? [];
-    const picks = responses[colKey as keyof LpsPage1ResponseRow] as boolean[] | undefined;
-    if (!correctIndices.length || !picks?.length) return sum;
-    const correctPicks = correctIndices.filter((idx) => picks[idx]);
-    return sum + correctPicks.length;
-  }, 0);
+    const picks = responses[colKey];
+    if (correctIndices.length && picks?.length) {
+      const correctPicks = correctIndices.filter((idx) => picks[idx]);
+      sum += correctPicks.length;
+    }
+  }
+
+  // Score col3 (number | null)
+  const correctIndicesCol3 = solutions.col3 ?? [];
+  const selectedIndexCol3 = responses.col3;
+  if (correctIndicesCol3.length > 0 && selectedIndexCol3 !== null) {
+    if (correctIndicesCol3.includes(selectedIndexCol3)) {
+      sum += 1; // Assuming only one correct answer is possible for SVG
+    }
+  }
+
+  return sum;
 }
 
 const page1Score = computed(() =>
@@ -400,8 +424,8 @@ const page1MaxScore = computed(() =>
               </div>
 
               <div class="flex items-center gap-3">
-                <div v-for="(state, idx) in columnStates.slice(0, 2)" :key="`column-state-${idx}`"
-                  class="flex items-center gap-2">
+                <div v-for="(state, idx) in columnStates" :key="`column-state-${idx}`"
+                     class="flex items-center gap-2">
                   <div class="rounded-lg border px-3 py-2 text-xs" :class="state.status === 'active'
                     ? 'border-destructive/50 bg-destructive/5 text-destructive'
                     : state.status === 'ready'
@@ -421,7 +445,7 @@ const page1MaxScore = computed(() =>
                   </div>
 
                   <Button v-if="state.status === 'ready'" size="sm" :disabled="isAnyColumnActive"
-                    @click="startColumn(idx)">
+                          @click="startColumn(idx)">
                     Start
                   </Button>
                 </div>
@@ -470,30 +494,41 @@ const page1MaxScore = computed(() =>
                 </div>
               </div>
 
-              <!-- 3/4/5 empty placeholders (keep structure like original test page) -->
-              <div class="text-center text-muted-foreground/50">–blabla 3 </div>
+              <!-- Column 3 area -->
+              <div class="col-span-1 lps-sep">
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[3px]">
+                  <LpsColumn3Svg
+                      v-if="typeof row.column3 === 'object' && row.column3 !== null"
+                      :svg="(row.column3 as LpsColumnEntrySvg).svg"
+                      :selection="page1Responses[idx].col3"
+                      :disabled="!isColumnInteractive(3)"
+                      @update:selection="toggleSvgSelection(idx, $event)"
+                  />
+                  <div v-else class="flex h-[42px] items-center justify-center text-center text-muted-foreground/50">–</div>
+                </div>
+              </div>
               <!-- Columns 4 area -->
               <div class="col-span-1 lps-sep">
-                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[3px]">
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c4`" class="py-[3px]">
                   <div class="lps-letters">
                     <button v-for="(char, charIdx) in row.column4.split('')" :key="`${row.id}-4-${charIdx}`"
-                      type="button" class="lps-letter"
-                      :class="page1Responses[idx].col4[charIdx] ? 'lps-letter--selected' : ''"
-                      :disabled="!isColumnInteractive(2)" :aria-pressed="page1Responses[idx].col4[charIdx]"
-                      @click="toggleSelection(idx, 'col4', charIdx)">
+                            type="button" class="lps-letter"
+                            :class="page1Responses[idx].col4[charIdx] ? 'lps-letter--selected' : ''"
+                            :disabled="!isColumnInteractive(4)" :aria-pressed="page1Responses[idx].col4[charIdx]"
+                            @click="toggleSelection(idx, 'col4', charIdx)">
                       {{ char }}
                     </button>
                   </div>
                 </div>
               </div>
               <div class="col-span-1 lps-sep">
-                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[3px]">
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c5`" class="py-[3px]">
                   <div class="lps-letters">
-                    <button v-for="(char, charIdx) in row.column5.split('')" :key="`${row.id}-4-${charIdx}`"
-                      type="button" class="lps-letter"
-                      :class="page1Responses[idx].col5[charIdx] ? 'lps-letter--selected' : ''"
-                      :disabled="!isColumnInteractive(2)" :aria-pressed="page1Responses[idx].col5[charIdx]"
-                      @click="toggleSelection(idx, 'col5', charIdx)">
+                    <button v-for="(char, charIdx) in row.column5.split('')" :key="`${row.id}-5-${charIdx}`"
+                            type="button" class="lps-letter"
+                            :class="page1Responses[idx].col5[charIdx] ? 'lps-letter--selected' : ''"
+                            :disabled="!isColumnInteractive(5)" :aria-pressed="page1Responses[idx].col5[charIdx]"
+                            @click="toggleSelection(idx, 'col5', charIdx)">
                       {{ char }}
                     </button>
                   </div>
