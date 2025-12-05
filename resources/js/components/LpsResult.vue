@@ -83,7 +83,24 @@ function formatTime(seconds?: number | null) {
                   </div>
                 </div>
               </td>
-              <td class="px-3 py-3 text-center text-muted-foreground">–</td>
+              <td class="px-3 py-3">
+                <div v-if="row.row.column3?.length" class="grid grid-cols-4 gap-2">
+                  <div
+                    v-for="(option, optionIdx) in row.row.column3"
+                    :key="option.id"
+                    class="relative flex h-12 w-12 items-center justify-center rounded-md border bg-muted/20"
+                  >
+                    <img :src="option.src" class="h-10 w-10" alt="" />
+                    <span
+                      v-if="row.response.col3?.[optionIdx]"
+                      class="absolute text-lg font-bold leading-none text-destructive"
+                    >
+                      /
+                    </span>
+                  </div>
+                </div>
+                <div v-else class="text-center text-muted-foreground">–</div>
+              </td>
               <td class="px-3 py-3 text-center text-muted-foreground">–</td>
               <td class="px-3 py-3 text-center text-muted-foreground">–</td>
             </tr>
