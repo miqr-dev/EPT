@@ -450,7 +450,7 @@ const page1MaxScore = computed(() =>
             <div class="inline-grid grid-cols-5 gap-x-2">
               <!-- Columns 1/2 area -->
               <div class="col-span-1 border-solid border-4">
-                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c1`" class="py-[3px]">
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c1`" class="py-[1px]">
                   <div class="lps-letters">
                     <button v-for="(char, charIdx) in row.column1.split('')" :key="`${row.id}-1-${charIdx}`"
                       type="button" class="lps-letter"
@@ -464,7 +464,7 @@ const page1MaxScore = computed(() =>
               </div>
 
               <div class="col-span-1 lps-sep">
-                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[3px]">
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[1px]">
                   <div class="lps-letters">
                     <button v-for="(char, charIdx) in row.column2.split('')" :key="`${row.id}-2-${charIdx}`"
                       type="button" class="lps-letter"
@@ -479,7 +479,7 @@ const page1MaxScore = computed(() =>
 
               <!-- 3/4/5 empty placeholders (keep structure like original test page) -->
               <div class="col-span-1 lps-sep">
-                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[3px]">
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[1px]">
                   <div v-if="row.column3?.length">
                     <div
                       v-if="row.column3SvgMeta && row.column3.every((option) => option.pathData)"
@@ -555,7 +555,7 @@ const page1MaxScore = computed(() =>
               </div>
               <!-- Columns 4 area -->
               <div class="col-span-1 lps-sep">
-                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[3px]">
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[1px]">
                   <div class="lps-letters">
                     <button v-for="(char, charIdx) in row.column4.split('')" :key="`${row.id}-4-${charIdx}`"
                       type="button" class="lps-letter"
@@ -568,7 +568,7 @@ const page1MaxScore = computed(() =>
                 </div>
               </div>
               <div class="col-span-1 lps-sep">
-                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[3px]">
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[1px]">
                   <div class="lps-letters">
                     <button v-for="(char, charIdx) in row.column5.split('')" :key="`${row.id}-4-${charIdx}`"
                       type="button" class="lps-letter"
