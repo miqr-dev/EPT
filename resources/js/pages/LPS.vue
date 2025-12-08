@@ -483,12 +483,12 @@ const page1MaxScore = computed(() =>
                   <div v-if="row.column3?.length">
                     <div
                       v-if="row.column3SvgMeta && row.column3.every((option) => option.pathData)"
-                      class="flex justify-center"
+                      class="flex items-center justify-center leading-none"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         version="1.1"
-                        class="select-none"
+                        class="lps-column3-svg select-none"
                         :viewBox="row.column3SvgMeta.viewBox"
                         :width="row.column3SvgMeta.width"
                         :height="row.column3SvgMeta.height"
@@ -626,6 +626,13 @@ const page1MaxScore = computed(() =>
   gap: 10px;
   /* very close */
   align-items: baseline;
+}
+
+.lps-column3-svg {
+  display: block;
+  line-height: 0;
+  height: 32px;
+  width: auto;
 }
 
 .lps-letter {
