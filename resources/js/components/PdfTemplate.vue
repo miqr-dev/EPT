@@ -15,7 +15,7 @@ const testDate = new Date().toLocaleDateString('de-DE', {
 </script>
 
 <template>
-  <div class="bg-white text-black p-8 font-sans">
+  <div class="bg-white text-black p-8 font-sans" :data-test-name="assignment.test.name">
     <!-- Header -->
     <div class="flex justify-between items-center pb-4 border-b-2 border-gray-200">
       <div>

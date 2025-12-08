@@ -7,25 +7,46 @@ export async function generatePdfFromElement(element: HTMLElement, filename: str
     return;
   }
 
-  const canvas = await html2canvas(element, {
-    scale: 2, // Higher scale for better quality
-    useCORS: true,
-  });
+  const testName = element.dataset?.testName;
+  const zoomFactor = testName === 'AVEM' ? 1.4 : 1;
+  const originalTransform = element.style.transform;
+  const originalTransformOrigin = element.style.transformOrigin;
 
-  const img = canvas.toDataURL('image/png');
+  try {
+    if (zoomFactor !== 1) {
+      element.style.transformOrigin = 'top left';
+      element.style.transform = `scale(${zoomFactor})`;
+    }
 
-  const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-  const pdfW = pdf.internal.pageSize.getWidth();
-  const pdfH = pdf.internal.pageSize.getHeight();
+    const rect = element.getBoundingClientRect();
+    const pixelRatio = Math.max(2, window.devicePixelRatio || 1);
 
-  let imgW = pdfW;
-  let imgH = (canvas.height * imgW) / canvas.width;
-  if (imgH > pdfH) {
-    imgH = pdfH;
-    imgW = (canvas.width * imgH) / canvas.height;
+    // Render the element at a higher resolution to avoid blurry text in the PDF.
+    const canvas = await html2canvas(element, {
+      scale: pixelRatio,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      width: rect.width,
+      height: rect.height,
+    });
+
+    const img = canvas.toDataURL('image/png');
+    const mmPerPx = 25.4 / 96; // convert canvas pixels to millimeters
+    const targetWidthPx = rect.width / zoomFactor;
+    const targetHeightPx = rect.height / zoomFactor;
+    const pdfW = targetWidthPx * mmPerPx;
+    const pdfH = targetHeightPx * mmPerPx;
+
+    const pdf = new jsPDF({
+      orientation: targetWidthPx > targetHeightPx ? 'landscape' : 'portrait',
+      unit: 'mm',
+      format: [pdfW, pdfH],
+    });
+
+    pdf.addImage(img, 'PNG', 0, 0, pdfW, pdfH);
+    pdf.save(filename);
+  } finally {
+    element.style.transform = originalTransform;
+    element.style.transformOrigin = originalTransformOrigin;
   }
-
-  const marginX = (pdfW - imgW) / 2;
-  pdf.addImage(img, 'PNG', marginX, 0, imgW, imgH);
-  pdf.save(filename);
 }
