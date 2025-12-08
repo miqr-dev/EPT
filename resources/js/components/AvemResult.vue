@@ -37,25 +37,25 @@ const scaleLabels = [
 
 // Stanine-Zelltexte (aus der Vorlage)
 const NORM_INTERVALS: string[][] = [
-  ['6–7','8–9','10–12','13–14','15–17','18–19','20–22','23–24','25–30'],
-  ['6–10','11–12','13–14','15–17','18–19','20–22','23–25','26–27','28–30'],
-  ['6–10','11–13','14–15','16–17','18–19','20–22','23–24','25–27','28–30'],
-  ['6–14','15–17','18–19','20–21','22–23','24–25','26–27','28–29','30'],
-  ['6–8','9–11','12–14','15–17','18–19','20–21','22–24','25–26','27–30'],
-  ['6–7','8–9','10–11','12–13','14–16','17–18','19–20','21–23','24–30'],
-  ['6–16','17–18','19','20–21','22–23','24–25','26–27','28–29','30'],
-  ['6–12','13–14','15–17','18–19','20–21','22–23','24–25','26–27','28–30'],
-  ['6–15','16–17','18–19','20–21','22–23','24–25','26–27','28–29','30'],
-  ['6–14','15–17','18–19','20–21','22–23','24–25','26–27','28','29–30'],
-  ['6–14','15–17','18–19','20–22','23–24','25–26','27–28','29','30'],
+  ['6–7', '8–9', '10–12', '13–14', '15–17', '18–19', '20–22', '23–24', '25–30'],
+  ['6–10', '11–12', '13–14', '15–17', '18–19', '20–22', '23–25', '26–27', '28–30'],
+  ['6–10', '11–13', '14–15', '16–17', '18–19', '20–22', '23–24', '25–27', '28–30'],
+  ['6–14', '15–17', '18–19', '20–21', '22–23', '24–25', '26–27', '28–29', '30'],
+  ['6–8', '9–11', '12–14', '15–17', '18–19', '20–21', '22–24', '25–26', '27–30'],
+  ['6–7', '8–9', '10–11', '12–13', '14–16', '17–18', '19–20', '21–23', '24–30'],
+  ['6–16', '17–18', '19', '20–21', '22–23', '24–25', '26–27', '28–29', '30'],
+  ['6–12', '13–14', '15–17', '18–19', '20–21', '22–23', '24–25', '26–27', '28–30'],
+  ['6–15', '16–17', '18–19', '20–21', '22–23', '24–25', '26–27', '28–29', '30'],
+  ['6–14', '15–17', '18–19', '20–21', '22–23', '24–25', '26–27', '28', '29–30'],
+  ['6–14', '15–17', '18–19', '20–22', '23–24', '25–26', '27–28', '29', '30'],
 ]
 
 // Reverse-Items
-const REVERSED = new Set([23,56,13,16,49,60,19,30,31,54,22,33,55])
+const REVERSED = new Set([23, 56, 13, 16, 49, 60, 19, 30, 31, 54, 22, 33, 55])
 
 // Items je Skala (k, k+11, …, k+55)
 const SCALE_ITEMS: number[][] = Array.from({ length: 11 }, (_, k) =>
-  Array.from({ length: 6 }, (__ , j) => k + 1 + j * 11)
+  Array.from({ length: 6 }, (__, j) => k + 1 + j * 11)
 )
 
 const clamp = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, x))
@@ -189,8 +189,8 @@ const topBottomPlugin = {
     const topLblY = topNumY + 12
     ctx.fillText('Muster S', x.getPixelForValue(2), topLblY)
     ctx.fillText('Risikomuster B', x.getPixelForValue(3.5), topLblY)
-    ctx.fillText('Muster G', x.getPixelForValue(5), topLblY)
-    ctx.fillText('Risikomuster A', x.getPixelForValue(8), topLblY)
+    ctx.fillText('Muster G', x.getPixelForValue(6), topLblY)
+    ctx.fillText('Risikomuster A', x.getPixelForValue(8.25), topLblY)
 
     // Bottom Prozent row
     const perc = [4, 11, 23, 40, 60, 77, 89, 96]
@@ -244,7 +244,7 @@ const frameBorder = {
     const frame = getFrameBounds(chart)
     ctx.save()
     ctx.strokeStyle = '#2a2a2a'
-    ctx.lineWidth = 1.2
+    ctx.lineWidth = 2.2
     ctx.strokeRect(frame.left, frame.top, frame.right - frame.left, frame.bottom - frame.top)
     ctx.restore()
   },
@@ -263,49 +263,37 @@ const chartOptions = computed(() => ({
       min: 1,
       max: 9,
       ticks: { display: false, stepSize: 1 },      // hide bottom 1..9
-      grid: {
-        drawTicks: false,
-        color: (ctx: any) => {
-          const val = Number(ctx.tick.value)
-          if (!Number.isFinite(val)) return 'rgba(0,0,0,0.08)'
-          return Number.isInteger(val) ? 'rgba(0,0,0,0.32)' : 'rgba(0,0,0,0.1)'
-        },
-        lineWidth: (ctx: any) => {
-          const val = Number(ctx.tick.value)
-          return Number.isInteger(val) ? 1 : 0.6
-        },
-      },
+      grid: { display: false },
       border: { display: false },
     },
-    y: {
-      offset: true,
-      ticks: { display: false },
-      grid: {
-        color: (ctx: any) => (ctx.index === 0 || ctx.index === 10 ? 'rgba(0,0,0,0)' : 'rgba(0,0,0,0.12)'),
-        lineWidth: (ctx: any) => (ctx.index === 0 || ctx.index === 10 ? 0 : 0.8),
-      },
-      border: { display: false },
-    },
-  },
-  plugins: {
-    legend: { display: false },
-    tooltip: { callbacks: { label: (ctx: any) => ` Stanine: ${ctx.parsed.x}` } },
-    title: { display: false },
-    annotation: {
-      annotations: {
-        // grey band 4..6 (behind lines)
-        band: { type: 'box', xMin: 4, xMax: 6, yMin: -0.5, yMax: 10.5, backgroundColor: 'rgba(150,150,150,0.12)', borderWidth: 0, z: 0 },
-        // SOLID boundaries between stanine groups
-        lineBetweenSAndB: { type: 'line', scaleID: 'x', value: 3.5, borderColor: '#111', borderWidth: 1.2, z: 10 },
-        lineBetweenGAndA: { type: 'line', scaleID: 'x', value: 6.5, borderColor: '#111', borderWidth: 1.2, z: 10 },
+      y: {
+        ticks: { display: false },
+        grid: {
+          color: 'rgba(0,0,0,0.12)',
+          lineWidth: 0.8, // optional: makes all horizontal lines same thickness too
+        },
+        border: { display: false },
       },
     },
-  },
-  // padding outside data area that becomes part of the framed chart bands
-  layout: { padding: LAYOUT_PADDING },
-  elements: { point: { hitRadius: 6 } },
-  color: '#111',
-}))
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: (ctx: any) => ` Stanine: ${ctx.parsed.x}` } },
+      title: { display: false },
+      annotation: {
+        annotations: {
+          // grey band 4..6 (behind lines)
+          band: { type: 'box', xMin: 3.5, xMax: 6.5, yMin: -0.5, yMax: 10.5, backgroundColor: 'rgba(150,150,150,0.12)', borderWidth: 0, z: 0 },
+          // SOLID boundaries between stanine groups
+          lineBetweenSAndB: { type: 'line', scaleID: 'x', value: 3.5, borderColor: '#111', borderWidth: 1.2, z: 10 },
+          lineBetweenGAndA: { type: 'line', scaleID: 'x', value: 6.5, borderColor: '#111', borderWidth: 1.2, z: 10 },
+        },
+      },
+    },
+    // padding outside data area that becomes part of the framed chart bands
+    layout: { padding: LAYOUT_PADDING },
+    elements: { point: { hitRadius: 6 } },
+    color: '#111',
+  }))
 
 const detailRows = computed(() => {
   const arr = Array.isArray(props.results?.answers) ? props.results.answers : []
