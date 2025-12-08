@@ -508,6 +508,10 @@ const page1MaxScore = computed(() =>
                           @keydown.space.prevent="toggleSelection(idx, 'col3', optionIdx)"
                         >
                           <path
+                            class="lps-figure-hit"
+                            :d="option.pathData"
+                          />
+                          <path
                             fill="#090d0e"
                             class="lps-figure-shape"
                             :class="[
@@ -673,6 +677,15 @@ const page1MaxScore = computed(() =>
   outline: none;
   /* Allow clicks anywhere inside the shape's bounding box. */
   pointer-events: bounding-box;
+}
+
+.lps-figure-hit {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 16px;
+  stroke-linejoin: round;
+  /* Expand the clickable surface beyond the visible shape. */
+  pointer-events: stroke;
 }
 
 .lps-figure-shape {
