@@ -28,6 +28,15 @@ const teacherName = computed(() => {
   return props.assignment?.results?.[0]?.teacher?.name || 'N/A';
 });
 
+const isAvemTest = computed(() => props.assignment?.test?.name === 'AVEM');
+
+const pdfContainerStyle = computed(() => ({
+  zIndex: -1,
+  width: '1200px',
+  transform: isAvemTest.value ? 'scale(1.25)' : undefined,
+  transformOrigin: isAvemTest.value ? 'top left' : undefined,
+}));
+
 watch(
   () => props.assignment,
   (val) => {
@@ -68,8 +77,7 @@ async function downloadUnifiedPdf() {
     const el = pdfTemplateRef.value?.$el as HTMLElement | undefined;
     if (el) {
       const filename = `${props.participant.name}_${props.assignment.test.name}_Ergebnis.pdf`;
-      const zoom = props.assignment?.test?.name === 'AVEM' ? 1.5 : undefined;
-      await generatePdfFromElement(el, filename, { zoom });
+      await generatePdfFromElement(el, filename);
     } else {
       console.error("PDF template element not found.");
     }
@@ -101,7 +109,7 @@ async function downloadUnifiedPdf() {
   </Dialog>
 
   <!-- Hidden template for PDF generation -->
-  <div v-if="isGeneratingPdf" class="fixed top-0 left-0" style="z-index: -1; width: 1200px;">
+  <div v-if="isGeneratingPdf" class="fixed top-0 left-0" :style="pdfContainerStyle">
       <PdfTemplate
         v-if="assignment"
         ref="pdfTemplateRef"
