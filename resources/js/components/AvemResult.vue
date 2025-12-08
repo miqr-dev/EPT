@@ -194,7 +194,7 @@ const topBottomPlugin = {
 
     // Bottom Prozent row
     const perc = [4, 11, 23, 40, 60, 77, 89, 96]
-    const xs = [1, 2, 3, 4, 5, 6, 7, 8]
+    const xs = [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5]
     const baseY = frame.bottom - 40
     for (let i = 0; i < xs.length; i++) ctx.fillText(String(perc[i]), x.getPixelForValue(xs[i]), baseY)
     ctx.fillText('Prozent', x.getPixelForValue(5), baseY + 18)
@@ -278,10 +278,11 @@ const chartOptions = computed(() => ({
       border: { display: false },
     },
     y: {
+      offset: true,
       ticks: { display: false },
       grid: {
-        color: (ctx: any) => (ctx.index === 0 || ctx.index === 10 ? '#111' : 'rgba(0,0,0,0.12)'),
-        lineWidth: (ctx: any) => (ctx.index === 0 || ctx.index === 10 ? 1.2 : 0.8),
+        color: (ctx: any) => (ctx.index === 0 || ctx.index === 10 ? 'rgba(0,0,0,0)' : 'rgba(0,0,0,0.12)'),
+        lineWidth: (ctx: any) => (ctx.index === 0 || ctx.index === 10 ? 0 : 0.8),
       },
       border: { display: false },
     },
