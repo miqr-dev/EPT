@@ -68,7 +68,8 @@ async function downloadUnifiedPdf() {
     const el = pdfTemplateRef.value?.$el as HTMLElement | undefined;
     if (el) {
       const filename = `${props.participant.name}_${props.assignment.test.name}_Ergebnis.pdf`;
-      await generatePdfFromElement(el, filename);
+      const zoom = props.assignment?.test?.name === 'AVEM' ? 1.4 : undefined;
+      await generatePdfFromElement(el, filename, { zoom });
     } else {
       console.error("PDF template element not found.");
     }
