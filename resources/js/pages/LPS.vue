@@ -13,7 +13,7 @@ type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = [120, 120, 60, 60, 60];
+const COLUMN_DURATION_SECONDS = [3, 3, 60, 60, 60];
 
 const props = defineProps<{
   pausedTestResult?: {
