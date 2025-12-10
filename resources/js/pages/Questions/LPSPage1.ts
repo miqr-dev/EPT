@@ -624,6 +624,146 @@ const LPS_PAGE1_COLUMN3_B_ROW3_SHAPES = [
       `M 440.9968 25.3109 A 2.28 2.28 0 0 1 440.9799 28.5353 L 425.3707 43.9818 A 2.28 2.28 0 0 1 422.1464 43.9649 L 405.7432 27.3891 A 2.28 2.28 0 0 1 405.7601 24.1647 L 421.3693 8.7182 A 2.28 2.28 0 0 1 424.5936 8.7351 L 440.9968 25.3109 Z M 436.34 28.41 A 2.11 2.11 0 0 0 436.34 25.43 L 424.37 13.46 A 2.11 2.11 0 0 0 421.39 13.46 L 410.50 24.35 A 2.11 2.11 0 0 0 410.50 27.33 L 422.48 39.30 A 2.11 2.11 0 0 0 425.46 39.30 L 436.34 28.41 Z`,
 ];
 
+const LPS_PAGE1_COLUMN3_B_ROW19_SHAPES = [
+  {
+    svgAttributes: { viewBox: '0 0 96 96', width: 96, height: 96 },
+    paths: [
+      'M12 12h72v72H12z',
+      'M24 24h48v48H24z',
+    ],
+  },
+  {
+    svgAttributes: { viewBox: '0 0 96 96', width: 96, height: 96 },
+    paths: [
+      'M48 8L88 48 48 88 8 48z',
+      'M48 24L72 48 48 72 24 48z',
+    ],
+  },
+  {
+    svgAttributes: { viewBox: '0 0 96 96', width: 96, height: 96 },
+    paths: [
+      'M16 16h64v24H16z',
+      'M16 56h64v24H16z',
+    ],
+  },
+  {
+    svgAttributes: { viewBox: '0 0 96 96', width: 96, height: 96 },
+    paths: [
+      'M16 16h64v64H16z',
+      'M32 32h32v32H32z',
+      'M44 44h8v8h-8z',
+    ],
+  },
+  {
+    svgAttributes: { viewBox: '0 0 96 96', width: 96, height: 96 },
+    paths: [
+      'M16 16h64v64H16z',
+      'M16 48h64',
+      'M48 16v64',
+    ],
+  },
+  {
+    svgAttributes: { viewBox: '0 0 96 96', width: 96, height: 96 },
+    paths: [
+      'M48 8a40 40 0 1 1 0 80 40 40 0 0 1 0-80z',
+      'M48 24a24 24 0 1 1 0 48 24 24 0 0 1 0-48z',
+    ],
+  },
+];
+
+const LPS_PAGE1_COLUMN3_B_ROW20_SHAPES = [
+  {
+    svgAttributes: { viewBox: '0 0 120 120', width: 120, height: 120 },
+    paths: [
+      'M60 10L110 110H10z',
+      'M60 34L86 86H34z',
+    ],
+  },
+  {
+    svgAttributes: { viewBox: '0 0 120 120', width: 120, height: 120 },
+    paths: [
+      'M20 20h80v80H20z',
+      'M20 60h80',
+      'M60 20v80',
+    ],
+  },
+  {
+    svgAttributes: { viewBox: '0 0 120 120', width: 120, height: 120 },
+    paths: [
+      'M20 20h80v40H20z',
+      'M20 80h80v20H20z',
+    ],
+  },
+  {
+    svgAttributes: { viewBox: '0 0 120 120', width: 120, height: 120 },
+    paths: [
+      'M60 8a52 52 0 1 1 0 104 52 52 0 0 1 0-104z',
+      'M60 28a32 32 0 1 1 0 64 32 32 0 0 1 0-64z',
+    ],
+  },
+  {
+    svgAttributes: { viewBox: '0 0 120 120', width: 120, height: 120 },
+    paths: [
+      'M20 20h80v80H20z',
+      'M34 34h52v52H34z',
+      'M48 48h24v24H48z',
+    ],
+  },
+  {
+    svgAttributes: { viewBox: '0 0 120 120', width: 120, height: 120 },
+    paths: [
+      'M20 20h80v80H20z',
+      'M20 60l40-40 40 40-40 40z',
+    ],
+  },
+];
+
+const LPS_PAGE1_COLUMN3_B_ROW21_SHAPES = [
+  {
+    svgAttributes: { viewBox: '0 0 84 84', width: 84, height: 84 },
+    paths: [
+      'M10 10h64v64H10z',
+      'M42 10v64',
+    ],
+  },
+  {
+    svgAttributes: { viewBox: '0 0 84 84', width: 84, height: 84 },
+    paths: [
+      'M42 6a36 36 0 1 1 0 72 36 36 0 0 1 0-72z',
+      'M42 22a20 20 0 1 1 0 40 20 20 0 0 1 0-40z',
+    ],
+  },
+  {
+    svgAttributes: { viewBox: '0 0 84 84', width: 84, height: 84 },
+    paths: [
+      'M10 10h64v24H10z',
+      'M10 50h64v24H10z',
+    ],
+  },
+  {
+    svgAttributes: { viewBox: '0 0 84 84', width: 84, height: 84 },
+    paths: [
+      'M10 10h64v64H10z',
+      'M10 42h64',
+      'M42 10v64',
+    ],
+  },
+  {
+    svgAttributes: { viewBox: '0 0 84 84', width: 84, height: 84 },
+    paths: [
+      'M10 10h64v64H10z',
+      'M26 26h32v32H26z',
+    ],
+  },
+  {
+    svgAttributes: { viewBox: '0 0 84 84', width: 84, height: 84 },
+    paths: [
+      'M42 6a36 36 0 1 1 0 72 36 36 0 0 1 0-72z',
+      'M42 42a10 10 0 1 1 0 20 10 10 0 0 1 0-20z',
+    ],
+  },
+];
+
 const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
   {
     id: 1,
@@ -651,6 +791,33 @@ const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     })),
     correctIndex: 7,
     svgMeta: { viewBox: '0 0 447 43', width: 446, height: 54 },
+  },
+  {
+    id: 19,
+    options: LPS_PAGE1_COLUMN3_B_ROW19_SHAPES.map((shape, idx) => ({
+      id: `lps-b-r19-shape${idx + 1}`,
+      pathData: shape.paths.join(' '),
+    })),
+    correctIndex: 1,
+    svgMeta: { viewBox: '0 0 96 96', width: 96, height: 96 },
+  },
+  {
+    id: 20,
+    options: LPS_PAGE1_COLUMN3_B_ROW20_SHAPES.map((shape, idx) => ({
+      id: `lps-b-r20-shape${idx + 1}`,
+      pathData: shape.paths.join(' '),
+    })),
+    correctIndex: 3,
+    svgMeta: { viewBox: '0 0 120 120', width: 120, height: 120 },
+  },
+  {
+    id: 21,
+    options: LPS_PAGE1_COLUMN3_B_ROW21_SHAPES.map((shape, idx) => ({
+      id: `lps-b-r21-shape${idx + 1}`,
+      pathData: shape.paths.join(' '),
+    })),
+    correctIndex: 5,
+    svgMeta: { viewBox: '0 0 84 84', width: 84, height: 84 },
   },
 ];
 
