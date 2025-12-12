@@ -509,7 +509,7 @@ const page1MaxScore = computed(() =>
                         >
                           <path
                             class="lps-figure-hit"
-                            :d="option.pathData"
+                            :d="Array.isArray(option.pathData) ? option.pathData.join(' ') : option.pathData"
                           />
                           <path
                             fill="#090d0e"
@@ -517,10 +517,13 @@ const page1MaxScore = computed(() =>
                             :class="[
                               page1Responses[idx].col3[optionIdx] ? 'lps-figure-shape--selected' : '',
                             ]"
-                            :d="option.pathData"
+                            :d="Array.isArray(option.pathData) ? option.pathData.join(' ') : option.pathData"
                           />
                           <clipPath :id="`${option.id}-clip`">
-                            <path :d="option.pathData" :transform="option.transform" />
+                            <path
+                              :d="Array.isArray(option.pathData) ? option.pathData.join(' ') : option.pathData"
+                              :transform="option.transform"
+                            />
                           </clipPath>
                           <line
                             v-if="page1Responses[idx].col3[optionIdx]"
