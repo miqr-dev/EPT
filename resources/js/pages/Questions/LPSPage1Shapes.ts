@@ -1104,215 +1104,167 @@ const LPS_PAGE1_COLUMN3_B_ROW23_SHAPES = [
 `M 197.59 42.95 A 1.17 1.17 0.0 0 0 195.59 43.75 L 195.13 62.34 A 2.27 2.27 0.0 0 1 192.80 64.55 L 192.11 64.53 A 2.14 2.14 0.0 0 1 190.02 62.34 L 190.70 35.21 A 1.43 1.38 -25.6 0 1 191.02 34.35 Q 193.61 31.24 196.58 33.90 C 200.89 37.75 204.74 42.47 209.23 46.32 Q 211.84 48.56 215.65 52.22 A 2.84 2.83 -45.6 0 1 215.69 56.27 L 215.25 56.71 A 2.76 2.76 0.0 0 1 211.35 56.71 L 197.59 42.95 Z`,
 `M 343.7 53.127 C 343.8 53.107 349.85 47.02 350.51 46.24 C 354.59 41.393 358.733 37.09 362.94 33.33 C 363.711 32.64 364.864 32.644 365.58 33.34 C 365.993 33.747 366.21 34.387 366.23 35.26 C 366.4 43 365.95 51.22 366.38 61.09 C 366.438 62.443 365.301 63.543 363.95 63.44 L 363.7 63.42 C 362.341 63.319 361.304 62.167 361.35 60.81 L 361.87 45.34 C 361.89 44.633 361.171 44.143 360.52 44.42 C 358.407 45.32 356.617 46.65 355.15 48.41 C 352.517 51.55 350.333 53.897 348.6 55.45 C 347.173 56.723 345.757 56.59 344.35 55.05 C 344.163 54.843 343.333 53.187 343.7 53.127 Z`,
 ];
-export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
+
+
+type LpsColumn3RowConfig = {
+  id: number;
+  shapes: string[];
+  correctIndex: number;
+  svgMeta: { viewBox: string; width: number; height: number };
+};
+
+const LPS_PAGE1_COLUMN3_B_ROW_CONFIGS: LpsColumn3RowConfig[] = [
   {
     id: 1,
-    options: LPS_PAGE1_COLUMN3_B_ROW1_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r1-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW1_SHAPES,
     correctIndex: 0,
     svgMeta: { viewBox: '0 0 447 43', width: 447, height: 43 },
   },
   {
     id: 2,
-    options: LPS_PAGE1_COLUMN3_B_ROW2_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r2-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW2_SHAPES,
     correctIndex: 3,
     svgMeta: { viewBox: '0 0 331 37', width: 331, height: 37 },
   },
   {
     id: 3,
-    options: LPS_PAGE1_COLUMN3_B_ROW3_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r3-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW3_SHAPES,
     correctIndex: 7,
     svgMeta: { viewBox: '0 0 447 43', width: 446, height: 54 },
   },
   {
     id: 4,
-    options: LPS_PAGE1_COLUMN3_B_ROW4_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r4-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW4_SHAPES,
     correctIndex: 1,
     svgMeta: { viewBox: '0 0 670 75', width: 670, height: 75 },
   },
   {
     id: 5,
-    options: LPS_PAGE1_COLUMN3_B_ROW5_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r5-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW5_SHAPES,
     correctIndex: 1,
     svgMeta: { viewBox: '0 0 669 74', width: 669, height: 74 },
   },
   {
     id: 6,
-    options: LPS_PAGE1_COLUMN3_B_ROW6_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r6-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW6_SHAPES,
     correctIndex: 7,
     svgMeta: { viewBox: '0 0 660 71', width: 660, height: 71 },
   },
   {
     id: 7,
-    options: LPS_PAGE1_COLUMN3_B_ROW7_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r7-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW7_SHAPES,
     correctIndex: 4,
     svgMeta: { viewBox: '0 0 664 71', width: 664, height: 71 },
   },
   {
     id: 8,
-    options: LPS_PAGE1_COLUMN3_B_ROW8_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r8-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW8_SHAPES,
     correctIndex: 5,
     svgMeta: { viewBox: '0 0 654 70', width: 654, height: 70 },
   },
   {
     id: 9,
-    options: LPS_PAGE1_COLUMN3_B_ROW9_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r9-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW9_SHAPES,
     correctIndex: 5,
     svgMeta: { viewBox: '0 0 653 87', width: 653, height: 87 },
   },
   {
     id: 10,
-    options: LPS_PAGE1_COLUMN3_B_ROW10_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r10-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW10_SHAPES,
     correctIndex: 6,
     svgMeta: { viewBox: '0 0 636 74', width: 636, height: 74 },
   },
   {
     id: 11,
-    options: LPS_PAGE1_COLUMN3_B_ROW11_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r11-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW11_SHAPES,
     correctIndex: 6,
     svgMeta: { viewBox: '0 0 662 78', width: 662, height: 78 },
   },
   {
     id: 12,
-    options: LPS_PAGE1_COLUMN3_B_ROW12_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r12-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW12_SHAPES,
     correctIndex: 6,
     svgMeta: { viewBox: '0 0 662 54', width: 662, height: 54 },
   },
   {
     id: 13,
-    options: LPS_PAGE1_COLUMN3_B_ROW13_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r13-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW13_SHAPES,
     correctIndex: 6,
     svgMeta: { viewBox: '0 0 663 70', width: 663, height: 70 },
   },
   {
     id: 14,
-    options: LPS_PAGE1_COLUMN3_B_ROW14_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r14-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW14_SHAPES,
     correctIndex: 0,
     svgMeta: { viewBox: '0 0 664 71', width: 664, height: 71 },
   },
   {
     id: 15,
-    options: LPS_PAGE1_COLUMN3_B_ROW15_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r15-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW15_SHAPES,
     correctIndex: 7,
     svgMeta: { viewBox: '0 0 657 70', width: 657, height: 70 },
   },
   {
     id: 16,
-    options: LPS_PAGE1_COLUMN3_B_ROW16_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r16-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW16_SHAPES,
     correctIndex: 7,
     svgMeta: { viewBox: '0 0 657 70', width: 657, height: 70 },
   },
   {
     id: 17,
-    options: LPS_PAGE1_COLUMN3_B_ROW17_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r17-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW17_SHAPES,
     correctIndex: 6,
     svgMeta: { viewBox: '0 0 657 70', width: 657, height: 70 },
   },
   {
     id: 18,
-    options: LPS_PAGE1_COLUMN3_B_ROW18_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r18-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW18_SHAPES,
     correctIndex: 3,
     svgMeta: { viewBox: '0 0 657 70', width: 657, height: 70 },
   },
   {
     id: 19,
-    options: LPS_PAGE1_COLUMN3_B_ROW19_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r19-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW19_SHAPES,
     correctIndex: 1,
     svgMeta: { viewBox: '0 0 657 70', width: 657, height: 70 },
   },
   {
     id: 20,
-    options: LPS_PAGE1_COLUMN3_B_ROW20_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r20-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW20_SHAPES,
     correctIndex: 3,
     svgMeta: { viewBox: '0 0 657 70', width: 657, height: 70 },
   },
   {
     id: 21,
-    options: LPS_PAGE1_COLUMN3_B_ROW21_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r21-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW21_SHAPES,
     correctIndex: 5,
     svgMeta: { viewBox: '0 0 657 70', width: 657, height: 70 },
   },
   {
     id: 22,
-    options: LPS_PAGE1_COLUMN3_B_ROW22_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r22-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW22_SHAPES,
     correctIndex: 4,
     svgMeta: { viewBox: '0 0 657 70', width: 657, height: 70 },
   },
   {
     id: 23,
-    options: LPS_PAGE1_COLUMN3_B_ROW23_SHAPES.map((pathData, idx) => ({
-      id: `lps-b-r23-shape${idx + 1}`,
-      pathData,
-    })),
+    shapes: LPS_PAGE1_COLUMN3_B_ROW23_SHAPES,
     correctIndex: 7,
     svgMeta: { viewBox: '0 0 657 70', width: 657, height: 70 },
   },
 ];
+
+export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = LPS_PAGE1_COLUMN3_B_ROW_CONFIGS.map(
+  ({ id, shapes, correctIndex, svgMeta }) => ({
+    id,
+    options: shapes.map((pathData, idx) => ({
+      id: `lps-b-r${id}-shape${idx + 1}`,
+      pathData,
+    })),
+    correctIndex,
+    svgMeta,
+  }),
+);
 
 
 
