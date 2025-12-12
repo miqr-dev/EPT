@@ -483,7 +483,7 @@ const page1MaxScore = computed(() =>
                   <div v-if="row.column3?.length">
                     <div
                       v-if="row.column3SvgMeta && row.column3.every((option) => option.pathData)"
-                      class="flex items-center justify-center leading-none"
+                      class="lps-column3-cell"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -628,11 +628,19 @@ const page1MaxScore = computed(() =>
   align-items: baseline;
 }
 
+.lps-column3-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 0;
+  line-height: 1;
+}
+
 .lps-column3-svg {
   display: block;
-  line-height: 0;
-  height: 32px;
+  height: 36px;
   width: auto;
+  overflow: visible;
 }
 
 .lps-letter {
