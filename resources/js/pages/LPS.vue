@@ -508,28 +508,21 @@ const page1MaxScore = computed(() =>
                           @keydown.enter.prevent="toggleSelection(idx, 'col3', optionIdx)"
                           @keydown.space.prevent="toggleSelection(idx, 'col3', optionIdx)"
                         >
-                          <template
-                            v-for="(pathData, segmentIdx) in option.segments"
-                            :key="`${option.id}-segment-${segmentIdx}`"
-                          >
-                            <path
-                              class="lps-figure-hit"
-                              :d="pathData"
-                            />
-                            <path
-                              fill="#090d0e"
-                              class="lps-figure-shape"
-                              :class="[
-                                page1Responses[idx].col3[optionIdx] ? 'lps-figure-shape--selected' : '',
-                              ]"
-                              :d="pathData"
-                            />
-                          </template>
+                          <path
+                            class="lps-figure-hit"
+                            :d="option.pathData"
+                          />
+                          <path
+                            fill="#090d0e"
+                            class="lps-figure-shape"
+                            :class="[
+                              page1Responses[idx].col3[optionIdx] ? 'lps-figure-shape--selected' : '',
+                            ]"
+                            :d="option.pathData"
+                          />
                           <clipPath :id="`${option.id}-clip`">
                             <path
-                              v-for="(pathData, segmentIdx) in Array.isArray(option.pathData) ? option.pathData : [option.pathData]"
-                              :key="`${option.id}-clip-segment-${segmentIdx}`"
-                              :d="pathData"
+                              :d="option.pathData"
                               :transform="option.transform"
                             />
                           </clipPath>

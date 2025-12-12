@@ -20,6 +20,11 @@ export type LpsColumn3OptionGroup = {
   optionKey: string;
   id: string;
   transform?: string;
+  /**
+   * Single path string that may contain multiple subpaths (each starting with M).
+   * Enables rendering and hit-testing as a single selectable element.
+   */
+  pathData: string;
   segments: string[];
 };
 
@@ -35,12 +40,14 @@ export function groupColumn3Options(options?: LpsColumn3Option[]): LpsColumn3Opt
 
     if (group) {
       group.segments.push(...segments);
+      group.pathData = group.segments.join(' ');
     } else {
       byKey.set(optionKey, {
         optionKey,
         id: option.id ?? optionKey,
         transform: option.transform,
         segments: [...segments],
+        pathData: segments.join(' '),
       });
     }
   });
