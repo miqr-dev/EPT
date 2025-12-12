@@ -46,6 +46,71 @@ export type LpsDataset = {
   solutions: LpsPage1Solution[];
 };
 
+function buildRow(
+  rowIdx: number,
+  column1: LpsColumnEntry[],
+  column2: LpsColumnEntry[],
+  column4: LpsColumnEntry[],
+  column5: LpsColumnEntry[],
+  column3Rows?: LpsColumn3Row[],
+): LpsPage1Row {
+  const col1 = column1[rowIdx];
+  const col2 = column2[rowIdx];
+  const col4 = column4[rowIdx];
+  const col5 = column5[rowIdx];
+  const col3 = column3Rows?.[rowIdx];
+  const fallbackId = rowIdx + 1;
+
+  return {
+    id: col1?.id ?? col2?.id ?? col4?.id ?? col5?.id ?? col3?.id ?? fallbackId,
+    column1: col1?.word ?? '',
+    column2: col2?.word ?? '',
+    column3: col3?.options,
+    column3SvgMeta: col3?.svgMeta,
+    column4: col4?.word ?? '',
+    column5: col5?.word ?? '',
+  };
+}
+
+function buildRows(
+  column1: LpsColumnEntry[],
+  column2: LpsColumnEntry[],
+  column4: LpsColumnEntry[],
+  column5: LpsColumnEntry[],
+  column3Rows?: LpsColumn3Row[],
+) {
+  const rowCount = Math.max(column1.length, column2.length, column4.length, column5.length, column3Rows?.length ?? 0);
+  return Array.from({ length: rowCount }, (_, idx) => buildRow(idx, column1, column2, column4, column5, column3Rows));
+}
+
+function extractSolution(entry?: LpsColumnEntry): number[] {
+  if (!entry || typeof entry.correctIndex !== 'number') return [];
+  if (entry.correctIndex < 0 || entry.correctIndex >= entry.word.length) return [];
+  return [entry.correctIndex];
+}
+
+function extractColumn3Solution(entry?: LpsColumn3Row): number[] {
+  if (!entry || typeof entry.correctIndex !== 'number') return [];
+  if (entry.correctIndex < 0 || entry.correctIndex >= entry.options.length) return [];
+  return [entry.correctIndex];
+}
+
+function buildSolutions(
+  column1: LpsColumnEntry[],
+  column2: LpsColumnEntry[],
+  column4: LpsColumnEntry[],
+  column5: LpsColumnEntry[],
+  column3Rows?: LpsColumn3Row[],
+) {
+  return buildRows(column1, column2, column4, column5, column3Rows).map((_, idx) => ({
+    col1: extractSolution(column1[idx]),
+    col2: extractSolution(column2[idx]),
+    col3: extractColumn3Solution(column3Rows?.[idx]),
+    col4: extractSolution(column4[idx]),
+    col5: extractSolution(column5[idx]),
+  }));
+}
+
 export const LPS_PAGE1_COLUMN1: LpsColumnEntry[] = [
   { id: 1, word: 'Auvzug', correctIndex: 0 },
   { id: 2, word: 'Freute', correctIndex: 0 },
@@ -181,6 +246,34 @@ export const LPS_PAGE1_COLUMN5: LpsColumnEntry[] = [
   { id: 3, word: 'xxxxxxxox', correctIndex: 0 },
   { id: 4, word: 'xxxxxxxox', correctIndex: 0 },
 ];
+
+export const LPS_PAGE1_ROWS: LpsPage1Row[] = buildRows(LPS_PAGE1_COLUMN1, LPS_PAGE1_COLUMN2, LPS_PAGE1_COLUMN4, LPS_PAGE1_COLUMN5);
+
+export const LPS_PAGE1_SOLUTIONS: LpsPage1Solution[] = buildSolutions(
+  LPS_PAGE1_COLUMN1,
+  LPS_PAGE1_COLUMN2,
+  LPS_PAGE1_COLUMN4,
+  LPS_PAGE1_COLUMN5,
+);
+
+const LPS_PAGE1_COLUMN1_A = LPS_PAGE1_COLUMN1.slice(0, 20);
+const LPS_PAGE1_COLUMN2_A = LPS_PAGE1_COLUMN2.slice(0, 20);
+const LPS_PAGE1_COLUMN4_A = LPS_PAGE1_COLUMN4.slice(0, 20);
+const LPS_PAGE1_COLUMN5_A = LPS_PAGE1_COLUMN5.slice(0, 20);
+
+export const LPS_PAGE1_ROWS_A: LpsPage1Row[] = buildRows(
+  LPS_PAGE1_COLUMN1_A,
+  LPS_PAGE1_COLUMN2_A,
+  LPS_PAGE1_COLUMN4_A,
+  LPS_PAGE1_COLUMN5_A,
+);
+
+export const LPS_PAGE1_SOLUTIONS_A: LpsPage1Solution[] = buildSolutions(
+  LPS_PAGE1_COLUMN1_A,
+  LPS_PAGE1_COLUMN2_A,
+  LPS_PAGE1_COLUMN4_A,
+  LPS_PAGE1_COLUMN5_A,
+);
 
 const LPS_PAGE1_COLUMN1_B: LpsColumnEntry[] = [
   { id: 1, word: 'Auyzug', correctIndex: 2 },
