@@ -482,7 +482,7 @@ const page1MaxScore = computed(() =>
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[1px]">
                   <div v-if="row.column3?.length">
                     <div
-                      v-if="row.column3SvgMeta && row.column3.every((option) => option.pathData)"
+                      v-if="row.column3SvgMeta && row.column3.every((option) => option.pathData && (Array.isArray(option.pathData) ? option.pathData.length : true))"
                       class="flex items-center justify-center leading-none"
                     >
                       <svg
@@ -507,30 +507,35 @@ const page1MaxScore = computed(() =>
                           @keydown.enter.prevent="toggleSelection(idx, 'col3', optionIdx)"
                           @keydown.space.prevent="toggleSelection(idx, 'col3', optionIdx)"
                         >
-                          <path
-                            class="lps-figure-hit"
-                            :d="option.pathData"
-                          />
-                          <path
-                            fill="#090d0e"
-                            class="lps-figure-shape"
-                            :class="[
-                              page1Responses[idx].col3[optionIdx] ? 'lps-figure-shape--selected' : '',
-                            ]"
-                            :d="option.pathData"
-                          />
-                          <clipPath :id="`${option.id}-clip`">
-                            <path :d="option.pathData" :transform="option.transform" />
-                          </clipPath>
-                          <line
-                            v-if="page1Responses[idx].col3[optionIdx]"
-                            class="lps-figure-slash"
-                            :clip-path="`url(#${option.id}-clip)`"
-                            x1="0"
-                            :y1="row.column3SvgMeta.height - 6"
-                            :x2="row.column3SvgMeta.width"
-                            y2="6"
-                          />
+                          <template
+                            v-for="(path, pathIdx) in Array.isArray(option.pathData) ? option.pathData : option.pathData ? [option.pathData] : []"
+                            :key="`${option.id}-path-${pathIdx}`"
+                          >
+                            <path
+                              class="lps-figure-hit"
+                              :d="path"
+                            />
+                            <path
+                              fill="#090d0e"
+                              class="lps-figure-shape"
+                              :class="[
+                                page1Responses[idx].col3[optionIdx] ? 'lps-figure-shape--selected' : '',
+                              ]"
+                              :d="path"
+                            />
+                            <clipPath :id="`${option.id}-clip-${pathIdx}`">
+                              <path :d="path" :transform="option.transform" />
+                            </clipPath>
+                            <line
+                              v-if="page1Responses[idx].col3[optionIdx]"
+                              class="lps-figure-slash"
+                              :clip-path="`url(#${option.id}-clip-${pathIdx})`"
+                              x1="0"
+                              :y1="row.column3SvgMeta.height - 6"
+                              :x2="row.column3SvgMeta.width"
+                              y2="6"
+                            />
+                          </template>
                         </g>
                       </svg>
                     </div>
