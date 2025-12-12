@@ -1,6 +1,15 @@
 import { LPS_PAGE1_COLUMN3_B } from './lpsPage1SvgShapes';
 
-export type LpsColumn3Option = { id: string; src?: string; pathData?: string; transform?: string };
+export type LpsColumn3Option = {
+  id: string;
+  src?: string;
+  /**
+   * When grouping multiple SVG paths into a single selectable option, provide an array.
+   * A single string is still supported for the common case of one path per option.
+   */
+  pathData?: string | string[];
+  transform?: string;
+};
 
 export type LpsPage1Row = {
   id: number;

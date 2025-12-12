@@ -507,20 +507,30 @@ const page1MaxScore = computed(() =>
                           @keydown.enter.prevent="toggleSelection(idx, 'col3', optionIdx)"
                           @keydown.space.prevent="toggleSelection(idx, 'col3', optionIdx)"
                         >
-                          <path
-                            class="lps-figure-hit"
-                            :d="option.pathData"
-                          />
-                          <path
-                            fill="#090d0e"
-                            class="lps-figure-shape"
-                            :class="[
-                              page1Responses[idx].col3[optionIdx] ? 'lps-figure-shape--selected' : '',
-                            ]"
-                            :d="option.pathData"
-                          />
+                          <template
+                            v-for="(pathData, segmentIdx) in Array.isArray(option.pathData) ? option.pathData : [option.pathData]"
+                            :key="`${option.id}-segment-${segmentIdx}`"
+                          >
+                            <path
+                              class="lps-figure-hit"
+                              :d="pathData"
+                            />
+                            <path
+                              fill="#090d0e"
+                              class="lps-figure-shape"
+                              :class="[
+                                page1Responses[idx].col3[optionIdx] ? 'lps-figure-shape--selected' : '',
+                              ]"
+                              :d="pathData"
+                            />
+                          </template>
                           <clipPath :id="`${option.id}-clip`">
-                            <path :d="option.pathData" :transform="option.transform" />
+                            <path
+                              v-for="(pathData, segmentIdx) in Array.isArray(option.pathData) ? option.pathData : [option.pathData]"
+                              :key="`${option.id}-clip-segment-${segmentIdx}`"
+                              :d="pathData"
+                              :transform="option.transform"
+                            />
                           </clipPath>
                           <line
                             v-if="page1Responses[idx].col3[optionIdx]"
