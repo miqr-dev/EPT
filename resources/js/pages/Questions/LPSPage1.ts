@@ -4,12 +4,49 @@ export type LpsColumn3Option = {
   id: string;
   src?: string;
   /**
+   * Options that share the same key will be grouped into a single selectable choice.
+   * Falls back to the id when omitted.
+   */
+  optionKey?: string;
+  /**
    * When grouping multiple SVG paths into a single selectable option, provide an array.
    * A single string is still supported for the common case of one path per option.
    */
   pathData?: string | string[];
   transform?: string;
 };
+
+export type LpsColumn3OptionGroup = {
+  optionKey: string;
+  id: string;
+  transform?: string;
+  segments: string[];
+};
+
+export function groupColumn3Options(options?: LpsColumn3Option[]): LpsColumn3OptionGroup[] {
+  if (!options?.length) return [];
+
+  const byKey = new Map<string, LpsColumn3OptionGroup>();
+
+  options.forEach((option, idx) => {
+    const optionKey = option.optionKey ?? option.id ?? `option-${idx + 1}`;
+    const group = byKey.get(optionKey);
+    const segments = Array.isArray(option.pathData) ? option.pathData : option.pathData ? [option.pathData] : [];
+
+    if (group) {
+      group.segments.push(...segments);
+    } else {
+      byKey.set(optionKey, {
+        optionKey,
+        id: option.id ?? optionKey,
+        transform: option.transform,
+        segments: [...segments],
+      });
+    }
+  });
+
+  return Array.from(byKey.values());
+}
 
 export type LpsPage1Row = {
   id: number;
@@ -100,7 +137,8 @@ function extractSolution(entry?: LpsColumnEntry): number[] {
 
 function extractColumn3Solution(entry?: LpsColumn3Row): number[] {
   if (!entry || typeof entry.correctIndex !== 'number') return [];
-  if (entry.correctIndex < 0 || entry.correctIndex >= entry.options.length) return [];
+  const groups = groupColumn3Options(entry.options);
+  if (entry.correctIndex < 0 || entry.correctIndex >= groups.length) return [];
   return [entry.correctIndex];
 }
 
