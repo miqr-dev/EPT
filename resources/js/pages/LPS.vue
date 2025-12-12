@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
-import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
+import { getLpsDataset, groupColumn3Options, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
 
@@ -29,6 +29,7 @@ const props = defineProps<{
 const emit = defineEmits(['complete', 'update:answers']);
 
 const { rows: lpsRows, solutions: lpsSolutions } = getLpsDataset(props.testName);
+const column3Groups = lpsRows.map((row) => groupColumn3Options(row.column3));
 
 const showTest = ref(false);
 const pageIndex = ref(0);
@@ -49,7 +50,7 @@ const page1Responses = ref<LpsPage1ResponseRow[]>(
     return {
       col1: buildSelection(row.column1.length, pausedRow?.col1),
       col2: buildSelection(row.column2.length, pausedRow?.col2),
-      col3: buildSelection(row.column3?.length ?? 0, pausedRow?.col3),
+      col3: buildSelection(column3Groups[idx]?.length ?? 0, pausedRow?.col3),
       col4: buildSelection(row.column4.length, pausedRow?.col4),
       col5: buildSelection(row.column5.length, pausedRow?.col5),
     };
@@ -480,9 +481,9 @@ const page1MaxScore = computed(() =>
               <!-- 3/4/5 empty placeholders (keep structure like original test page) -->
               <div class="col-span-1 lps-sep">
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[1px]">
-                  <div v-if="row.column3?.length">
+                  <div v-if="column3Groups[idx]?.length">
                     <div
-                      v-if="row.column3SvgMeta && row.column3.every((option) => option.pathData)"
+                      v-if="row.column3SvgMeta"
                       class="flex items-center justify-center leading-none"
                     >
                       <svg
@@ -494,7 +495,7 @@ const page1MaxScore = computed(() =>
                         :height="row.column3SvgMeta.height"
                       >
                         <g
-                          v-for="(option, optionIdx) in row.column3"
+                          v-for="(option, optionIdx) in column3Groups[idx]"
                           :id="option.id"
                           :key="option.id"
                           role="button"
@@ -520,7 +521,10 @@ const page1MaxScore = computed(() =>
                             :d="option.pathData"
                           />
                           <clipPath :id="`${option.id}-clip`">
-                            <path :d="option.pathData" :transform="option.transform" />
+                            <path
+                              :d="option.pathData"
+                              :transform="option.transform"
+                            />
                           </clipPath>
                           <line
                             v-if="page1Responses[idx].col3[optionIdx]"
