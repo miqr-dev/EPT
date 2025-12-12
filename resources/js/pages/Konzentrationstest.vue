@@ -188,8 +188,42 @@ const copyCounts = ref<string[]>(Array(copyRows.length).fill(''))
 
 const toggleCopyChar = (r: number, p: number, c: number) => {
   copyMarks.value[r][p][c] = !copyMarks.value[r][p][c]
+  toggleCopyGapAround(r, p, c)
 }
 const getChars = (r: number, p: number) => Array.from(copyRows[r].parts[p])
+
+// Gap placeholders (for missing letters) — one slot before the first char and after every char
+const copyGaps = ref(copyRows.map(row => row.parts.map(part => Array.from({ length: part.length + 1 }, () => false))))
+
+const toggleCopyGap = (r: number, p: number, gapIdx: number) => {
+  const gaps = copyGaps.value[r][p]
+  if (gapIdx < 0 || gapIdx >= gaps.length) return
+  gaps[gapIdx] = !gaps[gapIdx]
+}
+
+// Clicking either neighbour reveals/hides the same gap (1ch red underline)
+const toggleCopyGapAround = (r: number, p: number, charIdx: number) => {
+  const gaps = copyGaps.value[r][p]
+  const before = charIdx
+  const after = charIdx + 1
+
+  // If either side is already open, close it first (idempotent toggle)
+  if (gaps[before]) {
+    gaps[before] = false
+    return
+  }
+  if (gaps[after]) {
+    gaps[after] = false
+    return
+  }
+
+  // Otherwise, open the gap to the right; if that doesn't exist, use the left
+  if (after < gaps.length) {
+    gaps[after] = true
+  } else if (before >= 0) {
+    gaps[before] = true
+  }
+}
 
 /* =========================================================
    PAGES 4 + scoring  [were old 6–7]
@@ -791,16 +825,24 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
 
                 <!-- Row 1 -->
                 <div>
-                  <span v-for="(ch, cIdx) in getChars(rIdx, 0)" :key="'r' + rIdx + 'p0c' + cIdx"
-                    @click="toggleCopyChar(rIdx, 0, cIdx)" :class="['letter', { marked: copyMarks[rIdx][0][cIdx] }]">
-                    {{ ch }}
-                  </span>
+                  <span class="gap-slot" :class="{ active: copyGaps[rIdx][0][0] }"
+                    @click="toggleCopyGap(rIdx, 0, 0)"></span>
+                  <template v-for="(ch, cIdx) in getChars(rIdx, 0)" :key="'r' + rIdx + 'p0c' + cIdx">
+                    <span @click="toggleCopyChar(rIdx, 0, cIdx)"
+                      :class="['letter', { marked: copyMarks[rIdx][0][cIdx] }]">{{ ch }}</span>
+                    <span class="gap-slot" :class="{ active: copyGaps[rIdx][0][cIdx + 1] }"
+                      @click="toggleCopyGap(rIdx, 0, cIdx + 1)"></span>
+                  </template>
                 </div>
                 <div>
-                  <span v-for="(ch, cIdx) in getChars(rIdx, 1)" :key="'r' + rIdx + 'p1c' + cIdx"
-                    @click="toggleCopyChar(rIdx, 1, cIdx)" :class="['letter', { marked: copyMarks[rIdx][1][cIdx] }]">
-                    {{ ch }}
-                  </span>
+                  <span class="gap-slot" :class="{ active: copyGaps[rIdx][1][0] }"
+                    @click="toggleCopyGap(rIdx, 1, 0)"></span>
+                  <template v-for="(ch, cIdx) in getChars(rIdx, 1)" :key="'r' + rIdx + 'p1c' + cIdx">
+                    <span @click="toggleCopyChar(rIdx, 1, cIdx)"
+                      :class="['letter', { marked: copyMarks[rIdx][1][cIdx] }]">{{ ch }}</span>
+                    <span class="gap-slot" :class="{ active: copyGaps[rIdx][1][cIdx + 1] }"
+                      @click="toggleCopyGap(rIdx, 1, cIdx + 1)"></span>
+                  </template>
                 </div>
 
                 <!-- Count -->
@@ -810,16 +852,24 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
 
                 <!-- Row 2 -->
                 <div class="col-start-2 mt-1">
-                  <span v-for="(ch, cIdx) in getChars(rIdx, 2)" :key="'r' + rIdx + 'p2c' + cIdx"
-                    @click="toggleCopyChar(rIdx, 2, cIdx)" :class="['letter', { marked: copyMarks[rIdx][2][cIdx] }]">
-                    {{ ch }}
-                  </span>
+                  <span class="gap-slot" :class="{ active: copyGaps[rIdx][2][0] }"
+                    @click="toggleCopyGap(rIdx, 2, 0)"></span>
+                  <template v-for="(ch, cIdx) in getChars(rIdx, 2)" :key="'r' + rIdx + 'p2c' + cIdx">
+                    <span @click="toggleCopyChar(rIdx, 2, cIdx)"
+                      :class="['letter', { marked: copyMarks[rIdx][2][cIdx] }]">{{ ch }}</span>
+                    <span class="gap-slot" :class="{ active: copyGaps[rIdx][2][cIdx + 1] }"
+                      @click="toggleCopyGap(rIdx, 2, cIdx + 1)"></span>
+                  </template>
                 </div>
                 <div class="col-start-3 mt-1">
-                  <span v-for="(ch, cIdx) in getChars(rIdx, 3)" :key="'r' + rIdx + 'p3c' + cIdx"
-                    @click="toggleCopyChar(rIdx, 3, cIdx)" :class="['letter', { marked: copyMarks[rIdx][3][cIdx] }]">
-                    {{ ch }}
-                  </span>
+                  <span class="gap-slot" :class="{ active: copyGaps[rIdx][3][0] }"
+                    @click="toggleCopyGap(rIdx, 3, 0)"></span>
+                  <template v-for="(ch, cIdx) in getChars(rIdx, 3)" :key="'r' + rIdx + 'p3c' + cIdx">
+                    <span @click="toggleCopyChar(rIdx, 3, cIdx)"
+                      :class="['letter', { marked: copyMarks[rIdx][3][cIdx] }]">{{ ch }}</span>
+                    <span class="gap-slot" :class="{ active: copyGaps[rIdx][3][cIdx + 1] }"
+                      @click="toggleCopyGap(rIdx, 3, cIdx + 1)"></span>
+                  </template>
                 </div>
               </div>
             </div>
@@ -941,6 +991,22 @@ ul .answer-box {
 .letter {
   cursor: pointer;
   padding: 0 0.25px;
+}
+
+.gap-slot {
+  display: inline-block;
+  width: 0.1ch;
+  height: 1.2em;
+  margin: 0 0.05em;
+  border-bottom: 2px solid transparent;
+  vertical-align: middle;
+  transition: width 140ms ease, border-color 140ms ease;
+  cursor: pointer;
+}
+
+.gap-slot.active {
+  width: 1ch;
+  border-bottom-color: #dc2626;
 }
 
 .marked {
