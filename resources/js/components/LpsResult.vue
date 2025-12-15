@@ -58,7 +58,7 @@ function formatTime(seconds?: number | null) {
               <td class="px-3 py-3">
                 <div class="flex flex-wrap gap-2">
                   <div
-                    v-for="(char, charIdx) in row.row.column1.split('')"
+                    v-for="(char, charIdx) in row.row.column1Tokens"
                     :key="`${row.row.id}-1-${charIdx}`"
                     class="relative flex h-8 w-8 items-center justify-center rounded-full border bg-muted/20 font-semibold"
                   >
@@ -72,7 +72,7 @@ function formatTime(seconds?: number | null) {
               <td class="px-3 py-3">
                 <div class="flex flex-wrap gap-2">
                   <div
-                    v-for="(char, charIdx) in row.row.column2.split('')"
+                    v-for="(char, charIdx) in row.row.column2Tokens"
                     :key="`${row.row.id}-2-${charIdx}`"
                     class="relative flex h-8 w-8 items-center justify-center rounded-full border bg-muted/20 font-semibold"
                   >
