@@ -13,7 +13,7 @@ type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = [3, 3, 60, 60, 60];
+const COLUMN_DURATION_SECONDS = [3, 3, 60, 480, 60];
 
 const props = defineProps<{
   pausedTestResult?: {
@@ -345,7 +345,8 @@ const page1MaxScore = computed(() =>
 
   <!-- Whole page scrolls -->
   <div class="min-h-screen overflow-x-auto bg-muted/15 p-4">
-    <div class="mx-auto w-[1120px] max-w-none">
+   <div class="flex justify-center">
+     <div class="mx-auto w-[1120px] max-w-none">
       <!-- Top bar -->
       <div class="mb-4 flex items-end justify-between gap-4">
         <div class="space-y-1">
@@ -557,7 +558,7 @@ const page1MaxScore = computed(() =>
               <div class="col-span-1 lps-sep">
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[1px]">
                   <div class="lps-letters">
-                    <button v-for="(char, charIdx) in row.column4.split('')" :key="`${row.id}-4-${charIdx}`"
+                    <button v-for="(char, charIdx) in row.column4.split(' ')" :key="`${row.id}-4-${charIdx}`"
                       type="button" class="lps-letter"
                       :class="page1Responses[idx].col4[charIdx] ? 'lps-letter--selected' : ''"
                       :disabled="!isColumnInteractive('col4')" :aria-pressed="page1Responses[idx].col4[charIdx]"
