@@ -14,6 +14,12 @@ type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
 const COLUMN_DURATION_SECONDS = [3, 3, 60, 60, 60];
+const PAGE_SECTIONS = [
+  { title: 'Spalten 1 + 2', columnIndices: [0, 1] },
+  { title: 'Spalte 3', columnIndices: [2] },
+  { title: 'Spalte 4', columnIndices: [3] },
+  { title: 'Spalte 5', columnIndices: [4] },
+];
 
 const props = defineProps<{
   pausedTestResult?: {
@@ -32,6 +38,12 @@ const { rows: lpsRows, solutions: lpsSolutions } = getLpsDataset(props.testName)
 
 const showTest = ref(false);
 const pageIndex = ref(0);
+const pageCount = PAGE_SECTIONS.length;
+const currentSection = computed(() => PAGE_SECTIONS[pageIndex.value] ?? PAGE_SECTIONS[0]);
+const visibleColumnIndices = computed(() => currentSection.value.columnIndices);
+const visibleColumnStates = computed(() =>
+  visibleColumnIndices.value.map((idx) => ({ idx, state: columnStates.value[idx] })),
+);
 const elapsedSecondsBeforeResume = ref(props.pausedTestResult?.total_time_seconds ?? 0);
 const runningElapsedSeconds = ref(0);
 const timerHandle = ref<number | null>(null);
@@ -62,6 +74,8 @@ const columnStates = ref<LpsColumnState[]>(
     : createInitialColumnStates(),
 );
 
+const sectionDurationText = computed(() => formatSectionDurations(visibleColumnIndices.value));
+
 const activeColumnIndex = computed(() => columnStates.value.findIndex((c) => c.status === 'active'));
 const isAnyColumnActive = computed(() => activeColumnIndex.value !== -1);
 const columnTimerHandle = ref<number | null>(null);
@@ -70,6 +84,7 @@ if (props.pausedTestResult) {
   if (typeof props.pausedTestResult.pageIndex === 'number') {
     pageIndex.value = props.pausedTestResult.pageIndex;
   }
+  pageIndex.value = Math.min(pageIndex.value, pageCount - 1);
   showTest.value = true;
   startTimer();
   if (activeColumnIndex.value !== -1) {
@@ -148,7 +163,7 @@ function startTest() {
 }
 
 function nextPage() {
-  pageIndex.value = Math.min(pageIndex.value + 1, 2);
+  pageIndex.value = Math.min(pageIndex.value + 1, pageCount - 1);
 }
 
 function prevPage() {
@@ -272,6 +287,12 @@ function formatColumnRemaining(seconds: number) {
   return formatTime(seconds);
 }
 
+function formatSectionDurations(indices: number[]) {
+  return indices
+    .map((idx) => `Sp ${idx + 1} ${formatTime(getColumnDuration(idx))}`)
+    .join(', ');
+}
+
 function getColumnDuration(columnIdx: number) {
   return COLUMN_DURATION_SECONDS[columnIdx] ?? COLUMN_DURATION_SECONDS[0];
 }
@@ -350,7 +371,7 @@ const page1MaxScore = computed(() =>
       <div class="mb-4 flex items-end justify-between gap-4">
         <div class="space-y-1">
           <h1 class="text-xl font-bold tracking-tight">{{ testLabel }}</h1>
-          <div class="text-xs text-muted-foreground" v-if="showTest">Seite {{ pageIndex + 1 }} / 3</div>
+          <div class="text-xs text-muted-foreground" v-if="showTest">Seite {{ pageIndex + 1 }} / {{ pageCount }}</div>
         </div>
 
         <div class="flex flex-col items-end gap-2">
@@ -370,9 +391,8 @@ const page1MaxScore = computed(() =>
       <div v-if="!showTest" class="rounded-2xl border bg-background p-8 shadow-sm">
         <div class="mx-auto max-w-3xl space-y-4 text-center">
           <p class="text-base text-muted-foreground">
-            Der {{ testLabel }}-Test umfasst drei Seiten. Beginnen Sie mit der ersten Seite. Die Spalten 1 und 2 sind
-            zusammengefasst, die Spalten 3, 4 und 5 stehen getrennt nebeneinander. Arbeiten Sie jede Zeile von oben
-            nach unten durch.
+            Der {{ testLabel }}-Test umfasst vier Schritte. Beginnen Sie mit den Spalten 1 und 2, anschließend folgen
+            die Spalten 3, 4 und 5 jeweils auf einer eigenen Seite. Arbeiten Sie jede Zeile von oben nach unten durch.
           </p>
           <Button class="px-8" @click="startTest">Test starten</Button>
         </div>
@@ -386,7 +406,8 @@ const page1MaxScore = computed(() =>
             <Button variant="outline" size="sm" :disabled="pageIndex === 0 || isAnyColumnActive" @click="prevPage">
               Zurück
             </Button>
-            <Button variant="secondary" size="sm" :disabled="pageIndex >= 2 || isAnyColumnActive" @click="nextPage">
+            <Button variant="secondary" size="sm"
+              :disabled="pageIndex >= pageCount - 1 || isAnyColumnActive" @click="nextPage">
               Weiter
             </Button>
           </div>
@@ -396,60 +417,49 @@ const page1MaxScore = computed(() =>
           </div>
         </div>
 
-        <!-- Page 1 -->
-        <div v-if="pageIndex === 0" class="space-y-3">
-          <!-- Column timers / start buttons -->
-          <div class="rounded-xl border bg-background px-4 py-3 shadow-sm">
-            <div class="flex items-center justify-between gap-4">
-              <div class="text-xs text-muted-foreground">
-                Spalte starten (Dauer: Sp 1 {{ formatTime(getColumnDuration(0)) }}, Sp 2
-                {{ formatTime(getColumnDuration(1)) }}, Sp 3–5 {{ formatTime(getColumnDuration(2)) }}).
-                Nur eine Spalte gleichzeitig.
-              </div>
+        <!-- Column timers / start buttons -->
+        <div class="rounded-xl border bg-background px-4 py-3 shadow-sm">
+          <div class="flex items-center justify-between gap-4">
+            <div class="text-xs text-muted-foreground">
+              Spalte starten (Dauer: {{ sectionDurationText }}). Nur eine Spalte gleichzeitig.
+            </div>
 
-              <div class="flex items-center gap-3">
-                <div v-for="(state, idx) in columnStates" :key="`column-state-${idx}`" class="flex items-center gap-2">
-                  <div class="rounded-lg border px-3 py-2 text-xs" :class="state.status === 'active'
-                    ? 'border-destructive/50 bg-destructive/5 text-destructive'
-                    : state.status === 'ready'
-                      ? 'border-foreground/20 bg-background text-foreground'
-                      : state.status === 'finished'
-                        ? 'border-foreground/10 bg-muted/30 text-muted-foreground'
-                        : 'border-foreground/10 bg-muted/20 text-muted-foreground'">
-                    <div class="flex items-center gap-2">
-                      <span class="font-semibold">Sp {{ idx + 1 }}</span>
-                      <span v-if="state.status === 'active'" class="tabular-nums font-semibold">
-                        {{ formatColumnRemaining(state.remaining) }}
-                      </span>
-                      <span v-else-if="state.status === 'ready'">bereit</span>
-                      <span v-else-if="state.status === 'finished'">fertig</span>
-                      <span v-else>gesperrt</span>
-                    </div>
+            <div class="flex items-center gap-3">
+              <div v-for="entry in visibleColumnStates" :key="`column-state-${entry.idx}`" class="flex items-center gap-2">
+                <div class="rounded-lg border px-3 py-2 text-xs" :class="entry.state?.status === 'active'"
+                  ? 'border-destructive/50 bg-destructive/5 text-destructive'
+                  : entry.state?.status === 'ready'
+                    ? 'border-foreground/20 bg-background text-foreground'
+                    : entry.state?.status === 'finished'
+                      ? 'border-foreground/10 bg-muted/30 text-muted-foreground'
+                      : 'border-foreground/10 bg-muted/20 text-muted-foreground'">
+                  <div class="flex items-center gap-2">
+                    <span class="font-semibold">Sp {{ entry.idx + 1 }}</span>
+                    <span v-if="entry.state?.status === 'active'" class="tabular-nums font-semibold">
+                      {{ formatColumnRemaining(entry.state.remaining) }}
+                    </span>
+                    <span v-else-if="entry.state?.status === 'ready'">bereit</span>
+                    <span v-else-if="entry.state?.status === 'finished'">fertig</span>
+                    <span v-else>gesperrt</span>
                   </div>
-
-                  <Button v-if="state.status === 'ready'" size="sm" :disabled="isAnyColumnActive"
-                    @click="startColumn(idx)">
-                    Start
-                  </Button>
                 </div>
+
+                <Button v-if="entry.state?.status === 'ready'" size="sm" :disabled="isAnyColumnActive"
+                  @click="startColumn(entry.idx)">
+                  Start
+                </Button>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Minimal “letter sheet”: no boxes, no row lines -->
+        <!-- Page 1: Spalten 1 + 2 -->
+        <div v-if="pageIndex === 0" class="space-y-3">
           <div class="rounded-2xl border bg-background p-4 shadow-sm">
-            <!-- header (optional, minimal) -->
-            <div class="mb-3 grid grid-cols-5 text-center text-[13px] font-extrabold tracking-wide text-foreground">
-              <div class="col-span-2">1 + 2</div>
-              <div>3</div>
-              <div>4</div>
-              <div>5</div>
-            </div>
+            <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalten 1 + 2</div>
 
-            <!-- content -->
-            <div class="inline-grid grid-cols-5 gap-x-2">
-              <!-- Columns 1/2 area -->
-              <div class="col-span-1 border-solid border-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c1`" class="py-[1px]">
                   <div class="lps-letters">
                     <button v-for="(char, charIdx) in row.column1.split('')" :key="`${row.id}-1-${charIdx}`"
@@ -463,7 +473,7 @@ const page1MaxScore = computed(() =>
                 </div>
               </div>
 
-              <div class="col-span-1 lps-sep">
+              <div class="lps-sep">
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[1px]">
                   <div class="lps-letters">
                     <button v-for="(char, charIdx) in row.column2.split('')" :key="`${row.id}-2-${charIdx}`"
@@ -476,10 +486,18 @@ const page1MaxScore = computed(() =>
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
 
-              <!-- 3/4/5 empty placeholders (keep structure like original test page) -->
-              <div class="col-span-1 lps-sep">
-                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[1px]">
+        <!-- Page 2: Spalte 3 -->
+        <div v-else-if="pageIndex === 1" class="space-y-3">
+          <div class="rounded-2xl border bg-background p-4 shadow-sm">
+            <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 3</div>
+
+            <div class="flex justify-center">
+              <div class="w-full max-w-4xl">
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[2px]">
                   <div v-if="row.column3?.length">
                     <div
                       v-if="row.column3SvgMeta && row.column3.every((option) => option.pathData)"
@@ -553,57 +571,62 @@ const page1MaxScore = computed(() =>
                   <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
                 </div>
               </div>
-              <!-- Columns 4 area -->
-              <div class="col-span-1 lps-sep">
-                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[1px]">
-                  <div class="lps-letters">
-                    <button v-for="(char, charIdx) in row.column4.split('')" :key="`${row.id}-4-${charIdx}`"
-                      type="button" class="lps-letter"
-                      :class="page1Responses[idx].col4[charIdx] ? 'lps-letter--selected' : ''"
-                      :disabled="!isColumnInteractive('col4')" :aria-pressed="page1Responses[idx].col4[charIdx]"
-                      @click="toggleSelection(idx, 'col4', charIdx)">
-                      {{ char }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div class="col-span-1 lps-sep">
-                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[1px]">
-                  <div class="lps-letters">
-                    <button v-for="(char, charIdx) in row.column5.split('')" :key="`${row.id}-4-${charIdx}`"
-                      type="button" class="lps-letter"
-                      :class="page1Responses[idx].col5[charIdx] ? 'lps-letter--selected' : ''"
-                      :disabled="!isColumnInteractive('col5')" :aria-pressed="page1Responses[idx].col5[charIdx]"
-                      @click="toggleSelection(idx, 'col5', charIdx)">
-                      {{ char }}
-                    </button>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
-
-          <div
-            class="flex items-center justify-between rounded-xl border bg-background px-4 py-3 text-xs text-muted-foreground shadow-sm">
-            <div>
-              Punkte gesamt:
-              <span class="font-semibold text-foreground">
-                {{ page1MaxScore ? `${page1Score} / ${page1MaxScore}` : '–' }}
-              </span>
-            </div>
-            <div class="text-[11px]">Spalte 3 enthält jetzt die Bildauswahl für LPS-B; weitere Reihen folgen.</div>
           </div>
         </div>
 
-        <!-- Other pages placeholder -->
-        <div v-else
-          class="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed bg-background p-8 text-muted-foreground">
-          Weitere Seiten dieses Tests werden in den nächsten Schritten ergänzt.
+        <!-- Page 3: Spalte 4 -->
+        <div v-else-if="pageIndex === 2" class="space-y-3">
+          <div class="rounded-2xl border bg-background p-4 shadow-sm">
+            <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 4</div>
+
+            <div>
+              <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c4`" class="py-[1px]">
+                <div class="lps-letters">
+                  <button v-for="(char, charIdx) in row.column4.split('')" :key="`${row.id}-4-${charIdx}`"
+                    type="button" class="lps-letter"
+                    :class="page1Responses[idx].col4[charIdx] ? 'lps-letter--selected' : ''"
+                    :disabled="!isColumnInteractive('col4')" :aria-pressed="page1Responses[idx].col4[charIdx]"
+                    @click="toggleSelection(idx, 'col4', charIdx)">
+                    {{ char }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Page 4: Spalte 5 -->
+        <div v-else-if="pageIndex === 3" class="space-y-3">
+          <div class="rounded-2xl border bg-background p-4 shadow-sm">
+            <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 5</div>
+
+            <div>
+              <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c5`" class="py-[1px]">
+                <div class="lps-letters">
+                  <button v-for="(char, charIdx) in row.column5.split('')" :key="`${row.id}-5-${charIdx}`"
+                    type="button" class="lps-letter"
+                    :class="page1Responses[idx].col5[charIdx] ? 'lps-letter--selected' : ''"
+                    :disabled="!isColumnInteractive('col5')" :aria-pressed="page1Responses[idx].col5[charIdx]"
+                    @click="toggleSelection(idx, 'col5', charIdx)">
+                    {{ char }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="flex items-center justify-between rounded-xl border bg-background px-4 py-3 text-xs text-muted-foreground shadow-sm">
+          <div>
+            Punkte gesamt:
+            <span class="font-semibold text-foreground">
+              {{ page1MaxScore ? `${page1Score} / ${page1MaxScore}` : '–' }}
+            </span>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-
   <Dialog v-model:open="endConfirmOpen">
     <DialogContent>
       <DialogHeader>
