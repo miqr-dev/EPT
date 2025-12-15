@@ -630,6 +630,9 @@ const page1MaxScore = computed(() =>
           </div>
         </div>
       </div>
+
+    </div>
+  </div>
   <Dialog v-model:open="endConfirmOpen">
     <DialogContent>
       <DialogHeader>
