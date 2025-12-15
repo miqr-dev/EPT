@@ -5,16 +5,25 @@ export type LpsColumn3Option = { id: string; src?: string; pathData?: string; tr
 export type LpsPage1Row = {
   id: number;
   column1: string;
+  column1Tokens: string[];
   column2: string;
+  column2Tokens: string[];
   column3?: LpsColumn3Option[];
   column3SvgMeta?: { viewBox: string; width: number; height: number };
   column4: string;
+  column4Tokens: string[];
   column5: string;
+  column5Tokens: string[];
 };
 
 export type LpsColumnEntry = {
   id: number;
   word: string;
+  /**
+   * Optional custom tokenization for rendering. When provided, each token is displayed together
+   * instead of splitting the word into single characters.
+   */
+  tokens?: string[];
   /**
    * Zero-based index of the correct character within the word.
    * When omitted, the entry will not contribute to scoring.
@@ -61,14 +70,31 @@ function buildRow(
   const col3 = column3Rows?.[rowIdx];
   const fallbackId = rowIdx + 1;
 
+  const buildTokens = (entry?: LpsColumnEntry) => {
+    if (!entry) return [] as string[];
+    if (entry.tokens?.length) return entry.tokens;
+    const spacedTokens = entry.word.split(' ').filter(Boolean);
+    if (spacedTokens.length > 1) return spacedTokens;
+    return entry.word.split('');
+  };
+
+  const column1Tokens = buildTokens(col1);
+  const column2Tokens = buildTokens(col2);
+  const column4Tokens = buildTokens(col4);
+  const column5Tokens = buildTokens(col5);
+
   return {
     id: col1?.id ?? col2?.id ?? col4?.id ?? col5?.id ?? col3?.id ?? fallbackId,
     column1: col1?.word ?? '',
+    column1Tokens,
     column2: col2?.word ?? '',
+    column2Tokens,
     column3: col3?.options,
     column3SvgMeta: col3?.svgMeta,
     column4: col4?.word ?? '',
+    column4Tokens,
     column5: col5?.word ?? '',
+    column5Tokens,
   };
 }
 
@@ -85,7 +111,12 @@ function buildRows(
 
 function extractSolution(entry?: LpsColumnEntry): number[] {
   if (!entry || typeof entry.correctIndex !== 'number') return [];
-  if (entry.correctIndex < 0 || entry.correctIndex >= entry.word.length) return [];
+  const tokens = entry.tokens?.length
+    ? entry.tokens
+    : entry.word.split(' ').filter(Boolean).length > 1
+      ? entry.word.split(' ').filter(Boolean)
+      : entry.word.split('');
+  if (entry.correctIndex < 0 || entry.correctIndex >= tokens.length) return [];
   return [entry.correctIndex];
 }
 
@@ -368,27 +399,67 @@ const LPS_PAGE1_COLUMN4_B: LpsColumnEntry[] = [
   { id: 5, word: '00n00n000', correctIndex: 8 },
   { id: 6, word: 'abcdefchi', correctIndex: 6 },
   { id: 7, word: 'aBaBaBaba', correctIndex: 7 },
-  { id: 8, word: '2468912141618', correctIndex: 4 },
+  {
+    id: 8,
+    word: '2468912141618',
+    tokens: ['2', '4', '6', '8', '9', '12', '14', '16', '18'],
+    correctIndex: 4,
+  },
   { id: 9, word: 'abcabcdbc', correctIndex: 6 },
   { id: 10, word: '121222121', correctIndex: 4 },
-  { id: 11, word: '5105205306405', correctIndex: 6 },
-  { id: 12, word: '19171513118753', correctIndex: 5 },
+  {
+    id: 11,
+    word: '5105205306405',
+    tokens: ['5', '10', '5', '20', '5', '30', '6', '40', '5'],
+    correctIndex: 6,
+  },
+  {
+    id: 12,
+    word: '19171513118753',
+    tokens: ['19', '17', '15', '13', '11', '8', '7', '5', '3'],
+    correctIndex: 5,
+  },
   { id: 13, word: 'abcdeFghi', correctIndex: 5 },
   { id: 14, word: 'jklmnopqs', correctIndex: 8 },
   { id: 15, word: 'BBaBaBaBa', correctIndex: 0 },
   { id: 16, word: 'rqtuvwxyz', correctIndex: 1 },
-  { id: 17, word: '349121518212427', correctIndex: 1 },
+  {
+    id: 17,
+    word: '349121518212427',
+    tokens: ['3', '4', '9', '12', '15', '18', '21', '24', '27'],
+    correctIndex: 1,
+  },
   { id: 18, word: 'xxoxxoxoo', correctIndex: 7 },
   { id: 19, word: 'ijkLmnopq', correctIndex: 3 },
   { id: 20, word: 'bbcddefghhijj', correctIndex: 4 },
   { id: 21, word: 'ihgfeDcba', correctIndex: 5 },
   { id: 22, word: 'abbcddeeffghhi', correctIndex: 4 },
   { id: 23, word: 'dcedcbdcb', correctIndex: 2 },
-  { id: 24, word: '10128146163182', correctIndex: 6 },
+  {
+    id: 24,
+    word: '10128146163182',
+    tokens: ['10', '12', '8', '14', '6', '16', '3', '18', '2'],
+    correctIndex: 6,
+  },
   { id: 25, word: 'bCdEFGhIj', correctIndex: 4 },
-  { id: 26, word: '151812219245273', correctIndex: 6 },
-  { id: 27, word: '234567432', correctIndex: 5 },
-  { id: 28, word: '124787421', correctIndex: 4 },
+  {
+    id: 26,
+    word: '151812219245273',
+    tokens: ['15', '18', '12', '21', '9', '24', '5', '27', '3'],
+    correctIndex: 6,
+  },
+  {
+    id: 27,
+    word: '234567432',
+    tokens: ['2', '3', '4', '5', '6', '7', '4', '3', '2'],
+    correctIndex: 5,
+  },
+  {
+    id: 28,
+    word: '124787421',
+    tokens: ['1', '2', '4', '7', '8', '7', '4', '2', '1'],
+    correctIndex: 4,
+  },
   { id: 29, word: '1fg2dc3ba', correctIndex: 2 },
   { id: 30, word: '125344352', correctIndex: 0 },
   { id: 31, word: 'abegikmoq', correctIndex: 1 },

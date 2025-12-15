@@ -13,7 +13,7 @@ type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = [3, 3, 60, 60, 60];
+const COLUMN_DURATION_SECONDS = [3, 3, 480, 480, 480];
 
 const props = defineProps<{
   pausedTestResult?: {
@@ -47,11 +47,11 @@ const page1Responses = ref<LpsPage1ResponseRow[]>(
   lpsRows.map((row, idx) => {
     const pausedRow = props.pausedTestResult?.page1?.[idx];
     return {
-      col1: buildSelection(row.column1.length, pausedRow?.col1),
-      col2: buildSelection(row.column2.length, pausedRow?.col2),
+      col1: buildSelection(row.column1Tokens.length, pausedRow?.col1),
+      col2: buildSelection(row.column2Tokens.length, pausedRow?.col2),
       col3: buildSelection(row.column3?.length ?? 0, pausedRow?.col3),
-      col4: buildSelection(row.column4.length, pausedRow?.col4),
-      col5: buildSelection(row.column5.length, pausedRow?.col5),
+      col4: buildSelection(row.column4Tokens.length, pausedRow?.col4),
+      col5: buildSelection(row.column5Tokens.length, pausedRow?.col5),
     };
   }),
 );
@@ -81,6 +81,9 @@ const totalElapsed = computed(() => elapsedSecondsBeforeResume.value + runningEl
 
 const endConfirmOpen = ref(false);
 const testLabel = computed(() => props.testName ?? 'LPS');
+const columnDurationLabel = computed(() =>
+  COLUMN_DURATION_SECONDS.map((duration, idx) => `Sp ${idx + 1} ${formatTime(duration)}`).join(', '),
+);
 const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
   isActive: () => showTest.value,
   onStart: () => {
@@ -285,8 +288,8 @@ function createInitialColumnStates(): LpsColumnState[] {
 
 function isColumnFullyAnswered(columnKey: 'col1' | 'col2') {
   return lpsRows.every((row, idx) => {
-    const word = columnKey === 'col1' ? row.column1 : row.column2;
-    if (!word.length) return true;
+    const tokens = columnKey === 'col1' ? row.column1Tokens : row.column2Tokens;
+    if (!tokens.length) return true;
     const picks = page1Responses.value[idx]?.[columnKey];
     return picks?.some(Boolean) ?? false;
   });
@@ -402,20 +405,21 @@ const page1MaxScore = computed(() =>
           <div class="rounded-xl border bg-background px-4 py-3 shadow-sm">
             <div class="flex items-center justify-between gap-4">
               <div class="text-xs text-muted-foreground">
-                Spalte starten (Dauer: Sp 1 {{ formatTime(getColumnDuration(0)) }}, Sp 2
-                {{ formatTime(getColumnDuration(1)) }}, Sp 3–5 {{ formatTime(getColumnDuration(2)) }}).
-                Nur eine Spalte gleichzeitig.
+                Spalte starten (Dauer: {{ columnDurationLabel }}). Nur eine Spalte gleichzeitig.
               </div>
 
               <div class="flex items-center gap-3">
                 <div v-for="(state, idx) in columnStates" :key="`column-state-${idx}`" class="flex items-center gap-2">
-                  <div class="rounded-lg border px-3 py-2 text-xs" :class="state.status === 'active'
-                    ? 'border-destructive/50 bg-destructive/5 text-destructive'
-                    : state.status === 'ready'
-                      ? 'border-foreground/20 bg-background text-foreground'
-                      : state.status === 'finished'
-                        ? 'border-foreground/10 bg-muted/30 text-muted-foreground'
-                        : 'border-foreground/10 bg-muted/20 text-muted-foreground'">
+                  <div
+                    class="rounded-lg border px-3 py-2 text-xs"
+                    :class="state.status === 'active'
+                      ? 'border-destructive/50 bg-destructive/5 text-destructive'
+                      : state.status === 'ready'
+                        ? 'border-foreground/20 bg-background text-foreground'
+                        : state.status === 'finished'
+                          ? 'border-foreground/10 bg-muted/30 text-muted-foreground'
+                          : 'border-foreground/10 bg-muted/20 text-muted-foreground'"
+                  >
                     <div class="flex items-center gap-2">
                       <span class="font-semibold">Sp {{ idx + 1 }}</span>
                       <span v-if="state.status === 'active'" class="tabular-nums font-semibold">
@@ -447,12 +451,12 @@ const page1MaxScore = computed(() =>
             </div>
 
             <!-- content -->
-            <div class="inline-grid grid-cols-5 gap-x-2">
+            <div class="mx-auto inline-grid grid-cols-5 gap-x-2">
               <!-- Columns 1/2 area -->
               <div class="col-span-1 border-solid border-4">
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c1`" class="py-[1px]">
                   <div class="lps-letters">
-                    <button v-for="(char, charIdx) in row.column1.split('')" :key="`${row.id}-1-${charIdx}`"
+                    <button v-for="(char, charIdx) in row.column1Tokens" :key="`${row.id}-1-${charIdx}`"
                       type="button" class="lps-letter"
                       :class="page1Responses[idx].col1[charIdx] ? 'lps-letter--selected' : ''"
                       :disabled="!isColumnInteractive('col1')" :aria-pressed="page1Responses[idx].col1[charIdx]"
@@ -466,7 +470,7 @@ const page1MaxScore = computed(() =>
               <div class="col-span-1 lps-sep">
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[1px]">
                   <div class="lps-letters">
-                    <button v-for="(char, charIdx) in row.column2.split('')" :key="`${row.id}-2-${charIdx}`"
+                    <button v-for="(char, charIdx) in row.column2Tokens" :key="`${row.id}-2-${charIdx}`"
                       type="button" class="lps-letter"
                       :class="page1Responses[idx].col2[charIdx] ? 'lps-letter--selected' : ''"
                       :disabled="!isColumnInteractive('col2')" :aria-pressed="page1Responses[idx].col2[charIdx]"
@@ -556,8 +560,8 @@ const page1MaxScore = computed(() =>
               <!-- Columns 4 area -->
               <div class="col-span-1 lps-sep">
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[1px]">
-                  <div class="lps-letters">
-                    <button v-for="(char, charIdx) in row.column4.split('')" :key="`${row.id}-4-${charIdx}`"
+                  <div class="lps-letters lps-letters--centered">
+                    <button v-for="(char, charIdx) in row.column4Tokens" :key="`${row.id}-4-${charIdx}`"
                       type="button" class="lps-letter"
                       :class="page1Responses[idx].col4[charIdx] ? 'lps-letter--selected' : ''"
                       :disabled="!isColumnInteractive('col4')" :aria-pressed="page1Responses[idx].col4[charIdx]"
@@ -570,7 +574,7 @@ const page1MaxScore = computed(() =>
               <div class="col-span-1 lps-sep">
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[1px]">
                   <div class="lps-letters">
-                    <button v-for="(char, charIdx) in row.column5.split('')" :key="`${row.id}-4-${charIdx}`"
+                    <button v-for="(char, charIdx) in row.column5Tokens" :key="`${row.id}-4-${charIdx}`"
                       type="button" class="lps-letter"
                       :class="page1Responses[idx].col5[charIdx] ? 'lps-letter--selected' : ''"
                       :disabled="!isColumnInteractive('col5')" :aria-pressed="page1Responses[idx].col5[charIdx]"
@@ -626,6 +630,11 @@ const page1MaxScore = computed(() =>
   gap: 10px;
   /* very close */
   align-items: baseline;
+}
+
+.lps-letters--centered {
+  justify-content: center;
+  text-align: center;
 }
 
 .lps-column3-svg {
