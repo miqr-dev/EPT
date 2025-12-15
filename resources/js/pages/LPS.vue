@@ -426,13 +426,16 @@ const page1MaxScore = computed(() =>
 
             <div class="flex items-center gap-3">
               <div v-for="entry in visibleColumnStates" :key="`column-state-${entry.idx}`" class="flex items-center gap-2">
-                <div class="rounded-lg border px-3 py-2 text-xs" :class="entry.state?.status === 'active'"
-                  ? 'border-destructive/50 bg-destructive/5 text-destructive'
-                  : entry.state?.status === 'ready'
-                    ? 'border-foreground/20 bg-background text-foreground'
-                    : entry.state?.status === 'finished'
-                      ? 'border-foreground/10 bg-muted/30 text-muted-foreground'
-                      : 'border-foreground/10 bg-muted/20 text-muted-foreground'">
+                <div
+                  class="rounded-lg border px-3 py-2 text-xs"
+                  :class="entry.state?.status === 'active'
+                    ? 'border-destructive/50 bg-destructive/5 text-destructive'
+                    : entry.state?.status === 'ready'
+                      ? 'border-foreground/20 bg-background text-foreground'
+                      : entry.state?.status === 'finished'
+                        ? 'border-foreground/10 bg-muted/30 text-muted-foreground'
+                        : 'border-foreground/10 bg-muted/20 text-muted-foreground'"
+                >
                   <div class="flex items-center gap-2">
                     <span class="font-semibold">Sp {{ entry.idx + 1 }}</span>
                     <span v-if="entry.state?.status === 'active'" class="tabular-nums font-semibold">
