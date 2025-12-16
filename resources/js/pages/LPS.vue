@@ -52,6 +52,9 @@ const visibleColumnIndices = computed(() => currentSection.value.columnIndices);
 const visibleColumnStates = computed(() =>
   visibleColumnIndices.value.map((idx) => ({ idx, state: columnStates.value[idx] })),
 );
+const isAnyVisibleColumnActive = computed(() =>
+  visibleColumnIndices.value.some((idx) => columnStates.value[idx]?.status === 'active'),
+);
 const elapsedSecondsBeforeResume = ref(props.pausedTestResult?.total_time_seconds ?? 0);
 const runningElapsedSeconds = ref(0);
 const timerHandle = ref<number | null>(null);
@@ -467,7 +470,7 @@ const totalMaxScore = computed(() => page1MaxScore.value + page5MaxScore.value);
               Zurück
             </Button>
             <Button variant="secondary" size="sm"
-              :disabled="pageIndex >= pageCount - 1 || isAnyColumnActive" @click="nextPage">
+              :disabled="pageIndex >= pageCount - 1 || isAnyVisibleColumnActive" @click="nextPage">
               Weiter
             </Button>
           </div>
