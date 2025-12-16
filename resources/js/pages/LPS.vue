@@ -6,19 +6,23 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
+import { getLpsPage5Dataset, type LpsPage5Solution } from '@/pages/Questions/LPSPage5';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
+type LpsPage5ResponseRow = { col7: boolean[] };
 
 type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = [3, 3, 60, 480, 60];
+const COLUMN_DURATION_SECONDS = [3, 3, 60, 480, 60, 60];
+const COLUMN_LABELS = [1, 2, 3, 4, 5, 7];
 const PAGE_SECTIONS = [
   { title: 'Spalten 1 + 2', columnIndices: [0, 1] },
   { title: 'Spalte 3', columnIndices: [2] },
   { title: 'Spalte 4', columnIndices: [3] },
   { title: 'Spalte 5', columnIndices: [4] },
+  { title: 'Spalte 7', columnIndices: [5] },
 ];
 
 const props = defineProps<{
@@ -26,7 +30,10 @@ const props = defineProps<{
     pageIndex?: number;
     total_time_seconds?: number;
     page1?: LpsPage1ResponseRow[];
+    page5?: LpsPage5ResponseRow[];
     columnStates?: LpsColumnState[];
+    page5_score?: number;
+    page5_max_score?: number;
   };
   timeRemainingSeconds?: number | null;
   testName?: string;
@@ -35,6 +42,7 @@ const props = defineProps<{
 const emit = defineEmits(['complete', 'update:answers']);
 
 const { rows: lpsRows, solutions: lpsSolutions } = getLpsDataset(props.testName);
+const { rows: lpsPage5Rows, solutions: lpsPage5Solutions } = getLpsPage5Dataset(props.testName);
 
 const showTest = ref(false);
 const pageIndex = ref(0);
@@ -43,6 +51,9 @@ const currentSection = computed(() => PAGE_SECTIONS[pageIndex.value] ?? PAGE_SEC
 const visibleColumnIndices = computed(() => currentSection.value.columnIndices);
 const visibleColumnStates = computed(() =>
   visibleColumnIndices.value.map((idx) => ({ idx, state: columnStates.value[idx] })),
+);
+const isAnyVisibleColumnActive = computed(() =>
+  visibleColumnIndices.value.some((idx) => columnStates.value[idx]?.status === 'active'),
 );
 const elapsedSecondsBeforeResume = ref(props.pausedTestResult?.total_time_seconds ?? 0);
 const runningElapsedSeconds = ref(0);
@@ -69,9 +80,16 @@ const page1Responses = ref<LpsPage1ResponseRow[]>(
 );
 
 const columnStates = ref<LpsColumnState[]>(
-  props.pausedTestResult?.columnStates?.length === 5
+  props.pausedTestResult?.columnStates?.length === COLUMN_DURATION_SECONDS.length
     ? props.pausedTestResult.columnStates
     : createInitialColumnStates(),
+);
+
+const page5Responses = ref<LpsPage5ResponseRow[]>(
+  lpsPage5Rows.map((row, idx) => {
+    const pausedRow = props.pausedTestResult?.page5?.[idx];
+    return { col7: buildSelection(row.column7?.length ?? 0, pausedRow?.col7) };
+  }),
 );
 
 const sectionDurationText = computed(() => formatSectionDurations(visibleColumnIndices.value));
@@ -131,7 +149,7 @@ onBeforeUnmount(() => stopTimer());
 onBeforeUnmount(() => stopColumnTimer());
 
 watch(
-  [page1Responses, pageIndex, totalElapsed, columnStates],
+  [page1Responses, page5Responses, pageIndex, totalElapsed, columnStates],
   () => {
     emit('update:answers', {
       pageIndex: pageIndex.value,
@@ -140,6 +158,9 @@ watch(
       columnStates: columnStates.value,
       page1_score: page1Score.value,
       page1_max_score: page1MaxScore.value,
+      page5: page5Responses.value,
+      page5_score: page5Score.value,
+      page5_max_score: page5MaxScore.value,
     });
   },
   { deep: true },
@@ -191,9 +212,12 @@ function confirmEnd() {
     pageIndex: pageIndex.value,
     total_time_seconds: totalElapsed.value,
     page1: page1Responses.value,
+    page5: page5Responses.value,
     columnStates: columnStates.value,
     page1_score: page1Score.value,
     page1_max_score: page1MaxScore.value,
+    page5_score: page5Score.value,
+    page5_max_score: page5MaxScore.value,
   });
 }
 
@@ -203,12 +227,13 @@ function formatTime(seconds: number) {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-const COLUMN_INDEX_BY_KEY: Record<keyof LpsPage1ResponseRow, number> = {
+const COLUMN_INDEX_BY_KEY: Record<keyof LpsPage1ResponseRow | 'col7', number> = {
   col1: 0,
   col2: 1,
   col3: 2,
   col4: 3,
   col5: 4,
+  col7: 5,
 };
 
 function toggleSelection(rowIdx: number, column: keyof LpsPage1ResponseRow, charIdx: number) {
@@ -217,6 +242,14 @@ function toggleSelection(rowIdx: number, column: keyof LpsPage1ResponseRow, char
   if (!row || !row[column]?.length) return;
   const currentlySelected = row[column][charIdx];
   row[column] = row[column].map((_, idx) => (idx === charIdx ? !currentlySelected : false));
+}
+
+function togglePage5Selection(rowIdx: number, charIdx: number) {
+  if (!isColumnInteractive('col7')) return;
+  const row = page5Responses.value[rowIdx];
+  if (!row?.col7?.length) return;
+  const currentlySelected = row.col7[charIdx];
+  row.col7 = row.col7.map((_, idx) => (idx === charIdx ? !currentlySelected : false));
 }
 
 function resetColumns() {
@@ -287,9 +320,13 @@ function formatColumnRemaining(seconds: number) {
   return formatTime(seconds);
 }
 
+function getColumnLabel(idx: number) {
+  return COLUMN_LABELS[idx] ?? idx + 1;
+}
+
 function formatSectionDurations(indices: number[]) {
   return indices
-    .map((idx) => `Sp ${idx + 1} ${formatTime(getColumnDuration(idx))}`)
+    .map((idx) => `Sp ${getColumnLabel(idx)} ${formatTime(getColumnDuration(idx))}`)
     .join(', ');
 }
 
@@ -358,6 +395,31 @@ const page1MaxScore = computed(() =>
     0,
   ),
 );
+
+function scorePage5Row(rowIdx: number, solutions: LpsPage5Solution, responses: LpsPage5ResponseRow) {
+  const cols: Array<keyof LpsPage5Solution> = ['col7'];
+  return cols.reduce((sum, colKey) => {
+    const correctIndices = solutions[colKey] ?? [];
+    const picks = responses[colKey as keyof LpsPage5ResponseRow] as boolean[] | undefined;
+    if (!correctIndices.length || !picks?.length) return sum;
+    const correctPicks = correctIndices.filter((idx) => picks[idx]);
+    return sum + correctPicks.length;
+  }, 0);
+}
+
+const page5Score = computed(() =>
+  page5Responses.value.reduce((total, response, idx) => {
+    const solutions = lpsPage5Solutions[idx] ?? {};
+    return total + scorePage5Row(idx, solutions, response);
+  }, 0),
+);
+
+const page5MaxScore = computed(() =>
+  lpsPage5Solutions.reduce((total, solution) => total + (solution.col7?.length ?? 0), 0),
+);
+
+const totalScore = computed(() => page1Score.value + page5Score.value);
+const totalMaxScore = computed(() => page1MaxScore.value + page5MaxScore.value);
 </script>
 
 <template>
@@ -408,7 +470,7 @@ const page1MaxScore = computed(() =>
               Zurück
             </Button>
             <Button variant="secondary" size="sm"
-              :disabled="pageIndex >= pageCount - 1 || isAnyColumnActive" @click="nextPage">
+              :disabled="pageIndex >= pageCount - 1 || isAnyVisibleColumnActive" @click="nextPage">
               Weiter
             </Button>
           </div>
@@ -438,7 +500,7 @@ const page1MaxScore = computed(() =>
                         : 'border-foreground/10 bg-muted/20 text-muted-foreground'"
                 >
                   <div class="flex items-center gap-2">
-                    <span class="font-semibold">Sp {{ entry.idx + 1 }}</span>
+                    <span class="font-semibold">Sp {{ getColumnLabel(entry.idx) }}</span>
                     <span v-if="entry.state?.status === 'active'" class="tabular-nums font-semibold">
                       {{ formatColumnRemaining(entry.state.remaining) }}
                     </span>
@@ -621,12 +683,97 @@ const page1MaxScore = computed(() =>
           </div>
         </div>
 
+        <!-- Page 5: Spalte 7 -->
+        <div v-else-if="pageIndex === 4" class="space-y-3">
+          <div class="rounded-2xl border bg-background p-4 shadow-sm">
+            <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 7</div>
+
+            <div class="flex justify-center">
+              <div class="w-full max-w-4xl">
+                <div v-for="(row, idx) in lpsPage5Rows" :key="`${row.id}-c7`" class="py-[10px]">
+                  <div v-if="row.column7?.length">
+                    <div
+                      v-if="row.column7SvgMeta && row.column7.every((option) => option.pathData)"
+                      class="flex items-center justify-center leading-none"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        version="1.1"
+                        class="lps-column3-svg select-none"
+                        :viewBox="row.column7SvgMeta.viewBox"
+                        :width="row.column7SvgMeta.width"
+                        :height="row.column7SvgMeta.height"
+                      >
+                        <g
+                          v-for="(option, optionIdx) in row.column7"
+                          :id="option.id"
+                          :key="option.id"
+                          role="button"
+                          class="lps-figure-shape-group"
+                          :transform="option.transform"
+                          :tabindex="isColumnInteractive('col7') ? 0 : -1"
+                          :aria-pressed="page5Responses[idx].col7[optionIdx]"
+                          :class="!isColumnInteractive('col7') ? 'lps-figure-shape--disabled' : ''"
+                          @click="isColumnInteractive('col7') && togglePage5Selection(idx, optionIdx)"
+                          @keydown.enter.prevent="togglePage5Selection(idx, optionIdx)"
+                          @keydown.space.prevent="togglePage5Selection(idx, optionIdx)"
+                        >
+                          <path
+                            class="lps-figure-hit"
+                            :d="option.pathData"
+                          />
+                          <path
+                            fill="#090d0e"
+                            class="lps-figure-shape"
+                            :class="[
+                              page5Responses[idx].col7[optionIdx] ? 'lps-figure-shape--selected' : '',
+                            ]"
+                            :d="option.pathData"
+                          />
+                          <clipPath :id="`${option.id}-clip`">
+                            <path :d="option.pathData" :transform="option.transform" />
+                          </clipPath>
+                          <line
+                            v-if="page5Responses[idx].col7[optionIdx]"
+                            class="lps-figure-slash"
+                            :clip-path="`url(#${option.id}-clip)`"
+                            x1="0"
+                            :y1="row.column7SvgMeta.height - 6"
+                            :x2="row.column7SvgMeta.width"
+                            y2="6"
+                          />
+                        </g>
+                      </svg>
+                    </div>
+                    <div v-else class="grid grid-cols-8 gap-1">
+                      <button
+                        v-for="(option, optionIdx) in row.column7"
+                        :id="option.id"
+                        :key="option.id"
+                        type="button"
+                        class="lps-figure"
+                        :class="page5Responses[idx].col7[optionIdx] ? 'lps-figure--selected' : ''"
+                        :disabled="!isColumnInteractive('col7')"
+                        :aria-pressed="page5Responses[idx].col7[optionIdx]"
+                        @click="togglePage5Selection(idx, optionIdx)"
+                      >
+                        <img :src="option.src" class="mx-auto h-9 w-9" alt="" />
+                      </button>
+                    </div>
+                  </div>
+                  <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div
           class="flex items-center justify-between rounded-xl border bg-background px-4 py-3 text-xs text-muted-foreground shadow-sm">
           <div>
             Punkte gesamt:
             <span class="font-semibold text-foreground">
-              {{ page1MaxScore ? `${page1Score} / ${page1MaxScore}` : '–' }}
+              {{ totalMaxScore ? `${totalScore} / ${totalMaxScore}` : '–' }}
             </span>
           </div>
         </div>
