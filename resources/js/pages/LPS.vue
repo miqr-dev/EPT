@@ -501,7 +501,7 @@ const page1MaxScore = computed(() =>
 
             <div class="flex justify-center">
               <div class="w-full max-w-4xl">
-                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[2px]">
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[10px]">
                   <div v-if="row.column3?.length">
                     <div
                       v-if="row.column3SvgMeta && row.column3.every((option) => option.pathData)"
@@ -653,7 +653,7 @@ const page1MaxScore = computed(() =>
 .lps-letters {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 22px;
   /* very close */
   align-items: baseline;
   justify-content: center;
@@ -670,14 +670,14 @@ const page1MaxScore = computed(() =>
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 20px;
+  width: 12px;
+  height: 35px;
   padding: 0 1px;
   border: 0;
   border-radius: 0;
   background: transparent;
   font-weight: 900;
-  font-size: 16px;
+  font-size: 24px;
   line-height: 1;
   letter-spacing: -0.02em;
   user-select: none;
