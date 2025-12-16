@@ -670,7 +670,7 @@ const page1MaxScore = computed(() =>
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 16px;
+  width: 24px;
   height: 20px;
   padding: 0 1px;
   border: 0;
