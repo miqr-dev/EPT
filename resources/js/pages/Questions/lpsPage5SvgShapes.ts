@@ -23,46 +23,46 @@ const LPS_PAGE5_COLUMN7_B_ROW_SHAPES: string[][] = [
 ];
 
 const LPS_PAGE5_COLUMN7_B_CORRECT_INDICES: number[] = [
-  0, // row 1
-  3, // row 2
-  7, // row 3
-  1, // row 4
+  4, // row 1
+  2, // row 2
+  5, // row 3
+  3, // row 4
   1, // row 5
-  7, // row 6
-  4, // row 7
-  5, // row 8
-  5, // row 9
-  6, // row 10
-  6, // row 11
-  6, // row 12
-  6, // row 13
-  0, // row 14
-  7, // row 15
-  7, // row 16
-  6, // row 17
-  3, // row 18
+  5, // row 6
+  3, // row 7
+  2, // row 8
+  4, // row 9
+  1, // row 10
+  3, // row 11
+  1, // row 12
+  4, // row 13
+  5, // row 14
+  2, // row 15
+  3, // row 16
+  5, // row 17
+  2, // row 18
   1, // row 19
-  3, // row 20
+  4, // row 20
   5, // row 21
-  4, // row 22
-  7, // row 23
-  2, // row 24
-  5, // row 25
-  5, // row 26
-  2, // row 27
-  2, // row 28
+  2, // row 22
+  1, // row 23
+  3, // row 24
+  2, // row 25
+  3, // row 26
+  4, // row 27
+  1, // row 28
   5, // row 29
-  2, // row 30
-  6, // row 31
+  4, // row 30
+  3, // row 31
   5, // row 32
-  6, // row 33
-  5, // row 34
-  5, // row 35
-  4, // row 36
-  2, // row 37
-  1, // row 38
-  0, // row 39
-  4, // row 40
+  2, // row 33
+  4, // row 34
+  1, // row 35
+  1, // row 36
+  4, // row 37
+  3, // row 38
+  5, // row 39
+  2, // row 40
 ];
 
 export const LPS_PAGE5_COLUMN7_B: LpsColumn3Row[] = LPS_PAGE5_COLUMN7_B_ROW_SHAPES.map((shapeSet, rowIdx) => ({
