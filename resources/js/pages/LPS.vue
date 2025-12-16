@@ -602,6 +602,7 @@ const page1MaxScore = computed(() =>
           Weitere Seiten dieses Tests werden in den nächsten Schritten ergänzt.
         </div>
       </div>
+     </div>
     </div>
   </div>
 
