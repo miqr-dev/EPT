@@ -22,11 +22,55 @@ const LPS_PAGE5_COLUMN7_B_ROW_SHAPES: string[][] = [
   ...Array.from({ length: 38 }, () => []),
 ];
 
+const LPS_PAGE5_COLUMN7_B_CORRECT_INDICES: number[] = [
+  4, // row 1
+  2, // row 2
+  5, // row 3
+  3, // row 4
+  1, // row 5
+  5, // row 6
+  3, // row 7
+  2, // row 8
+  4, // row 9
+  1, // row 10
+  3, // row 11
+  1, // row 12
+  4, // row 13
+  5, // row 14
+  2, // row 15
+  3, // row 16
+  5, // row 17
+  2, // row 18
+  1, // row 19
+  4, // row 20
+  5, // row 21
+  2, // row 22
+  1, // row 23
+  3, // row 24
+  2, // row 25
+  3, // row 26
+  4, // row 27
+  1, // row 28
+  5, // row 29
+  4, // row 30
+  3, // row 31
+  5, // row 32
+  2, // row 33
+  4, // row 34
+  1, // row 35
+  1, // row 36
+  4, // row 37
+  3, // row 38
+  5, // row 39
+  2, // row 40
+];
+
 export const LPS_PAGE5_COLUMN7_B: LpsColumn3Row[] = LPS_PAGE5_COLUMN7_B_ROW_SHAPES.map((shapeSet, rowIdx) => ({
   id: rowIdx + 1,
   options: shapeSet.map((pathData, idx) => ({
     id: `lps-p5c7-b-r${rowIdx + 1}-shape${idx + 1}`,
     pathData,
   })),
+  correctIndex: LPS_PAGE5_COLUMN7_B_CORRECT_INDICES[rowIdx],
   svgMeta: { viewBox: '0 0 320 70', width: 320, height: 70 },
 }));
