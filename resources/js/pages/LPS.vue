@@ -13,7 +13,7 @@ type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = [3, 3, 60, 60, 60];
+const COLUMN_DURATION_SECONDS = [3, 3, 60, 480, 60];
 const PAGE_SECTIONS = [
   { title: 'Spalten 1 + 2', columnIndices: [0, 1] },
   { title: 'Spalte 3', columnIndices: [2] },
@@ -587,7 +587,7 @@ const page1MaxScore = computed(() =>
             <div>
               <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c4`" class="py-[1px]">
                 <div class="lps-letters">
-                  <button v-for="(char, charIdx) in row.column4.split('')" :key="`${row.id}-4-${charIdx}`"
+                  <button v-for="(char, charIdx) in row.column4.split(' ')" :key="`${row.id}-4-${charIdx}`"
                     type="button" class="lps-letter"
                     :class="page1Responses[idx].col4[charIdx] ? 'lps-letter--selected' : ''"
                     :disabled="!isColumnInteractive('col4')" :aria-pressed="page1Responses[idx].col4[charIdx]"
@@ -656,6 +656,7 @@ const page1MaxScore = computed(() =>
   gap: 10px;
   /* very close */
   align-items: baseline;
+  justify-content: center;
 }
 
 .lps-column3-svg {
