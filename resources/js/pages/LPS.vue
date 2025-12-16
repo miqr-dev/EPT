@@ -366,7 +366,8 @@ const page1MaxScore = computed(() =>
 
   <!-- Whole page scrolls -->
   <div class="min-h-screen overflow-x-auto bg-muted/15 p-4">
-    <div class="mx-auto w-[1120px] max-w-none">
+   <div class="flex justify-center">
+     <div class="mx-auto w-[1120px] max-w-none">
       <!-- Top bar -->
       <div class="mb-4 flex items-end justify-between gap-4">
         <div class="space-y-1">
@@ -630,8 +631,8 @@ const page1MaxScore = computed(() =>
           </div>
         </div>
       </div>
-
     </div>
+  </div>
   </div>
   <Dialog v-model:open="endConfirmOpen">
     <DialogContent>
