@@ -863,7 +863,7 @@ const totalMaxScore = computed(() => page1MaxScore.value + page5MaxScore.value +
 
             <div class="space-y-6">
               <div v-for="(row, idx) in lpsPage6Rows" :key="`${row.id}-c8`" class="rounded-xl border bg-muted/40 p-4">
-                <div class="grid gap-6 md:grid-cols-[1.4fr,1fr] md:items-center">
+                <div class="grid grid-cols-[1.25fr,1fr] items-start gap-6">
                   <div class="flex justify-center">
                     <div
                       v-if="row.column8Svg"

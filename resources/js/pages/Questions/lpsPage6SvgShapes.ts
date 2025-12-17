@@ -9,6 +9,17 @@ function buildNumberedLetterOptions(numbers: number[]) {
   );
 }
 
+function buildNumberedLetterSolutions(numbers: number[], answers: Array<{ number: number; letter: (typeof LETTER_OPTIONS)[number] }>) {
+  return answers
+    .map(({ number, letter }) => {
+      const numberIdx = numbers.indexOf(number);
+      const letterIdx = LETTER_OPTIONS.indexOf(letter);
+      if (numberIdx === -1 || letterIdx === -1) return null;
+      return numberIdx * LETTER_OPTIONS.length + letterIdx;
+    })
+    .filter((idx): idx is number => idx !== null);
+}
+
 export const LPS_PAGE6_COLUMN8_B = [
   {
     svg: `<?xml version="1.0" encoding="utf-8"?>
@@ -23,7 +34,14 @@ export const LPS_PAGE6_COLUMN8_B = [
 </svg>`,
     svgMeta: { width: 600, height: 400 },
     options: buildNumberedLetterOptions([1, 2, 3]),
-    correctIndices: [2, 9, 11],
+    correctIndices: buildNumberedLetterSolutions(
+      [1, 2, 3],
+      [
+        { number: 1, letter: 'C' },
+        { number: 2, letter: 'E' },
+        { number: 3, letter: 'B' },
+      ],
+    ),
   },
   {},
   {},
