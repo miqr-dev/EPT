@@ -3,7 +3,7 @@ const LETTER_OPTIONS = ['A', 'B', 'C', 'D', 'E'] as const;
 function buildNumberedLetterOptions(numbers: number[]) {
   return numbers.flatMap((number) =>
     LETTER_OPTIONS.map((letter) => ({
-      label: `${number} → ${letter}`,
+      label: `${letter}`,
       group: `${number}`,
     })),
   );

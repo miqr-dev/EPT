@@ -7,11 +7,12 @@ import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
 import { getLpsPage5Dataset, type LpsPage5Solution } from '@/pages/Questions/LPSPage5';
-import { getLpsPage6Dataset, type LpsPage6Solution } from '@/pages/Questions/LPSPage6';
+import { getLpsPage6Dataset, type LpsPage6Option, type LpsPage6Solution } from '@/pages/Questions/LPSPage6';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
 type LpsPage5ResponseRow = { col7: boolean[] };
 type LpsPage6ResponseRow = { col8: boolean[] };
+type LpsPage6OptionGroup = { label: string; options: Array<{ option: LpsPage6Option; index: number }> };
 
 type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
@@ -104,6 +105,10 @@ const page6Responses = ref<LpsPage6ResponseRow[]>(
     const pausedRow = props.pausedTestResult?.page6?.[idx];
     return { col8: buildSelection(row.column8Options.length ?? 0, pausedRow?.col8) };
   }),
+);
+
+const page6OptionGroups = computed<LpsPage6OptionGroup[][]>(() =>
+  lpsPage6Rows.map((row) => buildPage6OptionGroups(row.column8Options ?? [])),
 );
 
 const sectionDurationText = computed(() => formatSectionDurations(visibleColumnIndices.value));
@@ -258,6 +263,24 @@ const COLUMN_INDEX_BY_KEY: Record<ColumnKey, number> = {
   col7: 5,
   col8: 6,
 };
+
+function buildPage6OptionGroups(options: LpsPage6Option[]): LpsPage6OptionGroup[] {
+  if (!options.some((option) => option.group)) return [];
+
+  const groupMap = new Map<string, LpsPage6OptionGroup>();
+
+  options.forEach((option, index) => {
+    const key = option.group ?? `group-${index}`;
+
+    if (!groupMap.has(key)) {
+      groupMap.set(key, { label: option.group ?? '', options: [] });
+    }
+
+    groupMap.get(key)?.options.push({ option, index });
+  });
+
+  return Array.from(groupMap.values());
+}
 
 function toggleSelection(rowIdx: number, column: keyof LpsPage1ResponseRow, charIdx: number) {
   if (!isColumnInteractive(column)) return;
@@ -853,10 +876,35 @@ const totalMaxScore = computed(() => page1MaxScore.value + page5MaxScore.value +
 
                   <div class="space-y-2">
                     <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Antwort auswählen</div>
-                    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    <div v-if="page6OptionGroups[idx].length" class="space-y-2">
+                      <div
+                        v-for="group in page6OptionGroups[idx]"
+                        :key="`${row.id}-c8-group-${group.label}`"
+                        class="flex items-center gap-3"
+                      >
+                        <div class="min-w-[1.25rem] text-center text-sm font-semibold text-muted-foreground">
+                          {{ group.label }}
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                          <button
+                            v-for="groupOption in group.options"
+                            :key="`${row.id}-c8-${groupOption.index}`"
+                            type="button"
+                            class="lps-letter"
+                            :class="page6Responses[idx].col8[groupOption.index] ? 'lps-letter--selected' : ''"
+                            :disabled="!isColumnInteractive('col8') || !row.column8Svg"
+                            :aria-pressed="page6Responses[idx].col8[groupOption.index]"
+                            @click="togglePage6Selection(idx, groupOption.index)"
+                          >
+                            {{ groupOption.option.label }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div v-else class="grid grid-cols-2 gap-2 sm:grid-cols-3">
                       <button
                         v-for="(option, optionIdx) in row.column8Options"
-                        :key="`${row.id}-c8-${option.label}`"
+                        :key="`${row.id}-c8-${optionIdx}`"
                         type="button"
                         class="lps-letter"
                         :class="page6Responses[idx].col8[optionIdx] ? 'lps-letter--selected' : ''"
