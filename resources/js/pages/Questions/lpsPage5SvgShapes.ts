@@ -345,7 +345,6 @@ const LPS_PAGE5_COLUMN7_B_ROW_SHAPES: string[][] = [
     LPS_PAGE5_COLUMN7_B_ROW38_SHAPES,
     LPS_PAGE5_COLUMN7_B_ROW39_SHAPES,
     LPS_PAGE5_COLUMN7_B_ROW40_SHAPES,
-    ...Array.from({ length: 38 }, () => []),
 ];
 
 const LPS_PAGE5_COLUMN7_B_CORRECT_INDICES: number[] = [
