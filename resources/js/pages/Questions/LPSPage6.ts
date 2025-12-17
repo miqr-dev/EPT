@@ -8,6 +8,7 @@ export type LpsPage6Row = {
   column8Svg?: string;
   column8SvgMeta?: { width: number; height: number; viewBox?: string };
   correctIndices?: number[];
+  subQuestionCount: number;
 };
 
 export type LpsPage6Solution = {
@@ -29,6 +30,7 @@ function buildRow(rowIdx: number, column8?: typeof LPS_PAGE6_COLUMN8_B): LpsPage
     column8Svg: entry?.svg,
     column8SvgMeta: entry?.svgMeta,
     correctIndices: entry?.correctIndices,
+    subQuestionCount: entry?.correctIndices?.length ?? 0,
   };
 }
 
