@@ -1,11 +1,13 @@
+import { LPS_PAGE6_COLUMN8_B } from './lpsPage6SvgShapes';
+
 export type LpsPage6Option = { label: string };
 
 export type LpsPage6Row = {
   id: number;
   column8Options: LpsPage6Option[];
   column8Svg?: string;
-  column8SvgMeta?: { width: number; height: number };
-  correctIndex?: number;
+  column8SvgMeta?: { width: number; height: number; viewBox?: string };
+  correctIndices?: number[];
 };
 
 export type LpsPage6Solution = {
@@ -17,58 +19,16 @@ export type LpsPage6Dataset = {
   solutions: LpsPage6Solution[];
 };
 
-const DEFAULT_OPTIONS: LpsPage6Option[] = [
-  { label: 'A' },
-  { label: 'B' },
-  { label: 'C' },
-  { label: 'D' },
-  { label: 'E' },
-];
-
-const LPS_PAGE6_COLUMN8_B: Array<{
-  svg?: string;
-  correctIndex?: number;
-}> = [
-  {
-    correctIndex: 2,
-    svg: `
-      <svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagram with numbered shapes">
-        <rect x="80" y="90" width="240" height="60" fill="none" stroke="#111" stroke-width="7" rx="6" />
-        <circle cx="300" cy="70" r="35" fill="none" stroke="#111" stroke-width="7" />
-        <circle cx="200" cy="180" r="35" fill="none" stroke="#111" stroke-width="7" />
-        <text x="292" y="78" font-family="Inter, sans-serif" font-size="32" font-weight="700">1</text>
-        <text x="70" y="120" font-family="Inter, sans-serif" font-size="32" font-weight="700">2</text>
-        <text x="70" y="160" font-family="Inter, sans-serif" font-size="32" font-weight="700">3</text>
-        <path d="M330 120c0-25 18-45 40-45s40 20 40 45v60c0 25-18 45-40 45s-40-20-40-45z" fill="none" stroke="#111" stroke-width="7" />
-        <path d="M370 120v75" stroke="#111" stroke-width="7" />
-        <path d="M330 120h80" stroke="#111" stroke-width="7" />
-        <text x="362" y="110" font-family="Inter, sans-serif" font-size="28" font-weight="700">C</text>
-        <text x="395" y="140" font-family="Inter, sans-serif" font-size="28" font-weight="700">A</text>
-        <text x="334" y="140" font-family="Inter, sans-serif" font-size="28" font-weight="700">D</text>
-        <text x="363" y="170" font-family="Inter, sans-serif" font-size="28" font-weight="700">E</text>
-        <text x="395" y="200" font-family="Inter, sans-serif" font-size="28" font-weight="700">B</text>
-      </svg>
-    `,
-  },
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-];
-
 function buildRow(rowIdx: number, column8?: typeof LPS_PAGE6_COLUMN8_B): LpsPage6Row {
   const entry = column8?.[rowIdx];
   const fallbackId = rowIdx + 1;
 
   return {
     id: fallbackId,
-    column8Options: DEFAULT_OPTIONS,
+    column8Options: (entry?.options ?? []).map((label) => ({ label })),
     column8Svg: entry?.svg,
-    column8SvgMeta: entry?.svg ? { width: 420, height: 220 } : undefined,
-    correctIndex: entry?.correctIndex,
+    column8SvgMeta: entry?.svgMeta,
+    correctIndices: entry?.correctIndices,
   };
 }
 
@@ -78,9 +38,8 @@ function buildRows(column8?: typeof LPS_PAGE6_COLUMN8_B) {
 }
 
 function extractColumn8Solution(entry?: (typeof LPS_PAGE6_COLUMN8_B)[number]) {
-  if (!entry || typeof entry.correctIndex !== 'number') return [] as number[];
-  if (entry.correctIndex < 0 || entry.correctIndex >= DEFAULT_OPTIONS.length) return [] as number[];
-  return [entry.correctIndex];
+  if (!entry?.correctIndices?.length) return [] as number[];
+  return entry.correctIndices;
 }
 
 function buildSolutions(column8?: typeof LPS_PAGE6_COLUMN8_B) {
