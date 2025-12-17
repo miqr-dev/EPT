@@ -5,6 +5,7 @@ export type LpsPage5Row = {
   id: number;
   column7?: LpsColumn3Option[];
   column7SvgMeta?: { viewBox: string; width: number; height: number };
+  answerNumbers?: number[];
 };
 
 export type LpsPage5Solution = {
@@ -24,6 +25,7 @@ function buildRow(rowIdx: number, column7?: LpsColumn3Row[]): LpsPage5Row {
     id: col7?.id ?? fallbackId,
     column7: col7?.options,
     column7SvgMeta: col7?.svgMeta,
+    answerNumbers: col7?.answerNumbers,
   };
 }
 

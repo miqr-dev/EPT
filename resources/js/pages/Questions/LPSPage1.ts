@@ -39,6 +39,11 @@ export type LpsColumn3Row = {
   options: LpsColumn3Option[];
   correctIndex?: number;
   svgMeta?: { viewBox: string; width: number; height: number };
+  /**
+   * Optional list of numeric labels that should be shown as answer prompts
+   * alongside the standard A–E letter choices.
+   */
+  answerNumbers?: number[];
 };
 
 export type LpsDataset = {
