@@ -278,9 +278,20 @@ function togglePage5Selection(rowIdx: number, charIdx: number) {
 function togglePage6Selection(rowIdx: number, charIdx: number) {
   if (!isColumnInteractive('col8')) return;
   const row = page6Responses.value[rowIdx];
+  const options = lpsPage6Rows[rowIdx]?.column8Options ?? [];
   if (!row?.col8?.length) return;
+  const targetGroup = options[charIdx]?.group;
   const currentlySelected = row.col8[charIdx];
-  row.col8 = row.col8.map((_, idx) => (idx === charIdx ? !currentlySelected : false));
+
+  row.col8 = row.col8.map((selected, idx) => {
+    if (targetGroup) {
+      const isSameGroup = options[idx]?.group === targetGroup;
+      if (idx === charIdx) return !currentlySelected;
+      return isSameGroup ? false : selected;
+    }
+
+    return idx === charIdx ? !currentlySelected : false;
+  });
 }
 
 function resetColumns() {

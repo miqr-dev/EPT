@@ -1,6 +1,6 @@
 import { LPS_PAGE6_COLUMN8_B } from './lpsPage6SvgShapes';
 
-export type LpsPage6Option = { label: string };
+export type LpsPage6Option = { label: string; group?: string };
 
 export type LpsPage6Row = {
   id: number;
@@ -25,7 +25,7 @@ function buildRow(rowIdx: number, column8?: typeof LPS_PAGE6_COLUMN8_B): LpsPage
 
   return {
     id: fallbackId,
-    column8Options: (entry?.options ?? []).map((label) => ({ label })),
+    column8Options: (entry?.options ?? []).map((option) => ({ ...option })),
     column8Svg: entry?.svg,
     column8SvgMeta: entry?.svgMeta,
     correctIndices: entry?.correctIndices,

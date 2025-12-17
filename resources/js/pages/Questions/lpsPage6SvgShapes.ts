@@ -1,3 +1,14 @@
+const LETTER_OPTIONS = ['A', 'B', 'C', 'D', 'E'] as const;
+
+function buildNumberedLetterOptions(numbers: number[]) {
+  return numbers.flatMap((number) =>
+    LETTER_OPTIONS.map((letter) => ({
+      label: `${number} → ${letter}`,
+      group: `${number}`,
+    })),
+  );
+}
+
 export const LPS_PAGE6_COLUMN8_B = [
   {
     svg: `<?xml version="1.0" encoding="utf-8"?>
@@ -11,8 +22,8 @@ export const LPS_PAGE6_COLUMN8_B = [
   <path fill="#212225" d=" M 49.43 235.53 Q 49.65 233.26 48.97 232.13 A 2.29 2.11 -29.6 0 0 45.99 231.44 Q 43.72 232.68 43.65 232.72 A 2.38 2.37 64.7 0 1 40.42 231.56 Q 39.18 228.76 42.05 226.97 Q 49.04 222.61 54.09 229.19 Q 56.52 232.35 55.68 236.23 C 55.25 238.20 53.39 239.82 52.49 241.29 A 1.90 1.88 53.9 0 0 52.27 242.75 Q 53.22 246.43 51.44 251.08 A 1.23 1.22 -0.7 0 1 50.76 251.77 C 44.26 254.31 41.76 254.55 35.99 250.52 A 1.88 1.82 9.2 0 1 35.28 249.57 Q 34.82 248.18 35.43 245.97 A 0.74 0.74 0.0 0 1 36.14 245.43 Q 38.12 245.44 39.55 246.54 C 41.68 248.18 44.12 248.95 45.98 247.50 A 2.38 2.30 -46.9 0 0 45.92 243.69 Q 44.72 242.91 43.87 242.27 A 2.11 2.07 -83.1 0 1 43.18 241.37 C 41.64 237.64 45.98 236.31 48.73 236.19 A 0.73 0.73 0.0 0 0 49.43 235.53 Z"/>
 </svg>`,
     svgMeta: { width: 600, height: 400 },
-    options: ['A', 'B', 'C', 'D', 'E'],
-    correctIndices: [2, 4, 1],
+    options: buildNumberedLetterOptions([1, 2, 3]),
+    correctIndices: [2, 9, 11],
   },
   {},
   {},
