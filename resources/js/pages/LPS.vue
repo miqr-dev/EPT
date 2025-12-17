@@ -9,7 +9,7 @@ import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1
 import { getLpsPage5Dataset, type LpsPage5Solution } from '@/pages/Questions/LPSPage5';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
-type LpsPage5ResponseRow = { col7: boolean[] };
+type LpsPage5ResponseRow = { col7: boolean[]; col7Letters: (string | null)[] };
 
 type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
@@ -24,6 +24,7 @@ const PAGE_SECTIONS = [
   { title: 'Spalte 5', columnIndices: [4] },
   { title: 'Spalte 7', columnIndices: [5] },
 ];
+const LETTER_OPTIONS = ['A', 'B', 'C', 'D', 'E'];
 
 const props = defineProps<{
   pausedTestResult?: {
@@ -66,6 +67,13 @@ function buildSelection(length: number, saved?: boolean[]) {
   return base.map((_, idx) => saved[idx] ?? false);
 }
 
+function buildLetterSelection(length: number, saved?: (string | null)[]) {
+  const base = Array.from({ length }, () => null as string | null);
+  if (!saved) return base;
+  if (saved.length === base.length) return saved;
+  return base.map((_, idx) => saved[idx] ?? null);
+}
+
 const page1Responses = ref<LpsPage1ResponseRow[]>(
   lpsRows.map((row, idx) => {
     const pausedRow = props.pausedTestResult?.page1?.[idx];
@@ -88,7 +96,10 @@ const columnStates = ref<LpsColumnState[]>(
 const page5Responses = ref<LpsPage5ResponseRow[]>(
   lpsPage5Rows.map((row, idx) => {
     const pausedRow = props.pausedTestResult?.page5?.[idx];
-    return { col7: buildSelection(row.column7?.length ?? 0, pausedRow?.col7) };
+    return {
+      col7: buildSelection(row.column7?.length ?? 0, pausedRow?.col7),
+      col7Letters: buildLetterSelection(row.answerNumbers?.length ?? 0, pausedRow?.col7Letters),
+    };
   }),
 );
 
@@ -250,6 +261,13 @@ function togglePage5Selection(rowIdx: number, charIdx: number) {
   if (!row?.col7?.length) return;
   const currentlySelected = row.col7[charIdx];
   row.col7 = row.col7.map((_, idx) => (idx === charIdx ? !currentlySelected : false));
+}
+
+function togglePage5LetterSelection(rowIdx: number, numberIdx: number, letter: string) {
+  if (!isColumnInteractive('col7')) return;
+  const row = page5Responses.value[rowIdx];
+  if (!row?.col7Letters?.length) return;
+  row.col7Letters = row.col7Letters.map((current, idx) => (idx === numberIdx ? letter : current));
 }
 
 function resetColumns() {
@@ -759,6 +777,31 @@ const totalMaxScore = computed(() => page1MaxScore.value + page5MaxScore.value);
                       >
                         <img :src="option.src" class="mx-auto h-9 w-9" alt="" />
                       </button>
+                    </div>
+                    <div v-if="row.answerNumbers?.length" class="mt-3 flex justify-center">
+                      <div class="flex flex-col gap-2">
+                        <div
+                          v-for="(numberLabel, answerIdx) in row.answerNumbers"
+                          :key="`${row.id}-c7-letter-${numberLabel}`"
+                          class="flex items-center gap-3"
+                        >
+                          <div class="text-xs font-semibold text-muted-foreground">Nr. {{ numberLabel }}</div>
+                          <div class="flex gap-1">
+                            <button
+                              v-for="letter in LETTER_OPTIONS"
+                              :key="`${row.id}-c7-letter-${numberLabel}-${letter}`"
+                              type="button"
+                              class="lps-letter"
+                              :class="page5Responses[idx].col7Letters[answerIdx] === letter ? 'lps-letter--selected' : ''"
+                              :disabled="!isColumnInteractive('col7')"
+                              :aria-pressed="page5Responses[idx].col7Letters[answerIdx] === letter"
+                              @click="togglePage5LetterSelection(idx, answerIdx, letter)"
+                            >
+                              {{ letter }}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div v-else class="text-center text-xs text-muted-foreground/60">—</div>

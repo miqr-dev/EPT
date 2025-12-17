@@ -397,6 +397,7 @@ export const LPS_PAGE5_COLUMN7_B: LpsColumn3Row[] = LPS_PAGE5_COLUMN7_B_ROW_SHAP
         id: `lps-p5c7-b-r${rowIdx + 1}-shape${idx + 1}`,
         pathData,
     })),
+    answerNumbers: rowIdx === 0 ? [1, 2, 3] : undefined,
     correctIndex: LPS_PAGE5_COLUMN7_B_CORRECT_INDICES[rowIdx],
     svgMeta: { viewBox: '0 0 320 70', width: 320, height: 70 },
 }));
