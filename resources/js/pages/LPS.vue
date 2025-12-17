@@ -11,7 +11,7 @@ import { getLpsPage6Dataset, type LpsPage6Solution } from '@/pages/Questions/LPS
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
 type LpsPage5ResponseRow = { col7: boolean[] };
-type LpsPage6ResponseRow = { col8: boolean[] };
+type LpsPage6ResponseRow = { col8: (number | null)[] };
 
 type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
@@ -102,7 +102,17 @@ const page5Responses = ref<LpsPage5ResponseRow[]>(
 const page6Responses = ref<LpsPage6ResponseRow[]>(
   lpsPage6Rows.map((row, idx) => {
     const pausedRow = props.pausedTestResult?.page6?.[idx];
-    return { col8: buildSelection(row.column8Options.length ?? 0, pausedRow?.col8) };
+    const saved = pausedRow?.col8;
+    const count = row.subQuestionCount;
+    const base = Array.from({ length: count }, () => null);
+
+    if (saved && saved.length === count) {
+      return { col8: saved };
+    }
+    if (saved) {
+      return { col8: base.map((_, i) => saved[i] ?? null) };
+    }
+    return { col8: base };
   }),
 );
 
@@ -275,12 +285,15 @@ function togglePage5Selection(rowIdx: number, charIdx: number) {
   row.col7 = row.col7.map((_, idx) => (idx === charIdx ? !currentlySelected : false));
 }
 
-function togglePage6Selection(rowIdx: number, charIdx: number) {
+function togglePage6Selection(rowIdx: number, subQuestionIdx: number, optionIdx: number) {
   if (!isColumnInteractive('col8')) return;
   const row = page6Responses.value[rowIdx];
-  if (!row?.col8?.length) return;
-  const currentlySelected = row.col8[charIdx];
-  row.col8 = row.col8.map((_, idx) => (idx === charIdx ? !currentlySelected : false));
+  if (!row?.col8) return;
+  if (row.col8[subQuestionIdx] === optionIdx) {
+    row.col8[subQuestionIdx] = null;
+  } else {
+    row.col8[subQuestionIdx] = optionIdx;
+  }
 }
 
 function resetColumns() {
@@ -450,14 +463,17 @@ const page5MaxScore = computed(() =>
 );
 
 function scorePage6Row(rowIdx: number, solutions: LpsPage6Solution, responses: LpsPage6ResponseRow) {
-  const cols: Array<keyof LpsPage6Solution> = ['col8'];
-  return cols.reduce((sum, colKey) => {
-    const correctIndices = solutions[colKey] ?? [];
-    const picks = responses[colKey as keyof LpsPage6ResponseRow] as boolean[] | undefined;
-    if (!correctIndices.length || !picks?.length) return sum;
-    const correctPicks = correctIndices.filter((idx) => picks[idx]);
-    return sum + correctPicks.length;
-  }, 0);
+  const correctIndices = solutions.col8 ?? [];
+  const userAnswers = responses.col8 ?? [];
+  if (!correctIndices.length || !userAnswers.length) return 0;
+
+  let score = 0;
+  for (let i = 0; i < correctIndices.length; i++) {
+    if (userAnswers[i] === correctIndices[i]) {
+      score++;
+    }
+  }
+  return score;
 }
 
 const page6Score = computed(() =>
@@ -840,21 +856,24 @@ const totalMaxScore = computed(() => page1MaxScore.value + page5MaxScore.value +
                     <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
                   </div>
 
-                  <div class="space-y-2">
+                  <div class="space-y-3">
                     <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Antwort auswählen</div>
-                    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      <button
-                        v-for="(option, optionIdx) in row.column8Options"
-                        :key="`${row.id}-c8-${option.label}`"
-                        type="button"
-                        class="lps-letter"
-                        :class="page6Responses[idx].col8[optionIdx] ? 'lps-letter--selected' : ''"
-                        :disabled="!isColumnInteractive('col8') || !row.column8Svg"
-                        :aria-pressed="page6Responses[idx].col8[optionIdx]"
-                        @click="togglePage6Selection(idx, optionIdx)"
-                      >
-                        {{ option.label }}
-                      </button>
+                    <div v-for="subQuestionIdx in row.subQuestionCount" :key="`${row.id}-c8-sq-${subQuestionIdx}`" class="flex items-center gap-4">
+                      <div class="w-6 text-center text-lg font-bold">{{ subQuestionIdx }}</div>
+                      <div class="flex flex-wrap gap-2">
+                        <button
+                          v-for="(option, optionIdx) in row.column8Options"
+                          :key="`${row.id}-c8-${subQuestionIdx}-${option.label}`"
+                          type="button"
+                          class="lps-letter"
+                          :class="page6Responses[idx].col8[subQuestionIdx - 1] === optionIdx ? 'lps-letter--selected' : ''"
+                          :disabled="!isColumnInteractive('col8') || !row.column8Svg"
+                          :aria-pressed="page6Responses[idx].col8[subQuestionIdx - 1] === optionIdx"
+                          @click="togglePage6Selection(idx, subQuestionIdx - 1, optionIdx)"
+                        >
+                          {{ option.label }}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
