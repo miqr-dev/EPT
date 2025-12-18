@@ -148,9 +148,19 @@ const page7Responses = ref<LpsPage7ResponseRow[]>(
   lpsPage7Rows.map((row, idx) => {
     const pausedRow = props.pausedTestResult?.page7?.[idx];
     return {
-      prompts: row.prompts.map((prompt, promptIdx) =>
-        buildSelection(prompt.options.length ?? 0, pausedRow?.prompts?.[promptIdx]),
-      ),
+      prompts: row.prompts.map((prompt, promptIdx) => {
+        const selection = buildSelection(prompt.options.length ?? 0, pausedRow?.prompts?.[promptIdx]);
+
+        if (!pausedRow && props.testName === 'LPS-B' && idx === 0 && promptIdx < 2) {
+          const correctIndex = lpsPage7Solutions[idx]?.correctOptionIndices?.[promptIdx];
+
+          if (typeof correctIndex === 'number') {
+            selection[correctIndex] = true;
+          }
+        }
+
+        return selection;
+      }),
     };
   }),
 );
@@ -1275,7 +1285,7 @@ const totalMaxScore = computed(
 .page7-arrow {
   position: absolute;
   top: 64px;
-  height: 4px;
+  height: 12px;
   border-radius: 9999px;
   background: #2563eb;
   z-index: 1;
@@ -1285,11 +1295,11 @@ const totalMaxScore = computed(
   content: '';
   position: absolute;
   top: 50%;
-  right: -7px;
+  right: -21px;
   transform: translateY(-50%);
-  border-left: 10px solid #2563eb;
-  border-top: 7px solid transparent;
-  border-bottom: 7px solid transparent;
+  border-left: 30px solid #2563eb;
+  border-top: 21px solid transparent;
+  border-bottom: 21px solid transparent;
 }
 
 .lps-number-chip {
