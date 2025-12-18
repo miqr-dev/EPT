@@ -1017,7 +1017,7 @@ const totalMaxScore = computed(
               >
                 <div
                   v-if="page7Arrows[rowIdx]?.length"
-                  class="pointer-events-none absolute inset-x-0 top-0 hidden w-full md:block"
+                  class="pointer-events-none absolute inset-x-0 top-0 w-full"
                   aria-hidden="true"
                 >
                   <div
@@ -1268,7 +1268,8 @@ const totalMaxScore = computed(
   top: 64px;
   height: 4px;
   border-radius: 9999px;
-  background: hsl(var(--primary));
+  background: #2563eb;
+  z-index: 1;
 }
 
 .page7-arrow::after {
@@ -1277,7 +1278,7 @@ const totalMaxScore = computed(
   top: 50%;
   right: -7px;
   transform: translateY(-50%);
-  border-left: 10px solid hsl(var(--primary));
+  border-left: 10px solid #2563eb;
   border-top: 7px solid transparent;
   border-bottom: 7px solid transparent;
 }
