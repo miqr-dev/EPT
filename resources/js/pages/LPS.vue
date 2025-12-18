@@ -8,18 +8,20 @@ import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
 import { getLpsPage5Dataset, type LpsPage5Solution } from '@/pages/Questions/LPSPage5';
 import { getLpsPage6Dataset, type LpsPage6Option, type LpsPage6Solution } from '@/pages/Questions/LPSPage6';
+import { getLpsPage7Dataset, type LpsPage7Solution } from '@/pages/Questions/LPSPage7';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
 type LpsPage5ResponseRow = { col7: boolean[] };
 type LpsPage6ResponseRow = { col8: boolean[] };
+type LpsPage7ResponseRow = { shapes: boolean[][] };
 type LpsPage6OptionGroup = { label: string; options: Array<{ option: LpsPage6Option; index: number }> };
 
 type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = [3, 3, 3, 3, 3, 60, 60];
-const COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8];
+const COLUMN_DURATION_SECONDS = [3, 3, 3, 3, 3, 60, 60, 60];
+const COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8, 9];
 const PAGE_SECTIONS = [
   { title: 'Spalten 1 + 2', columnIndices: [0, 1] },
   { title: 'Spalte 3', columnIndices: [2] },
@@ -27,6 +29,7 @@ const PAGE_SECTIONS = [
   { title: 'Spalte 5', columnIndices: [4] },
   { title: 'Spalte 7', columnIndices: [5] },
   { title: 'Spalte 8', columnIndices: [6] },
+  { title: 'Spalte 9', columnIndices: [7] },
 ];
 
 const props = defineProps<{
@@ -36,11 +39,14 @@ const props = defineProps<{
     page1?: LpsPage1ResponseRow[];
     page5?: LpsPage5ResponseRow[];
     page6?: LpsPage6ResponseRow[];
+    page7?: LpsPage7ResponseRow[];
     columnStates?: LpsColumnState[];
     page5_score?: number;
     page5_max_score?: number;
     page6_score?: number;
     page6_max_score?: number;
+    page7_score?: number;
+    page7_max_score?: number;
   };
   timeRemainingSeconds?: number | null;
   testName?: string;
@@ -51,6 +57,7 @@ const emit = defineEmits(['complete', 'update:answers']);
 const { rows: lpsRows, solutions: lpsSolutions } = getLpsDataset(props.testName);
 const { rows: lpsPage5Rows, solutions: lpsPage5Solutions } = getLpsPage5Dataset(props.testName);
 const { rows: lpsPage6Rows, solutions: lpsPage6Solutions } = getLpsPage6Dataset(props.testName);
+const { rows: lpsPage7Rows, solutions: lpsPage7Solutions } = getLpsPage7Dataset(props.testName);
 
 const showTest = ref(false);
 const pageIndex = ref(0);
@@ -104,6 +111,17 @@ const page6Responses = ref<LpsPage6ResponseRow[]>(
   lpsPage6Rows.map((row, idx) => {
     const pausedRow = props.pausedTestResult?.page6?.[idx];
     return { col8: buildSelection(row.column8Options.length ?? 0, pausedRow?.col8) };
+  }),
+);
+
+const page7Responses = ref<LpsPage7ResponseRow[]>(
+  lpsPage7Rows.map((row, idx) => {
+    const pausedRow = props.pausedTestResult?.page7?.[idx];
+    return {
+      shapes: row.shapes.map((shape, shapeIdx) =>
+        buildSelection(row.options.length, pausedRow?.shapes?.[shapeIdx]),
+      ),
+    };
   }),
 );
 
@@ -168,7 +186,7 @@ onBeforeUnmount(() => stopTimer());
 onBeforeUnmount(() => stopColumnTimer());
 
 watch(
-  [page1Responses, page5Responses, page6Responses, pageIndex, totalElapsed, columnStates],
+  [page1Responses, page5Responses, page6Responses, page7Responses, pageIndex, totalElapsed, columnStates],
   () => {
     emit('update:answers', {
       pageIndex: pageIndex.value,
@@ -183,6 +201,9 @@ watch(
       page6: page6Responses.value,
       page6_score: page6Score.value,
       page6_max_score: page6MaxScore.value,
+      page7: page7Responses.value,
+      page7_score: page7Score.value,
+      page7_max_score: page7MaxScore.value,
     });
   },
   { deep: true },
@@ -252,7 +273,7 @@ function formatTime(seconds: number) {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-type ColumnKey = keyof LpsPage1ResponseRow | 'col7' | 'col8';
+type ColumnKey = keyof LpsPage1ResponseRow | 'col7' | 'col8' | 'col9';
 
 const COLUMN_INDEX_BY_KEY: Record<ColumnKey, number> = {
   col1: 0,
@@ -262,6 +283,7 @@ const COLUMN_INDEX_BY_KEY: Record<ColumnKey, number> = {
   col5: 4,
   col7: 5,
   col8: 6,
+  col9: 7,
 };
 
 function buildPage6OptionGroups(options: LpsPage6Option[]): LpsPage6OptionGroup[] {
@@ -315,6 +337,15 @@ function togglePage6Selection(rowIdx: number, charIdx: number) {
 
     return idx === charIdx ? !currentlySelected : false;
   });
+}
+
+function togglePage7Selection(rowIdx: number, shapeIdx: number, optionIdx: number) {
+  if (!isColumnInteractive('col9')) return;
+  const row = page7Responses.value[rowIdx];
+  const shapeSelections = row?.shapes?.[shapeIdx];
+  if (!shapeSelections?.length) return;
+  const currentlySelected = shapeSelections[optionIdx];
+  row.shapes[shapeIdx] = shapeSelections.map((_, idx) => (idx === optionIdx ? !currentlySelected : false));
 }
 
 function resetColumns() {
@@ -505,8 +536,31 @@ const page6MaxScore = computed(() =>
   lpsPage6Solutions.reduce((total, solution) => total + (solution.col8?.length ?? 0), 0),
 );
 
-const totalScore = computed(() => page1Score.value + page5Score.value + page6Score.value);
-const totalMaxScore = computed(() => page1MaxScore.value + page5MaxScore.value + page6MaxScore.value);
+function scorePage7Row(rowIdx: number, solutions: LpsPage7Solution, responses: LpsPage7ResponseRow) {
+  const correct = solutions.shapes ?? [];
+  return correct.reduce((sum, correctIdx, shapeIdx) => {
+    if (correctIdx == null) return sum;
+    const picks = responses.shapes?.[shapeIdx];
+    if (!picks?.[correctIdx]) return sum;
+    return sum + 1;
+  }, 0);
+}
+
+const page7Score = computed(() =>
+  page7Responses.value.reduce((total, response, idx) => {
+    const solutions = lpsPage7Solutions[idx] ?? {};
+    return total + scorePage7Row(idx, solutions, response);
+  }, 0),
+);
+
+const page7MaxScore = computed(() =>
+  lpsPage7Solutions.reduce((total, solution) => total + (solution.shapes?.filter((idx) => idx != null).length ?? 0), 0),
+);
+
+const totalScore = computed(() => page1Score.value + page5Score.value + page6Score.value + page7Score.value);
+const totalMaxScore = computed(() =>
+  page1MaxScore.value + page5MaxScore.value + page6MaxScore.value + page7MaxScore.value,
+);
 </script>
 
 <template>
@@ -913,6 +967,56 @@ const totalMaxScore = computed(() => page1MaxScore.value + page5MaxScore.value +
                         @click="togglePage6Selection(idx, optionIdx)"
                       >
                         {{ option.label }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Page 7: Spalte 9 -->
+        <div v-else-if="pageIndex === 6" class="space-y-3">
+          <div class="rounded-2xl border bg-background p-4 shadow-sm">
+            <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 9</div>
+
+            <div class="space-y-6">
+              <div v-for="(row, rowIdx) in lpsPage7Rows" :key="`${row.id}-c9`" class="rounded-xl border bg-muted/40 p-4">
+                <div class="flex flex-wrap justify-center gap-6">
+                  <div
+                    v-for="(shape, shapeIdx) in row.shapes"
+                    :key="`${row.id}-shape-${shape.id}`"
+                    class="flex flex-col items-center gap-2"
+                  >
+                    <div class="rounded-lg bg-white p-2 shadow-sm">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="lps-column3-svg select-none"
+                        :viewBox="shape.svgMeta.viewBox"
+                        :width="shape.svgMeta.width"
+                        :height="shape.svgMeta.height"
+                      >
+                        <g
+                          :transform="`translate(-${shape.svgMeta.translateX ?? 0} -${shape.svgMeta.translateY ?? 0})`"
+                          v-html="shape.svgContent"
+                        ></g>
+                      </svg>
+                    </div>
+
+                    <div v-if="shape.isExample" class="text-[11px] uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                    <div v-else class="flex flex-wrap justify-center gap-2">
+                      <button
+                        v-for="(option, optionIdx) in row.options"
+                        :key="`${row.id}-c9-${shape.id}-${option}`"
+                        type="button"
+                        class="lps-letter"
+                        :class="page7Responses[rowIdx].shapes[shapeIdx][optionIdx] ? 'lps-letter--selected' : ''"
+                        :disabled="!isColumnInteractive('col9')"
+                        :aria-pressed="page7Responses[rowIdx].shapes[shapeIdx][optionIdx]"
+                        @click="togglePage7Selection(rowIdx, shapeIdx, optionIdx)"
+                      >
+                        {{ option }}
                       </button>
                     </div>
                   </div>
