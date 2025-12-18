@@ -8,18 +8,20 @@ import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
 import { getLpsPage5Dataset, type LpsPage5Solution } from '@/pages/Questions/LPSPage5';
 import { getLpsPage6Dataset, type LpsPage6Option, type LpsPage6Solution } from '@/pages/Questions/LPSPage6';
+import { getLpsPage7Dataset, type LpsPage7Solution } from '@/pages/Questions/LPSPage7';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
 type LpsPage5ResponseRow = { col7: boolean[] };
 type LpsPage6ResponseRow = { col8: boolean[] };
+type LpsPage7ResponseRow = { prompts: boolean[][] };
 type LpsPage6OptionGroup = { label: string; options: Array<{ option: LpsPage6Option; index: number }> };
 
 type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = [3, 3, 3, 3, 3, 3, 120];
-const COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8];
+const COLUMN_DURATION_SECONDS = [3, 3, 3, 3, 3, 3, 120, 120];
+const COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8, 9];
 const PAGE_SECTIONS = [
   { title: 'Spalten 1 + 2', columnIndices: [0, 1] },
   { title: 'Spalte 3', columnIndices: [2] },
@@ -27,6 +29,7 @@ const PAGE_SECTIONS = [
   { title: 'Spalte 5', columnIndices: [4] },
   { title: 'Spalte 7', columnIndices: [5] },
   { title: 'Spalte 8', columnIndices: [6] },
+  { title: 'Spalte 9', columnIndices: [7] },
 ];
 
 const props = defineProps<{
@@ -41,6 +44,9 @@ const props = defineProps<{
     page5_max_score?: number;
     page6_score?: number;
     page6_max_score?: number;
+    page7?: LpsPage7ResponseRow[];
+    page7_score?: number;
+    page7_max_score?: number;
   };
   timeRemainingSeconds?: number | null;
   testName?: string;
@@ -51,6 +57,7 @@ const emit = defineEmits(['complete', 'update:answers']);
 const { rows: lpsRows, solutions: lpsSolutions } = getLpsDataset(props.testName);
 const { rows: lpsPage5Rows, solutions: lpsPage5Solutions } = getLpsPage5Dataset(props.testName);
 const { rows: lpsPage6Rows, solutions: lpsPage6Solutions } = getLpsPage6Dataset(props.testName);
+const { rows: lpsPage7Rows, solutions: lpsPage7Solutions } = getLpsPage7Dataset(props.testName);
 
 const showTest = ref(false);
 const pageIndex = ref(0);
@@ -104,6 +111,17 @@ const page6Responses = ref<LpsPage6ResponseRow[]>(
   lpsPage6Rows.map((row, idx) => {
     const pausedRow = props.pausedTestResult?.page6?.[idx];
     return { col8: buildSelection(row.column8Options.length ?? 0, pausedRow?.col8) };
+  }),
+);
+
+const page7Responses = ref<LpsPage7ResponseRow[]>(
+  lpsPage7Rows.map((row, idx) => {
+    const pausedRow = props.pausedTestResult?.page7?.[idx];
+    return {
+      prompts: row.prompts.map((prompt, promptIdx) =>
+        buildSelection(prompt.options.length ?? 0, pausedRow?.prompts?.[promptIdx]),
+      ),
+    };
   }),
 );
 
@@ -168,7 +186,7 @@ onBeforeUnmount(() => stopTimer());
 onBeforeUnmount(() => stopColumnTimer());
 
 watch(
-  [page1Responses, page5Responses, page6Responses, pageIndex, totalElapsed, columnStates],
+  [page1Responses, page5Responses, page6Responses, page7Responses, pageIndex, totalElapsed, columnStates],
   () => {
     emit('update:answers', {
       pageIndex: pageIndex.value,
@@ -183,6 +201,9 @@ watch(
       page6: page6Responses.value,
       page6_score: page6Score.value,
       page6_max_score: page6MaxScore.value,
+      page7: page7Responses.value,
+      page7_score: page7Score.value,
+      page7_max_score: page7MaxScore.value,
     });
   },
   { deep: true },
@@ -236,6 +257,7 @@ function confirmEnd() {
     page1: page1Responses.value,
     page5: page5Responses.value,
     page6: page6Responses.value,
+    page7: page7Responses.value,
     columnStates: columnStates.value,
     page1_score: page1Score.value,
     page1_max_score: page1MaxScore.value,
@@ -243,6 +265,8 @@ function confirmEnd() {
     page5_max_score: page5MaxScore.value,
     page6_score: page6Score.value,
     page6_max_score: page6MaxScore.value,
+    page7_score: page7Score.value,
+    page7_max_score: page7MaxScore.value,
   });
 }
 
@@ -252,7 +276,7 @@ function formatTime(seconds: number) {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-type ColumnKey = keyof LpsPage1ResponseRow | 'col7' | 'col8';
+type ColumnKey = keyof LpsPage1ResponseRow | 'col7' | 'col8' | 'col9';
 
 const COLUMN_INDEX_BY_KEY: Record<ColumnKey, number> = {
   col1: 0,
@@ -262,6 +286,7 @@ const COLUMN_INDEX_BY_KEY: Record<ColumnKey, number> = {
   col5: 4,
   col7: 5,
   col8: 6,
+  col9: 7,
 };
 
 function buildPage6OptionGroups(options: LpsPage6Option[]): LpsPage6OptionGroup[] {
@@ -315,6 +340,14 @@ function togglePage6Selection(rowIdx: number, charIdx: number) {
 
     return idx === charIdx ? !currentlySelected : false;
   });
+}
+
+function togglePage7Selection(rowIdx: number, promptIdx: number, optionIdx: number) {
+  if (!isColumnInteractive('col9')) return;
+  const row = page7Responses.value[rowIdx];
+  if (!row?.prompts?.[promptIdx]?.length) return;
+  const currentlySelected = row.prompts[promptIdx][optionIdx];
+  row.prompts[promptIdx] = row.prompts[promptIdx].map((_, idx) => (idx === optionIdx ? !currentlySelected : false));
 }
 
 function resetColumns() {
@@ -505,8 +538,36 @@ const page6MaxScore = computed(() =>
   lpsPage6Solutions.reduce((total, solution) => total + (solution.col8?.length ?? 0), 0),
 );
 
-const totalScore = computed(() => page1Score.value + page5Score.value + page6Score.value);
-const totalMaxScore = computed(() => page1MaxScore.value + page5MaxScore.value + page6MaxScore.value);
+function scorePage7Row(rowIdx: number, solutions: LpsPage7Solution, responses: LpsPage7ResponseRow) {
+  return solutions.correctOptionIndices.reduce((sum, correctIdx, promptIdx) => {
+    if (correctIdx === null || correctIdx === undefined) return sum;
+    const picks = responses.prompts?.[promptIdx];
+    if (!picks?.length) return sum;
+    return picks[correctIdx] ? sum + 1 : sum;
+  }, 0);
+}
+
+const page7Score = computed(() =>
+  page7Responses.value.reduce((total, response, idx) => {
+    const solutions = lpsPage7Solutions[idx];
+    if (!solutions) return total;
+    return total + scorePage7Row(idx, solutions, response);
+  }, 0),
+);
+
+const page7MaxScore = computed(() =>
+  lpsPage7Solutions.reduce(
+    (total, solution) => total + solution.correctOptionIndices.filter((idx) => idx !== null).length,
+    0,
+  ),
+);
+
+const totalScore = computed(
+  () => page1Score.value + page5Score.value + page6Score.value + page7Score.value,
+);
+const totalMaxScore = computed(
+  () => page1MaxScore.value + page5MaxScore.value + page6MaxScore.value + page7MaxScore.value,
+);
 </script>
 
 <template>
@@ -539,14 +600,14 @@ const totalMaxScore = computed(() => page1MaxScore.value + page5MaxScore.value +
 
       <!-- Start screen -->
       <div v-if="!showTest" class="rounded-2xl border bg-background p-8 shadow-sm">
-        <div class="mx-auto max-w-3xl space-y-4 text-center">
-          <p class="text-base text-muted-foreground">
-            Der {{ testLabel }}-Test umfasst sechs Schritte. Beginnen Sie mit den Spalten 1 und 2, anschließend folgen
-            die Spalten 3, 4, 5, 7 und 8 jeweils auf einer eigenen Seite. Arbeiten Sie jede Zeile von oben nach unten
-            durch.
-          </p>
-          <Button class="px-8" @click="startTest">Test starten</Button>
-        </div>
+          <div class="mx-auto max-w-3xl space-y-4 text-center">
+            <p class="text-base text-muted-foreground">
+              Der {{ testLabel }}-Test umfasst sieben Schritte. Beginnen Sie mit den Spalten 1 und 2, anschließend folgen
+              die Spalten 3, 4, 5, 7, 8 und 9 jeweils auf einer eigenen Seite. Arbeiten Sie jede Zeile von oben nach
+              unten durch.
+            </p>
+            <Button class="px-8" @click="startTest">Test starten</Button>
+          </div>
       </div>
 
       <!-- Test -->
@@ -922,6 +983,55 @@ const totalMaxScore = computed(() => page1MaxScore.value + page5MaxScore.value +
           </div>
         </div>
 
+        <!-- Page 7: Spalte 9 -->
+        <div v-else-if="pageIndex === 6" class="space-y-3">
+          <div class="rounded-2xl border bg-background p-4 shadow-sm">
+            <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 9</div>
+
+            <div class="space-y-4">
+              <div
+                v-for="(row, rowIdx) in lpsPage7Rows"
+                :key="`${row.id}-c9`"
+                class="rounded-xl border bg-muted/40 p-4"
+              >
+                <div class="mb-3 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <span>Reihe {{ row.id }}</span>
+                  <span v-if="row.prompts?.length">{{ row.prompts.length }} Figuren</span>
+                </div>
+
+                <div class="grid gap-3 md:grid-cols-3">
+                  <div
+                    v-for="(prompt, promptIdx) in row.prompts"
+                    :key="prompt.id"
+                    class="space-y-3 rounded-lg bg-background p-3 shadow-sm"
+                  >
+                    <div class="flex justify-center">
+                      <div class="lps-shape-panel" v-html="prompt.svg"></div>
+                    </div>
+
+                    <div class="flex flex-wrap justify-center gap-2">
+                      <button
+                        v-for="(option, optionIdx) in prompt.options"
+                        :key="`${prompt.id}-${option}`"
+                        type="button"
+                        class="lps-number-chip"
+                        :class="page7Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]
+                          ? 'lps-number-chip--selected'
+                          : ''"
+                        :disabled="!isColumnInteractive('col9')"
+                        :aria-pressed="page7Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]"
+                        @click="togglePage7Selection(rowIdx, promptIdx, optionIdx)"
+                      >
+                        {{ option }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div
           class="flex items-center justify-between rounded-xl border bg-background px-4 py-3 text-xs text-muted-foreground shadow-sm">
           <div>
@@ -1099,6 +1209,66 @@ const totalMaxScore = computed(() => page1MaxScore.value + page5MaxScore.value +
   line-height: 1;
   letter-spacing: -0.02em;
   color: inherit;
+}
+
+.lps-shape-panel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 170px;
+  height: 140px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 18px rgb(15 23 42 / 0.08);
+  overflow: hidden;
+}
+
+.lps-shape-panel svg {
+  width: 100%;
+  height: 100%;
+}
+
+.lps-number-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgb(226 232 240);
+  background: white;
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: rgb(15 23 42);
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background-color 120ms ease;
+}
+
+.lps-number-chip:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgb(15 23 42 / 0.12);
+  border-color: rgb(203 213 225);
+}
+
+.lps-number-chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.lps-number-chip--selected {
+  border-color: rgb(239 68 68);
+  background: rgb(254 242 242);
+}
+
+.lps-number-chip--selected::after {
+  content: '';
+  position: absolute;
+  inset: 10px 8px auto;
+  border-top: 3px solid rgb(220 38 38);
+  transform: rotate(-32deg);
+  transform-origin: center;
 }
 
 /* Vertical separator between column 1 and 2 */
