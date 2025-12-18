@@ -992,13 +992,8 @@ const totalMaxScore = computed(
               <div
                 v-for="(row, rowIdx) in lpsPage7Rows"
                 :key="`${row.id}-c9`"
-                class="rounded-xl border bg-muted/40 p-4"
+                class="space-y-3"
               >
-                <div class="mb-3 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  <span>Reihe {{ row.id }}</span>
-                  <span v-if="row.prompts?.length">{{ row.prompts.length }} Figuren</span>
-                </div>
-
                 <div class="grid gap-3 md:grid-cols-3">
                   <div
                     v-for="(prompt, promptIdx) in row.prompts"
