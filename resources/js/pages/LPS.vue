@@ -60,6 +60,8 @@ const { rows: lpsPage6Rows, solutions: lpsPage6Solutions } = getLpsPage6Dataset(
 const { rows: lpsPage7Rows, solutions: lpsPage7Solutions } = getLpsPage7Dataset(props.testName);
 
 const PAGE7_GRID_GAP_PX = 12;
+// Update this width if the shape panels get larger/smaller so the arrows anchor to the panel edges.
+const PAGE7_DEFAULT_SHAPE_WIDTH = 170;
 const page7Arrows: Record<number, Array<{ from: number; to: number }>> = {
   0: [{ from: 2, to: 3 }],
   1: [{ from: 1, to: 2 }],
@@ -84,10 +86,17 @@ function getShapePanelStyle(svgMeta?: { width: number; height: number }) {
     '--shape-height': `${svgMeta.height}px`,
   } as const;
 }
-function getPage7ArrowStyle(fromCol: number, toCol: number) {
+function getPage7ShapeWidth(rowIdx: number) {
+  return lpsPage7Rows[rowIdx]?.prompts?.[0]?.svgMeta?.width ?? PAGE7_DEFAULT_SHAPE_WIDTH;
+}
+
+function getPage7ArrowStyle(rowIdx: number, fromCol: number, toCol: number) {
   const columnWidth = `calc((100% - (${PAGE7_GRID_GAP_PX * 2}px)) / 3)`;
-  const startLeft = `calc((${columnWidth} * ${fromCol - 0.5}) + ${PAGE7_GRID_GAP_PX * (fromCol - 1)}px)`;
-  const width = `calc((${columnWidth} * ${toCol - fromCol}) + ${PAGE7_GRID_GAP_PX * (toCol - fromCol)}px)`;
+  const shapeWidth = getPage7ShapeWidth(rowIdx);
+  const startLeft = `calc((${columnWidth} * ${fromCol - 0.5}) + ${PAGE7_GRID_GAP_PX * (fromCol - 1)}px + ${
+    shapeWidth / 2
+  }px)`;
+  const width = `calc((${columnWidth} * ${toCol - fromCol}) + ${PAGE7_GRID_GAP_PX * (toCol - fromCol)}px - ${shapeWidth}px)`;
 
   return { left: startLeft, width } as const;
 }
@@ -1024,7 +1033,7 @@ const totalMaxScore = computed(
                     v-for="(arrow, arrowIdx) in page7Arrows[rowIdx]"
                     :key="`${row.id}-arrow-${arrowIdx}`"
                     class="page7-arrow"
-                    :style="getPage7ArrowStyle(arrow.from, arrow.to)"
+                    :style="getPage7ArrowStyle(rowIdx, arrow.from, arrow.to)"
                   ></div>
                 </div>
                 <div class="grid gap-3 md:grid-cols-3">
