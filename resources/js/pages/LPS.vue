@@ -8,7 +8,7 @@ import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
 import { getLpsPage5Dataset, type LpsPage5Solution } from '@/pages/Questions/LPSPage5';
 import { getLpsPage6Dataset, type LpsPage6Option, type LpsPage6Solution } from '@/pages/Questions/LPSPage6';
-import { getLpsPage7Dataset, type LpsPage7Solution } from '@/pages/Questions/LPSPage7';
+import { getLpsPage7Dataset, type LpsPage7Prompt, type LpsPage7Solution } from '@/pages/Questions/LPSPage7';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
 type LpsPage5ResponseRow = { col7: boolean[] };
@@ -113,6 +113,17 @@ function buildSelection(length: number, saved?: boolean[]) {
   return base.map((_, idx) => saved[idx] ?? false);
 }
 
+function buildExamplePromptSelection(rowIdx: number, promptIdx: number, prompt: LpsPage7Prompt) {
+  const selection = buildSelection(prompt.options.length ?? 0);
+  const correctIdx = lpsPage7Solutions[rowIdx]?.correctOptionIndices?.[promptIdx];
+
+  if (typeof correctIdx === 'number' && selection[correctIdx] !== undefined) {
+    selection[correctIdx] = true;
+  }
+
+  return selection;
+}
+
 const page1Responses = ref<LpsPage1ResponseRow[]>(
   lpsRows.map((row, idx) => {
     const pausedRow = props.pausedTestResult?.page1?.[idx];
@@ -151,13 +162,11 @@ const page7Responses = ref<LpsPage7ResponseRow[]>(
     const pausedRow = props.pausedTestResult?.page7?.[idx];
     return {
       prompts: row.prompts.map((prompt, promptIdx) => {
-        const selection = buildSelection(prompt.options.length ?? 0, pausedRow?.prompts?.[promptIdx]);
-
         if (isPage7ExamplePrompt(idx, promptIdx)) {
-          selection.fill(false);
+          return buildExamplePromptSelection(idx, promptIdx, prompt);
         }
 
-        return selection;
+        return buildSelection(prompt.options.length ?? 0, pausedRow?.prompts?.[promptIdx]);
       }),
     };
   }),
