@@ -18,7 +18,7 @@ type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = [3, 3, 3, 3, 3, 60, 60];
+const COLUMN_DURATION_SECONDS = [3, 3, 3, 3, 3, 3, 120];
 const COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8];
 const PAGE_SECTIONS = [
   { title: 'Spalten 1 + 2', columnIndices: [0, 1] },
@@ -882,7 +882,7 @@ const totalMaxScore = computed(() => page1MaxScore.value + page5MaxScore.value +
                         :key="`${row.id}-c8-group-${group.label}`"
                         class="flex items-center gap-3"
                       >
-                        <div class="min-w-[1.25rem] text-center text-sm font-semibold text-muted-foreground">
+                        <div class="lps-number-label">
                           {{ group.label }}
                         </div>
                         <div class="flex flex-wrap gap-2">
@@ -1085,6 +1085,20 @@ const totalMaxScore = computed(() => page1MaxScore.value + page5MaxScore.value +
 .lps-figure--selected {
   border-color: hsl(var(--primary));
   box-shadow: 0 0 0 3px hsla(var(--primary), 0.25);
+}
+
+.lps-number-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 35px;
+  padding: 0 2px;
+  font-weight: 900;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: inherit;
 }
 
 /* Vertical separator between column 1 and 2 */
