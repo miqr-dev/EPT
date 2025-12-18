@@ -59,6 +59,12 @@ const { rows: lpsPage5Rows, solutions: lpsPage5Solutions } = getLpsPage5Dataset(
 const { rows: lpsPage6Rows, solutions: lpsPage6Solutions } = getLpsPage6Dataset(props.testName);
 const { rows: lpsPage7Rows, solutions: lpsPage7Solutions } = getLpsPage7Dataset(props.testName);
 
+const PAGE7_GRID_GAP_PX = 12;
+const page7Arrows: Record<number, Array<{ from: number; to: number }>> = {
+  0: [{ from: 2, to: 3 }],
+  1: [{ from: 1, to: 2 }],
+};
+
 const showTest = ref(false);
 const pageIndex = ref(0);
 const pageCount = PAGE_SECTIONS.length;
@@ -70,6 +76,21 @@ const visibleColumnStates = computed(() =>
 const isAnyVisibleColumnActive = computed(() =>
   visibleColumnIndices.value.some((idx) => columnStates.value[idx]?.status === 'active'),
 );
+function getShapePanelStyle(svgMeta?: { width: number; height: number }) {
+  if (!svgMeta) return {};
+
+  return {
+    '--shape-width': `${svgMeta.width}px`,
+    '--shape-height': `${svgMeta.height}px`,
+  } as const;
+}
+function getPage7ArrowStyle(fromCol: number, toCol: number) {
+  const columnWidth = `calc((100% - (${PAGE7_GRID_GAP_PX * 2}px)) / 3)`;
+  const startLeft = `calc((${columnWidth} * ${fromCol - 0.5}) + ${PAGE7_GRID_GAP_PX * (fromCol - 1)}px)`;
+  const width = `calc((${columnWidth} * ${toCol - fromCol}) + ${PAGE7_GRID_GAP_PX * (toCol - fromCol)}px)`;
+
+  return { left: startLeft, width } as const;
+}
 const elapsedSecondsBeforeResume = ref(props.pausedTestResult?.total_time_seconds ?? 0);
 const runningElapsedSeconds = ref(0);
 const timerHandle = ref<number | null>(null);
@@ -992,8 +1013,20 @@ const totalMaxScore = computed(
               <div
                 v-for="(row, rowIdx) in lpsPage7Rows"
                 :key="`${row.id}-c9`"
-                class="space-y-3"
+                class="relative space-y-3"
               >
+                <div
+                  v-if="page7Arrows[rowIdx]?.length"
+                  class="pointer-events-none absolute inset-x-0 top-0 hidden w-full md:block"
+                  aria-hidden="true"
+                >
+                  <div
+                    v-for="(arrow, arrowIdx) in page7Arrows[rowIdx]"
+                    :key="`${row.id}-arrow-${arrowIdx}`"
+                    class="page7-arrow"
+                    :style="getPage7ArrowStyle(arrow.from, arrow.to)"
+                  ></div>
+                </div>
                 <div class="grid gap-3 md:grid-cols-3">
                   <div
                     v-for="(prompt, promptIdx) in row.prompts"
@@ -1001,7 +1034,11 @@ const totalMaxScore = computed(
                     class="space-y-3 rounded-lg bg-background p-3 shadow-sm"
                   >
                     <div class="flex justify-center">
-                      <div class="lps-shape-panel" v-html="prompt.svg"></div>
+                      <div
+                        class="lps-shape-panel"
+                        v-html="prompt.svg"
+                        :style="getShapePanelStyle(prompt.svgMeta)"
+                      ></div>
                     </div>
 
                     <div class="flex flex-wrap justify-center gap-2">
@@ -1210,8 +1247,10 @@ const totalMaxScore = computed(
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 170px;
-  height: 140px;
+  width: var(--shape-width, 170px);
+  height: var(--shape-height, 140px);
+  min-width: 170px;
+  min-height: 140px;
   background: white;
   border-radius: 10px;
   box-shadow: 0 4px 18px rgb(15 23 42 / 0.08);
@@ -1221,6 +1260,26 @@ const totalMaxScore = computed(
 .lps-shape-panel svg {
   width: 100%;
   height: 100%;
+  object-fit: contain;
+}
+
+.page7-arrow {
+  position: absolute;
+  top: 64px;
+  height: 4px;
+  border-radius: 9999px;
+  background: hsl(var(--primary));
+}
+
+.page7-arrow::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -7px;
+  transform: translateY(-50%);
+  border-left: 10px solid hsl(var(--primary));
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
 }
 
 .lps-number-chip {
