@@ -1,9 +1,6 @@
-import {
-  LPS_PAGE7_NUMBER_OPTIONS,
-  LPS_PAGE7_PLACEHOLDER_SVG,
-  LPS_PAGE7_SHAPES_B,
-  type LpsPage7SvgRow,
-} from './lpsPage7SvgShapes';
+import { LPS_PAGE7_PLACEHOLDER_SVG, LPS_PAGE7_SHAPES_B, type LpsPage7SvgRow } from './lpsPage7SvgShapes';
+
+const DEFAULT_PAGE7_NUMBER_OPTIONS = [3, 4, 5, 6, 7] as const;
 
 export type LpsPage7Prompt = {
   id: string;
@@ -34,12 +31,20 @@ export type LpsPage7Dataset = {
 };
 
 function buildPrompt(rowId: number, promptIdx: number, prompt?: LpsPage7SvgRow['prompts'][number]): LpsPage7Prompt {
+  const options = prompt?.options ? [...prompt.options] : [...DEFAULT_PAGE7_NUMBER_OPTIONS];
+  const resolvedIndex =
+    typeof prompt?.correctIndex === 'number'
+      ? prompt.correctIndex
+      : prompt?.correctAnswer !== undefined
+        ? options.indexOf(prompt.correctAnswer)
+        : undefined;
+
   return {
     id: `lps-b-r${rowId}-p${promptIdx + 1}`,
     svg: prompt?.svg ?? LPS_PAGE7_PLACEHOLDER_SVG,
     svgMeta: prompt?.svgMeta,
-    options: prompt?.options ? [...prompt.options] : [...LPS_PAGE7_NUMBER_OPTIONS],
-    correctIndex: prompt?.correctIndex,
+    options,
+    correctIndex: resolvedIndex !== -1 ? resolvedIndex : undefined,
   };
 }
 
