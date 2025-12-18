@@ -66,6 +66,8 @@ const page7Arrows: Record<number, Array<{ from: number; to: number }>> = {
   0: [{ from: 2, to: 3 }],
   1: [{ from: 1, to: 2 }],
 };
+const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
+  props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
 
 const showTest = ref(false);
 const pageIndex = ref(0);
@@ -151,12 +153,8 @@ const page7Responses = ref<LpsPage7ResponseRow[]>(
       prompts: row.prompts.map((prompt, promptIdx) => {
         const selection = buildSelection(prompt.options.length ?? 0, pausedRow?.prompts?.[promptIdx]);
 
-        if (!pausedRow && props.testName === 'LPS-B' && idx === 0 && promptIdx < 2) {
-          const correctIndex = lpsPage7Solutions[idx]?.correctOptionIndices?.[promptIdx];
-
-          if (typeof correctIndex === 'number') {
-            selection[correctIndex] = true;
-          }
+        if (isPage7ExamplePrompt(idx, promptIdx)) {
+          selection.fill(false);
         }
 
         return selection;
@@ -383,7 +381,7 @@ function togglePage6Selection(rowIdx: number, charIdx: number) {
 }
 
 function togglePage7Selection(rowIdx: number, promptIdx: number, optionIdx: number) {
-  if (!isColumnInteractive('col9')) return;
+  if (!isColumnInteractive('col9') || isPage7ExamplePrompt(rowIdx, promptIdx)) return;
   const row = page7Responses.value[rowIdx];
   if (!row?.prompts?.[promptIdx]?.length) return;
   const currentlySelected = row.prompts[promptIdx][optionIdx];
@@ -580,6 +578,7 @@ const page6MaxScore = computed(() =>
 
 function scorePage7Row(rowIdx: number, solutions: LpsPage7Solution, responses: LpsPage7ResponseRow) {
   return solutions.correctOptionIndices.reduce((sum, correctIdx, promptIdx) => {
+    if (isPage7ExamplePrompt(rowIdx, promptIdx)) return sum;
     if (correctIdx === null || correctIdx === undefined) return sum;
     const picks = responses.prompts?.[promptIdx];
     if (!picks?.length) return sum;
@@ -596,10 +595,14 @@ const page7Score = computed(() =>
 );
 
 const page7MaxScore = computed(() =>
-  lpsPage7Solutions.reduce(
-    (total, solution) => total + solution.correctOptionIndices.filter((idx) => idx !== null).length,
-    0,
-  ),
+  lpsPage7Solutions.reduce((total, solution, rowIdx) => {
+    const rowTotal = solution.correctOptionIndices.reduce((rowSum, idx, promptIdx) => {
+      if (isPage7ExamplePrompt(rowIdx, promptIdx)) return rowSum;
+      return idx !== null ? rowSum + 1 : rowSum;
+    }, 0);
+
+    return total + rowTotal;
+  }, 0),
 );
 
 const totalScore = computed(
@@ -1069,7 +1072,7 @@ const totalMaxScore = computed(
                         :class="page7Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]
                           ? 'lps-number-chip--selected'
                           : ''"
-                        :disabled="!isColumnInteractive('col9')"
+                        :disabled="!isColumnInteractive('col9') || isPage7ExamplePrompt(rowIdx, promptIdx)"
                         :aria-pressed="page7Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]"
                         @click="togglePage7Selection(rowIdx, promptIdx, optionIdx)"
                       >
@@ -1334,15 +1337,6 @@ const totalMaxScore = computed(
 .lps-number-chip--selected {
   border-color: rgb(239 68 68);
   background: rgb(254 242 242);
-}
-
-.lps-number-chip--selected::after {
-  content: '';
-  position: absolute;
-  inset: 10px 8px auto;
-  border-top: 3px solid rgb(220 38 38);
-  transform: rotate(-32deg);
-  transform-origin: center;
 }
 
 /* Vertical separator between column 1 and 2 */
