@@ -12,6 +12,7 @@ use App\Models\ExamParticipant;
 use App\Models\ExamStepStatus;
 use App\Models\TestAssignment;
 use App\Models\TestResult;
+use App\Models\User;
 use Carbon\Carbon;
 use Inertia\Inertia;
 
@@ -355,6 +356,33 @@ class ParticipantController extends Controller
     return Inertia::render('Participants/List', [
       'participants' => $participants,
     ]);
+  }
+
+  public function updateLoginPermission(Request $request, User $participant)
+  {
+    $user = Auth::user();
+
+    if (!in_array($user->role, ['admin', 'teacher'])) {
+      abort(403);
+    }
+
+    if ($participant->role !== 'participant') {
+      abort(404);
+    }
+
+    if ($user->role === 'teacher' && $participant->city_id !== $user->city_id) {
+      abort(403);
+    }
+
+    $data = $request->validate([
+      'can_login' => ['required', 'boolean'],
+    ]);
+
+    $participant->forceFill([
+      'can_login' => $data['can_login'],
+    ])->save();
+
+    return back()->with('success', __('Anmeldeberechtigung aktualisiert.'));
   }
 
   public function pauseStep(Request $request)

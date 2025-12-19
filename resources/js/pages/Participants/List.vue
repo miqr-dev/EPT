@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import TestResultModal from '@/components/TestResultModal.vue';
+import { Checkbox } from '@/components/ui/checkbox';
 
 defineProps<{
   participants: {
@@ -16,6 +17,7 @@ defineProps<{
 const isModalOpen = ref(false);
 const selectedAssignment = ref(null);
 const selectedParticipant = ref(null);
+const togglingIds = ref<number[]>([]);
 
 const dateFormatter = computed(() =>
   new Intl.DateTimeFormat('de-DE', {
@@ -38,6 +40,26 @@ function closeModal() {
   selectedAssignment.value = null;
   selectedParticipant.value = null;
 }
+
+const isToggling = (id: number) => togglingIds.value.includes(id);
+
+function toggleLoginPermission(participant: any, value: boolean | string | undefined) {
+  const nextValue = Boolean(value);
+  if (participant.can_login === nextValue) return;
+
+  togglingIds.value.push(participant.id);
+
+  router.patch(
+    route('participants.login-permission', participant.id),
+    { can_login: nextValue },
+    {
+      preserveScroll: true,
+      onFinish: () => {
+        togglingIds.value = togglingIds.value.filter((id) => id !== participant.id);
+      },
+    },
+  );
+}
 </script>
 
 <template>
@@ -54,11 +76,12 @@ function closeModal() {
                 <TableHead>Name</TableHead>
                 <TableHead>Prüfung erstellt am</TableHead>
                 <TableHead>Tests</TableHead>
+                <TableHead class="text-center">Login erlaubt</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow v-if="participants.data.length === 0">
-                <TableCell colspan="3" class="text-center text-gray-500 py-4">Keine Teilnehmer:innen gefunden.</TableCell>
+                <TableCell colspan="4" class="text-center text-gray-500 py-4">Keine Teilnehmer:innen gefunden.</TableCell>
               </TableRow>
               <TableRow v-for="participant in participants.data" :key="participant.id">
                 <TableCell>{{ participant.name }}</TableCell>
@@ -82,6 +105,13 @@ function closeModal() {
                   <div v-else>
                     Keine Tests zugewiesen.
                   </div>
+                </TableCell>
+                <TableCell>
+                  <label class="flex items-center justify-center gap-3">
+                    <Checkbox :checked="participant.can_login" :disabled="isToggling(participant.id)"
+                      @update:checked="(value) => toggleLoginPermission(participant, value)" />
+                    <span class="text-sm text-gray-700">{{ participant.can_login ? 'Aktiviert' : 'Gesperrt' }}</span>
+                  </label>
                 </TableCell>
               </TableRow>
             </TableBody>

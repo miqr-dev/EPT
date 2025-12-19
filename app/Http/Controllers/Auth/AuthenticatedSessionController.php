@@ -42,6 +42,16 @@ class AuthenticatedSessionController extends Controller
     $request->session()->regenerate();
 
     $user = $request->user();
+    if (!$user->can_login) {
+      Auth::guard('web')->logout();
+
+      $request->session()->invalidate();
+      $request->session()->regenerateToken();
+
+      return redirect()->route('login')->withErrors([
+        'username' => __('Deine Anmeldung wurde deaktiviert. Bitte wende dich an deine Lehrkraft.'),
+      ]);
+    }
     if ($user->role === 'participant') {
       $profile = $user->participantProfile;
       $profileComplete = $profile && $profile->birthday && $profile->sex;

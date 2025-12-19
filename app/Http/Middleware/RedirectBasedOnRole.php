@@ -34,6 +34,17 @@ class RedirectBasedOnRole
       $user = Auth::user();
       $currentRoute = $request->route()->getName();
 
+      if ($user->role === 'participant' && !$user->can_login) {
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->withErrors([
+          'username' => __('Deine Anmeldung wurde deaktiviert. Bitte wende dich an deine Lehrkraft.'),
+        ]);
+      }
+
       // Allowed routes for participants
       $participantRoutes = [
         'participant',
