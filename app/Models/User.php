@@ -17,6 +17,9 @@ class User extends Authenticatable implements LdapAuthenticatable
     'name',
     'email',
     'password',
+    'can_login',
+    'role',
+    'city_id',
   ];
 
   protected $hidden = [
@@ -29,6 +32,7 @@ class User extends Authenticatable implements LdapAuthenticatable
     return [
       'email_verified_at' => 'datetime',
       'password' => 'hashed',
+      'can_login' => 'boolean',
     ];
   }
   public function participantProfile()

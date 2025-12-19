@@ -12,6 +12,7 @@ use App\Models\ExamParticipant;
 use App\Models\ExamStepStatus;
 use App\Models\TestAssignment;
 use App\Models\TestResult;
+use App\Models\User;
 use Carbon\Carbon;
 use Inertia\Inertia;
 
@@ -72,14 +73,14 @@ class ParticipantController extends Controller
     $profile->fill($data)->save();
 
     $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
-    if ($examParticipant) {
-      $exam = Exam::find($examParticipant->exam_id);
-      if ($exam && $exam->status === 'in_progress') {
-        return redirect()->route('my-exam');
+      if ($examParticipant) {
+        $exam = Exam::find($examParticipant->exam_id);
+        if ($exam && in_array($exam->status, ['in_progress', 'paused', 'completed'], true)) {
+          return redirect()->route('my-exam');
+        }
       }
+      return redirect()->route('participant.no-exam');
     }
-    return redirect()->route('participant.no-exam');
-  }
 
   public function examLauncher()
   {
@@ -93,7 +94,7 @@ class ParticipantController extends Controller
 
     $exam = Exam::with(['steps.test', 'currentStep.test'])->find($examParticipant->exam_id);
 
-    if (!$exam || $exam->status !== 'in_progress') {
+    if (!$exam || !in_array($exam->status, ['in_progress', 'paused', 'completed'], true)) {
       // Either exam does not exist or hasn't started yet.
       return redirect()->route('participant.no-exam');
     }
@@ -355,6 +356,33 @@ class ParticipantController extends Controller
     return Inertia::render('Participants/List', [
       'participants' => $participants,
     ]);
+  }
+
+  public function updateLoginPermission(Request $request, User $participant)
+  {
+    $user = Auth::user();
+
+    if (!in_array($user->role, ['admin', 'teacher'])) {
+      abort(403);
+    }
+
+    if ($participant->role !== 'participant') {
+      abort(404);
+    }
+
+    if ($user->role === 'teacher' && $participant->city_id !== $user->city_id) {
+      abort(403);
+    }
+
+    $data = $request->validate([
+      'can_login' => ['required', 'boolean'],
+    ]);
+
+    $participant->forceFill([
+      'can_login' => $data['can_login'],
+    ])->save();
+
+    return back()->with('success', __('Anmeldeberechtigung aktualisiert.'));
   }
 
   public function pauseStep(Request $request)

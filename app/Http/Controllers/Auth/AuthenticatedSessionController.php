@@ -42,6 +42,16 @@ class AuthenticatedSessionController extends Controller
     $request->session()->regenerate();
 
     $user = $request->user();
+    if (!$user->can_login) {
+      Auth::guard('web')->logout();
+
+      $request->session()->invalidate();
+      $request->session()->regenerateToken();
+
+      return redirect()->route('login')->withErrors([
+        'username' => __('Deine Anmeldung wurde deaktiviert. Bitte wende dich an deine Lehrkraft.'),
+      ]);
+    }
     if ($user->role === 'participant') {
       $profile = $user->participantProfile;
       $profileComplete = $profile && $profile->birthday && $profile->sex;
@@ -53,7 +63,7 @@ class AuthenticatedSessionController extends Controller
         return redirect()->intended(route('participant.no-exam', absolute: false));
       }
       $exam = Exam::find($examParticipant->exam_id);
-      if ($exam && $exam->status === 'in_progress') {
+      if ($exam && in_array($exam->status, ['in_progress', 'paused', 'completed'], true)) {
         return redirect()->intended(route('my-exam', absolute: false));
       }
       return redirect()->intended(route('participant.no-exam', absolute: false));
