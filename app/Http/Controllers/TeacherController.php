@@ -25,7 +25,8 @@ class TeacherController extends Controller
       ->get();
 
     // New: Fetch users created in the last 6 hours in the same city
-    $recentUsers = User::where('role', 'participant')
+    $recentUsers = User::with('participantProfile')
+      ->where('role', 'participant')
       ->where('city_id', $cityId)
       ->where('created_at', '>=', Carbon::now()->subHours(6))
       ->orderBy('created_at', 'desc')

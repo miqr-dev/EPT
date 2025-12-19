@@ -189,7 +189,11 @@ class ParticipantController extends Controller
 
   public function noExam()
   {
-    return Inertia::render('Exams/NoExam');
+    $user = Auth::user()->load('participantProfile');
+
+    return Inertia::render('Exams/NoExam', [
+        'canViewContract' => $user->participantProfile?->can_view_contract ?? false,
+    ]);
   }
 
   public function startStep(Request $request)
@@ -425,4 +429,30 @@ class ParticipantController extends Controller
 
     return back(303);
   }
+
+    public function toggleContractVisibility(Request $request, User $participant)
+    {
+        $user = Auth::user();
+
+        if (!in_array($user->role, ['admin', 'teacher'])) {
+            abort(403);
+        }
+
+        if ($participant->role !== 'participant') {
+            abort(404);
+        }
+
+        if ($user->role === 'teacher' && $participant->city_id !== $user->city_id) {
+            abort(403);
+        }
+
+        $participant->load('participantProfile');
+
+        $profile = $participant->participantProfile ?: new ParticipantProfile(['user_id' => $participant->id]);
+
+        $profile->can_view_contract = !$profile->can_view_contract;
+        $profile->save();
+
+        return back()->with('success', __('Sichtbarkeit des Vertrags aktualisiert.'));
+    }
 }

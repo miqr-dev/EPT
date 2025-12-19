@@ -303,22 +303,27 @@ function addTests() {
                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
                       </th>
                       <th class="px-3 py-2 text-left font-medium">Name</th>
-                      <th class="px-3 py-2 text-left font-medium">Vorname</th>
+                      <th class="px-3 py-2 text-left font-medium">Aktion</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr v-for="user in availableRecentUsers" :key="user.id"
-                      class="cursor-pointer border-b border-slate-50 text-slate-800 hover:bg-slate-50/80 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-700"
-                      @click="toggleRecentUser(user.id)">
+                      class="border-b border-slate-50 text-slate-800 dark:border-slate-700 dark:text-slate-100">
                       <td class="px-3 py-1.5 text-center">
                         <input type="checkbox" :checked="selectedRecentUserIds.includes(user.id)"
-                          class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                               @click.stop="toggleRecentUser(user.id)"
+                               class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
                       </td>
-                      <td class="px-3 py-1.5">
+                      <td class="px-3 py-1.5" @click="toggleRecentUser(user.id)">
                         {{ user.name }}
                       </td>
                       <td class="px-3 py-1.5">
-                        {{ user.firstname }}
+                        <button
+                          @click.stop="router.patch(route('participants.contract-visibility', { participant: user.id }), {}, { preserveScroll: true })"
+                          class="text-xs font-semibold text-blue-600 underline-offset-2 hover:text-blue-700 hover:underline dark:text-blue-300 dark:hover:text-blue-200"
+                        >
+                          {{ user.participant_profile?.can_view_contract ? 'Sperren' : 'Freigeben' }}
+                        </button>
                       </td>
                     </tr>
                     <tr v-if="!availableRecentUsers.length">
