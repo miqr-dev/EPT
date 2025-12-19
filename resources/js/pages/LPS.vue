@@ -62,6 +62,8 @@ const { rows: lpsPage7Rows, solutions: lpsPage7Solutions } = getLpsPage7Dataset(
 const PAGE7_GRID_GAP_PX = 12;
 // Update this width if the shape panels get larger/smaller so the arrows anchor to the panel edges.
 const PAGE7_DEFAULT_SHAPE_WIDTH = 170;
+// Increase/decrease this inset to shorten/lengthen the page 7 arrows without touching the CSS.
+const PAGE7_ARROW_INSET_PX = 18;
 const page7Arrows: Record<number, Array<{ from: number; to: number }>> = {
   0: [{ from: 2, to: 3 }],
   1: [{ from: 1, to: 2 }],
@@ -96,9 +98,11 @@ function getPage7ArrowStyle(rowIdx: number, fromCol: number, toCol: number) {
   const columnWidth = `calc((100% - (${PAGE7_GRID_GAP_PX * 2}px)) / 3)`;
   const shapeWidth = getPage7ShapeWidth(rowIdx);
   const startLeft = `calc((${columnWidth} * ${fromCol - 0.5}) + ${PAGE7_GRID_GAP_PX * (fromCol - 1)}px + ${
-    shapeWidth / 2
+    shapeWidth / 2 + PAGE7_ARROW_INSET_PX
   }px)`;
-  const width = `calc((${columnWidth} * ${toCol - fromCol}) + ${PAGE7_GRID_GAP_PX * (toCol - fromCol)}px - ${shapeWidth}px)`;
+  const width = `calc((${columnWidth} * ${toCol - fromCol}) + ${PAGE7_GRID_GAP_PX * (toCol - fromCol)}px - ${
+    shapeWidth + PAGE7_ARROW_INSET_PX * 2
+  }px)`;
 
   return { left: startLeft, width } as const;
 }
@@ -1297,9 +1301,9 @@ const totalMaxScore = computed(
 .page7-arrow {
   position: absolute;
   top: 64px;
-  height: 12px;
+  height: 18px;
   border-radius: 9999px;
-  background: #2563eb;
+  background: #4b5563;
   z-index: 1;
 }
 
@@ -1307,11 +1311,11 @@ const totalMaxScore = computed(
   content: '';
   position: absolute;
   top: 50%;
-  right: -21px;
+  right: -26px;
   transform: translateY(-50%);
-  border-left: 30px solid #2563eb;
-  border-top: 21px solid transparent;
-  border-bottom: 21px solid transparent;
+  border-left: 34px solid #4b5563;
+  border-top: 18px solid transparent;
+  border-bottom: 18px solid transparent;
 }
 
 .lps-number-chip {
