@@ -63,7 +63,7 @@ class AuthenticatedSessionController extends Controller
         return redirect()->intended(route('participant.no-exam', absolute: false));
       }
       $exam = Exam::find($examParticipant->exam_id);
-      if ($exam && $exam->status === 'in_progress') {
+      if ($exam && in_array($exam->status, ['in_progress', 'paused', 'completed'], true)) {
         return redirect()->intended(route('my-exam', absolute: false));
       }
       return redirect()->intended(route('participant.no-exam', absolute: false));

@@ -82,6 +82,7 @@ class RedirectBasedOnRole
         'api.active-exams',
         'exams.updateSteps',
         'participants.list',
+        'participants.login-permission',
         'test-results.download',
         'test-results.pdf',
         'exam-step-status.add-time',
@@ -92,11 +93,11 @@ class RedirectBasedOnRole
         $profileComplete = $profile && $profile->birthday && $profile->sex;
 
         $allowedRoutes = $participantRoutes;
-        $examStarted = false;
+        $examAccessible = false;
         if ($profileComplete) {
           $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
           $exam = $examParticipant?->exam;
-          $examStarted = $exam && $exam->status === 'in_progress';
+          $examAccessible = $exam && in_array($exam->status, ['in_progress', 'paused', 'completed'], true);
           $allowedRoutes = array_merge($allowedRoutes, [
             'my-exam',
             'exam-room',
@@ -111,7 +112,7 @@ class RedirectBasedOnRole
           if (!$profileComplete) {
             return redirect()->route('participant.onboarding');
           }
-          return redirect()->route($examStarted ? 'my-exam' : 'participant.no-exam');
+          return redirect()->route($examAccessible ? 'my-exam' : 'participant.no-exam');
         }
       }
 
