@@ -3,6 +3,10 @@ import { Head, Link, router } from '@inertiajs/vue3'
 import { LogOut } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 
+defineProps<{
+  canViewContract: boolean
+}>()
+
 const handleLogout = () => {
   router.flushAll()
 }
@@ -31,6 +35,9 @@ const handleLogout = () => {
       <Link :href="route('my-exam')" class="block mt-4">
         <Button class="w-full">Zur Prüfung</Button>
       </Link>
+      <a v-if="canViewContract" :href="route('my.pdf')" target="_blank" class="block mt-4">
+        <Button class="w-full" variant="outline">Vertrag ansehen</Button>
+      </a>
     </div>
   </div>
 </template>

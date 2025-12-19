@@ -63,6 +63,8 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('/participants', [ParticipantController::class, 'list'])->name('participants.list');
     Route::patch('/participants/{participant}/login-permission', [ParticipantController::class, 'updateLoginPermission'])
       ->name('participants.login-permission');
+    Route::patch('/participants/{participant}/contract-visibility', [ParticipantController::class, 'toggleContractVisibility'])
+        ->name('participants.contract-visibility');
     Route::put('/test-results/{testResult}', [TestResultController::class, 'update'])->name('test-results.update');
 
 
