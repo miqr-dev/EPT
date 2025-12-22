@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import { LogOut } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import axios from 'axios'
 
 const handleLogout = () => {
@@ -12,14 +13,14 @@ const handleLogout = () => {
 const page = usePage()
 const initialCanViewContract = computed(() => !!page.props.auth?.user?.contract_view_enabled)
 const canViewContract = ref<boolean>(initialCanViewContract.value)
-const contractWindow = ref<Window | null>(null)
+const isContractDialogOpen = ref(false)
+const contractSrc = computed(
+  () => `${route('my.pdf')}#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&view=FitH`,
+)
 let polling: number | null = null
 
-const closeContractWindow = () => {
-  if (contractWindow.value && !contractWindow.value.closed) {
-    contractWindow.value.close()
-  }
-  contractWindow.value = null
+const closeContract = () => {
+  isContractDialogOpen.value = false
 }
 
 const refreshContractStatus = async () => {
@@ -32,8 +33,8 @@ const refreshContractStatus = async () => {
 }
 
 const openContract = () => {
-  closeContractWindow()
-  contractWindow.value = window.open(route('my.pdf'), '_blank', 'noopener')
+  if (!canViewContract.value) return
+  isContractDialogOpen.value = true
 }
 
 watch(initialCanViewContract, (value) => {
@@ -42,7 +43,23 @@ watch(initialCanViewContract, (value) => {
 
 watch(canViewContract, (enabled) => {
   if (!enabled) {
-    closeContractWindow()
+    closeContract()
+  }
+})
+
+const handleContractHotkeys = (event: KeyboardEvent) => {
+  const key = event.key.toLowerCase()
+  if ((event.ctrlKey || event.metaKey) && (key === 'p' || key === 's')) {
+    event.preventDefault()
+    event.stopPropagation()
+  }
+}
+
+watch(isContractDialogOpen, (isOpen) => {
+  if (isOpen) {
+    window.addEventListener('keydown', handleContractHotkeys, true)
+  } else {
+    window.removeEventListener('keydown', handleContractHotkeys, true)
   }
 })
 
@@ -55,7 +72,8 @@ onUnmounted(() => {
   if (polling) {
     window.clearInterval(polling)
   }
-  closeContractWindow()
+  closeContract()
+  window.removeEventListener('keydown', handleContractHotkeys, true)
 })
 </script>
 
@@ -87,4 +105,27 @@ onUnmounted(() => {
       </div>
     </div>
   </div>
+  <Dialog v-model:open="isContractDialogOpen">
+    <DialogContent
+      class="inset-0 top-0 left-0 h-screen w-screen max-w-none translate-x-0 translate-y-0 overflow-hidden rounded-none border-none bg-white p-0 text-black sm:max-w-none dark:bg-gray-900 dark:text-white"
+      @contextmenu.prevent
+    >
+      <DialogHeader class="sr-only">
+        <DialogTitle>Vertragsansicht</DialogTitle>
+        <DialogDescription>Vertragsdetails im Vollbild anzeigen.</DialogDescription>
+      </DialogHeader>
+      <div class="absolute top-4 left-4 flex items-center gap-2">
+        <Button variant="ghost" size="sm" @click="closeContract">✕</Button>
+        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Vertrag</span>
+      </div>
+      <div class="h-full w-full pt-12">
+        <iframe
+          :src="contractSrc"
+          class="h-full w-full border-0"
+          allow="fullscreen"
+          allowfullscreen
+        />
+      </div>
+    </DialogContent>
+  </Dialog>
 </template>
