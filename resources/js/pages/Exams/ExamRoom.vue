@@ -68,7 +68,7 @@ const activeStepId = ref<number | null>(null);
 const isContractDialogOpen = ref(false);
 const contractStatus = ref({
   userEnabled: !!page.props.auth?.user?.contract_view_enabled,
-  examEnabled: !!props.exam.contract_view_enabled,
+  examEnabled: props.exam.status === 'completed' ? false : !!props.exam.contract_view_enabled,
 });
 const localPausedResults = ref<Record<string, unknown>>({});
 const activeTimeRemainingSeconds = ref<number | null>(null);
@@ -82,7 +82,13 @@ const pausedTestResults = computed<Record<string, unknown>>(() => {
 const contractSrc = computed(
   () => `${route('my.pdf')}#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&view=FitH`,
 );
-const isContractAvailable = computed(() => contractStatus.value.userEnabled || contractStatus.value.examEnabled);
+const isContractAvailable = computed(() => {
+  if (props.exam.status === 'completed') {
+    return contractStatus.value.userEnabled;
+  }
+
+  return contractStatus.value.userEnabled || contractStatus.value.examEnabled;
+});
 
 let countdownInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -201,7 +207,7 @@ function closeContract() {
 watch(
   () => props.exam.contract_view_enabled,
   (enabled) => {
-    contractStatus.value.examEnabled = !!enabled;
+    contractStatus.value.examEnabled = props.exam.status === 'completed' ? false : !!enabled;
 
     if (!isContractAvailable.value) {
       closeContract();
@@ -225,7 +231,7 @@ watch(
 const syncContractFlagsFromProps = () => {
   contractStatus.value = {
     userEnabled: !!page.props.auth?.user?.contract_view_enabled,
-    examEnabled: !!props.exam.contract_view_enabled,
+    examEnabled: props.exam.status === 'completed' ? false : !!props.exam.contract_view_enabled,
   };
 };
 
@@ -237,8 +243,9 @@ const refreshContractStatus = async () => {
 
     const userEnabled = !!response.data?.user_contract_view_enabled;
     const examContractFromResponse = response.data?.exam_contract_view_enabled;
-    const examEnabled =
-      typeof examContractFromResponse === 'boolean'
+    const examEnabled = props.exam.status === 'completed'
+      ? false
+      : typeof examContractFromResponse === 'boolean'
         ? !!examContractFromResponse
         : contractStatus.value.examEnabled;
 
