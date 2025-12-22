@@ -51,7 +51,8 @@ class RedirectBasedOnRole
         'participant.onboarding',
         'participant.onboarding.save',
         'logout',
-        'my.pdf'
+        'my.pdf',
+        'api.my-contract-status'
       ];
 
       // Allowed routes for teachers/admins
