@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\TestAssignment;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TeacherController extends Controller
 {
@@ -24,16 +25,22 @@ class TeacherController extends Controller
       ->orderBy('created_at', 'desc')
       ->get();
 
-    // New: Fetch participants from the same city who recently joined OR have ever taken an exam
-    $recentCutoff = Carbon::now()->subHours(6);
+    // New: Fetch participants from the same city who logged in within the last 6 hours
+    $recentCutoffTimestamp = Carbon::now()->subHours(6)->getTimestamp();
+
+    $recentUserIds = DB::table('sessions')
+      ->whereNotNull('user_id')
+      ->where('last_activity', '>=', $recentCutoffTimestamp)
+      ->pluck('user_id')
+      ->unique();
 
     $recentUsers = User::where('role', 'participant')
       ->where('city_id', $cityId)
-      ->where(function ($query) use ($recentCutoff) {
-        $query->where('created_at', '>=', $recentCutoff)
-          ->orWhereHas('examParticipants');
-      })
-      ->orderBy('updated_at', 'desc')
+      ->whereIn('id', $recentUserIds)
+      ->addSelect(['last_seen_at' => DB::table('sessions')
+        ->selectRaw('MAX(last_activity)')
+        ->whereColumn('user_id', 'users.id')])
+      ->orderByDesc('last_seen_at')
       ->get();
 
     // New: Fetch exams from the teacher's city created within the last 30 days
