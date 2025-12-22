@@ -18,6 +18,7 @@ class User extends Authenticatable implements LdapAuthenticatable
     'email',
     'password',
     'can_login',
+    'contract_view_enabled',
     'role',
     'city_id',
   ];
@@ -33,6 +34,7 @@ class User extends Authenticatable implements LdapAuthenticatable
       'email_verified_at' => 'datetime',
       'password' => 'hashed',
       'can_login' => 'boolean',
+      'contract_view_enabled' => 'boolean',
     ];
   }
   public function participantProfile()

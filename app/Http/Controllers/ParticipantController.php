@@ -385,6 +385,33 @@ class ParticipantController extends Controller
     return back()->with('success', __('Anmeldeberechtigung aktualisiert.'));
   }
 
+  public function setContractVisibility(Request $request, User $participant)
+  {
+    $user = Auth::user();
+
+    if (!in_array($user->role, ['admin', 'teacher'], true)) {
+      abort(403);
+    }
+
+    if ($participant->role !== 'participant') {
+      abort(404);
+    }
+
+    if ($user->role === 'teacher' && $participant->city_id !== $user->city_id) {
+      abort(403);
+    }
+
+    $data = $request->validate([
+      'enabled' => ['required', 'boolean'],
+    ]);
+
+    $participant->forceFill([
+      'contract_view_enabled' => $data['enabled'],
+    ])->save();
+
+    return back()->with('success', __('Vertragsansicht aktualisiert.'));
+  }
+
   public function pauseStep(Request $request)
   {
     $user = Auth::user();

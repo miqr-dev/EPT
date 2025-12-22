@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3'
+import { computed } from 'vue'
+import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import { LogOut } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 
 const handleLogout = () => {
   router.flushAll()
 }
+
+const page = usePage()
+const canViewContract = computed(() => !!page.props.auth?.user?.contract_view_enabled)
 </script>
 
 
@@ -30,6 +34,9 @@ const handleLogout = () => {
       <h1 class="text-2xl font-bold text-gray-800">Bitte warten …</h1>
       <Link :href="route('my-exam')" class="block mt-4">
         <Button class="w-full">Zur Prüfung</Button>
+      </Link>
+      <Link v-if="canViewContract" :href="route('my.pdf')" target="_blank" class="block">
+        <Button variant="outline" class="w-full">Vertrag ansehen</Button>
       </Link>
     </div>
   </div>

@@ -77,7 +77,12 @@ const pausedTestResults = computed<Record<string, unknown>>(() => {
 const contractSrc = computed(
   () => `${route('my.pdf')}#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&view=FitH`,
 );
-const isContractAvailable = computed(() => !!props.exam.contract_view_enabled);
+const isContractAvailable = computed(() => {
+  const examEnabled = !!props.exam.contract_view_enabled;
+  const userEnabled = !!page.props.auth?.user?.contract_view_enabled;
+
+  return examEnabled || userEnabled;
+});
 
 let countdownInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -636,7 +641,7 @@ watch(isContractDialogOpen, (isOpen) => {
 });
 
 watch(
-  () => props.exam.contract_view_enabled,
+  isContractAvailable,
   (enabled) => {
     if (!enabled) {
       isContractDialogOpen.value = false;

@@ -119,6 +119,14 @@ function toggleRecentUser(id: number) {
   }
 }
 
+function toggleUserContractVisibility(participantId: number, enabled: boolean) {
+  router.post(
+    route('participants.set-contract-visibility', { participant: participantId }),
+    { enabled },
+    { preserveScroll: true },
+  );
+}
+
 function toggleSelectAllRecent(event: Event) {
   const target = event.target as HTMLInputElement;
   if (target.checked) {
@@ -303,7 +311,7 @@ function addTests() {
                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
                       </th>
                       <th class="px-3 py-2 text-left font-medium">Name</th>
-                      <th class="px-3 py-2 text-left font-medium">Vorname</th>
+                      <th class="px-3 py-2 text-left font-medium">Vertrag</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -318,7 +326,14 @@ function addTests() {
                         {{ user.name }}
                       </td>
                       <td class="px-3 py-1.5">
-                        {{ user.firstname }}
+                        <button type="button"
+                          class="inline-flex items-center gap-1 rounded border px-2 py-1 text-xs font-semibold transition dark:border-slate-600"
+                          :class="user.contract_view_enabled
+                            ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-100'
+                            : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-100'"
+                          @click.stop="toggleUserContractVisibility(user.id, !user.contract_view_enabled)">
+                          {{ user.contract_view_enabled ? 'Vertragsansicht sperren' : 'Vertrag freigeben' }}
+                        </button>
                       </td>
                     </tr>
                     <tr v-if="!availableRecentUsers.length">

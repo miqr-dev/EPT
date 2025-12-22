@@ -14,10 +14,13 @@ class UserPdfController extends Controller
   {
     $user = $request->user();
 
-    $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
-    $exam = $examParticipant ? Exam::find($examParticipant->exam_id) : null;
+    $exam = Exam::whereHas('participants', function ($query) use ($user) {
+      $query->where('participant_id', $user->id);
+    })->latest('exams.created_at')->first();
 
-    abort_unless($exam && $exam->contract_view_enabled, 403);
+    $canViewContract = $user->contract_view_enabled || ($exam?->contract_view_enabled ?? false);
+
+    abort_unless($canViewContract, 403);
 
     // e.g. "J.Doe"
     $base = Str::of($user->username)->trim();
