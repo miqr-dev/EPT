@@ -1,15 +1,62 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import { LogOut } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
+import axios from 'axios'
 
 const handleLogout = () => {
   router.flushAll()
 }
 
 const page = usePage()
-const canViewContract = computed(() => !!page.props.auth?.user?.contract_view_enabled)
+const initialCanViewContract = computed(() => !!page.props.auth?.user?.contract_view_enabled)
+const canViewContract = ref<boolean>(initialCanViewContract.value)
+const contractWindow = ref<Window | null>(null)
+let polling: number | null = null
+
+const closeContractWindow = () => {
+  if (contractWindow.value && !contractWindow.value.closed) {
+    contractWindow.value.close()
+  }
+  contractWindow.value = null
+}
+
+const refreshContractStatus = async () => {
+  try {
+    const response = await axios.get(route('api.my-contract-status'))
+    canViewContract.value = !!response.data?.user_contract_view_enabled
+  } catch (error) {
+    console.error('Fehler beim Laden des Vertragsstatus', error)
+  }
+}
+
+const openContract = () => {
+  closeContractWindow()
+  contractWindow.value = window.open(route('my.pdf'), '_blank', 'noopener')
+}
+
+watch(initialCanViewContract, (value) => {
+  canViewContract.value = !!value
+})
+
+watch(canViewContract, (enabled) => {
+  if (!enabled) {
+    closeContractWindow()
+  }
+})
+
+onMounted(() => {
+  refreshContractStatus()
+  polling = window.setInterval(refreshContractStatus, 3000)
+})
+
+onUnmounted(() => {
+  if (polling) {
+    window.clearInterval(polling)
+  }
+  closeContractWindow()
+})
 </script>
 
 
@@ -35,9 +82,9 @@ const canViewContract = computed(() => !!page.props.auth?.user?.contract_view_en
       <Link :href="route('my-exam')" class="block mt-4">
         <Button class="w-full">Zur Prüfung</Button>
       </Link>
-      <Link v-if="canViewContract" :href="route('my.pdf')" target="_blank" class="block">
-        <Button variant="outline" class="w-full">Vertrag ansehen</Button>
-      </Link>
+      <div v-if="canViewContract" class="block">
+        <Button variant="outline" class="w-full" type="button" @click="openContract">Vertrag ansehen</Button>
+      </div>
     </div>
   </div>
 </template>

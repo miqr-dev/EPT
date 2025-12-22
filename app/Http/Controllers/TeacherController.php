@@ -24,11 +24,19 @@ class TeacherController extends Controller
       ->orderBy('created_at', 'desc')
       ->get();
 
-    // New: Fetch users created in the last 6 hours in the same city
+    // New: Fetch users active in the last 6 hours in the same city
+    $recentCutoff = Carbon::now()->subHours(6);
+
     $recentUsers = User::where('role', 'participant')
       ->where('city_id', $cityId)
-      ->where('created_at', '>=', Carbon::now()->subHours(6))
-      ->orderBy('created_at', 'desc')
+      ->where(function ($query) use ($recentCutoff) {
+        $query->where('created_at', '>=', $recentCutoff)
+          ->orWhereHas('examParticipants', function ($subQuery) use ($recentCutoff) {
+            $subQuery->where('created_at', '>=', $recentCutoff)
+              ->orWhere('updated_at', '>=', $recentCutoff);
+          });
+      })
+      ->orderBy('updated_at', 'desc')
       ->get();
 
     // New: Fetch exams from the teacher's city created within the last 30 days

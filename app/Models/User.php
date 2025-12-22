@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use LdapRecord\Laravel\Auth\LdapAuthenticatable;
 use LdapRecord\Laravel\Auth\AuthenticatesWithLdap;
 use Illuminate\Notifications\Notifiable;
+use App\Models\ExamParticipant;
 
 class User extends Authenticatable implements LdapAuthenticatable
 {
@@ -58,5 +59,10 @@ class User extends Authenticatable implements LdapAuthenticatable
       'participant_id',
       'test_id'
     );
+  }
+
+  public function examParticipants()
+  {
+    return $this->hasMany(ExamParticipant::class, 'participant_id');
   }
 }

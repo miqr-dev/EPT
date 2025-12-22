@@ -412,6 +412,30 @@ class ParticipantController extends Controller
     return back()->with('success', __('Vertragsansicht aktualisiert.'));
   }
 
+  public function contractStatus(Request $request)
+  {
+    $user = Auth::user()->fresh();
+
+    $examId = $request->integer('exam_id');
+    $examContractEnabled = null;
+
+    if ($examId) {
+      $examParticipant = ExamParticipant::where('participant_id', $user->id)
+        ->where('exam_id', $examId)
+        ->first();
+
+      if ($examParticipant) {
+        $examContractEnabled = (bool) Exam::where('id', $examId)
+          ->value('contract_view_enabled');
+      }
+    }
+
+    return response()->json([
+      'user_contract_view_enabled' => (bool) $user->contract_view_enabled,
+      'exam_contract_view_enabled' => $examContractEnabled,
+    ]);
+  }
+
   public function pauseStep(Request $request)
   {
     $user = Auth::user();
