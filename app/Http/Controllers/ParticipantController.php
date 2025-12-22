@@ -405,9 +405,11 @@ class ParticipantController extends Controller
       'enabled' => ['required', 'boolean'],
     ]);
 
+    $participant->timestamps = false;
     $participant->forceFill([
       'contract_view_enabled' => $data['enabled'],
     ])->save();
+    $participant->timestamps = true;
 
     return back()->with('success', __('Vertragsansicht aktualisiert.'));
   }
