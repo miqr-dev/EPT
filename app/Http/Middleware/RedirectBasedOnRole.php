@@ -83,6 +83,7 @@ class RedirectBasedOnRole
         'exams.updateSteps',
         'participants.list',
         'participants.login-permission',
+        'participants.set-contract-visibility',
         'test-results.download',
         'test-results.pdf',
         'exam-step-status.add-time',

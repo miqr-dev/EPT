@@ -17,6 +17,10 @@ class Exam extends Model
     'contract_view_enabled',
   ];
 
+  protected $casts = [
+    'contract_view_enabled' => 'boolean',
+  ];
+
   public function city()
   {
     return $this->belongsTo(City::class);
