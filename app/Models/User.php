@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use LdapRecord\Laravel\Auth\LdapAuthenticatable;
 use LdapRecord\Laravel\Auth\AuthenticatesWithLdap;
 use Illuminate\Notifications\Notifiable;
+use App\Models\ExamParticipant;
 
 class User extends Authenticatable implements LdapAuthenticatable
 {
@@ -18,6 +19,7 @@ class User extends Authenticatable implements LdapAuthenticatable
     'email',
     'password',
     'can_login',
+    'contract_view_enabled',
     'role',
     'city_id',
   ];
@@ -33,6 +35,7 @@ class User extends Authenticatable implements LdapAuthenticatable
       'email_verified_at' => 'datetime',
       'password' => 'hashed',
       'can_login' => 'boolean',
+      'contract_view_enabled' => 'boolean',
     ];
   }
   public function participantProfile()
@@ -56,5 +59,10 @@ class User extends Authenticatable implements LdapAuthenticatable
       'participant_id',
       'test_id'
     );
+  }
+
+  public function examParticipants()
+  {
+    return $this->hasMany(ExamParticipant::class, 'participant_id');
   }
 }

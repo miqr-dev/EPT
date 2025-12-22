@@ -51,7 +51,8 @@ class RedirectBasedOnRole
         'participant.onboarding',
         'participant.onboarding.save',
         'logout',
-        'my.pdf'
+        'my.pdf',
+        'api.my-contract-status'
       ];
 
       // Allowed routes for teachers/admins
@@ -83,6 +84,7 @@ class RedirectBasedOnRole
         'exams.updateSteps',
         'participants.list',
         'participants.login-permission',
+        'participants.set-contract-visibility',
         'test-results.download',
         'test-results.pdf',
         'exam-step-status.add-time',

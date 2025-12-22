@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Head, router, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 
@@ -65,6 +66,10 @@ const activeTestComponent = shallowRef<unknown>(null);
 const isTestDialogOpen = ref(false);
 const activeStepId = ref<number | null>(null);
 const isContractDialogOpen = ref(false);
+const contractStatus = ref({
+  userEnabled: !!page.props.auth?.user?.contract_view_enabled,
+  examEnabled: !!props.exam.contract_view_enabled,
+});
 const localPausedResults = ref<Record<string, unknown>>({});
 const activeTimeRemainingSeconds = ref<number | null>(null);
 const pausedTestResults = computed<Record<string, unknown>>(() => {
@@ -77,7 +82,7 @@ const pausedTestResults = computed<Record<string, unknown>>(() => {
 const contractSrc = computed(
   () => `${route('my.pdf')}#toolbar=0&navpanes=0&scrollbar=0&statusbar=0&view=FitH`,
 );
-const isContractAvailable = computed(() => !!props.exam.contract_view_enabled);
+const isContractAvailable = computed(() => contractStatus.value.userEnabled || contractStatus.value.examEnabled);
 
 let countdownInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -185,12 +190,70 @@ const handleContractHotkeys = (event: KeyboardEvent) => {
 };
 
 function openContract() {
+  if (!isContractAvailable.value) return;
   isContractDialogOpen.value = true;
 }
 
 function closeContract() {
   isContractDialogOpen.value = false;
 }
+
+watch(
+  () => props.exam.contract_view_enabled,
+  (enabled) => {
+    contractStatus.value.examEnabled = !!enabled;
+
+    if (!isContractAvailable.value) {
+      closeContract();
+    }
+  },
+  { immediate: true },
+);
+
+watch(
+  () => page.props.auth?.user?.contract_view_enabled,
+  (enabled) => {
+    contractStatus.value.userEnabled = !!enabled;
+
+    if (!isContractAvailable.value) {
+      closeContract();
+    }
+  },
+  { immediate: true },
+);
+
+const syncContractFlagsFromProps = () => {
+  contractStatus.value = {
+    userEnabled: !!page.props.auth?.user?.contract_view_enabled,
+    examEnabled: !!props.exam.contract_view_enabled,
+  };
+};
+
+const refreshContractStatus = async () => {
+  try {
+    const response = await axios.get(route('api.my-contract-status'), {
+      params: { exam_id: props.exam.id },
+    });
+
+    const userEnabled = !!response.data?.user_contract_view_enabled;
+    const examContractFromResponse = response.data?.exam_contract_view_enabled;
+    const examEnabled =
+      typeof examContractFromResponse === 'boolean'
+        ? !!examContractFromResponse
+        : contractStatus.value.examEnabled;
+
+    contractStatus.value = {
+      userEnabled,
+      examEnabled,
+    };
+
+    if (!isContractAvailable.value) {
+      closeContract();
+    }
+  } catch (error) {
+    console.error('Fehler beim Aktualisieren des Vertragsstatus', error);
+  }
+};
 
 function isStepActionDisabled(step: ExamStepInfo) {
   const status = stepStatuses.value[step.id]?.status;
@@ -534,14 +597,19 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
 
 // --- Polling ---
 let polling: NodeJS.Timeout | null = null;
+let contractPolling: number | null = null;
 onMounted(() => {
   polling = setInterval(() => {
     router.reload({ only: ['exam', 'stepStatuses'] });
   }, 5000);
+
+  refreshContractStatus();
+  contractPolling = window.setInterval(refreshContractStatus, 3000);
 });
 
 onUnmounted(() => {
   if (polling) clearInterval(polling);
+  if (contractPolling) window.clearInterval(contractPolling);
   cleanupAfterTest();
   stopCountdown();
   window.removeEventListener('keydown', handleContractHotkeys, true);
@@ -636,7 +704,7 @@ watch(isContractDialogOpen, (isOpen) => {
 });
 
 watch(
-  () => props.exam.contract_view_enabled,
+  isContractAvailable,
   (enabled) => {
     if (!enabled) {
       isContractDialogOpen.value = false;

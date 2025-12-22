@@ -385,6 +385,59 @@ class ParticipantController extends Controller
     return back()->with('success', __('Anmeldeberechtigung aktualisiert.'));
   }
 
+  public function setContractVisibility(Request $request, User $participant)
+  {
+    $user = Auth::user();
+
+    if (!in_array($user->role, ['admin', 'teacher'], true)) {
+      abort(403);
+    }
+
+    if ($participant->role !== 'participant') {
+      abort(404);
+    }
+
+    if ($user->role === 'teacher' && $participant->city_id !== $user->city_id) {
+      abort(403);
+    }
+
+    $data = $request->validate([
+      'enabled' => ['required', 'boolean'],
+    ]);
+
+    $participant->timestamps = false;
+    $participant->forceFill([
+      'contract_view_enabled' => $data['enabled'],
+    ])->save();
+    $participant->timestamps = true;
+
+    return back()->with('success', __('Vertragsansicht aktualisiert.'));
+  }
+
+  public function contractStatus(Request $request)
+  {
+    $user = Auth::user()->fresh();
+
+    $examId = $request->integer('exam_id');
+    $examContractEnabled = null;
+
+    if ($examId) {
+      $examParticipant = ExamParticipant::where('participant_id', $user->id)
+        ->where('exam_id', $examId)
+        ->first();
+
+      if ($examParticipant) {
+        $examContractEnabled = (bool) Exam::where('id', $examId)
+          ->value('contract_view_enabled');
+      }
+    }
+
+    return response()->json([
+      'user_contract_view_enabled' => (bool) $user->contract_view_enabled,
+      'exam_contract_view_enabled' => $examContractEnabled,
+    ]);
+  }
+
   public function pauseStep(Request $request)
   {
     $user = Auth::user();
