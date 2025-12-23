@@ -72,14 +72,14 @@ function buildPlaceholderRow(): LpsPage8SvgRow {
 const BASE_ROWS: LpsPage8SvgRow[] = [
   {
     prompts: [
-      { svg: LPS_PAGE8_OPTION_SVGS[0].svg, svgMeta: LPS_PAGE8_OPTION_SVGS[0].svgMeta, correctOptionId: 'triangle' },
-      { svg: LPS_PAGE8_OPTION_SVGS[1].svg, svgMeta: LPS_PAGE8_OPTION_SVGS[1].svgMeta, correctOptionId: 'square' },
+      { svg: FIRST_QUESTION_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'square' },
+      { svg: LPS_PAGE8_PLACEHOLDER_SVG, svgMeta: PLACEHOLDER_META },
     ],
   },
   {
     prompts: [
-      { svg: FIRST_QUESTION_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'square' },
-      { svg: LPS_PAGE8_PLACEHOLDER_SVG, svgMeta: PLACEHOLDER_META },
+      { svg: LPS_PAGE8_OPTION_SVGS[0].svg, svgMeta: LPS_PAGE8_OPTION_SVGS[0].svgMeta, correctOptionId: 'triangle' },
+      { svg: LPS_PAGE8_OPTION_SVGS[1].svg, svgMeta: LPS_PAGE8_OPTION_SVGS[1].svgMeta, correctOptionId: 'square' },
     ],
   },
 ];
