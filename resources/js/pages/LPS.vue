@@ -9,19 +9,21 @@ import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1
 import { getLpsPage5Dataset, type LpsPage5Solution } from '@/pages/Questions/LPSPage5';
 import { getLpsPage6Dataset, type LpsPage6Option, type LpsPage6Solution } from '@/pages/Questions/LPSPage6';
 import { getLpsPage7Dataset, type LpsPage7Prompt, type LpsPage7Solution } from '@/pages/Questions/LPSPage7';
+import { getLpsPage8Dataset, type LpsPage8Prompt, type LpsPage8Solution } from '@/pages/Questions/LPSPage8';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
 type LpsPage5ResponseRow = { col7: boolean[] };
 type LpsPage6ResponseRow = { col8: boolean[] };
 type LpsPage7ResponseRow = { prompts: boolean[][] };
+type LpsPage8ResponseRow = { prompts: boolean[][] };
 type LpsPage6OptionGroup = { label: string; options: Array<{ option: LpsPage6Option; index: number }> };
 
 type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = [3, 3, 3, 3, 3, 3, 120, 120];
-const COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8, 9];
+const COLUMN_DURATION_SECONDS = [3, 3, 3, 3, 3, 3, 120, 120, 120];
+const COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8, 9, 10];
 const PAGE_SECTIONS = [
   { title: 'Spalten 1 + 2', columnIndices: [0, 1] },
   { title: 'Spalte 3', columnIndices: [2] },
@@ -30,6 +32,7 @@ const PAGE_SECTIONS = [
   { title: 'Spalte 7', columnIndices: [5] },
   { title: 'Spalte 8', columnIndices: [6] },
   { title: 'Spalte 9', columnIndices: [7] },
+  { title: 'Spalte 10', columnIndices: [8] },
 ];
 
 const props = defineProps<{
@@ -47,6 +50,9 @@ const props = defineProps<{
     page7?: LpsPage7ResponseRow[];
     page7_score?: number;
     page7_max_score?: number;
+    page8?: LpsPage8ResponseRow[];
+    page8_score?: number;
+    page8_max_score?: number;
   };
   timeRemainingSeconds?: number | null;
   testName?: string;
@@ -58,6 +64,7 @@ const { rows: lpsRows, solutions: lpsSolutions } = getLpsDataset(props.testName)
 const { rows: lpsPage5Rows, solutions: lpsPage5Solutions } = getLpsPage5Dataset(props.testName);
 const { rows: lpsPage6Rows, solutions: lpsPage6Solutions } = getLpsPage6Dataset(props.testName);
 const { rows: lpsPage7Rows, solutions: lpsPage7Solutions } = getLpsPage7Dataset(props.testName);
+const { rows: lpsPage8Rows, solutions: lpsPage8Solutions } = getLpsPage8Dataset(props.testName);
 
 const PAGE7_GRID_GAP_PX = 12;
 // Update this width if the shape panels get larger/smaller so the arrows anchor to the panel edges.
@@ -69,6 +76,8 @@ const page7Arrows: Record<number, Array<{ from: number; to: number }>> = {
   1: [{ from: 1, to: 2 }],
 };
 const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
+  props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
+const isPage8ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
 
 const showTest = ref(false);
@@ -176,6 +185,32 @@ const page7Responses = ref<LpsPage7ResponseRow[]>(
   }),
 );
 
+function buildPage8ExamplePromptSelection(rowIdx: number, promptIdx: number, prompt: LpsPage8Prompt) {
+  const selection = buildSelection(prompt.options.length ?? 0);
+  const correctIdx = lpsPage8Solutions[rowIdx]?.correctOptionIndices?.[promptIdx];
+
+  if (typeof correctIdx === 'number' && selection[correctIdx] !== undefined) {
+    selection[correctIdx] = true;
+  }
+
+  return selection;
+}
+
+const page8Responses = ref<LpsPage8ResponseRow[]>(
+  lpsPage8Rows.map((row, idx) => {
+    const pausedRow = props.pausedTestResult?.page8?.[idx];
+    return {
+      prompts: row.prompts.map((prompt, promptIdx) => {
+        if (isPage8ExamplePrompt(idx, promptIdx)) {
+          return buildPage8ExamplePromptSelection(idx, promptIdx, prompt);
+        }
+
+        return buildSelection(prompt.options.length ?? 0, pausedRow?.prompts?.[promptIdx]);
+      }),
+    };
+  }),
+);
+
 const page6OptionGroups = computed<LpsPage6OptionGroup[][]>(() =>
   lpsPage6Rows.map((row) => buildPage6OptionGroups(row.column8Options ?? [])),
 );
@@ -237,7 +272,7 @@ onBeforeUnmount(() => stopTimer());
 onBeforeUnmount(() => stopColumnTimer());
 
 watch(
-  [page1Responses, page5Responses, page6Responses, page7Responses, pageIndex, totalElapsed, columnStates],
+  [page1Responses, page5Responses, page6Responses, page7Responses, page8Responses, pageIndex, totalElapsed, columnStates],
   () => {
     emit('update:answers', {
       pageIndex: pageIndex.value,
@@ -255,6 +290,9 @@ watch(
       page7: page7Responses.value,
       page7_score: page7Score.value,
       page7_max_score: page7MaxScore.value,
+      page8: page8Responses.value,
+      page8_score: page8Score.value,
+      page8_max_score: page8MaxScore.value,
     });
   },
   { deep: true },
@@ -309,6 +347,7 @@ function confirmEnd() {
     page5: page5Responses.value,
     page6: page6Responses.value,
     page7: page7Responses.value,
+    page8: page8Responses.value,
     columnStates: columnStates.value,
     page1_score: page1Score.value,
     page1_max_score: page1MaxScore.value,
@@ -318,6 +357,8 @@ function confirmEnd() {
     page6_max_score: page6MaxScore.value,
     page7_score: page7Score.value,
     page7_max_score: page7MaxScore.value,
+    page8_score: page8Score.value,
+    page8_max_score: page8MaxScore.value,
   });
 }
 
@@ -327,7 +368,7 @@ function formatTime(seconds: number) {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-type ColumnKey = keyof LpsPage1ResponseRow | 'col7' | 'col8' | 'col9';
+type ColumnKey = keyof LpsPage1ResponseRow | 'col7' | 'col8' | 'col9' | 'col10';
 
 const COLUMN_INDEX_BY_KEY: Record<ColumnKey, number> = {
   col1: 0,
@@ -338,6 +379,7 @@ const COLUMN_INDEX_BY_KEY: Record<ColumnKey, number> = {
   col7: 5,
   col8: 6,
   col9: 7,
+  col10: 8,
 };
 
 function buildPage6OptionGroups(options: LpsPage6Option[]): LpsPage6OptionGroup[] {
@@ -396,6 +438,14 @@ function togglePage6Selection(rowIdx: number, charIdx: number) {
 function togglePage7Selection(rowIdx: number, promptIdx: number, optionIdx: number) {
   if (!isColumnInteractive('col9') || isPage7ExamplePrompt(rowIdx, promptIdx)) return;
   const row = page7Responses.value[rowIdx];
+  if (!row?.prompts?.[promptIdx]?.length) return;
+  const currentlySelected = row.prompts[promptIdx][optionIdx];
+  row.prompts[promptIdx] = row.prompts[promptIdx].map((_, idx) => (idx === optionIdx ? !currentlySelected : false));
+}
+
+function togglePage8Selection(rowIdx: number, promptIdx: number, optionIdx: number) {
+  if (!isColumnInteractive('col10') || isPage8ExamplePrompt(rowIdx, promptIdx)) return;
+  const row = page8Responses.value[rowIdx];
   if (!row?.prompts?.[promptIdx]?.length) return;
   const currentlySelected = row.prompts[promptIdx][optionIdx];
   row.prompts[promptIdx] = row.prompts[promptIdx].map((_, idx) => (idx === optionIdx ? !currentlySelected : false));
@@ -618,11 +668,42 @@ const page7MaxScore = computed(() =>
   }, 0),
 );
 
+function scorePage8Row(rowIdx: number, solutions: LpsPage8Solution, responses: LpsPage8ResponseRow) {
+  return solutions.correctOptionIndices.reduce((sum, correctIdx, promptIdx) => {
+    if (isPage8ExamplePrompt(rowIdx, promptIdx)) return sum;
+    if (correctIdx === null || correctIdx === undefined) return sum;
+    const picks = responses.prompts?.[promptIdx];
+    if (!picks?.length) return sum;
+    return picks[correctIdx] ? sum + 1 : sum;
+  }, 0);
+}
+
+const page8Score = computed(() =>
+  page8Responses.value.reduce((total, response, idx) => {
+    const solutions = lpsPage8Solutions[idx];
+    if (!solutions) return total;
+    return total + scorePage8Row(idx, solutions, response);
+  }, 0),
+);
+
+const page8MaxScore = computed(() =>
+  lpsPage8Solutions.reduce((total, solution, rowIdx) => {
+    const rowTotal = solution.correctOptionIndices.reduce((rowSum, idx, promptIdx) => {
+      if (isPage8ExamplePrompt(rowIdx, promptIdx)) return rowSum;
+      return idx !== null ? rowSum + 1 : rowSum;
+    }, 0);
+
+    return total + rowTotal;
+  }, 0),
+);
+
 const totalScore = computed(
-  () => page1Score.value + page5Score.value + page6Score.value + page7Score.value,
+  () =>
+    page1Score.value + page5Score.value + page6Score.value + page7Score.value + page8Score.value,
 );
 const totalMaxScore = computed(
-  () => page1MaxScore.value + page5MaxScore.value + page6MaxScore.value + page7MaxScore.value,
+  () =>
+    page1MaxScore.value + page5MaxScore.value + page6MaxScore.value + page7MaxScore.value + page8MaxScore.value,
 );
 </script>
 
@@ -1108,6 +1189,54 @@ const totalMaxScore = computed(
             </span>
           </div>
         </div>
+
+        <div v-else-if="pageIndex === 7" class="space-y-3">
+          <div class="rounded-2xl border bg-background p-4 shadow-sm">
+            <div class="mb-1 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 10</div>
+            <p class="text-center text-xs text-muted-foreground">Finde die passende Form zu jeder Vorlage.</p>
+
+            <div class="space-y-4">
+              <div
+                v-for="(row, rowIdx) in lpsPage8Rows"
+                :key="`${row.id}-c10`"
+                class="rounded-xl border bg-muted/30 p-4 shadow-sm"
+              >
+                <div class="grid gap-3 md:grid-cols-2">
+                  <div
+                    v-for="(prompt, promptIdx) in row.prompts"
+                    :key="prompt.id"
+                    class="space-y-3 rounded-lg bg-background p-3 shadow-sm"
+                  >
+                    <div class="flex justify-center">
+                      <div
+                        class="lps-shape-panel page8-shape-panel"
+                        v-html="prompt.svg"
+                        :style="getShapePanelStyle(prompt.svgMeta)"
+                      ></div>
+                    </div>
+
+                    <div class="flex flex-wrap justify-center gap-2">
+                      <button
+                        v-for="(option, optionIdx) in prompt.options"
+                        :key="option.id"
+                        type="button"
+                        class="page8-option"
+                        :class="page8Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]
+                          ? 'page8-option--selected'
+                          : ''"
+                        :disabled="!isColumnInteractive('col10') || isPage8ExamplePrompt(rowIdx, promptIdx)"
+                        :aria-pressed="page8Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]"
+                        @click="togglePage8Selection(rowIdx, promptIdx, optionIdx)"
+                      >
+                        <span v-html="option.svg"></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1349,6 +1478,52 @@ const totalMaxScore = computed(
 
 .lps-number-chip--selected {
   border-color: rgb(239 68 68);
+  background: rgb(254 242 242);
+}
+
+.page8-shape-panel {
+  min-width: 180px;
+  min-height: 150px;
+}
+
+.page8-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 90px;
+  height: 90px;
+  border-radius: 14px;
+  border: 1px solid rgb(226 232 240);
+  background: white;
+  box-shadow: 0 4px 14px rgb(15 23 42 / 0.08);
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background-color 120ms ease;
+}
+
+.page8-option span {
+  display: inline-flex;
+  width: 72px;
+  height: 72px;
+}
+
+.page8-option svg {
+  width: 100%;
+  height: 100%;
+}
+
+.page8-option:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgb(15 23 42 / 0.12);
+  border-color: rgb(203 213 225);
+}
+
+.page8-option:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.page8-option--selected {
+  border-color: rgb(239 68 68);
+  box-shadow: 0 0 0 3px rgb(254 226 226);
   background: rgb(254 242 242);
 }
 
