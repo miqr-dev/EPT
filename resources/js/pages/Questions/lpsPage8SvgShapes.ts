@@ -60,6 +60,10 @@ export const LPS_PAGE8_OPTION_SVGS: LpsPage8SvgOption[] = [
   },
 ];
 
+// To mark the correct answer for a prompt, set `correctOptionId` on the
+// corresponding entry in BASE_ROWS (or future rows). The value must match one of
+// the option ids above (triangle, square, t-shape, u-shape, l-shape).
+
 function buildPlaceholderRow(): LpsPage8SvgRow {
   return {
     prompts: [

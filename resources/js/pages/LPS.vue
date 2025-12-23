@@ -1501,13 +1501,15 @@ const totalMaxScore = computed(
 
 .page8-option span {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 72px;
   height: 72px;
 }
 
 .page8-option svg {
-  width: 100%;
-  height: 100%;
+  width: 64px;
+  height: 64px;
 }
 
 .page8-option:hover:not(:disabled) {
