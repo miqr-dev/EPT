@@ -1180,20 +1180,10 @@ const totalMaxScore = computed(
           </div>
         </div>
 
-        <div
-          class="flex items-center justify-between rounded-xl border bg-background px-4 py-3 text-xs text-muted-foreground shadow-sm">
-          <div>
-            Punkte gesamt:
-            <span class="font-semibold text-foreground">
-              {{ totalMaxScore ? `${totalScore} / ${totalMaxScore}` : '–' }}
-            </span>
-          </div>
-        </div>
-
-        <div v-else-if="pageIndex === 7" class="space-y-3">
-          <div class="rounded-2xl border bg-background p-4 shadow-sm">
-            <div class="mb-1 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 10</div>
-            <p class="text-center text-xs text-muted-foreground">Finde die passende Form zu jeder Vorlage.</p>
+          <div v-else-if="pageIndex === 7" class="space-y-3">
+            <div class="rounded-2xl border bg-background p-4 shadow-sm">
+              <div class="mb-1 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 10</div>
+              <p class="text-center text-xs text-muted-foreground">Finde die passende Form zu jeder Vorlage.</p>
 
             <div class="space-y-4">
               <div
@@ -1234,6 +1224,16 @@ const totalMaxScore = computed(
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div
+            class="flex items-center justify-between rounded-xl border bg-background px-4 py-3 text-xs text-muted-foreground shadow-sm">
+            <div>
+              Punkte gesamt:
+              <span class="font-semibold text-foreground">
+                {{ totalMaxScore ? `${totalScore} / ${totalMaxScore}` : '–' }}
+              </span>
             </div>
           </div>
         </div>
