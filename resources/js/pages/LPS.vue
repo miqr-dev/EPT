@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
+import { getLpsPage11Dataset, type LpsPage11Solution } from '@/pages/Questions/LPSPage11';
 import { getLpsPage5Dataset, type LpsPage5Solution } from '@/pages/Questions/LPSPage5';
 import { getLpsPage6Dataset, type LpsPage6Option, type LpsPage6Solution } from '@/pages/Questions/LPSPage6';
 import { getLpsPage7Dataset, type LpsPage7Prompt, type LpsPage7Solution } from '@/pages/Questions/LPSPage7';
@@ -14,14 +15,15 @@ type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; 
 type LpsPage5ResponseRow = { col7: boolean[] };
 type LpsPage6ResponseRow = { col8: boolean[] };
 type LpsPage7ResponseRow = { prompts: boolean[][] };
+type LpsPage11ResponseRow = { prompts: boolean[][] };
 type LpsPage6OptionGroup = { label: string; options: Array<{ option: LpsPage6Option; index: number }> };
 
 type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = [3, 3, 3, 3, 3, 3, 120, 120];
-const COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8, 9];
+const COLUMN_DURATION_SECONDS = [3, 3, 3, 3, 3, 3, 120, 120, 180];
+const COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8, 9, 11];
 const PAGE_SECTIONS = [
   { title: 'Spalten 1 + 2', columnIndices: [0, 1] },
   { title: 'Spalte 3', columnIndices: [2] },
@@ -30,6 +32,7 @@ const PAGE_SECTIONS = [
   { title: 'Spalte 7', columnIndices: [5] },
   { title: 'Spalte 8', columnIndices: [6] },
   { title: 'Spalte 9', columnIndices: [7] },
+  { title: 'Spalte 11', columnIndices: [8] },
 ];
 
 const props = defineProps<{
@@ -39,6 +42,7 @@ const props = defineProps<{
     page1?: LpsPage1ResponseRow[];
     page5?: LpsPage5ResponseRow[];
     page6?: LpsPage6ResponseRow[];
+    page11?: LpsPage11ResponseRow[];
     columnStates?: LpsColumnState[];
     page5_score?: number;
     page5_max_score?: number;
@@ -47,6 +51,8 @@ const props = defineProps<{
     page7?: LpsPage7ResponseRow[];
     page7_score?: number;
     page7_max_score?: number;
+    page11_score?: number;
+    page11_max_score?: number;
   };
   timeRemainingSeconds?: number | null;
   testName?: string;
@@ -58,6 +64,7 @@ const { rows: lpsRows, solutions: lpsSolutions } = getLpsDataset(props.testName)
 const { rows: lpsPage5Rows, solutions: lpsPage5Solutions } = getLpsPage5Dataset(props.testName);
 const { rows: lpsPage6Rows, solutions: lpsPage6Solutions } = getLpsPage6Dataset(props.testName);
 const { rows: lpsPage7Rows, solutions: lpsPage7Solutions } = getLpsPage7Dataset(props.testName);
+const { rows: lpsPage11Rows, solutions: lpsPage11Solutions } = getLpsPage11Dataset(props.testName);
 
 const PAGE7_GRID_GAP_PX = 12;
 // Update this width if the shape panels get larger/smaller so the arrows anchor to the panel edges.
@@ -176,6 +183,15 @@ const page7Responses = ref<LpsPage7ResponseRow[]>(
   }),
 );
 
+const page11Responses = ref<LpsPage11ResponseRow[]>(
+  lpsPage11Rows.map((row, idx) => {
+    const pausedRow = props.pausedTestResult?.page11?.[idx];
+    return {
+      prompts: row.prompts.map((prompt, promptIdx) => buildSelection(prompt.options.length ?? 0, pausedRow?.prompts?.[promptIdx])),
+    };
+  }),
+);
+
 const page6OptionGroups = computed<LpsPage6OptionGroup[][]>(() =>
   lpsPage6Rows.map((row) => buildPage6OptionGroups(row.column8Options ?? [])),
 );
@@ -237,7 +253,7 @@ onBeforeUnmount(() => stopTimer());
 onBeforeUnmount(() => stopColumnTimer());
 
 watch(
-  [page1Responses, page5Responses, page6Responses, page7Responses, pageIndex, totalElapsed, columnStates],
+  [page1Responses, page5Responses, page6Responses, page7Responses, page11Responses, pageIndex, totalElapsed, columnStates],
   () => {
     emit('update:answers', {
       pageIndex: pageIndex.value,
@@ -255,6 +271,9 @@ watch(
       page7: page7Responses.value,
       page7_score: page7Score.value,
       page7_max_score: page7MaxScore.value,
+      page11: page11Responses.value,
+      page11_score: page11Score.value,
+      page11_max_score: page11MaxScore.value,
     });
   },
   { deep: true },
@@ -309,6 +328,7 @@ function confirmEnd() {
     page5: page5Responses.value,
     page6: page6Responses.value,
     page7: page7Responses.value,
+    page11: page11Responses.value,
     columnStates: columnStates.value,
     page1_score: page1Score.value,
     page1_max_score: page1MaxScore.value,
@@ -318,6 +338,8 @@ function confirmEnd() {
     page6_max_score: page6MaxScore.value,
     page7_score: page7Score.value,
     page7_max_score: page7MaxScore.value,
+    page11_score: page11Score.value,
+    page11_max_score: page11MaxScore.value,
   });
 }
 
@@ -327,7 +349,7 @@ function formatTime(seconds: number) {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-type ColumnKey = keyof LpsPage1ResponseRow | 'col7' | 'col8' | 'col9';
+type ColumnKey = keyof LpsPage1ResponseRow | 'col7' | 'col8' | 'col9' | 'col11';
 
 const COLUMN_INDEX_BY_KEY: Record<ColumnKey, number> = {
   col1: 0,
@@ -338,6 +360,7 @@ const COLUMN_INDEX_BY_KEY: Record<ColumnKey, number> = {
   col7: 5,
   col8: 6,
   col9: 7,
+  col11: 8,
 };
 
 function buildPage6OptionGroups(options: LpsPage6Option[]): LpsPage6OptionGroup[] {
@@ -396,6 +419,14 @@ function togglePage6Selection(rowIdx: number, charIdx: number) {
 function togglePage7Selection(rowIdx: number, promptIdx: number, optionIdx: number) {
   if (!isColumnInteractive('col9') || isPage7ExamplePrompt(rowIdx, promptIdx)) return;
   const row = page7Responses.value[rowIdx];
+  if (!row?.prompts?.[promptIdx]?.length) return;
+  const currentlySelected = row.prompts[promptIdx][optionIdx];
+  row.prompts[promptIdx] = row.prompts[promptIdx].map((_, idx) => (idx === optionIdx ? !currentlySelected : false));
+}
+
+function togglePage11Selection(rowIdx: number, promptIdx: number, optionIdx: number) {
+  if (!isColumnInteractive('col11')) return;
+  const row = page11Responses.value[rowIdx];
   if (!row?.prompts?.[promptIdx]?.length) return;
   const currentlySelected = row.prompts[promptIdx][optionIdx];
   row.prompts[promptIdx] = row.prompts[promptIdx].map((_, idx) => (idx === optionIdx ? !currentlySelected : false));
@@ -618,11 +649,43 @@ const page7MaxScore = computed(() =>
   }, 0),
 );
 
+function scorePage11Row(rowIdx: number, solutions: LpsPage11Solution, responses: LpsPage11ResponseRow) {
+  return solutions.correctOptionIndices.reduce((sum, correctIdx, promptIdx) => {
+    if (correctIdx === null || correctIdx === undefined) return sum;
+    const picks = responses.prompts?.[promptIdx];
+    if (!picks?.length) return sum;
+    return picks[correctIdx] ? sum + 1 : sum;
+  }, 0);
+}
+
+const page11Score = computed(() =>
+  page11Responses.value.reduce((total, response, idx) => {
+    const solutions = lpsPage11Solutions[idx];
+    if (!solutions) return total;
+    return total + scorePage11Row(idx, solutions, response);
+  }, 0),
+);
+
+const page11MaxScore = computed(() =>
+  lpsPage11Solutions.reduce((total, solution) => {
+    const rowTotal = solution.correctOptionIndices.reduce(
+      (rowSum, idx) => (idx !== null && idx !== undefined ? rowSum + 1 : rowSum),
+      0,
+    );
+    return total + rowTotal;
+  }, 0),
+);
+
 const totalScore = computed(
-  () => page1Score.value + page5Score.value + page6Score.value + page7Score.value,
+  () => page1Score.value + page5Score.value + page6Score.value + page7Score.value + page11Score.value,
 );
 const totalMaxScore = computed(
-  () => page1MaxScore.value + page5MaxScore.value + page6MaxScore.value + page7MaxScore.value,
+  () =>
+    page1MaxScore.value +
+    page5MaxScore.value +
+    page6MaxScore.value +
+    page7MaxScore.value +
+    page11MaxScore.value,
 );
 </script>
 
@@ -658,8 +721,8 @@ const totalMaxScore = computed(
       <div v-if="!showTest" class="rounded-2xl border bg-background p-8 shadow-sm">
           <div class="mx-auto max-w-3xl space-y-4 text-center">
             <p class="text-base text-muted-foreground">
-              Der {{ testLabel }}-Test umfasst sieben Schritte. Beginnen Sie mit den Spalten 1 und 2, anschließend folgen
-              die Spalten 3, 4, 5, 7, 8 und 9 jeweils auf einer eigenen Seite. Arbeiten Sie jede Zeile von oben nach
+              Der {{ testLabel }}-Test umfasst acht Schritte. Beginnen Sie mit den Spalten 1 und 2, anschließend folgen
+              die Spalten 3, 4, 5, 7, 8, 9 und 11 jeweils auf einer eigenen Seite. Arbeiten Sie jede Zeile von oben nach
               unten durch.
             </p>
             <Button class="px-8" @click="startTest">Test starten</Button>
@@ -1092,6 +1155,55 @@ const totalMaxScore = computed(
                         {{ option }}
                       </button>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Page 8: Spalte 11 -->
+        <div v-else-if="pageIndex === 7" class="space-y-3">
+          <div class="rounded-2xl border bg-background p-4 shadow-sm">
+            <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 11</div>
+
+            <div class="space-y-4">
+              <div
+                v-for="(row, rowIdx) in lpsPage11Rows"
+                :key="`${row.id}-c11`"
+                class="space-y-3"
+              >
+                <div class="grid gap-3 md:grid-cols-3">
+                  <div
+                    v-for="(prompt, promptIdx) in row.prompts"
+                    :key="prompt.id"
+                    class="space-y-3 rounded-lg bg-background p-3 shadow-sm"
+                  >
+                    <div class="flex justify-center">
+                      <div
+                        class="lps-shape-panel"
+                        v-html="prompt.svg"
+                        :style="getShapePanelStyle(prompt.svgMeta)"
+                      ></div>
+                    </div>
+
+                    <div v-if="prompt.options.length" class="flex flex-wrap justify-center gap-2">
+                      <button
+                        v-for="(option, optionIdx) in prompt.options"
+                        :key="`${prompt.id}-${option}`"
+                        type="button"
+                        class="lps-number-chip"
+                        :class="page11Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]
+                          ? 'lps-number-chip--selected'
+                          : ''"
+                        :disabled="!isColumnInteractive('col11')"
+                        :aria-pressed="page11Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]"
+                        @click="togglePage11Selection(rowIdx, promptIdx, optionIdx)"
+                      >
+                        {{ option }}
+                      </button>
+                    </div>
+                    <div v-else class="text-center text-xs text-muted-foreground">Noch keine Antwortoptionen hinterlegt.</div>
                   </div>
                 </div>
               </div>
