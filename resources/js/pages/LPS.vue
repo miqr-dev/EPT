@@ -113,12 +113,10 @@ function getPage7ShapeWidth(rowIdx: number) {
 function getPage7ArrowStyle(rowIdx: number, fromCol: number, toCol: number) {
   const columnWidth = `calc((100% - (${PAGE7_GRID_GAP_PX * 2}px)) / 3)`;
   const shapeWidth = getPage7ShapeWidth(rowIdx);
-  const startLeft = `calc((${columnWidth} * ${fromCol - 0.5}) + ${PAGE7_GRID_GAP_PX * (fromCol - 1)}px + ${
-    shapeWidth / 2 + PAGE7_ARROW_INSET_PX
-  }px)`;
-  const width = `calc((${columnWidth} * ${toCol - fromCol}) + ${PAGE7_GRID_GAP_PX * (toCol - fromCol)}px - ${
-    shapeWidth + PAGE7_ARROW_INSET_PX * 2
-  }px)`;
+  const startLeft = `calc((${columnWidth} * ${fromCol - 0.5}) + ${PAGE7_GRID_GAP_PX * (fromCol - 1)}px + ${shapeWidth / 2 + PAGE7_ARROW_INSET_PX
+    }px)`;
+  const width = `calc((${columnWidth} * ${toCol - fromCol}) + ${PAGE7_GRID_GAP_PX * (toCol - fromCol)}px - ${shapeWidth + PAGE7_ARROW_INSET_PX * 2
+    }px)`;
 
   return { left: startLeft, width } as const;
 }
@@ -788,579 +786,450 @@ const totalMaxScore = computed(
 
   <!-- Whole page scrolls -->
   <div class="min-h-screen overflow-x-auto bg-muted/15 p-4">
-   <div class="flex justify-center">
-     <div class="mx-auto w-[1120px] max-w-none">
-      <!-- Top bar -->
-      <div class="mb-4 flex items-end justify-between gap-4">
-        <div class="space-y-1">
-          <h1 class="text-xl font-bold tracking-tight">{{ testLabel }}</h1>
-          <div class="text-xs text-muted-foreground" v-if="showTest">Seite {{ pageIndex + 1 }} / {{ pageCount }}</div>
+    <div class="flex justify-center">
+      <div class="mx-auto w-[1120px] max-w-none">
+        <!-- Top bar -->
+        <div class="mb-4 flex items-end justify-between gap-4">
+          <div class="space-y-1">
+            <h1 class="text-xl font-bold tracking-tight">{{ testLabel }}</h1>
+            <div class="text-xs text-muted-foreground" v-if="showTest">Seite {{ pageIndex + 1 }} / {{ pageCount }}</div>
+          </div>
+
+          <div class="flex flex-col items-end gap-2">
+            <div class="w-[520px]">
+              <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
+            </div>
+            <div v-if="showTest" class="flex items-center gap-3 text-xs text-muted-foreground">
+              <span class="font-medium text-foreground">Zeit: {{ formatTime(totalElapsed) }}</span>
+              <span v-if="isForcedFinish" class="font-semibold text-destructive">
+                Test wird beendet in {{ forcedFinishCountdown }}s
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div class="flex flex-col items-end gap-2">
-          <div class="w-[520px]">
-            <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
-          </div>
-          <div v-if="showTest" class="flex items-center gap-3 text-xs text-muted-foreground">
-            <span class="font-medium text-foreground">Zeit: {{ formatTime(totalElapsed) }}</span>
-            <span v-if="isForcedFinish" class="font-semibold text-destructive">
-              Test wird beendet in {{ forcedFinishCountdown }}s
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Start screen -->
-      <div v-if="!showTest" class="rounded-2xl border bg-background p-8 shadow-sm">
+        <!-- Start screen -->
+        <div v-if="!showTest" class="rounded-2xl border bg-background p-8 shadow-sm">
           <div class="mx-auto max-w-3xl space-y-4 text-center">
             <p class="text-base text-muted-foreground">
-              Der {{ testLabel }}-Test umfasst sieben Schritte. Beginnen Sie mit den Spalten 1 und 2, anschließend folgen
+              Der {{ testLabel }}-Test umfasst sieben Schritte. Beginnen Sie mit den Spalten 1 und 2, anschließend
+              folgen
               die Spalten 3, 4, 5, 7, 8 und 9 jeweils auf einer eigenen Seite. Arbeiten Sie jede Zeile von oben nach
               unten durch.
             </p>
             <Button class="px-8" @click="startTest">Test starten</Button>
           </div>
-      </div>
-
-      <!-- Test -->
-      <div v-else class="space-y-4">
-        <!-- Controls -->
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <Button variant="outline" size="sm" :disabled="pageIndex === 0 || isAnyColumnActive" @click="prevPage">
-              Zurück
-            </Button>
-            <Button variant="secondary" size="sm"
-              :disabled="pageIndex >= pageCount - 1 || isAnyVisibleColumnActive" @click="nextPage">
-              Weiter
-            </Button>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <Button variant="destructive" size="sm" @click="finishTest">Test beenden</Button>
-          </div>
         </div>
 
-        <!-- Column timers / start buttons -->
-        <div class="rounded-xl border bg-background px-4 py-3 shadow-sm">
-          <div class="flex items-center justify-between gap-4">
-            <div class="text-xs text-muted-foreground">
-              Spalte starten (Dauer: {{ sectionDurationText }}). Nur eine Spalte gleichzeitig.
+        <!-- Test -->
+        <div v-else class="space-y-4">
+          <!-- Controls -->
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <Button variant="outline" size="sm" :disabled="pageIndex === 0 || isAnyColumnActive" @click="prevPage">
+                Zurück
+              </Button>
+              <Button variant="secondary" size="sm" :disabled="pageIndex >= pageCount - 1 || isAnyVisibleColumnActive"
+                @click="nextPage">
+                Weiter
+              </Button>
             </div>
 
-            <div class="flex items-center gap-3">
-              <div v-for="entry in visibleColumnStates" :key="`column-state-${entry.idx}`" class="flex items-center gap-2">
-                <div
-                  class="rounded-lg border px-3 py-2 text-xs"
-                  :class="entry.state?.status === 'active'
+            <div class="flex items-center gap-2">
+              <Button variant="destructive" size="sm" @click="finishTest">Test beenden</Button>
+            </div>
+          </div>
+
+          <!-- Column timers / start buttons -->
+          <div class="rounded-xl border bg-background px-4 py-3 shadow-sm">
+            <div class="flex items-center justify-between gap-4">
+              <div class="text-xs text-muted-foreground">
+                Spalte starten (Dauer: {{ sectionDurationText }}). Nur eine Spalte gleichzeitig.
+              </div>
+
+              <div class="flex items-center gap-3">
+                <div v-for="entry in visibleColumnStates" :key="`column-state-${entry.idx}`"
+                  class="flex items-center gap-2">
+                  <div class="rounded-lg border px-3 py-2 text-xs" :class="entry.state?.status === 'active'
                     ? 'border-destructive/50 bg-destructive/5 text-destructive'
                     : entry.state?.status === 'ready'
                       ? 'border-foreground/20 bg-background text-foreground'
                       : entry.state?.status === 'finished'
                         ? 'border-foreground/10 bg-muted/30 text-muted-foreground'
-                        : 'border-foreground/10 bg-muted/20 text-muted-foreground'"
-                >
-                  <div class="flex items-center gap-2">
-                    <span class="font-semibold">Sp {{ getColumnLabel(entry.idx) }}</span>
-                    <span v-if="entry.state?.status === 'active'" class="tabular-nums font-semibold">
-                      {{ formatColumnRemaining(entry.state.remaining) }}
-                    </span>
-                    <span v-else-if="entry.state?.status === 'ready'">bereit</span>
-                    <span v-else-if="entry.state?.status === 'finished'">fertig</span>
-                    <span v-else>gesperrt</span>
+                        : 'border-foreground/10 bg-muted/20 text-muted-foreground'">
+                    <div class="flex items-center gap-2">
+                      <span class="font-semibold">Sp {{ getColumnLabel(entry.idx) }}</span>
+                      <span v-if="entry.state?.status === 'active'" class="tabular-nums font-semibold">
+                        {{ formatColumnRemaining(entry.state.remaining) }}
+                      </span>
+                      <span v-else-if="entry.state?.status === 'ready'">bereit</span>
+                      <span v-else-if="entry.state?.status === 'finished'">fertig</span>
+                      <span v-else>gesperrt</span>
+                    </div>
                   </div>
-                </div>
 
-                <Button v-if="entry.state?.status === 'ready'" size="sm" :disabled="isAnyColumnActive"
-                  @click="startColumn(entry.idx)">
-                  Start
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Page 1: Spalten 1 + 2 -->
-        <div v-if="pageIndex === 0" class="space-y-3">
-          <div class="rounded-2xl border bg-background p-4 shadow-sm">
-            <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalten 1 + 2</div>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c1`" class="py-[1px]">
-                  <div class="lps-letters">
-                    <button v-for="(char, charIdx) in row.column1.split('')" :key="`${row.id}-1-${charIdx}`"
-                      type="button" class="lps-letter"
-                      :class="page1Responses[idx].col1[charIdx] ? 'lps-letter--selected' : ''"
-                      :disabled="!isColumnInteractive('col1')" :aria-pressed="page1Responses[idx].col1[charIdx]"
-                      @click="toggleSelection(idx, 'col1', charIdx)">
-                      {{ char }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="lps-sep">
-                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[1px]">
-                  <div class="lps-letters">
-                    <button v-for="(char, charIdx) in row.column2.split('')" :key="`${row.id}-2-${charIdx}`"
-                      type="button" class="lps-letter"
-                      :class="page1Responses[idx].col2[charIdx] ? 'lps-letter--selected' : ''"
-                      :disabled="!isColumnInteractive('col2')" :aria-pressed="page1Responses[idx].col2[charIdx]"
-                      @click="toggleSelection(idx, 'col2', charIdx)">
-                      {{ char }}
-                    </button>
-                  </div>
+                  <Button v-if="entry.state?.status === 'ready'" size="sm" :disabled="isAnyColumnActive"
+                    @click="startColumn(entry.idx)">
+                    Start
+                  </Button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Page 2: Spalte 3 -->
-        <div v-else-if="pageIndex === 1" class="space-y-3">
-          <div class="rounded-2xl border bg-background p-4 shadow-sm">
-            <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 3</div>
+          <!-- Page 1: Spalten 1 + 2 -->
+          <div v-if="pageIndex === 0" class="space-y-3">
+            <div class="rounded-2xl border bg-background p-4 shadow-sm">
+              <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalten 1 + 2</div>
 
-            <div class="flex justify-center">
-              <div class="w-full max-w-4xl">
-                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[10px]">
-                  <div v-if="row.column3?.length">
-                    <div
-                      v-if="row.column3SvgMeta && row.column3.every((option) => option.pathData)"
-                      class="flex items-center justify-center leading-none"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        version="1.1"
-                        class="lps-column3-svg select-none"
-                        :viewBox="row.column3SvgMeta.viewBox"
-                        :width="row.column3SvgMeta.width"
-                        :height="row.column3SvgMeta.height"
-                      >
-                        <g
-                          v-for="(option, optionIdx) in row.column3"
-                          :id="option.id"
-                          :key="option.id"
-                          role="button"
-                          class="lps-figure-shape-group"
-                          :transform="option.transform"
-                          :tabindex="isColumnInteractive('col3') ? 0 : -1"
-                          :aria-pressed="page1Responses[idx].col3[optionIdx]"
-                          :class="!isColumnInteractive('col3') ? 'lps-figure-shape--disabled' : ''"
-                          @click="isColumnInteractive('col3') && toggleSelection(idx, 'col3', optionIdx)"
-                          @keydown.enter.prevent="toggleSelection(idx, 'col3', optionIdx)"
-                          @keydown.space.prevent="toggleSelection(idx, 'col3', optionIdx)"
-                        >
-                          <path
-                            class="lps-figure-hit"
-                            :d="option.pathData"
-                          />
-                          <path
-                            fill="#090d0e"
-                            class="lps-figure-shape"
-                            :class="[
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c1`" class="py-[1px]">
+                    <div class="lps-letters">
+                      <button v-for="(char, charIdx) in row.column1.split('')" :key="`${row.id}-1-${charIdx}`"
+                        type="button" class="lps-letter"
+                        :class="page1Responses[idx].col1[charIdx] ? 'lps-letter--selected' : ''"
+                        :disabled="!isColumnInteractive('col1')" :aria-pressed="page1Responses[idx].col1[charIdx]"
+                        @click="toggleSelection(idx, 'col1', charIdx)">
+                        {{ char }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="lps-sep">
+                  <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[1px]">
+                    <div class="lps-letters">
+                      <button v-for="(char, charIdx) in row.column2.split('')" :key="`${row.id}-2-${charIdx}`"
+                        type="button" class="lps-letter"
+                        :class="page1Responses[idx].col2[charIdx] ? 'lps-letter--selected' : ''"
+                        :disabled="!isColumnInteractive('col2')" :aria-pressed="page1Responses[idx].col2[charIdx]"
+                        @click="toggleSelection(idx, 'col2', charIdx)">
+                        {{ char }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Page 2: Spalte 3 -->
+          <div v-else-if="pageIndex === 1" class="space-y-3">
+            <div class="rounded-2xl border bg-background p-4 shadow-sm">
+              <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 3</div>
+
+              <div class="flex justify-center">
+                <div class="w-full max-w-4xl">
+                  <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[10px]">
+                    <div v-if="row.column3?.length">
+                      <div v-if="row.column3SvgMeta && row.column3.every((option) => option.pathData)"
+                        class="flex items-center justify-center leading-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="lps-column3-svg select-none"
+                          :viewBox="row.column3SvgMeta.viewBox" :width="row.column3SvgMeta.width"
+                          :height="row.column3SvgMeta.height">
+                          <g v-for="(option, optionIdx) in row.column3" :id="option.id" :key="option.id" role="button"
+                            class="lps-figure-shape-group" :transform="option.transform"
+                            :tabindex="isColumnInteractive('col3') ? 0 : -1"
+                            :aria-pressed="page1Responses[idx].col3[optionIdx]"
+                            :class="!isColumnInteractive('col3') ? 'lps-figure-shape--disabled' : ''"
+                            @click="isColumnInteractive('col3') && toggleSelection(idx, 'col3', optionIdx)"
+                            @keydown.enter.prevent="toggleSelection(idx, 'col3', optionIdx)"
+                            @keydown.space.prevent="toggleSelection(idx, 'col3', optionIdx)">
+                            <path class="lps-figure-hit" :d="option.pathData" />
+                            <path fill="#090d0e" class="lps-figure-shape" :class="[
                               page1Responses[idx].col3[optionIdx] ? 'lps-figure-shape--selected' : '',
-                            ]"
-                            :d="option.pathData"
-                          />
-                          <clipPath :id="`${option.id}-clip`">
-                            <path :d="option.pathData" :transform="option.transform" />
-                          </clipPath>
-                          <line
-                            v-if="page1Responses[idx].col3[optionIdx]"
-                            class="lps-figure-slash"
-                            :clip-path="`url(#${option.id}-clip)`"
-                            x1="0"
-                            :y1="row.column3SvgMeta.height - 6"
-                            :x2="row.column3SvgMeta.width"
-                            y2="6"
-                          />
-                        </g>
-                      </svg>
-                    </div>
-                    <div v-else class="grid grid-cols-8 gap-1">
-                      <button
-                        v-for="(option, optionIdx) in row.column3"
-                        :id="option.id"
-                        :key="option.id"
-                        type="button"
-                        class="lps-figure"
-                        :class="page1Responses[idx].col3[optionIdx] ? 'lps-figure--selected' : ''"
-                        :disabled="!isColumnInteractive('col3')"
-                        :aria-pressed="page1Responses[idx].col3[optionIdx]"
-                        @click="toggleSelection(idx, 'col3', optionIdx)"
-                      >
-                        <img :src="option.src" class="mx-auto h-9 w-9" alt="" />
-                      </button>
-                    </div>
-                  </div>
-                  <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Page 3: Spalte 4 -->
-        <div v-else-if="pageIndex === 2" class="space-y-3">
-          <div class="rounded-2xl border bg-background p-4 shadow-sm">
-            <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 4</div>
-
-            <div>
-              <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c4`" class="py-[1px]">
-                <div class="lps-letters">
-                  <button v-for="(char, charIdx) in row.column4.split(' ')" :key="`${row.id}-4-${charIdx}`"
-                    type="button" class="lps-letter"
-                    :class="page1Responses[idx].col4[charIdx] ? 'lps-letter--selected' : ''"
-                    :disabled="!isColumnInteractive('col4')" :aria-pressed="page1Responses[idx].col4[charIdx]"
-                    @click="toggleSelection(idx, 'col4', charIdx)">
-                    {{ char }}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Page 4: Spalte 5 -->
-        <div v-else-if="pageIndex === 3" class="space-y-3">
-          <div class="rounded-2xl border bg-background p-4 shadow-sm">
-            <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 5</div>
-
-            <div>
-              <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c5`" class="py-[1px]">
-                <div class="lps-letters">
-                  <button v-for="(char, charIdx) in row.column5.split('')" :key="`${row.id}-5-${charIdx}`"
-                    type="button" class="lps-letter"
-                    :class="page1Responses[idx].col5[charIdx] ? 'lps-letter--selected' : ''"
-                    :disabled="!isColumnInteractive('col5')" :aria-pressed="page1Responses[idx].col5[charIdx]"
-                    @click="toggleSelection(idx, 'col5', charIdx)">
-                    {{ char }}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Page 5: Spalte 7 -->
-        <div v-else-if="pageIndex === 4" class="space-y-3">
-          <div class="rounded-2xl border bg-background p-4 shadow-sm">
-            <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 7</div>
-
-            <div class="flex justify-center">
-              <div class="w-full max-w-4xl">
-                <div v-for="(row, idx) in lpsPage5Rows" :key="`${row.id}-c7`" class="py-[10px]">
-                  <div v-if="row.column7?.length">
-                    <div
-                      v-if="row.column7SvgMeta && row.column7.every((option) => option.pathData)"
-                      class="flex items-center justify-center leading-none"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        version="1.1"
-                        class="lps-column3-svg select-none"
-                        :viewBox="row.column7SvgMeta.viewBox"
-                        :width="row.column7SvgMeta.width"
-                        :height="row.column7SvgMeta.height"
-                      >
-                        <g
-                          v-for="(option, optionIdx) in row.column7"
-                          :id="option.id"
-                          :key="option.id"
-                          role="button"
-                          class="lps-figure-shape-group"
-                          :transform="option.transform"
-                          :tabindex="isColumnInteractive('col7') ? 0 : -1"
-                          :aria-pressed="page5Responses[idx].col7[optionIdx]"
-                          :class="!isColumnInteractive('col7') ? 'lps-figure-shape--disabled' : ''"
-                          @click="isColumnInteractive('col7') && togglePage5Selection(idx, optionIdx)"
-                          @keydown.enter.prevent="togglePage5Selection(idx, optionIdx)"
-                          @keydown.space.prevent="togglePage5Selection(idx, optionIdx)"
-                        >
-                          <path
-                            class="lps-figure-hit"
-                            :d="option.pathData"
-                          />
-                          <path
-                            fill="#090d0e"
-                            class="lps-figure-shape"
-                            :class="[
-                              page5Responses[idx].col7[optionIdx] ? 'lps-figure-shape--selected' : '',
-                            ]"
-                            :d="option.pathData"
-                          />
-                          <clipPath :id="`${option.id}-clip`">
-                            <path :d="option.pathData" :transform="option.transform" />
-                          </clipPath>
-                          <line
-                            v-if="page5Responses[idx].col7[optionIdx]"
-                            class="lps-figure-slash"
-                            :clip-path="`url(#${option.id}-clip)`"
-                            x1="0"
-                            :y1="row.column7SvgMeta.height - 6"
-                            :x2="row.column7SvgMeta.width"
-                            y2="6"
-                          />
-                        </g>
-                      </svg>
-                    </div>
-                    <div v-else class="grid grid-cols-8 gap-1">
-                      <button
-                        v-for="(option, optionIdx) in row.column7"
-                        :id="option.id"
-                        :key="option.id"
-                        type="button"
-                        class="lps-figure"
-                        :class="page5Responses[idx].col7[optionIdx] ? 'lps-figure--selected' : ''"
-                        :disabled="!isColumnInteractive('col7')"
-                        :aria-pressed="page5Responses[idx].col7[optionIdx]"
-                        @click="togglePage5Selection(idx, optionIdx)"
-                      >
-                        <img :src="option.src" class="mx-auto h-9 w-9" alt="" />
-                      </button>
-                    </div>
-                  </div>
-                  <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Page 6: Spalte 8 -->
-        <div v-else-if="pageIndex === 5" class="space-y-3">
-          <div class="rounded-2xl border bg-background p-4 shadow-sm">
-            <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 8</div>
-
-            <div class="space-y-6">
-              <div v-for="(row, idx) in lpsPage6Rows" :key="`${row.id}-c8`" class="rounded-xl border bg-muted/40 p-4">
-                <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-[1.25fr_1fr]">
-                  <div class="flex justify-center">
-                    <div
-                      v-if="row.column8Svg"
-                      class="flex items-center justify-center rounded-lg bg-white p-3 shadow-sm"
-                      v-html="row.column8Svg"
-                      :style="{ width: `${row.column8SvgMeta?.width ?? 420}px`, height: `${row.column8SvgMeta?.height ?? 220}px` }"
-                    ></div>
-                    <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
-                  </div>
-
-                  <div class="space-y-2">
-                    <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Antwort auswählen</div>
-                    <div v-if="page6OptionGroups[idx].length" class="space-y-2">
-                      <div
-                        v-for="group in page6OptionGroups[idx]"
-                        :key="`${row.id}-c8-group-${group.label}`"
-                        class="flex items-center gap-3"
-                      >
-                        <div class="lps-number-label">
-                          {{ group.label }}
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                          <button
-                            v-for="groupOption in group.options"
-                            :key="`${row.id}-c8-${groupOption.index}`"
-                            type="button"
-                            class="lps-letter"
-                            :class="page6Responses[idx].col8[groupOption.index] ? 'lps-letter--selected' : ''"
-                            :disabled="!isColumnInteractive('col8') || !row.column8Svg"
-                            :aria-pressed="page6Responses[idx].col8[groupOption.index]"
-                            @click="togglePage6Selection(idx, groupOption.index)"
-                          >
-                            {{ groupOption.option.label }}
-                          </button>
-                        </div>
+                            ]" :d="option.pathData" />
+                            <clipPath :id="`${option.id}-clip`">
+                              <path :d="option.pathData" :transform="option.transform" />
+                            </clipPath>
+                            <line v-if="page1Responses[idx].col3[optionIdx]" class="lps-figure-slash"
+                              :clip-path="`url(#${option.id}-clip)`" x1="0" :y1="row.column3SvgMeta.height - 6"
+                              :x2="row.column3SvgMeta.width" y2="6" />
+                          </g>
+                        </svg>
+                      </div>
+                      <div v-else class="grid grid-cols-8 gap-1">
+                        <button v-for="(option, optionIdx) in row.column3" :id="option.id" :key="option.id"
+                          type="button" class="lps-figure"
+                          :class="page1Responses[idx].col3[optionIdx] ? 'lps-figure--selected' : ''"
+                          :disabled="!isColumnInteractive('col3')" :aria-pressed="page1Responses[idx].col3[optionIdx]"
+                          @click="toggleSelection(idx, 'col3', optionIdx)">
+                          <img :src="option.src" class="mx-auto h-9 w-9" alt="" />
+                        </button>
                       </div>
                     </div>
-                    <div v-else class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      <button
-                        v-for="(option, optionIdx) in row.column8Options"
-                        :key="`${row.id}-c8-${optionIdx}`"
-                        type="button"
-                        class="lps-letter"
-                        :class="page6Responses[idx].col8[optionIdx] ? 'lps-letter--selected' : ''"
-                        :disabled="!isColumnInteractive('col8') || !row.column8Svg"
-                        :aria-pressed="page6Responses[idx].col8[optionIdx]"
-                        @click="togglePage6Selection(idx, optionIdx)"
-                      >
-                        {{ option.label }}
-                      </button>
-                    </div>
+                    <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Page 7: Spalte 9 -->
-        <div v-else-if="pageIndex === 6" class="space-y-3">
-          <div class="rounded-2xl border bg-background p-4 shadow-sm">
-            <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 9</div>
+          <!-- Page 3: Spalte 4 -->
+          <div v-else-if="pageIndex === 2" class="space-y-3">
+            <div class="rounded-2xl border bg-background p-4 shadow-sm">
+              <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 4</div>
 
-            <div class="space-y-4">
-              <div
-                v-for="(row, rowIdx) in lpsPage7Rows"
-                :key="`${row.id}-c9`"
-                class="relative space-y-3"
-              >
-                <div
-                  v-if="page7Arrows[rowIdx]?.length"
-                  class="pointer-events-none absolute inset-x-0 top-0 w-full"
-                  aria-hidden="true"
-                >
-                  <div
-                    v-for="(arrow, arrowIdx) in page7Arrows[rowIdx]"
-                    :key="`${row.id}-arrow-${arrowIdx}`"
-                    class="page7-arrow"
-                    :style="getPage7ArrowStyle(rowIdx, arrow.from, arrow.to)"
-                  ></div>
+              <div>
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c4`" class="py-[1px]">
+                  <div class="lps-letters">
+                    <button v-for="(char, charIdx) in row.column4.split(' ')" :key="`${row.id}-4-${charIdx}`"
+                      type="button" class="lps-letter"
+                      :class="page1Responses[idx].col4[charIdx] ? 'lps-letter--selected' : ''"
+                      :disabled="!isColumnInteractive('col4')" :aria-pressed="page1Responses[idx].col4[charIdx]"
+                      @click="toggleSelection(idx, 'col4', charIdx)">
+                      {{ char }}
+                    </button>
+                  </div>
                 </div>
-                <div class="grid gap-3 md:grid-cols-3">
-                  <div
-                    v-for="(prompt, promptIdx) in row.prompts"
-                    :key="prompt.id"
-                    class="space-y-3 rounded-lg bg-background p-3 shadow-sm"
-                  >
+              </div>
+            </div>
+          </div>
+
+          <!-- Page 4: Spalte 5 -->
+          <div v-else-if="pageIndex === 3" class="space-y-3">
+            <div class="rounded-2xl border bg-background p-4 shadow-sm">
+              <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 5</div>
+
+              <div>
+                <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c5`" class="py-[1px]">
+                  <div class="lps-letters">
+                    <button v-for="(char, charIdx) in row.column5.split('')" :key="`${row.id}-5-${charIdx}`"
+                      type="button" class="lps-letter"
+                      :class="page1Responses[idx].col5[charIdx] ? 'lps-letter--selected' : ''"
+                      :disabled="!isColumnInteractive('col5')" :aria-pressed="page1Responses[idx].col5[charIdx]"
+                      @click="toggleSelection(idx, 'col5', charIdx)">
+                      {{ char }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Page 5: Spalte 7 -->
+          <div v-else-if="pageIndex === 4" class="space-y-3">
+            <div class="rounded-2xl border bg-background p-4 shadow-sm">
+              <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 7</div>
+
+              <div class="flex justify-center">
+                <div class="w-full max-w-4xl">
+                  <div v-for="(row, idx) in lpsPage5Rows" :key="`${row.id}-c7`" class="py-[10px]">
+                    <div v-if="row.column7?.length">
+                      <div v-if="row.column7SvgMeta && row.column7.every((option) => option.pathData)"
+                        class="flex items-center justify-center leading-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="lps-column3-svg select-none"
+                          :viewBox="row.column7SvgMeta.viewBox" :width="row.column7SvgMeta.width"
+                          :height="row.column7SvgMeta.height">
+                          <g v-for="(option, optionIdx) in row.column7" :id="option.id" :key="option.id" role="button"
+                            class="lps-figure-shape-group" :transform="option.transform"
+                            :tabindex="isColumnInteractive('col7') ? 0 : -1"
+                            :aria-pressed="page5Responses[idx].col7[optionIdx]"
+                            :class="!isColumnInteractive('col7') ? 'lps-figure-shape--disabled' : ''"
+                            @click="isColumnInteractive('col7') && togglePage5Selection(idx, optionIdx)"
+                            @keydown.enter.prevent="togglePage5Selection(idx, optionIdx)"
+                            @keydown.space.prevent="togglePage5Selection(idx, optionIdx)">
+                            <path class="lps-figure-hit" :d="option.pathData" />
+                            <path fill="#090d0e" class="lps-figure-shape" :class="[
+                              page5Responses[idx].col7[optionIdx] ? 'lps-figure-shape--selected' : '',
+                            ]" :d="option.pathData" />
+                            <clipPath :id="`${option.id}-clip`">
+                              <path :d="option.pathData" :transform="option.transform" />
+                            </clipPath>
+                            <line v-if="page5Responses[idx].col7[optionIdx]" class="lps-figure-slash"
+                              :clip-path="`url(#${option.id}-clip)`" x1="0" :y1="row.column7SvgMeta.height - 6"
+                              :x2="row.column7SvgMeta.width" y2="6" />
+                          </g>
+                        </svg>
+                      </div>
+                      <div v-else class="grid grid-cols-8 gap-1">
+                        <button v-for="(option, optionIdx) in row.column7" :id="option.id" :key="option.id"
+                          type="button" class="lps-figure"
+                          :class="page5Responses[idx].col7[optionIdx] ? 'lps-figure--selected' : ''"
+                          :disabled="!isColumnInteractive('col7')" :aria-pressed="page5Responses[idx].col7[optionIdx]"
+                          @click="togglePage5Selection(idx, optionIdx)">
+                          <img :src="option.src" class="mx-auto h-9 w-9" alt="" />
+                        </button>
+                      </div>
+                    </div>
+                    <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Page 6: Spalte 8 -->
+          <div v-else-if="pageIndex === 5" class="space-y-3">
+            <div class="rounded-2xl border bg-background p-4 shadow-sm">
+              <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 8</div>
+
+              <div class="space-y-6">
+                <div v-for="(row, idx) in lpsPage6Rows" :key="`${row.id}-c8`" class="rounded-xl border bg-muted/40 p-4">
+                  <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-[1.25fr_1fr]">
                     <div class="flex justify-center">
-                      <div
-                        class="lps-shape-panel"
-                        v-html="prompt.svg"
-                        :style="getShapePanelStyle(prompt.svgMeta)"
-                      ></div>
+                      <div v-if="row.column8Svg"
+                        class="flex items-center justify-center rounded-lg bg-white p-3 shadow-sm"
+                        v-html="row.column8Svg"
+                        :style="{ width: `${row.column8SvgMeta?.width ?? 420}px`, height: `${row.column8SvgMeta?.height ?? 220}px` }">
+                      </div>
+                      <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
                     </div>
 
-                    <div class="flex flex-wrap justify-center gap-2">
-                      <button
-                        v-for="(option, optionIdx) in prompt.options"
-                        :key="`${prompt.id}-${option}`"
-                        type="button"
-                        class="lps-number-chip"
-                        :class="page7Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]
-                          ? 'lps-number-chip--selected'
-                          : ''"
-                        :disabled="!isColumnInteractive('col9') || isPage7ExamplePrompt(rowIdx, promptIdx)"
-                        :aria-pressed="page7Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]"
-                        @click="togglePage7Selection(rowIdx, promptIdx, optionIdx)"
-                      >
-                        {{ option }}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div v-else-if="pageIndex === 8" class="space-y-3">
-          <div class="rounded-2xl border bg-background p-4 shadow-sm">
-            <div class="mb-1 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 11</div>
-            <p class="text-center text-xs text-muted-foreground">Finde den richtigen Buchstaben zu jeder Form.</p>
-
-            <div class="space-y-4">
-              <div
-                v-for="(row, rowIdx) in lpsPage9Rows"
-                :key="`${row.id}-c11`"
-                class="rounded-xl border bg-muted/30 p-4 shadow-sm"
-              >
-                <div class="grid gap-3 md:grid-cols-3">
-                  <div
-                    v-for="(prompt, promptIdx) in row.prompts"
-                    :key="prompt.id"
-                    class="space-y-3 rounded-lg bg-background p-3 shadow-sm"
-                  >
-                    <div class="flex justify-center">
-                      <div
-                        class="lps-shape-panel page9-shape-panel"
-                        v-html="prompt.svg"
-                        :style="getShapePanelStyle(prompt.svgMeta)"
-                      ></div>
-                    </div>
-
-                    <div class="flex flex-wrap justify-center gap-2">
-                      <button
-                        v-for="(option, optionIdx) in prompt.options"
-                        :key="`${prompt.id}-${option}`"
-                        type="button"
-                        class="page9-letter"
-                        :class="page9Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx] ? 'page9-letter--selected' : ''"
-                        :disabled="!isColumnInteractive('col11')"
-                        :aria-pressed="page9Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]"
-                        @click="togglePage9Selection(rowIdx, promptIdx, optionIdx)"
-                      >
-                        {{ option }}
-                      </button>
+                    <div class="space-y-2">
+                      <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Antwort auswählen
+                      </div>
+                      <div v-if="page6OptionGroups[idx].length" class="space-y-2">
+                        <div v-for="group in page6OptionGroups[idx]" :key="`${row.id}-c8-group-${group.label}`"
+                          class="flex items-center gap-3">
+                          <div class="lps-number-label">
+                            {{ group.label }}
+                          </div>
+                          <div class="flex flex-wrap gap-2">
+                            <button v-for="groupOption in group.options" :key="`${row.id}-c8-${groupOption.index}`"
+                              type="button" class="lps-letter"
+                              :class="page6Responses[idx].col8[groupOption.index] ? 'lps-letter--selected' : ''"
+                              :disabled="!isColumnInteractive('col8') || !row.column8Svg"
+                              :aria-pressed="page6Responses[idx].col8[groupOption.index]"
+                              @click="togglePage6Selection(idx, groupOption.index)">
+                              {{ groupOption.option.label }}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div v-else class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        <button v-for="(option, optionIdx) in row.column8Options" :key="`${row.id}-c8-${optionIdx}`"
+                          type="button" class="lps-letter"
+                          :class="page6Responses[idx].col8[optionIdx] ? 'lps-letter--selected' : ''"
+                          :disabled="!isColumnInteractive('col8') || !row.column8Svg"
+                          :aria-pressed="page6Responses[idx].col8[optionIdx]"
+                          @click="togglePage6Selection(idx, optionIdx)">
+                          {{ option.label }}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+
+          <!-- Page 7: Spalte 9 -->
+          <div v-else-if="pageIndex === 6" class="space-y-3">
+            <div class="rounded-2xl border bg-background p-4 shadow-sm">
+              <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 9</div>
+
+              <div class="space-y-4">
+                <div v-for="(row, rowIdx) in lpsPage7Rows" :key="`${row.id}-c9`" class="relative space-y-3">
+                  <div v-if="page7Arrows[rowIdx]?.length" class="pointer-events-none absolute inset-x-0 top-0 w-full"
+                    aria-hidden="true">
+                    <div v-for="(arrow, arrowIdx) in page7Arrows[rowIdx]" :key="`${row.id}-arrow-${arrowIdx}`"
+                      class="page7-arrow" :style="getPage7ArrowStyle(rowIdx, arrow.from, arrow.to)"></div>
+                  </div>
+                  <div class="grid gap-3 md:grid-cols-3">
+                    <div v-for="(prompt, promptIdx) in row.prompts" :key="prompt.id"
+                      class="space-y-3 rounded-lg bg-background p-3 shadow-sm">
+                      <div class="flex justify-center">
+                        <div class="lps-shape-panel" v-html="prompt.svg" :style="getShapePanelStyle(prompt.svgMeta)">
+                        </div>
+                      </div>
+
+                      <div class="flex flex-wrap justify-center gap-2">
+                        <button v-for="(option, optionIdx) in prompt.options" :key="`${prompt.id}-${option}`"
+                          type="button" class="lps-number-chip" :class="page7Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]
+                            ? 'lps-number-chip--selected'
+                            : ''" :disabled="!isColumnInteractive('col9') || isPage7ExamplePrompt(rowIdx, promptIdx)"
+                          :aria-pressed="page7Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]"
+                          @click="togglePage7Selection(rowIdx, promptIdx, optionIdx)">
+                          {{ option }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="pageIndex === 8" class="space-y-3">
+            <div class="rounded-2xl border bg-background p-4 shadow-sm">
+              <div class="mb-1 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 11</div>
+              <p class="text-center text-xs text-muted-foreground">Finde den richtigen Buchstaben zu jeder Form.</p>
+
+              <div class="space-y-4">
+                <div v-for="(row, rowIdx) in lpsPage9Rows" :key="`${row.id}-c11`"
+                  class="rounded-xl border bg-muted/30 p-4 shadow-sm">
+                  <div class="grid gap-3 md:grid-cols-3">
+                    <div v-for="(prompt, promptIdx) in row.prompts" :key="prompt.id"
+                      class="space-y-3 rounded-lg bg-background p-3 shadow-sm">
+                      <div class="flex justify-center">
+                        <div class="lps-shape-panel page9-shape-panel" v-html="prompt.svg"
+                          :style="getShapePanelStyle(prompt.svgMeta)"></div>
+                      </div>
+
+                      <div class="flex flex-wrap justify-center gap-2">
+                        <button v-for="(option, optionIdx) in prompt.options" :key="`${prompt.id}-${option}`"
+                          type="button" class="page9-letter"
+                          :class="page9Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx] ? 'page9-letter--selected' : ''"
+                          :disabled="!isColumnInteractive('col11')"
+                          :aria-pressed="page9Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]"
+                          @click="togglePage9Selection(rowIdx, promptIdx, optionIdx)">
+                          {{ option }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div v-else-if="pageIndex === 7" class="space-y-3">
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-1 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 10</div>
               <p class="text-center text-xs text-muted-foreground">Finde die passende Form zu jeder Vorlage.</p>
 
-            <div class="space-y-4">
-              <div
-                v-for="(row, rowIdx) in lpsPage8Rows"
-                :key="`${row.id}-c10`"
-                class="rounded-xl border bg-muted/30 p-4 shadow-sm"
-              >
-                <div class="grid gap-3 md:grid-cols-2">
-                  <div
-                    v-for="(prompt, promptIdx) in row.prompts"
-                    :key="prompt.id"
-                    class="space-y-3 rounded-lg bg-background p-3 shadow-sm"
-                  >
-                    <div class="flex justify-center">
-                      <div
-                        class="lps-shape-panel page8-shape-panel"
-                        v-html="prompt.svg"
-                        :style="getShapePanelStyle(prompt.svgMeta)"
-                      ></div>
-                    </div>
+              <div class="space-y-4">
+                <div v-for="(row, rowIdx) in lpsPage8Rows" :key="`${row.id}-c10`"
+                  class="rounded-xl border bg-muted/30 p-4 shadow-sm">
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <div v-for="(prompt, promptIdx) in row.prompts" :key="prompt.id"
+                      class="space-y-3 rounded-lg bg-background p-3 shadow-sm">
+                      <div class="flex justify-center">
+                        <div class="lps-shape-panel page8-shape-panel" v-html="prompt.svg"
+                          :style="getShapePanelStyle(prompt.svgMeta)"></div>
+                      </div>
 
-                    <div class="flex flex-wrap justify-center gap-2">
-                      <button
-                        v-for="(option, optionIdx) in prompt.options"
-                        :key="option.id"
-                        type="button"
-                        class="page8-option"
-                        :class="page8Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]
-                          ? 'page8-option--selected'
-                          : ''"
-                        :disabled="!isColumnInteractive('col10') || isPage8ExamplePrompt(rowIdx, promptIdx)"
-                        :aria-pressed="page8Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]"
-                        @click="togglePage8Selection(rowIdx, promptIdx, optionIdx)"
-                      >
-                        <span v-html="option.svg"></span>
-                      </button>
+                      <div class="flex flex-wrap justify-center gap-2">
+                        <button v-for="(option, optionIdx) in prompt.options" :key="option.id" type="button"
+                          class="page8-option" :class="page8Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]
+                            ? 'page8-option--selected'
+                            : ''" :disabled="!isColumnInteractive('col10') || isPage8ExamplePrompt(rowIdx, promptIdx)"
+                          :aria-pressed="page8Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]"
+                          @click="togglePage8Selection(rowIdx, promptIdx, optionIdx)">
+                          <span v-html="option.svg"></span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div
-            class="flex items-center justify-between rounded-xl border bg-background px-4 py-3 text-xs text-muted-foreground shadow-sm">
-            <div>
-              Punkte gesamt:
-              <span class="font-semibold text-foreground">
-                {{ totalMaxScore ? `${totalScore} / ${totalMaxScore}` : '–' }}
-              </span>
+            <div
+              class="flex items-center justify-between rounded-xl border bg-background px-4 py-3 text-xs text-muted-foreground shadow-sm">
+              <div>
+                Punkte gesamt:
+                <span class="font-semibold text-foreground">
+                  {{ totalMaxScore ? `${totalScore} / ${totalMaxScore}` : '–' }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
   </div>
   <Dialog v-model:open="endConfirmOpen">
     <DialogContent>
@@ -1653,6 +1522,7 @@ const totalMaxScore = computed(
 .page9-shape-panel {
   min-width: 150px;
   min-height: 130px;
+  border: 4px solid black;
 }
 
 .page9-letter {
