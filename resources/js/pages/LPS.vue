@@ -11,6 +11,7 @@ import { getLpsPage6Dataset, type LpsPage6Option, type LpsPage6Solution } from '
 import { getLpsPage7Dataset, type LpsPage7Prompt, type LpsPage7Solution } from '@/pages/Questions/LPSPage7';
 import { getLpsPage8Dataset, type LpsPage8Prompt, type LpsPage8Solution } from '@/pages/Questions/LPSPage8';
 import { getLpsPage9Dataset, type LpsPage9Solution } from '@/pages/Questions/LPSPage9';
+import { getLpsPage10Dataset } from '@/pages/Questions/LPSPage10';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
 type LpsPage5ResponseRow = { col7: boolean[] };
@@ -18,14 +19,15 @@ type LpsPage6ResponseRow = { col8: boolean[] };
 type LpsPage7ResponseRow = { prompts: boolean[][] };
 type LpsPage8ResponseRow = { prompts: boolean[][] };
 type LpsPage9ResponseRow = { prompts: boolean[][] };
+type LpsPage10ResponseRow = { paths: boolean[] };
 type LpsPage6OptionGroup = { label: string; options: Array<{ option: LpsPage6Option; index: number }> };
 
 type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = [3, 3, 3, 3, 3, 3, 120, 120, 180, 180];
-const COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11];
+const COLUMN_DURATION_SECONDS = [3, 3, 3, 3, 3, 3, 120, 120, 180, 180, 180];
+const COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12];
 const PAGE_SECTIONS = [
   { title: 'Spalten 1 + 2', columnIndices: [0, 1] },
   { title: 'Spalte 3', columnIndices: [2] },
@@ -36,6 +38,7 @@ const PAGE_SECTIONS = [
   { title: 'Spalte 9', columnIndices: [7] },
   { title: 'Spalte 10', columnIndices: [8] },
   { title: 'Spalte 11', columnIndices: [9] },
+  { title: 'Spalte 12', columnIndices: [10] },
 ];
 
 const props = defineProps<{
@@ -59,6 +62,9 @@ const props = defineProps<{
     page9?: LpsPage9ResponseRow[];
     page9_score?: number;
     page9_max_score?: number;
+    page10?: LpsPage10ResponseRow[];
+    page10_score?: number;
+    page10_max_score?: number;
   };
   timeRemainingSeconds?: number | null;
   testName?: string;
@@ -72,6 +78,7 @@ const { rows: lpsPage6Rows, solutions: lpsPage6Solutions } = getLpsPage6Dataset(
 const { rows: lpsPage7Rows, solutions: lpsPage7Solutions } = getLpsPage7Dataset(props.testName);
 const { rows: lpsPage8Rows, solutions: lpsPage8Solutions } = getLpsPage8Dataset(props.testName);
 const { rows: lpsPage9Rows, solutions: lpsPage9Solutions } = getLpsPage9Dataset(props.testName);
+const { rows: lpsPage10Rows, solutions: lpsPage10Solutions } = getLpsPage10Dataset(props.testName);
 
 const PAGE7_GRID_GAP_PX = 12;
 // Update this width if the shape panels get larger/smaller so the arrows anchor to the panel edges.
@@ -86,6 +93,7 @@ const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
 const isPage8ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
+const isPage10ExampleRow = (rowIdx: number) => props.testName === 'LPS-B' && rowIdx < 2;
 
 const showTest = ref(false);
 const pageIndex = ref(0);
@@ -225,6 +233,28 @@ const page9Responses = ref<LpsPage9ResponseRow[]>(
   }),
 );
 
+function buildPage10ExampleSelection(rowIdx: number) {
+  const selection = buildSelection(lpsPage10Rows[rowIdx]?.options?.length ?? 0);
+  const correctIdx = lpsPage10Solutions[rowIdx]?.correctIndex;
+
+  if (typeof correctIdx === 'number' && selection[correctIdx] !== undefined) {
+    selection[correctIdx] = true;
+  }
+
+  return selection;
+}
+
+const page10Responses = ref<LpsPage10ResponseRow[]>(
+  lpsPage10Rows.map((row, idx) => {
+    const pausedRow = props.pausedTestResult?.page10?.[idx];
+    const baseSelection = isPage10ExampleRow(idx)
+      ? buildPage10ExampleSelection(idx)
+      : buildSelection(row.options.length ?? 0, pausedRow?.paths);
+
+    return { paths: baseSelection };
+  }),
+);
+
 const page6OptionGroups = computed<LpsPage6OptionGroup[][]>(() =>
   lpsPage6Rows.map((row) => buildPage6OptionGroups(row.column8Options ?? [])),
 );
@@ -293,6 +323,7 @@ watch(
     page7Responses,
     page8Responses,
     page9Responses,
+    page10Responses,
     pageIndex,
     totalElapsed,
     columnStates,
@@ -320,6 +351,9 @@ watch(
       page9: page9Responses.value,
       page9_score: page9Score.value,
       page9_max_score: page9MaxScore.value,
+      page10: page10Responses.value,
+      page10_score: page10Score.value,
+      page10_max_score: page10MaxScore.value,
     });
   },
   { deep: true },
@@ -398,7 +432,7 @@ function formatTime(seconds: number) {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-type ColumnKey = keyof LpsPage1ResponseRow | 'col7' | 'col8' | 'col9' | 'col10' | 'col11';
+type ColumnKey = keyof LpsPage1ResponseRow | 'col7' | 'col8' | 'col9' | 'col10' | 'col11' | 'col12';
 
 const COLUMN_INDEX_BY_KEY: Record<ColumnKey, number> = {
   col1: 0,
@@ -411,6 +445,7 @@ const COLUMN_INDEX_BY_KEY: Record<ColumnKey, number> = {
   col9: 7,
   col10: 8,
   col11: 9,
+  col12: 10,
 };
 
 function buildPage6OptionGroups(options: LpsPage6Option[]): LpsPage6OptionGroup[] {
@@ -488,6 +523,14 @@ function togglePage9Selection(rowIdx: number, promptIdx: number, optionIdx: numb
   if (!row?.prompts?.[promptIdx]?.length) return;
   const currentlySelected = row.prompts[promptIdx][optionIdx];
   row.prompts[promptIdx] = row.prompts[promptIdx].map((_, idx) => (idx === optionIdx ? !currentlySelected : false));
+}
+
+function togglePage10Selection(rowIdx: number, optionIdx: number) {
+  if (!isColumnInteractive('col12') || isPage10ExampleRow(rowIdx)) return;
+  const row = page10Responses.value[rowIdx];
+  if (!row?.paths?.length) return;
+  const currentlySelected = row.paths[optionIdx];
+  row.paths = row.paths.map((_, idx) => (idx === optionIdx ? !currentlySelected : false));
 }
 
 function resetColumns() {
@@ -745,12 +788,24 @@ function scorePage9Row(rowIdx: number, solutions: LpsPage9Solution, responses: L
   }, 0);
 }
 
+function scorePage10Row(rowIdx: number, responses: LpsPage10ResponseRow) {
+  if (isPage10ExampleRow(rowIdx)) return 0;
+  const correctIdx = lpsPage10Solutions[rowIdx]?.correctIndex;
+  const picks = responses.paths;
+  if (correctIdx === null || correctIdx === undefined || !picks?.length) return 0;
+  return picks[correctIdx] ? 1 : 0;
+}
+
 const page9Score = computed(() =>
   page9Responses.value.reduce((total, response, idx) => {
     const solutions = lpsPage9Solutions[idx];
     if (!solutions) return total;
     return total + scorePage9Row(idx, solutions, response);
   }, 0),
+);
+
+const page10Score = computed(() =>
+  page10Responses.value.reduce((total, response, idx) => total + scorePage10Row(idx, response), 0),
 );
 
 const page9MaxScore = computed(() =>
@@ -760,6 +815,15 @@ const page9MaxScore = computed(() =>
   }, 0),
 );
 
+const page10MaxScore = computed(
+  () =>
+    lpsPage10Solutions.reduce(
+      (total, solution, idx) =>
+        total + (solution.correctIndex !== null && !isPage10ExampleRow(idx) ? 1 : 0),
+      0,
+    ),
+);
+
 const totalScore = computed(
   () =>
     page1Score.value +
@@ -767,7 +831,8 @@ const totalScore = computed(
     page6Score.value +
     page7Score.value +
     page8Score.value +
-    page9Score.value,
+    page9Score.value +
+    page10Score.value,
 );
 const totalMaxScore = computed(
   () =>
@@ -776,7 +841,8 @@ const totalMaxScore = computed(
     page6MaxScore.value +
     page7MaxScore.value +
     page8MaxScore.value +
-    page9MaxScore.value,
+    page9MaxScore.value +
+    page10MaxScore.value,
 );
 </script>
 
@@ -1179,6 +1245,49 @@ const totalMaxScore = computed(
                         </button>
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="pageIndex === 9" class="space-y-3">
+            <div class="rounded-2xl border bg-background p-4 shadow-sm">
+              <div class="mb-1 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 12</div>
+              <p class="text-center text-xs text-muted-foreground">Wähle den passenden Pfad in jeder Vorlage aus.</p>
+
+              <div class="flex justify-center">
+                <div class="w-full max-w-4xl">
+                  <div v-for="(row, rowIdx) in lpsPage10Rows" :key="`${row.id}-c12`" class="py-[10px]">
+                    <div v-if="row.options?.length && row.svgMeta" class="flex items-center justify-center leading-none">
+                      <svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="lps-column3-svg select-none"
+                        :viewBox="row.svgMeta.viewBox" :width="row.svgMeta.width" :height="row.svgMeta.height">
+                        <g v-for="(option, optionIdx) in row.options" :id="option.id" :key="option.id" role="button"
+                          class="lps-figure-shape-group" :transform="option.transform"
+                          :tabindex="isColumnInteractive('col12') ? 0 : -1"
+                          :aria-pressed="page10Responses[rowIdx].paths[optionIdx]"
+                          :class="[
+                            !isColumnInteractive('col12') ? 'lps-figure-shape--disabled' : '',
+                            isPage10ExampleRow(rowIdx) ? 'pointer-events-none opacity-70' : '',
+                          ]"
+                          @click="isColumnInteractive('col12') && togglePage10Selection(rowIdx, optionIdx)"
+                          @keydown.enter.prevent="togglePage10Selection(rowIdx, optionIdx)"
+                          @keydown.space.prevent="togglePage10Selection(rowIdx, optionIdx)">
+                          <path class="lps-figure-hit" :d="option.pathData" />
+                          <path fill="#090d0e" class="lps-figure-shape"
+                            :class="page10Responses[rowIdx].paths[optionIdx] ? 'lps-figure-shape--selected' : ''"
+                            :d="option.pathData" />
+                          <clipPath :id="`${option.id}-clip`">
+                            <path :d="option.pathData" :transform="option.transform" />
+                          </clipPath>
+                          <line v-if="page10Responses[rowIdx].paths[optionIdx]" class="lps-figure-slash"
+                            :clip-path="`url(#${option.id}-clip)`" x1="0" :y1="row.svgMeta.height - 6"
+                            :x2="row.svgMeta.width" y2="6" />
+                        </g>
+                      </svg>
+                    </div>
+                    <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
+                    <div v-if="isPage10ExampleRow(rowIdx)" class="pt-1 text-center text-[11px] uppercase tracking-wide text-muted-foreground">Beispiel</div>
                   </div>
                 </div>
               </div>
