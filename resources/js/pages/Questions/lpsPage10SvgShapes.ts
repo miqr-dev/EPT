@@ -17,10 +17,21 @@ export const LPS_PAGE10_PLACEHOLDER_PATHS = [
   `M 135.6295 59.3491 A 4.64 3.47 -95.2 0 0 132.5943 64.2845 A 4.64 3.47 -95.2 0 0 136.4705 68.5909 A 4.64 3.47 -95.2 0 0 139.5057 63.6555 A 4.64 3.47 -95.2 0 0 135.6295 59.3491`,
 ];
 
-const LPS_PAGE10_OPTION_SHAPES = LPS_PAGE10_PLACEHOLDER_PATHS.map((path) => [path]);
+const LPS_PAGE10_LETTER_GROUPS = [
+  [0, 9], // L
+  [5, 11], // a
+  [3, 8], // p
+  [4, 10, 13], // p
+  [6, 7, 12], // e/m
+  [1, 2], // scribble/mark
+];
+
+const LPS_PAGE10_OPTION_SHAPES = LPS_PAGE10_LETTER_GROUPS.map((group) =>
+  group.map((pathIdx) => LPS_PAGE10_PLACEHOLDER_PATHS[pathIdx]),
+);
 
 export const LPS_PAGE10_SHAPES_B: string[][][] = Array.from({ length: 42 }, () => LPS_PAGE10_OPTION_SHAPES);
 
 export const LPS_PAGE10_CORRECT_INDICES_B: (number | null)[] = Array.from({ length: 42 }, (_, idx) =>
-  idx < 2 ? null : idx % LPS_PAGE10_PLACEHOLDER_PATHS.length,
+  idx < 2 ? null : idx % LPS_PAGE10_OPTION_SHAPES.length,
 );
