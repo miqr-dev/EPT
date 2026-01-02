@@ -4,7 +4,7 @@ import {
   LPS_PAGE10_SHAPES_B,
 } from './lpsPage10SvgShapes';
 
-export type LpsPage10Option = { id: string; pathData: string; transform?: string };
+export type LpsPage10Option = { id: string; paths: string[]; transform?: string };
 
 export type LpsPage10Row = {
   id: number;
@@ -18,10 +18,10 @@ export type LpsPage10Solution = { correctIndex: number | null; isExample?: boole
 
 export type LpsPage10Dataset = { rows: LpsPage10Row[]; solutions: LpsPage10Solution[] };
 
-function buildRow(idx: number, paths?: string[], correctIndex?: number | null): LpsPage10Row {
+function buildRow(idx: number, paths?: (string | string[])[], correctIndex?: number | null): LpsPage10Row {
   const options = (paths ?? []).map((pathData, pathIdx) => ({
     id: `lps-page10-row-${idx + 1}-opt-${pathIdx + 1}`,
-    pathData,
+    paths: Array.isArray(pathData) ? pathData : [pathData],
   }));
 
   return {
@@ -33,7 +33,7 @@ function buildRow(idx: number, paths?: string[], correctIndex?: number | null): 
   };
 }
 
-function buildRows(pathsByRow?: string[][], correctIndices?: (number | null)[]) {
+function buildRows(pathsByRow?: (string | string[])[][], correctIndices?: (number | null)[]) {
   const rowCount = Math.max(pathsByRow?.length ?? 0, 42);
   return Array.from({ length: rowCount }, (_, idx) =>
     buildRow(idx, pathsByRow?.[idx] ?? pathsByRow?.[0], correctIndices?.[idx]),

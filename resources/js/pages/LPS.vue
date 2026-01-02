@@ -1273,12 +1273,17 @@ const totalMaxScore = computed(
                           @click="isColumnInteractive('col12') && togglePage10Selection(rowIdx, optionIdx)"
                           @keydown.enter.prevent="togglePage10Selection(rowIdx, optionIdx)"
                           @keydown.space.prevent="togglePage10Selection(rowIdx, optionIdx)">
-                          <path class="lps-figure-hit" :d="option.pathData" />
-                          <path fill="#090d0e" class="lps-figure-shape"
-                            :class="page10Responses[rowIdx].paths[optionIdx] ? 'lps-figure-shape--selected' : ''"
-                            :d="option.pathData" />
+                          <template v-for="(segment, segmentIdx) in option.paths" :key="`${option.id}-hit-${segmentIdx}`">
+                            <path class="lps-figure-hit" :d="segment" />
+                          </template>
+                          <template v-for="(segment, segmentIdx) in option.paths" :key="`${option.id}-shape-${segmentIdx}`">
+                            <path fill="#090d0e" class="lps-figure-shape"
+                              :class="page10Responses[rowIdx].paths[optionIdx] ? 'lps-figure-shape--selected' : ''"
+                              :d="segment" />
+                          </template>
                           <clipPath :id="`${option.id}-clip`">
-                            <path :d="option.pathData" :transform="option.transform" />
+                            <path v-for="(segment, segmentIdx) in option.paths" :key="`${option.id}-clip-${segmentIdx}`"
+                              :d="segment" :transform="option.transform" />
                           </clipPath>
                           <line v-if="page10Responses[rowIdx].paths[optionIdx]" class="lps-figure-slash"
                             :clip-path="`url(#${option.id}-clip)`" x1="0" :y1="row.svgMeta.height - 6"
