@@ -1,15 +1,17 @@
 import {
   LPS_PAGE10_CORRECT_INDICES_B,
-  LPS_PAGE10_PLACEHOLDER_META,
-  LPS_PAGE10_SHAPES_B,
+  LPS_PAGE10_OPTIONS_BY_ROW,
 } from './lpsPage10SvgShapes';
 
-export type LpsPage10Option = { id: string; paths: string[]; transform?: string };
+export type LpsPage10Option = {
+  id: string;
+  svg: string;
+  svgMeta: { viewBox: string; width: number; height: number };
+};
 
 export type LpsPage10Row = {
   id: number;
   options: LpsPage10Option[];
-  svgMeta?: { viewBox: string; width: number; height: number };
   correctIndex?: number | null;
   isExample?: boolean;
 };
@@ -18,25 +20,24 @@ export type LpsPage10Solution = { correctIndex: number | null; isExample?: boole
 
 export type LpsPage10Dataset = { rows: LpsPage10Row[]; solutions: LpsPage10Solution[] };
 
-function buildRow(idx: number, paths?: (string | string[])[], correctIndex?: number | null): LpsPage10Row {
-  const options = (paths ?? []).map((pathData, pathIdx) => ({
-    id: `lps-page10-row-${idx + 1}-opt-${pathIdx + 1}`,
-    paths: Array.isArray(pathData) ? pathData : [pathData],
+function buildRow(idx: number, options?: Omit<LpsPage10Option, 'id'>[], correctIndex?: number | null): LpsPage10Row {
+  const parsedOptions = (options ?? []).map((option, optionIdx) => ({
+    ...option,
+    id: `lps-page10-row-${idx + 1}-opt-${optionIdx + 1}`,
   }));
 
   return {
     id: idx + 1,
-    options,
-    svgMeta: LPS_PAGE10_PLACEHOLDER_META,
+    options: parsedOptions,
     correctIndex: typeof correctIndex === 'number' ? correctIndex : null,
     isExample: idx < 2,
   };
 }
 
-function buildRows(pathsByRow?: (string | string[])[][], correctIndices?: (number | null)[]) {
-  const rowCount = Math.max(pathsByRow?.length ?? 0, 42);
+function buildRows(optionsByRow?: Omit<LpsPage10Option, 'id'>[][], correctIndices?: (number | null)[]) {
+  const rowCount = Math.max(optionsByRow?.length ?? 0, 42);
   return Array.from({ length: rowCount }, (_, idx) =>
-    buildRow(idx, pathsByRow?.[idx] ?? pathsByRow?.[0], correctIndices?.[idx]),
+    buildRow(idx, optionsByRow?.[idx] ?? optionsByRow?.[0], correctIndices?.[idx]),
   );
 }
 
@@ -47,7 +48,7 @@ function buildSolutions(rows: LpsPage10Row[]): LpsPage10Solution[] {
   }));
 }
 
-export const LPS_PAGE10_ROWS_B = buildRows(LPS_PAGE10_SHAPES_B, LPS_PAGE10_CORRECT_INDICES_B);
+export const LPS_PAGE10_ROWS_B = buildRows(LPS_PAGE10_OPTIONS_BY_ROW, LPS_PAGE10_CORRECT_INDICES_B);
 export const LPS_PAGE10_SOLUTIONS_B = buildSolutions(LPS_PAGE10_ROWS_B);
 
 export function getLpsPage10Dataset(testName?: string): LpsPage10Dataset {

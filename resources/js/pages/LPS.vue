@@ -1259,37 +1259,19 @@ const totalMaxScore = computed(
               <div class="flex justify-center">
                 <div class="w-full max-w-4xl">
                   <div v-for="(row, rowIdx) in lpsPage10Rows" :key="`${row.id}-c12`" class="py-[10px]">
-                    <div v-if="row.options?.length && row.svgMeta" class="flex items-center justify-center leading-none">
-                      <svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="lps-column3-svg select-none"
-                        :viewBox="row.svgMeta.viewBox" :width="row.svgMeta.width" :height="row.svgMeta.height">
-                        <g v-for="(option, optionIdx) in row.options" :id="option.id" :key="option.id" role="button"
-                          class="lps-figure-shape-group" :transform="option.transform"
-                          :tabindex="isColumnInteractive('col12') ? 0 : -1"
-                          :aria-pressed="page10Responses[rowIdx].paths[optionIdx]"
-                          :class="[
-                            !isColumnInteractive('col12') ? 'lps-figure-shape--disabled' : '',
-                            isPage10ExampleRow(rowIdx) ? 'pointer-events-none opacity-70' : '',
-                          ]"
-                          @click="isColumnInteractive('col12') && togglePage10Selection(rowIdx, optionIdx)"
-                          @keydown.enter.prevent="togglePage10Selection(rowIdx, optionIdx)"
-                          @keydown.space.prevent="togglePage10Selection(rowIdx, optionIdx)">
-                          <template v-for="(segment, segmentIdx) in option.paths" :key="`${option.id}-hit-${segmentIdx}`">
-                            <path class="lps-figure-hit" :d="segment" />
-                          </template>
-                          <template v-for="(segment, segmentIdx) in option.paths" :key="`${option.id}-shape-${segmentIdx}`">
-                            <path fill="#090d0e" class="lps-figure-shape"
-                              :class="page10Responses[rowIdx].paths[optionIdx] ? 'lps-figure-shape--selected' : ''"
-                              :d="segment" />
-                          </template>
-                          <clipPath :id="`${option.id}-clip`">
-                            <path v-for="(segment, segmentIdx) in option.paths" :key="`${option.id}-clip-${segmentIdx}`"
-                              :d="segment" :transform="option.transform" />
-                          </clipPath>
-                          <line v-if="page10Responses[rowIdx].paths[optionIdx]" class="lps-figure-slash"
-                            :clip-path="`url(#${option.id}-clip)`" x1="0" :y1="row.svgMeta.height - 6"
-                            :x2="row.svgMeta.width" y2="6" />
-                        </g>
-                      </svg>
+                    <div v-if="row.options?.length" class="flex flex-wrap justify-center gap-3">
+                      <button v-for="(option, optionIdx) in row.options" :key="option.id" type="button"
+                        class="page10-option"
+                        :class="page10Responses[rowIdx].paths[optionIdx] ? 'page10-option--selected' : ''"
+                        :disabled="!isColumnInteractive('col12') || isPage10ExampleRow(rowIdx)"
+                        :aria-pressed="page10Responses[rowIdx].paths[optionIdx]"
+                        @click="togglePage10Selection(rowIdx, optionIdx)"
+                        @keydown.enter.prevent="togglePage10Selection(rowIdx, optionIdx)"
+                        @keydown.space.prevent="togglePage10Selection(rowIdx, optionIdx)">
+                        <span class="page10-option-figure" v-html="option.svg"
+                          :style="getShapePanelStyle(option.svgMeta)"></span>
+                        <span class="sr-only">Option {{ optionIdx + 1 }}</span>
+                      </button>
                     </div>
                     <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
                     <div v-if="isPage10ExampleRow(rowIdx)" class="pt-1 text-center text-[11px] uppercase tracking-wide text-muted-foreground">Beispiel</div>
@@ -1666,6 +1648,49 @@ const totalMaxScore = computed(
 }
 
 .page9-letter--selected {
+  border-color: rgb(239 68 68);
+  box-shadow: 0 0 0 3px rgb(254 226 226);
+  background: rgb(254 242 242);
+}
+
+.page10-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 116px;
+  height: 116px;
+  border-radius: 12px;
+  border: 1px solid rgb(226 232 240);
+  background: white;
+  box-shadow: 0 4px 14px rgb(15 23 42 / 0.08);
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background-color 120ms ease;
+}
+
+.page10-option-figure {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+}
+
+.page10-option svg {
+  width: 100%;
+  height: 100%;
+}
+
+.page10-option:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgb(15 23 42 / 0.12);
+  border-color: rgb(203 213 225);
+}
+
+.page10-option:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.page10-option--selected {
   border-color: rgb(239 68 68);
   box-shadow: 0 0 0 3px rgb(254 226 226);
   background: rgb(254 242 242);
