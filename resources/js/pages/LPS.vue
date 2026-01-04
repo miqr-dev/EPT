@@ -1259,7 +1259,7 @@ const totalMaxScore = computed(
               <div class="flex justify-center">
                 <div class="w-full max-w-4xl">
                   <div v-for="(row, rowIdx) in lpsPage10Rows" :key="`${row.id}-c12`" class="py-[10px]">
-                    <div v-if="row.options?.length" class="flex flex-wrap justify-center gap-3">
+                    <div v-if="row.options?.length" class="page10-options-row">
                       <button v-for="(option, optionIdx) in row.options" :key="option.id" type="button"
                         class="page10-option"
                         :class="page10Responses[rowIdx].paths[optionIdx] ? 'page10-option--selected' : ''"
@@ -1653,36 +1653,45 @@ const totalMaxScore = computed(
   background: rgb(254 242 242);
 }
 
+.page10-options-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 4px;
+}
+
 .page10-option {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  width: 116px;
-  height: 116px;
-  border-radius: 12px;
-  border: 1px solid rgb(226 232 240);
-  background: white;
-  box-shadow: 0 4px 14px rgb(15 23 42 / 0.08);
-  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background-color 120ms ease;
+  padding: 2px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
 }
 
 .page10-option-figure {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  width: 96px;
-  height: 96px;
+  padding: 2px;
+  width: var(--shape-width, auto);
+  height: var(--shape-height, auto);
 }
 
 .page10-option svg {
-  width: 100%;
-  height: 100%;
+  display: block;
+  width: auto;
+  height: auto;
 }
 
 .page10-option:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgb(15 23 42 / 0.12);
-  border-color: rgb(203 213 225);
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .page10-option:disabled {
@@ -1691,9 +1700,8 @@ const totalMaxScore = computed(
 }
 
 .page10-option--selected {
-  border-color: rgb(239 68 68);
-  box-shadow: 0 0 0 3px rgb(254 226 226);
-  background: rgb(254 242 242);
+  background: rgba(239, 68, 68, 0.08);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.65);
 }
 
 /* Vertical separator between column 1 and 2 */
