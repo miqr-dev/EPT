@@ -1685,8 +1685,8 @@ const totalMaxScore = computed(
 
 .page10-option svg {
   display: block;
-  width: auto;
-  height: auto;
+  width: 100%;
+  height: 100%;
 }
 
 .page10-option:hover:not(:disabled) {
