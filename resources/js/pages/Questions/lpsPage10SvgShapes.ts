@@ -3,6 +3,290 @@ export type LpsPage10SvgMeta = { viewBox: string; width: number; height: number 
 export type LpsPage10SvgOption = { svg: string; svgMeta: LpsPage10SvgMeta };
 
 const PAGE10_SHARED_SVG_META: LpsPage10SvgMeta = { viewBox: '0 0 42 48', width: 42, height: 48 } as const;
+const PAGE10_EXAMPLE_ROW1_META: LpsPage10SvgMeta = { viewBox: '0 0 447 43', width: 140, height: 48 } as const;
+const PAGE10_EXAMPLE_ROW2_META: LpsPage10SvgMeta = { viewBox: '0 0 90 64', width: 90, height: 64 } as const;
+
+const ROW1_OPTIONS: LpsPage10SvgOption[] = [
+    {
+        svgMeta: PAGE10_EXAMPLE_ROW1_META,
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="48" viewBox="0 0 447 43">
+  <path fill="#101214" d="
+  M 269.4023 37.3704
+  A 1.79 1.79 0.0 0 1 267.6092 39.1573
+  L 236.3292 39.1027
+  A 1.79 1.79 0.0 0 1 234.5423 37.3096
+  L 234.5977 5.5696
+  A 1.79 1.79 0.0 0 1 236.3908 3.7827
+  L 267.6708 3.8373
+  A 1.79 1.79 0.0 0 1 269.4577 5.6304
+  L 269.4023 37.3704
+  Z
+  M 250.3643 8.9124
+  A 1.40 1.40 0.0 0 0 248.9692 7.5075
+  L 238.9892 7.4727
+  A 1.40 1.40 0.0 0 0 237.5844 8.8678
+  L 237.4957 34.2676
+  A 1.40 1.40 0.0 0 0 238.8908 35.6725
+  L 248.8708 35.7073
+  A 1.40 1.40 0.0 0 0 250.2756 34.3122
+  L 250.3643 8.9124
+  Z
+  M 266.5148 9.2649
+  A 1.63 1.63 0.0 0 0 264.8933 7.6264
+  L 254.8935 7.5740
+  A 1.63 1.63 0.0 0 0 253.2550 9.1955
+  L 253.1252 33.9751
+  A 1.63 1.63 0.0 0 0 254.7467 35.6136
+  L 264.7465 35.6660
+  A 1.63 1.63 0.0 0 0 266.3850 34.0445
+  L 266.5148 9.2649
+  Z" />
+</svg>
+        `,
+    },
+    {
+        svgMeta: PAGE10_EXAMPLE_ROW1_META,
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="48" viewBox="0 0 447 43">
+  <path fill="#101214" d="
+  M 6.01 21.34
+  L 23.21 4.14
+  A 1.83 1.83 0.0 0 1 25.79 4.14
+  L 43.46 21.81
+  A 1.83 1.83 0.0 0 1 43.46 24.39
+  L 26.26 41.59
+  A 1.83 1.83 0.0 0 1 23.68 41.59
+  L 6.01 23.92
+  A 1.83 1.83 0.0 0 1 6.01 21.34
+  Z
+  M 24.6348 8.4914
+  A 0.26 0.26 0.0 0 0 24.2671 8.4882
+  L 10.0307 22.4783
+  A 0.26 0.26 0.0 0 0 10.0275 22.8460
+  L 15.9852 28.9086
+  A 0.26 0.26 0.0 0 0 16.3529 28.9118
+  L 30.5893 14.9217
+  A 0.26 0.26 0.0 0 0 30.5925 14.5540
+  L 24.6348 8.4914
+  Z
+  M 24.44 37.11
+  A 0.89 0.89 0.0 0 0 25.70 37.11
+  L 39.01 23.81
+  A 0.89 0.89 0.0 0 0 39.01 22.55
+  L 34.07 17.61
+  A 0.89 0.89 0.0 0 0 32.81 17.61
+  L 19.51 30.92
+  A 0.89 0.89 0.0 0 0 19.51 32.18
+  L 24.44 37.11
+  Z" />
+</svg>
+        `,
+    },
+    {
+        svgMeta: PAGE10_EXAMPLE_ROW1_META,
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="48" viewBox="0 0 447 43">
+  <path fill="#101214" d="
+  M 325.98 39.07
+  L 291.25 39.07
+  A 0.63 0.63 0.0 0 1 290.62 38.44
+  L 290.62 4.49
+  A 0.63 0.63 0.0 0 1 291.25 3.86
+  L 325.98 3.86
+  A 0.63 0.63 0.0 0 1 326.61 4.49
+  L 326.61 38.44
+  A 0.63 0.63 0.0 0 1 325.98 39.07
+  Z
+  M 307.4134 9.0444
+  A 1.53 1.53 0.0 0 0 305.8887 7.5091
+  L 294.9888 7.4711
+  A 1.53 1.53 0.0 0 0 293.4535 8.9957
+  L 293.3666 33.8756
+  A 1.53 1.53 0.0 0 0 294.8913 35.4109
+  L 305.7912 35.4489
+  A 1.53 1.53 0.0 0 0 307.3265 33.9243
+  L 307.4134 9.0444
+  Z
+  M 323.7953 8.5536
+  A 1.11 1.11 0.0 0 0 322.6892 7.4398
+  L 311.4093 7.4004
+  A 1.11 1.11 0.0 0 0 310.2954 8.5065
+  L 310.2047 34.4864
+  A 1.11 1.11 0.0 0 0 311.3108 35.6002
+  L 322.5907 35.6396
+  A 1.11 1.11 0.0 0 0 323.7046 34.5335
+  L 323.7953 8.5536
+  Z" />
+</svg>
+        `,
+    },
+    {
+        svgMeta: PAGE10_EXAMPLE_ROW1_META,
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="48" viewBox="0 0 447 43">
+  <path fill="#101214" d="
+  M 98.2516 38.3806
+  A 1.75 1.75 0.0 0 1 96.4986 40.1276
+  L 64.8786 40.0724
+  A 1.75 1.75 0.0 0 1 63.1317 38.3193
+  L 63.1884 5.8394
+  A 1.75 1.75 0.0 0 1 64.9414 4.0924
+  L 96.5614 4.1476
+  A 1.75 1.75 0.0 0 1 98.3083 5.9007
+  L 98.2516 38.3806
+  Z
+  M 95.3888 9.9690
+  A 1.86 1.86 0.0 0 0 93.5255 8.1123
+  L 84.6456 8.1278
+  A 1.86 1.86 0.0 0 0 82.7888 9.9910
+  L 82.8312 34.2910
+  A 1.86 1.86 0.0 0 0 84.6945 36.1477
+  L 93.5744 36.1322
+  A 1.86 1.86 0.0 0 0 95.4312 34.2690
+  L 95.3888 9.9690
+  Z
+  M 79.8516 9.7721
+  A 1.72 1.72 0.0 0 0 78.1346 8.0491
+  L 67.7547 8.0310
+  A 1.72 1.72 0.0 0 0 66.0317 9.7480
+  L 65.9884 34.5479
+  A 1.72 1.72 0.0 0 0 67.7054 36.2709
+  L 78.0853 36.2890
+  A 1.72 1.72 0.0 0 0 79.8083 34.5720
+  L 79.8516 9.7721
+  Z" />
+</svg>
+        `,
+    },
+    {
+        svgMeta: PAGE10_EXAMPLE_ROW1_META,
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="48" viewBox="0 0 447 43">
+  <path fill="#101214" d="
+  M 177.12 37.78
+  L 177.12 5.81
+  A 1.67 1.67 0.0 0 1 178.79 4.14
+  L 212.11 4.14
+  A 1.67 1.67 0.0 0 1 213.78 5.81
+  L 213.78 37.78
+  A 1.67 1.67 0.0 0 1 212.11 39.45
+  L 178.79 39.45
+  A 1.67 1.67 0.0 0 1 177.12 37.78
+  Z
+  M 210.92 9.69
+  A 2.01 2.01 0.0 0 0 208.91 7.68
+  L 198.63 7.68
+  A 2.01 2.01 0.0 0 0 196.62 9.69
+  L 196.62 33.79
+  A 2.01 2.01 0.0 0 0 198.63 35.80
+  L 208.91 35.80
+  A 2.01 2.01 0.0 0 0 210.92 33.79
+  L 210.92 9.69
+  Z
+  M 193.6649 9.5159
+  A 1.68 1.68 0.0 0 0 191.9938 7.8272
+  L 181.6939 7.7732
+  A 1.68 1.68 0.0 0 0 180.0051 9.4444
+  L 179.8751 34.2841
+  A 1.68 1.68 0.0 0 0 181.5462 35.9728
+  L 191.8461 36.0268
+  A 1.68 1.68 0.0 0 0 193.5349 34.3556
+  L 193.6649 9.5159
+  Z" />
+</svg>
+        `,
+    },
+    {
+        svgMeta: PAGE10_EXAMPLE_ROW1_META,
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="48" viewBox="0 0 447 43">
+  <path fill="#101214" d="
+  M 156.1382 38.1279
+  A 1.55 1.55 0.0 0 1 154.5909 39.6806
+  L 120.8909 39.7394
+  A 1.55 1.55 0.0 0 1 119.3382 38.1921
+  L 119.2818 5.8721
+  A 1.55 1.55 0.0 0 1 120.8291 4.3194
+  L 154.5291 4.2606
+  A 1.55 1.55 0.0 0 1 156.0818 5.8079
+  L 156.1382 38.1279
+  Z
+  M 136.4539 9.5651
+  A 1.52 1.52 0.0 0 0 134.9393 8.0398
+  L 123.6593 8.0004
+  A 1.52 1.52 0.0 0 0 122.1340 9.5151
+  L 122.0461 34.7149
+  A 1.52 1.52 0.0 0 0 123.5607 36.2402
+  L 134.8407 36.2796
+  A 1.52 1.52 0.0 0 0 136.3660 34.7649
+  L 136.4539 9.5651
+  Z
+  M 152.9325 9.1650
+  A 1.22 1.22 0.0 0 0 151.7061 7.9514
+  L 140.7063 8.0090
+  A 1.22 1.22 0.0 0 0 139.4927 9.2354
+  L 139.6275 34.9750
+  A 1.22 1.22 0.0 0 0 140.8539 36.1886
+  L 151.8537 36.1310
+  A 1.22 1.22 0.0 0 0 153.0673 34.9046
+  L 152.9325 9.1650
+  Z" />
+</svg>
+        `,
+    },
+];
+
+const ROW2_OPTIONS: LpsPage10SvgOption[] = [
+    {
+        svgMeta: PAGE10_EXAMPLE_ROW2_META,
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="90" height="64" viewBox="0 0 90 64">
+  <path fill="#090d0e" d="M 50 32 A 18 18 0 1 1 14 32 A 18 18 0 1 1 50 32 Z M 32 10 L 24 22 L 40 22 Z" />
+</svg>
+        `,
+    },
+    {
+        svgMeta: PAGE10_EXAMPLE_ROW2_META,
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="90" height="64" viewBox="0 0 90 64">
+  <path fill="#090d0e" d="M 50 32 A 18 18 0 1 1 14 32 A 18 18 0 1 1 50 32 Z M 24 42 L 40 42 L 32 54 Z" />
+</svg>
+        `,
+    },
+    {
+        svgMeta: PAGE10_EXAMPLE_ROW2_META,
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="90" height="64" viewBox="0 0 90 64">
+  <path fill="#090d0e" d="M 50 32 A 18 18 0 1 1 14 32 A 18 18 0 1 1 50 32 Z M 10 32 L 22 24 L 22 40 Z" />
+</svg>
+        `,
+    },
+    {
+        svgMeta: PAGE10_EXAMPLE_ROW2_META,
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="90" height="64" viewBox="0 0 90 64">
+  <path fill="#090d0e" d="M 50 32 A 18 18 0 1 1 14 32 A 18 18 0 1 1 50 32 Z M 54 32 L 42 24 L 42 40 Z" />
+</svg>
+        `,
+    },
+    {
+        svgMeta: PAGE10_EXAMPLE_ROW2_META,
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="90" height="64" viewBox="0 0 90 64">
+  <path fill="#090d0e" d="M 50 32 A 18 18 0 1 1 14 32 A 18 18 0 1 1 50 32 Z M 32 20 L 24 32 L 40 32 Z" />
+</svg>
+        `,
+    },
+    {
+        svgMeta: PAGE10_EXAMPLE_ROW2_META,
+        svg: `
+<svg xmlns="http://www.w3.org/2000/svg" width="90" height="64" viewBox="0 0 90 64">
+  <path fill="#090d0e" d="M 50 32 A 18 18 0 1 1 14 32 A 18 18 0 1 1 50 32 Z M 24 32 L 40 32 L 32 44 Z" />
+</svg>
+        `,
+    },
+];
 
 const ROW3_OPTIONS: LpsPage10SvgOption[] = [
     {
@@ -1566,87 +1850,136 @@ const ROW42_OPTIONS: LpsPage10SvgOption[] = [
 ];
 
 export const LPS_PAGE10_OPTIONS_BY_ROW: LpsPage10SvgOption[][] = Array.from({ length: 42 }, (_, idx) =>
-    idx === 2
-        ? ROW3_OPTIONS
-        : idx === 3
-          ? ROW4_OPTIONS
-          : idx === 4
-            ? ROW5_OPTIONS
-            : idx === 5
-              ? ROW6_OPTIONS
-              : idx === 6
-                ? ROW7_OPTIONS
-                : idx === 7
-                  ? ROW8_OPTIONS
-                  : idx === 8
-                    ? ROW9_OPTIONS
-                    : idx === 9
-                      ? ROW10_OPTIONS
-                      : idx === 10
-                        ? ROW11_OPTIONS
-                        : idx === 11
-                          ? ROW12_OPTIONS
-                          : idx === 12
-                            ? ROW13_OPTIONS
-                            : idx === 13
-                              ? ROW14_OPTIONS
-                              : idx === 14
-                                ? ROW15_OPTIONS
-                                : idx === 15
-                                  ? ROW16_OPTIONS
-                                  : idx === 16
-                                    ? ROW17_OPTIONS
-                                    : idx === 17
-                                      ? ROW18_OPTIONS
-                                      : idx === 18
-                                        ? ROW19_OPTIONS
-                                        : idx === 19
-                                          ? ROW20_OPTIONS
-                                          : idx === 20
-                                            ? ROW21_OPTIONS
-                                            : idx === 21
-                                              ? ROW22_OPTIONS
-                                              : idx === 22
-                                                ? ROW23_OPTIONS
-                                                : idx === 23
-                                                  ? ROW24_OPTIONS
-                                                  : idx === 24
-                                                    ? ROW25_OPTIONS
-                                                    : idx === 25
-                                                      ? ROW26_OPTIONS
-                                                      : idx === 26
-                                                        ? ROW27_OPTIONS
-                                                        : idx === 27
-                                                          ? ROW28_OPTIONS
-                                                          : idx === 28
-                                                            ? ROW29_OPTIONS
-                                                            : idx === 29
-                                                              ? ROW30_OPTIONS
-                                                              : idx === 30
-                                                                ? ROW31_OPTIONS
-                                                                : idx === 31
-                                                                  ? ROW32_OPTIONS
-                                                                  : idx === 32
-                                                                    ? ROW33_OPTIONS
-                                                                    : idx === 33
-                                                                      ? ROW34_OPTIONS
-                                                                      : idx === 34
-                                                                        ? ROW35_OPTIONS
-                                                                        : idx === 35
-                                                                          ? ROW36_OPTIONS
-                                                                          : idx === 36
-                                                                            ? ROW37_OPTIONS
-                                                                            : idx === 37
-                                                                              ? ROW38_OPTIONS
-                                                                              : idx === 38
-                                                                                ? ROW39_OPTIONS
-                                                                                : idx === 39
-                                                                                  ? ROW40_OPTIONS
-                                                                                  : idx === 40
-                                                                                    ? ROW41_OPTIONS
-                                                                                    : idx === 41
-                                                                                      ? ROW42_OPTIONS
-                                                                                      : [],
+    idx === 0
+        ? ROW1_OPTIONS
+        : idx === 1
+          ? ROW2_OPTIONS
+          : idx === 2
+            ? ROW3_OPTIONS
+            : idx === 3
+              ? ROW4_OPTIONS
+              : idx === 4
+                ? ROW5_OPTIONS
+                : idx === 5
+                  ? ROW6_OPTIONS
+                  : idx === 6
+                    ? ROW7_OPTIONS
+                    : idx === 7
+                      ? ROW8_OPTIONS
+                      : idx === 8
+                        ? ROW9_OPTIONS
+                        : idx === 9
+                          ? ROW10_OPTIONS
+                          : idx === 10
+                            ? ROW11_OPTIONS
+                            : idx === 11
+                              ? ROW12_OPTIONS
+                              : idx === 12
+                                ? ROW13_OPTIONS
+                                : idx === 13
+                                  ? ROW14_OPTIONS
+                                  : idx === 14
+                                    ? ROW15_OPTIONS
+                                    : idx === 15
+                                      ? ROW16_OPTIONS
+                                      : idx === 16
+                                        ? ROW17_OPTIONS
+                                        : idx === 17
+                                          ? ROW18_OPTIONS
+                                          : idx === 18
+                                            ? ROW19_OPTIONS
+                                            : idx === 19
+                                              ? ROW20_OPTIONS
+                                              : idx === 20
+                                                ? ROW21_OPTIONS
+                                                : idx === 21
+                                                  ? ROW22_OPTIONS
+                                                  : idx === 22
+                                                    ? ROW23_OPTIONS
+                                                    : idx === 23
+                                                      ? ROW24_OPTIONS
+                                                      : idx === 24
+                                                        ? ROW25_OPTIONS
+                                                        : idx === 25
+                                                          ? ROW26_OPTIONS
+                                                          : idx === 26
+                                                            ? ROW27_OPTIONS
+                                                            : idx === 27
+                                                              ? ROW28_OPTIONS
+                                                              : idx === 28
+                                                                ? ROW29_OPTIONS
+                                                                : idx === 29
+                                                                  ? ROW30_OPTIONS
+                                                                  : idx === 30
+                                                                    ? ROW31_OPTIONS
+                                                                    : idx === 31
+                                                                      ? ROW32_OPTIONS
+                                                                      : idx === 32
+                                                                        ? ROW33_OPTIONS
+                                                                        : idx === 33
+                                                                          ? ROW34_OPTIONS
+                                                                          : idx === 34
+                                                                            ? ROW35_OPTIONS
+                                                                            : idx === 35
+                                                                              ? ROW36_OPTIONS
+                                                                              : idx === 36
+                                                                                ? ROW37_OPTIONS
+                                                                                : idx === 37
+                                                                                  ? ROW38_OPTIONS
+                                                                                  : idx === 38
+                                                                                    ? ROW39_OPTIONS
+                                                                                    : idx === 39
+                                                                                      ? ROW40_OPTIONS
+                                                                                      : idx === 40
+                                                                                        ? ROW41_OPTIONS
+                                                                                        : idx === 41
+                                                                                          ? ROW42_OPTIONS
+                                                                                          : [],
 );
 
-export const LPS_PAGE10_CORRECT_INDICES_B: (number | null)[] = Array.from({ length: 42 }, (_, idx) => (idx === 2 ? 0 : idx === 3 ? 0 : null));
+const LPS_PAGE10_CORRECT_INDICES = [
+    4,
+    5,
+    2,
+    2,
+    5,
+    0,
+    3,
+    4,
+    4,
+    1,
+    4,
+    0,
+    1,
+    5,
+    3,
+    4,
+    1,
+    4,
+    3,
+    1,
+    4,
+    5,
+    4,
+    0,
+    1,
+    0,
+    2,
+    2,
+    3,
+    5,
+    2,
+    1,
+    3,
+    5,
+    5,
+    2,
+    2,
+    4,
+    5,
+    1,
+];
+
+export const LPS_PAGE10_CORRECT_INDICES_B: (number | null)[] = Array.from({ length: 42 }, (_, idx) =>
+    idx < 2 ? null : LPS_PAGE10_CORRECT_INDICES[idx - 2] ?? null,
+);
