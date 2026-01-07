@@ -135,9 +135,12 @@ type RowParts = [string, string, string, string]
 const exampleOriginalRow: { parts: RowParts } = {
   parts: ['Sylvia Müller', '45678 Pasching', 'Leipziger Str. 4', 'Tel. 0212 7874624'],
 }
-const exampleSlashMarks: number[][] = [[0, 2], [7], [0], [10, 18]]
+const exampleCopyRow: { parts: RowParts } = {
+  parts: ['Silvya Müller', '45678 Paching', 'Laibziger Str. 4', 'Tel. 0122 787462'],
+}
+const exampleSlashMarks: number[][] = [[1, 4], [7], [1], [6, 7, 13]]
 const getExampleOriginalChars = (partIndex: number) => Array.from(exampleOriginalRow.parts[partIndex])
-const getExampleCopyChars = (partIndex: number) => Array.from(exampleOriginalRow.parts[partIndex])
+const getExampleCopyChars = (partIndex: number) => Array.from(exampleCopyRow.parts[partIndex])
 
 const originalRows: Array<{ letter: string; parts: RowParts }> = [
   { letter: 'a', parts: ['Friedrich Berlenbeck', '45527 Hattingen', 'An der Hunsebeck 27', 'Tel. 0421 455773'] },
@@ -802,7 +805,7 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
           <div class="pl-4">
             <div class="text-red-600 font-semibold text-lg mb-1">➔ Abschrift</div>
             <div
-              class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] grid-rows-2 gap-x-4 items-start whitespace-nowrap leading-[1.55]">
+              class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] grid-rows-2 gap-x-4 items-start whitespace-nowrap leading-[1.55]">
               <div>
                 <span v-for="(ch, cIdx) in getExampleCopyChars(0)" :key="'ex-copy-0-' + cIdx"
                   :class="['example-letter', { 'slash-marked': exampleSlashMarks[0].includes(cIdx) }]">
@@ -815,6 +818,8 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
                   {{ ch }}
                 </span>
               </div>
+              <input value="7" readonly aria-label="Beispiel Fehleranzahl"
+                class="answer-box count-box row-span-2 self-center justify-self-center" />
               <div class="mt-1">
                 <span v-for="(ch, cIdx) in getExampleCopyChars(2)" :key="'ex-copy-2-' + cIdx"
                   :class="['example-letter', { 'slash-marked': exampleSlashMarks[2].includes(cIdx) }]">
