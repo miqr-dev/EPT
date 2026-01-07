@@ -132,6 +132,12 @@ const page5Correct = ['7', '4', '8', '5', '7', '9', '7', '10', '10', '9']
 ========================================================= */
 type RowParts = [string, string, string, string]
 
+const exampleRow: { parts: RowParts } = {
+  parts: ['Sylvia Müller', '45678 Pasching', 'Leipziger Str. 4', 'Tel. 0212 7874624'],
+}
+const exampleSlashMarks: number[][] = [[0, 2], [7], [0], [10, 18]]
+const getExampleChars = (partIndex: number) => Array.from(exampleRow.parts[partIndex])
+
 const originalRows: Array<{ letter: string; parts: RowParts }> = [
   { letter: 'a', parts: ['Friedrich Berlenbeck', '45527 Hattingen', 'An der Hunsebeck 27', 'Tel. 0421 455773'] },
   { letter: 'b', parts: ['Friedel Feschner', '80768 Maienheim', 'Heissenstr. 4', 'Tel. 0943 557834'] },
@@ -756,6 +762,38 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
         Abschrift und tragen Sie die Anzahl rechts ein.
       </p>
 
+      <div class="mt-4 border-b border-black/50 pb-4">
+        <div class="text-[18px] font-semibold mb-2">Beispiel:</div>
+        <div class="text-[18px] font-mono">
+          <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] grid-rows-2 gap-x-4 items-start whitespace-nowrap leading-[1.55]">
+            <div>
+              <span v-for="(ch, cIdx) in getExampleChars(0)" :key="'ex-0-' + cIdx"
+                :class="['example-letter', { 'slash-marked': exampleSlashMarks[0].includes(cIdx) }]">
+                {{ ch }}
+              </span>
+            </div>
+            <div>
+              <span v-for="(ch, cIdx) in getExampleChars(1)" :key="'ex-1-' + cIdx"
+                :class="['example-letter', { 'slash-marked': exampleSlashMarks[1].includes(cIdx) }]">
+                {{ ch }}
+              </span>
+            </div>
+            <div class="mt-1">
+              <span v-for="(ch, cIdx) in getExampleChars(2)" :key="'ex-2-' + cIdx"
+                :class="['example-letter', { 'slash-marked': exampleSlashMarks[2].includes(cIdx) }]">
+                {{ ch }}
+              </span>
+            </div>
+            <div class="mt-1">
+              <span v-for="(ch, cIdx) in getExampleChars(3)" :key="'ex-3-' + cIdx"
+                :class="['example-letter', { 'slash-marked': exampleSlashMarks[3].includes(cIdx) }]">
+                {{ ch }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="relative mt-6 grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div class="hidden lg:block absolute inset-y-0 left-1/2 w-[2px] bg-black/60 pointer-events-none"></div>
 
@@ -941,6 +979,25 @@ ul .answer-box {
 .letter {
   cursor: pointer;
   padding: 0 0.25px;
+}
+
+.example-letter {
+  cursor: default;
+  pointer-events: none;
+  padding: 0 0.25px;
+  position: relative;
+}
+
+.slash-marked::after {
+  content: "/";
+  position: absolute;
+  left: 50%;
+  top: -0.15em;
+  transform: translateX(-50%);
+  color: #dc2626;
+  font-weight: 700;
+  font-size: 1.05em;
+  line-height: 1;
 }
 
 .marked {
