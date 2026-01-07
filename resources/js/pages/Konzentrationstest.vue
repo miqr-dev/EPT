@@ -297,8 +297,8 @@ type T = { ch: 'h' | 'u' | 'n' | 'm'; top?: 0 | 1 | 2 | 3; bot?: 0 | 1 | 2 | 3 }
  *  👉 Change this array to match your scan 1:1.
  */
 const rowA: T[] = [
-  { ch: 'u', top: 2, bot: 1 },   // ← first char: double above + single below
-  { ch: 'n', top: 1, bot: 2 },
+  { ch: 'n', top: 2, bot: 1 },   // ← first char: double above + single below
+  { ch: 'u', top: 1, bot: 2 },
   { ch: 'h', top: 1, bot: 2 },           // adjust these as needed to match the sheet
   { ch: 'u', bot: 2 },
   { ch: 'm', top: 1 },
