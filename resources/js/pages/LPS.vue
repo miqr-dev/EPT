@@ -26,7 +26,7 @@ type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 180];
+const COLUMN_DURATION_SECONDS = [3, 3, 180, 3, 3, 3, 3, 3, 3, 3, 180];
 const COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12];
 const PAGE_SECTIONS = [
   { title: 'Spalten 1 + 2', columnIndices: [0, 1] },
@@ -1254,7 +1254,7 @@ const totalMaxScore = computed(
           <div v-else-if="pageIndex === 9" class="space-y-3">
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-1 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 12</div>
-              <p class="text-center text-xs text-muted-foreground">Wähle den passenden Pfad in jeder Vorlage aus.</p>
+              <!-- <p class="text-center text-xs text-muted-foreground">Wähle den passenden Pfad in jeder Vorlage aus.</p> -->
 
               <div class="flex justify-center">
                 <div class="w-full max-w-4xl">
@@ -1274,7 +1274,7 @@ const totalMaxScore = computed(
                       </button>
                     </div>
                     <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
-                    <div v-if="isPage10ExampleRow(rowIdx)" class="pt-1 text-center text-[11px] uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                    <!-- <div v-if="isPage10ExampleRow(rowIdx)" class="pt-1 text-center text-[11px] uppercase tracking-wide text-muted-foreground">Beispiel</div> -->
                   </div>
                 </div>
               </div>
@@ -1284,7 +1284,7 @@ const totalMaxScore = computed(
           <div v-else-if="pageIndex === 7" class="space-y-3">
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-1 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 10</div>
-              <p class="text-center text-xs text-muted-foreground">Finde die passende Form zu jeder Vorlage.</p>
+              <!-- <p class="text-center text-xs text-muted-foreground">Finde die passende Form zu jeder Vorlage.</p> -->
 
               <div class="space-y-4">
                 <div v-for="(row, rowIdx) in lpsPage8Rows" :key="`${row.id}-c10`"

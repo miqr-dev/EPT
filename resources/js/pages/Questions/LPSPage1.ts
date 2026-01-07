@@ -362,7 +362,7 @@ const LPS_PAGE1_COLUMN2_B: LpsColumnEntry[] = [
 ];
 const LPS_PAGE1_COLUMN4_B: LpsColumnEntry[] = [
   { id: 1, word: 'x x x x x x x o x', correctIndex: 7 },
-  { id: 2, word: 'a b a b a b a b b', correctIndex: 8 },
+  { id: 2, word: 'a b a b a b a B b', correctIndex: 8 },
   { id: 3, word: 'x o x o x o x o o', correctIndex: 8 },
   { id: 4, word: '1 2 3 1 2 3 4 2 3', correctIndex: 6 },
   { id: 5, word: '0 0 n 0 0 n 0 0 0', correctIndex: 8 },
