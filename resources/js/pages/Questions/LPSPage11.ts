@@ -2,6 +2,7 @@ export type LpsPage11Entry = {
   id: number;
   value: string;
   correctIndex?: number;
+  correctIndices?: number[];
 };
 
 export type LpsPage11Row = {
@@ -12,6 +13,7 @@ export type LpsPage11Row = {
 
 export type LpsPage11Solution = {
   col13?: number[];
+  col14?: number[];
 };
 
 export type LpsPage11Dataset = {
@@ -84,6 +86,45 @@ S 1 5 T 0 6 2 1
   .trim()
   .split('\n')
   .map((row) => row.trim());
+
+const LPS_PAGE11_COLUMN14_CORRECT: Record<number, number[]> = {
+  1: [5],
+  3: [1],
+  5: [3],
+  7: [5],
+  9: [0],
+  10: [2],
+  11: [4],
+  12: [2],
+  15: [1, 4],
+  17: [3],
+  18: [5],
+  19: [2],
+  20: [4],
+  22: [0],
+  23: [2],
+  25: [0],
+  26: [2],
+  28: [3],
+  30: [2],
+  31: [5],
+  32: [2, 7],
+  33: [5],
+  35: [2],
+  36: [6],
+  37: [1, 5],
+  38: [3],
+  39: [5],
+  40: [0, 3],
+  44: [4],
+  45: [6],
+  48: [2],
+  49: [4],
+  52: [2],
+  53: [4],
+  55: [7],
+  58: [6],
+};
 
 const LPS_PAGE11_COLUMN13_VALUES = `
 2 1 0 1 1 2
@@ -171,6 +212,7 @@ function findMismatchIndex(value: string, reference: string) {
 const LPS_PAGE11_COLUMN14_B: LpsPage11Entry[] = LPS_PAGE11_COLUMN14_VALUES.map((value, idx) => ({
   id: idx + 1,
   value,
+  correctIndices: LPS_PAGE11_COLUMN14_CORRECT[idx + 1] ?? [],
 }));
 
 const LPS_PAGE11_COLUMN13_B: LpsPage11Entry[] = LPS_PAGE11_COLUMN13_VALUES.map((value, idx) => ({
@@ -203,9 +245,16 @@ function extractSolution(entry?: LpsPage11Entry): number[] {
   return [entry.correctIndex];
 }
 
+function extractColumn14Solution(entry?: LpsPage11Entry): number[] {
+  if (!entry?.correctIndices?.length) return [];
+  const tokens = splitTokens(entry.value);
+  return entry.correctIndices.filter((idx) => idx >= 0 && idx < tokens.length);
+}
+
 function buildSolutions(column13: LpsPage11Entry[]) {
   return buildRows(column13, LPS_PAGE11_COLUMN14_B).map((_, idx) => ({
     col13: extractSolution(column13[idx]),
+    col14: extractColumn14Solution(LPS_PAGE11_COLUMN14_B[idx]),
   }));
 }
 
