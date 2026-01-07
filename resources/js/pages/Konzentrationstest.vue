@@ -139,7 +139,7 @@ const exampleCopyRow: { parts: RowParts } = {
   parts: ['Silvya Müller', '45678 Paching', 'Laibziger Str. 4', 'Tel. 0122 787462'],
 }
 const exampleSlashMarks: number[][] = [[1, 4], [], [1], [6, 7, 13]]
-const exampleSlashAfterMarks: number[][] = [[], [7], [], []]
+const exampleSlashAfterMarks: number[][] = [[], [7], [], [15]]
 const getExampleOriginalChars = (partIndex: number) => Array.from(exampleOriginalRow.parts[partIndex])
 const getExampleCopyChars = (partIndex: number) => Array.from(exampleCopyRow.parts[partIndex])
 
