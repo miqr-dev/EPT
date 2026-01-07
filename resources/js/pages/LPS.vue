@@ -12,6 +12,7 @@ import { getLpsPage7Dataset, type LpsPage7Prompt, type LpsPage7Solution } from '
 import { getLpsPage8Dataset, type LpsPage8Prompt, type LpsPage8Solution } from '@/pages/Questions/LPSPage8';
 import { getLpsPage9Dataset, type LpsPage9Solution } from '@/pages/Questions/LPSPage9';
 import { getLpsPage10Dataset } from '@/pages/Questions/LPSPage10';
+import { getLpsPage11Dataset, type LpsPage11Solution } from '@/pages/Questions/LPSPage11';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
 type LpsPage5ResponseRow = { col7: boolean[] };
@@ -20,15 +21,16 @@ type LpsPage7ResponseRow = { prompts: boolean[][] };
 type LpsPage8ResponseRow = { prompts: boolean[][] };
 type LpsPage9ResponseRow = { prompts: boolean[][] };
 type LpsPage10ResponseRow = { paths: boolean[] };
+type LpsPage11ResponseRow = { col13: boolean[]; col14: boolean[] };
 type LpsPage6OptionGroup = { label: string; options: Array<{ option: LpsPage6Option; index: number }> };
 
 type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-const COLUMN_DURATION_SECONDS = [3, 3, 180, 3, 3, 3, 3, 3, 3, 3, 180];
-const COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12];
-const PAGE_SECTIONS = [
+const BASE_COLUMN_DURATION_SECONDS = [3, 3, 180, 3, 3, 3, 3, 3, 3, 3, 180];
+const BASE_COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12];
+const BASE_PAGE_SECTIONS = [
   { title: 'Spalten 1 + 2', columnIndices: [0, 1] },
   { title: 'Spalte 3', columnIndices: [2] },
   { title: 'Spalte 4', columnIndices: [3] },
@@ -65,6 +67,9 @@ const props = defineProps<{
     page10?: LpsPage10ResponseRow[];
     page10_score?: number;
     page10_max_score?: number;
+    page11?: LpsPage11ResponseRow[];
+    page11_positive_score?: number;
+    page11_negative_score?: number;
   };
   timeRemainingSeconds?: number | null;
   testName?: string;
@@ -79,6 +84,7 @@ const { rows: lpsPage7Rows, solutions: lpsPage7Solutions } = getLpsPage7Dataset(
 const { rows: lpsPage8Rows, solutions: lpsPage8Solutions } = getLpsPage8Dataset(props.testName);
 const { rows: lpsPage9Rows, solutions: lpsPage9Solutions } = getLpsPage9Dataset(props.testName);
 const { rows: lpsPage10Rows, solutions: lpsPage10Solutions } = getLpsPage10Dataset(props.testName);
+const { rows: lpsPage11Rows, solutions: lpsPage11Solutions } = getLpsPage11Dataset(props.testName);
 
 const PAGE7_GRID_GAP_PX = 12;
 // Update this width if the shape panels get larger/smaller so the arrows anchor to the panel edges.
@@ -97,8 +103,13 @@ const isPage10ExampleRow = (rowIdx: number) => props.testName === 'LPS-B' && row
 
 const showTest = ref(false);
 const pageIndex = ref(0);
-const pageCount = PAGE_SECTIONS.length;
-const currentSection = computed(() => PAGE_SECTIONS[pageIndex.value] ?? PAGE_SECTIONS[0]);
+const pageSections = computed(() =>
+  props.testName === 'LPS-B'
+    ? [...BASE_PAGE_SECTIONS, { title: 'Spalten 14 + 13', columnIndices: [11, 12] }]
+    : BASE_PAGE_SECTIONS,
+);
+const pageCount = computed(() => pageSections.value.length);
+const currentSection = computed(() => pageSections.value[pageIndex.value] ?? pageSections.value[0]);
 const visibleColumnIndices = computed(() => currentSection.value.columnIndices);
 const visibleColumnStates = computed(() =>
   visibleColumnIndices.value.map((idx) => ({ idx, state: columnStates.value[idx] })),
@@ -163,8 +174,15 @@ const page1Responses = ref<LpsPage1ResponseRow[]>(
   }),
 );
 
+const columnDurations = computed(() =>
+  props.testName === 'LPS-B' ? [...BASE_COLUMN_DURATION_SECONDS, 120, 180] : BASE_COLUMN_DURATION_SECONDS,
+);
+const columnLabels = computed(() =>
+  props.testName === 'LPS-B' ? [...BASE_COLUMN_LABELS, 14, 13] : BASE_COLUMN_LABELS,
+);
+
 const columnStates = ref<LpsColumnState[]>(
-  props.pausedTestResult?.columnStates?.length === COLUMN_DURATION_SECONDS.length
+  props.pausedTestResult?.columnStates?.length === columnDurations.value.length
     ? props.pausedTestResult.columnStates
     : createInitialColumnStates(),
 );
@@ -255,6 +273,23 @@ const page10Responses = ref<LpsPage10ResponseRow[]>(
   }),
 );
 
+function getSequenceTokens(value: string) {
+  if (!value) return [];
+  return value.trim().split(/\s+/);
+}
+
+const page11Responses = ref<LpsPage11ResponseRow[]>(
+  lpsPage11Rows.map((row, idx) => {
+    const pausedRow = props.pausedTestResult?.page11?.[idx];
+    const col13Tokens = getSequenceTokens(row.column13);
+    const col14Tokens = getSequenceTokens(row.column14);
+    return {
+      col13: buildSelection(col13Tokens.length, pausedRow?.col13),
+      col14: buildSelection(col14Tokens.length, pausedRow?.col14),
+    };
+  }),
+);
+
 const page6OptionGroups = computed<LpsPage6OptionGroup[][]>(() =>
   lpsPage6Rows.map((row) => buildPage6OptionGroups(row.column8Options ?? [])),
 );
@@ -269,7 +304,7 @@ if (props.pausedTestResult) {
   if (typeof props.pausedTestResult.pageIndex === 'number') {
     pageIndex.value = props.pausedTestResult.pageIndex;
   }
-  pageIndex.value = Math.min(pageIndex.value, pageCount - 1);
+  pageIndex.value = Math.min(pageIndex.value, pageCount.value - 1);
   showTest.value = true;
   startTimer();
   if (activeColumnIndex.value !== -1) {
@@ -323,11 +358,12 @@ watch(
     page7Responses,
     page8Responses,
     page9Responses,
-    page10Responses,
-    pageIndex,
-    totalElapsed,
-    columnStates,
-  ],
+  page10Responses,
+  page11Responses,
+  pageIndex,
+  totalElapsed,
+  columnStates,
+],
   () => {
     emit('update:answers', {
       pageIndex: pageIndex.value,
@@ -354,6 +390,9 @@ watch(
       page10: page10Responses.value,
       page10_score: page10Score.value,
       page10_max_score: page10MaxScore.value,
+      page11: page11Responses.value,
+      page11_positive_score: page11PositiveScore.value,
+      page11_negative_score: page11NegativeScore.value,
     });
   },
   { deep: true },
@@ -377,7 +416,7 @@ function startTest() {
 }
 
 function nextPage() {
-  pageIndex.value = Math.min(pageIndex.value + 1, pageCount - 1);
+  pageIndex.value = Math.min(pageIndex.value + 1, pageCount.value - 1);
 }
 
 function prevPage() {
@@ -423,6 +462,9 @@ function confirmEnd() {
     page8_max_score: page8MaxScore.value,
     page9_score: page9Score.value,
     page9_max_score: page9MaxScore.value,
+    page11: page11Responses.value,
+    page11_positive_score: page11PositiveScore.value,
+    page11_negative_score: page11NegativeScore.value,
   });
 }
 
@@ -432,7 +474,7 @@ function formatTime(seconds: number) {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-type ColumnKey = keyof LpsPage1ResponseRow | 'col7' | 'col8' | 'col9' | 'col10' | 'col11' | 'col12';
+type ColumnKey = keyof LpsPage1ResponseRow | 'col7' | 'col8' | 'col9' | 'col10' | 'col11' | 'col12' | 'col13' | 'col14';
 
 const COLUMN_INDEX_BY_KEY: Record<ColumnKey, number> = {
   col1: 0,
@@ -446,6 +488,8 @@ const COLUMN_INDEX_BY_KEY: Record<ColumnKey, number> = {
   col10: 8,
   col11: 9,
   col12: 10,
+  col14: 11,
+  col13: 12,
 };
 
 function buildPage6OptionGroups(options: LpsPage6Option[]): LpsPage6OptionGroup[] {
@@ -533,6 +577,14 @@ function togglePage10Selection(rowIdx: number, optionIdx: number) {
   row.paths = row.paths.map((_, idx) => (idx === optionIdx ? !currentlySelected : false));
 }
 
+function togglePage11Selection(rowIdx: number, columnKey: 'col13' | 'col14', tokenIdx: number) {
+  if (!isColumnInteractive(columnKey)) return;
+  const row = page11Responses.value[rowIdx];
+  if (!row?.[columnKey]?.length) return;
+  const currentlySelected = row[columnKey][tokenIdx];
+  row[columnKey] = row[columnKey].map((_, idx) => (idx === tokenIdx ? !currentlySelected : false));
+}
+
 function resetColumns() {
   stopColumnTimer();
   columnStates.value = createInitialColumnStates();
@@ -590,6 +642,9 @@ function finishColumn(columnIdx: number, unlockNext = true) {
       remaining: nextState.remaining || getColumnDuration(columnIdx + 1),
     };
   }
+  if (columnIdx === COLUMN_INDEX_BY_KEY.col14 && columnStates.value[columnIdx + 1]?.status === 'ready') {
+    startColumn(columnIdx + 1);
+  }
 }
 
 function isColumnInteractive(columnKey: ColumnKey) {
@@ -602,7 +657,7 @@ function formatColumnRemaining(seconds: number) {
 }
 
 function getColumnLabel(idx: number) {
-  return COLUMN_LABELS[idx] ?? idx + 1;
+  return columnLabels.value[idx] ?? idx + 1;
 }
 
 function formatSectionDurations(indices: number[]) {
@@ -612,11 +667,11 @@ function formatSectionDurations(indices: number[]) {
 }
 
 function getColumnDuration(columnIdx: number) {
-  return COLUMN_DURATION_SECONDS[columnIdx] ?? COLUMN_DURATION_SECONDS[0];
+  return columnDurations.value[columnIdx] ?? columnDurations.value[0];
 }
 
 function createInitialColumnStates(): LpsColumnState[] {
-  return COLUMN_DURATION_SECONDS.map((duration, idx) => ({
+  return columnDurations.value.map((duration, idx) => ({
     status: idx === 0 ? 'ready' : 'locked',
     remaining: duration,
   }));
@@ -796,6 +851,15 @@ function scorePage10Row(rowIdx: number, responses: LpsPage10ResponseRow) {
   return picks[correctIdx] ? 1 : 0;
 }
 
+function scorePage11Row(rowIdx: number, solutions: LpsPage11Solution, responses: LpsPage11ResponseRow) {
+  const correctIndices = solutions.col13 ?? [];
+  if (!correctIndices.length || !responses.col13?.length) return { positive: 0, negative: 0 };
+  const selectedIdx = responses.col13.findIndex(Boolean);
+  if (selectedIdx === -1) return { positive: 0, negative: 0 };
+  if (correctIndices.includes(selectedIdx)) return { positive: 1, negative: 0 };
+  return { positive: 0, negative: 1 };
+}
+
 const page9Score = computed(() =>
   page9Responses.value.reduce((total, response, idx) => {
     const solutions = lpsPage9Solutions[idx];
@@ -807,6 +871,24 @@ const page9Score = computed(() =>
 const page10Score = computed(() =>
   page10Responses.value.reduce((total, response, idx) => total + scorePage10Row(idx, response), 0),
 );
+
+const page11Scores = computed(() =>
+  page11Responses.value.reduce(
+    (totals, response, idx) => {
+      const solutions = lpsPage11Solutions[idx];
+      if (!solutions) return totals;
+      const rowScore = scorePage11Row(idx, solutions, response);
+      return {
+        positive: totals.positive + rowScore.positive,
+        negative: totals.negative + rowScore.negative,
+      };
+    },
+    { positive: 0, negative: 0 },
+  ),
+);
+
+const page11PositiveScore = computed(() => page11Scores.value.positive);
+const page11NegativeScore = computed(() => page11Scores.value.negative);
 
 const page9MaxScore = computed(() =>
   lpsPage9Solutions.reduce((total, solution) => {
@@ -1281,6 +1363,54 @@ const totalMaxScore = computed(
             </div>
           </div>
 
+          <div v-else-if="pageIndex === 10" class="space-y-3">
+            <div class="rounded-2xl border bg-background p-4 shadow-sm">
+              <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalten 14 + 13</div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c14`" class="py-[1px]">
+                    <div class="lps-sequence-row">
+                      <button v-for="(token, tokenIdx) in getSequenceTokens(row.column14)"
+                        :key="`${row.id}-14-${tokenIdx}`" type="button" class="lps-letter"
+                        :class="page11Responses[idx].col14[tokenIdx] ? 'lps-letter--selected' : ''"
+                        :disabled="!isColumnInteractive('col14')" :aria-pressed="page11Responses[idx].col14[tokenIdx]"
+                        @click="togglePage11Selection(idx, 'col14', tokenIdx)">
+                        {{ token }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="lps-sep">
+                  <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c13`" class="py-[1px]">
+                    <div class="lps-sequence-row">
+                      <button v-for="(token, tokenIdx) in getSequenceTokens(row.column13)"
+                        :key="`${row.id}-13-${tokenIdx}`" type="button" class="lps-letter"
+                        :class="page11Responses[idx].col13[tokenIdx] ? 'lps-letter--selected' : ''"
+                        :disabled="!isColumnInteractive('col13')" :aria-pressed="page11Responses[idx].col13[tokenIdx]"
+                        @click="togglePage11Selection(idx, 'col13', tokenIdx)">
+                        {{ token }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-background px-4 py-3 text-xs text-muted-foreground shadow-sm">
+              <div>
+                Pluspunkte:
+                <span class="font-semibold text-foreground">+{{ page11PositiveScore }}</span>
+              </div>
+              <div>
+                Minuspunkte:
+                <span class="font-semibold text-foreground">-{{ page11NegativeScore }}</span>
+              </div>
+            </div>
+          </div>
+
           <div v-else-if="pageIndex === 7" class="space-y-3">
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-1 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 10</div>
@@ -1350,6 +1480,14 @@ const totalMaxScore = computed(
   /* very close */
   align-items: baseline;
   justify-content: center;
+}
+
+.lps-sequence-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 260px;
+  margin: 0 auto;
 }
 
 .lps-column3-svg {
