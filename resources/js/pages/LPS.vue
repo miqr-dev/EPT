@@ -114,6 +114,7 @@ const visibleColumnIndices = computed(() => currentSection.value.columnIndices);
 const visibleColumnStates = computed(() =>
   visibleColumnIndices.value.map((idx) => ({ idx, state: columnStates.value[idx] })),
 );
+const alphabetLetters = 'abcdefghijklmnopqrstuvwxyz'.split('');
 const isAnyVisibleColumnActive = computed(() =>
   visibleColumnIndices.value.some((idx) => columnStates.value[idx]?.status === 'active'),
 );
@@ -1116,6 +1117,20 @@ const totalMaxScore = computed(
 
           <!-- Page 3: Spalte 4 -->
           <div v-else-if="pageIndex === 2" class="space-y-3">
+            <div class="lps-alphabet-float" aria-hidden="true">
+              <div class="lps-alphabet-box">
+                <div class="lps-alphabet-row">
+                  <span v-for="(char, charIdx) in alphabetLetters.slice(0, 13)" :key="`alpha-top-${charIdx}`">
+                    {{ char }}
+                  </span>
+                </div>
+                <div class="lps-alphabet-row">
+                  <span v-for="(char, charIdx) in alphabetLetters.slice(13)" :key="`alpha-bottom-${charIdx}`">
+                    {{ char }}
+                  </span>
+                </div>
+              </div>
+            </div>
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 4</div>
 
@@ -1840,6 +1855,35 @@ const totalMaxScore = computed(
 .page10-option--selected {
   background: rgba(239, 68, 68, 0.08);
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.65);
+}
+
+.lps-alphabet-float {
+  position: fixed;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  pointer-events: none;
+}
+
+.lps-alphabet-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  border: 2px solid rgb(15 23 42);
+  background: rgb(248 250 252);
+  box-shadow: 0 6px 16px rgb(15 23 42 / 0.12);
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.lps-alphabet-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
 }
 
 /* Vertical separator between column 1 and 2 */
