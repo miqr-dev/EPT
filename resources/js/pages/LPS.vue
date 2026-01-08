@@ -110,7 +110,7 @@ const page9Arrows = page7Arrows;
 const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
 const isPage8ExamplePrompt = (rowIdx: number, promptIdx: number) =>
-  props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
+  props.testName === 'LPS-B' && promptIdx === 0 && rowIdx < 2;
 const isPage9ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
 const isPage10ExampleRow = (rowIdx: number) => props.testName === 'LPS-B' && rowIdx < 2;
