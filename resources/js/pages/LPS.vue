@@ -1302,8 +1302,14 @@ const totalMaxScore = computed(
                 <div v-for="(row, rowIdx) in lpsPage7Rows" :key="`${row.id}-c9`" class="relative space-y-3">
                   <div v-if="page7Arrows[rowIdx]?.length" class="pointer-events-none absolute inset-x-0 top-0 w-full"
                     aria-hidden="true">
-                    <div v-for="(arrow, arrowIdx) in page7Arrows[rowIdx]" :key="`${row.id}-arrow-${arrowIdx}`"
-                      class="page7-arrow" :style="getPage7ArrowStyle(rowIdx, arrow.from, arrow.to)"></div>
+                    <svg v-for="(arrow, arrowIdx) in page7Arrows[rowIdx]" :key="`${row.id}-arrow-${arrowIdx}`"
+                      class="page7-arrow" :style="getPage7ArrowStyle(rowIdx, arrow.from, arrow.to)"
+                      viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path
+                        d="M492.888 159.339 359.286 25.738c-12.347-12.346-28.691-19.112-46.115-19.112q-.463 0-.926.006c-17.763.245-34.282 7.495-46.513 20.417-11.8 12.466-18.025 28.906-17.531 46.295.489 17.172 7.455 33.325 19.615 45.486l22.083 22.083c-71.908 12.999-137.081 47.191-189.527 99.638-51.575 51.575-85.891 116.367-99.236 187.373-3.609 19.202 1.471 38.833 13.935 53.859 12.437 14.992 30.743 23.591 50.224 23.591 31.36 0 58.309-22.214 64.078-52.821 15.542-82.461 75.257-149.309 153.301-175.281l-14.886 14.886c-25.298 25.299-26.126 66.559-1.844 91.976 12.443 13.026 29.207 20.199 47.203 20.199 17.429 0 33.815-6.787 46.14-19.111L492.888 251.62C505.212 239.295 512 222.909 512 205.479s-6.788-33.815-19.112-46.14m-14.425 77.858L344.862 370.798c-8.472 8.472-19.736 13.137-31.716 13.137-12.37 0-23.895-4.933-32.453-13.891-16.687-17.466-16.006-45.934 1.519-63.459l40.756-40.756a10.2 10.2 0 0 0-8.876-17.276C210.973 265.6 128.684 346.064 109.326 448.776c-3.953 20.974-22.471 36.198-44.032 36.198a44.73 44.73 0 0 1-34.524-16.216c-8.577-10.339-12.071-23.849-9.586-37.067 12.583-66.95 44.953-128.057 93.613-176.713 54.075-54.076 122.482-87.581 197.828-96.892a10.2 10.2 0 0 0 5.961-17.335l-36.344-36.344c-17.462-17.461-18.222-45.874-1.695-63.334 8.412-8.887 19.769-13.874 31.979-14.041q.318-.005.636-.005c11.978 0 23.214 4.651 31.702 13.137l133.601 133.601c8.472 8.472 13.137 19.736 13.137 31.716-.001 11.98-4.666 23.243-13.139 31.716" />
+                      <path
+                        d="M472.17 209.312c-3.984-3.981-10.441-3.981-14.424 0l-74.149 74.148c-3.983 3.984-3.983 10.442 0 14.425a10.17 10.17 0 0 0 7.212 2.987c2.61 0 5.221-.997 7.212-2.987l74.149-74.148c3.983-3.984 3.983-10.442 0-14.425M372.907 308.399c-3.984-3.982-10.442-3.982-14.425 0l-5.665 5.665c-3.983 3.984-3.983 10.442 0 14.425a10.17 10.17 0 0 0 7.212 2.987c2.61 0 5.221-.996 7.213-2.987l5.665-5.665c3.983-3.984 3.983-10.443 0-14.425" />
+                    </svg>
                   </div>
                   <div class="grid gap-3 md:grid-cols-3">
                     <div v-for="(prompt, promptIdx) in row.prompts" :key="prompt.id"
@@ -1699,22 +1705,14 @@ const totalMaxScore = computed(
 
 .page7-arrow {
   position: absolute;
-  top: 64px;
-  height: 18px;
-  border-radius: 9999px;
-  background: #4b5563;
+  top: 54px;
+  height: 36px;
+  color: #4b5563;
   z-index: 1;
 }
 
-.page7-arrow::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: -26px;
-  transform: translateY(-50%);
-  border-left: 34px solid #4b5563;
-  border-top: 18px solid transparent;
-  border-bottom: 18px solid transparent;
+.page7-arrow path {
+  fill: currentColor;
 }
 
 .lps-number-chip {
