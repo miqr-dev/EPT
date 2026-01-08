@@ -92,8 +92,8 @@ const PAGE7_GRID_GAP_PX = 12;
 const PAGE7_DEFAULT_SHAPE_WIDTH = 170;
 // Increase/decrease this inset to shorten/lengthen the page 7 arrows without touching the CSS.
 const PAGE7_ARROW_INSET_PX = 18;
-const PAGE8_ARROW_ROWS = new Set([0, 1]);
-const PAGE8_ARROW_TOP_PX = 150;
+const PAGE8_ARROW_ROWS = new Set([0]);
+const PAGE8_ARROW_TOP = 'calc(100% - 8px)';
 const PAGE8_GRID_GAP_PX = 12;
 const PAGE8_ROW_PADDING_PX = 16;
 const page7Arrows: Record<number, Array<{ from: number; to: number }>> = {
@@ -148,9 +148,9 @@ function getPage7ArrowStyle(rowIdx: number, fromCol: number, toCol: number) {
 function getPage8ArrowStyle(columnIdx: number) {
   const columnWidth = `calc((100% - ${PAGE8_GRID_GAP_PX}px) / 2)`;
   const left = columnIdx === 0
-    ? `${PAGE8_ROW_PADDING_PX}px`
-    : `calc(${PAGE8_ROW_PADDING_PX}px + ${columnWidth} + ${PAGE8_GRID_GAP_PX}px)`;
-  return { left, top: `${PAGE8_ARROW_TOP_PX}px` } as const;
+    ? `calc(${PAGE8_ROW_PADDING_PX}px + (${columnWidth} / 2))`
+    : `calc(${PAGE8_ROW_PADDING_PX}px + ${columnWidth} + ${PAGE8_GRID_GAP_PX}px + (${columnWidth} / 2))`;
+  return { left, top: PAGE8_ARROW_TOP } as const;
 }
 const elapsedSecondsBeforeResume = ref(props.pausedTestResult?.total_time_seconds ?? 0);
 const runningElapsedSeconds = ref(0);
