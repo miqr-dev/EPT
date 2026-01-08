@@ -13,6 +13,7 @@ import { getLpsPage8Dataset, type LpsPage8Prompt, type LpsPage8Solution } from '
 import { getLpsPage9Dataset, type LpsPage9Solution } from '@/pages/Questions/LPSPage9';
 import { getLpsPage10Dataset } from '@/pages/Questions/LPSPage10';
 import { getLpsPage11Dataset, type LpsPage11Solution } from '@/pages/Questions/LPSPage11';
+import { LPS_PAGE8_OPTION_SVGS } from '@/pages/Questions/lpsPage8SvgShapes';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
 type LpsPage5ResponseRow = { col7: boolean[] };
@@ -91,6 +92,8 @@ const PAGE7_GRID_GAP_PX = 12;
 const PAGE7_DEFAULT_SHAPE_WIDTH = 170;
 // Increase/decrease this inset to shorten/lengthen the page 7 arrows without touching the CSS.
 const PAGE7_ARROW_INSET_PX = 18;
+const PAGE8_ARROW_ROWS = new Set([0, 1]);
+const PAGE8_ARROW_TOP_PX = 58;
 const page7Arrows: Record<number, Array<{ from: number; to: number }>> = {
   0: [{ from: 2, to: 3 }],
   1: [{ from: 1, to: 2 }],
@@ -139,6 +142,9 @@ function getPage7ArrowStyle(rowIdx: number, fromCol: number, toCol: number) {
     }px)`;
 
   return { left: startLeft, width } as const;
+}
+function getPage8ArrowStyle() {
+  return { left: '50%', top: `${PAGE8_ARROW_TOP_PX}px` } as const;
 }
 const elapsedSecondsBeforeResume = ref(props.pausedTestResult?.total_time_seconds ?? 0);
 const runningElapsedSeconds = ref(0);
@@ -1431,9 +1437,18 @@ const totalMaxScore = computed(
               <div class="mb-1 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 10</div>
               <!-- <p class="text-center text-xs text-muted-foreground">Finde die passende Form zu jeder Vorlage.</p> -->
 
+              <div class="mb-4 flex flex-wrap justify-center gap-3 rounded-xl border bg-background p-3 shadow-sm">
+                <div v-for="option in LPS_PAGE8_OPTION_SVGS" :key="`page8-options-${option.id}`"
+                  class="page8-option-preview" v-html="option.svg"></div>
+              </div>
+
               <div class="space-y-4">
                 <div v-for="(row, rowIdx) in lpsPage8Rows" :key="`${row.id}-c10`"
-                  class="rounded-xl border bg-muted/30 p-4 shadow-sm">
+                  class="relative rounded-xl border bg-muted/30 p-4 shadow-sm">
+                  <div v-if="PAGE8_ARROW_ROWS.has(rowIdx)" class="pointer-events-none absolute inset-x-0 top-0 h-full"
+                    aria-hidden="true">
+                    <div class="page8-arrow" :style="getPage8ArrowStyle()"></div>
+                  </div>
                   <div class="grid gap-3 md:grid-cols-2">
                     <div v-for="(prompt, promptIdx) in row.prompts" :key="prompt.id"
                       class="space-y-3 rounded-lg bg-background p-3 shadow-sm">
@@ -1723,6 +1738,44 @@ const totalMaxScore = computed(
 .page8-shape-panel {
   min-width: 180px;
   min-height: 150px;
+}
+
+.page8-option-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 78px;
+  height: 78px;
+  border-radius: 12px;
+  border: 1px solid rgb(226 232 240);
+  background: white;
+  box-shadow: 0 4px 14px rgb(15 23 42 / 0.08);
+}
+
+.page8-option-preview svg {
+  width: 52px;
+  height: 52px;
+}
+
+.page8-arrow {
+  position: absolute;
+  height: 72px;
+  width: 18px;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  background: #4b5563;
+  z-index: 1;
+}
+
+.page8-arrow::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -26px;
+  transform: translateX(-50%);
+  border-top: 34px solid #4b5563;
+  border-left: 18px solid transparent;
+  border-right: 18px solid transparent;
 }
 
 .page8-option {
