@@ -138,8 +138,7 @@ const exampleOriginalRow: { parts: RowParts } = {
 const exampleCopyRow: { parts: RowParts } = {
   parts: ['Silvya Müller', '45678 Paching', 'Laibziger Str. 4', 'Tel. 0122 787462'],
 }
-const exampleSlashMarks: number[][] = [[1, 4], [], [1], [6, 7, 13]]
-const exampleSlashAfterMarks: number[][] = [[], [7], [], [15]]
+const exampleMarked: number[][] = [[1, 4], [], [1], [6, 7]]
 const getExampleOriginalChars = (partIndex: number) => Array.from(exampleOriginalRow.parts[partIndex])
 const getExampleCopyChars = (partIndex: number) => Array.from(exampleCopyRow.parts[partIndex])
 
@@ -809,36 +808,32 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
               class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] grid-rows-2 gap-x-4 items-start whitespace-nowrap leading-[1.55]">
               <div>
                 <template v-for="(ch, cIdx) in getExampleCopyChars(0)" :key="'ex-copy-0-' + cIdx">
-                  <span :class="['example-letter', { 'slash-marked': exampleSlashMarks[0].includes(cIdx) }]">
+                  <span :class="['example-letter', { marked: exampleMarked[0].includes(cIdx) }]">
                     {{ ch }}
                   </span>
-                  <span v-if="exampleSlashAfterMarks[0].includes(cIdx)" class="example-slash-after">/</span>
                 </template>
               </div>
               <div>
                 <template v-for="(ch, cIdx) in getExampleCopyChars(1)" :key="'ex-copy-1-' + cIdx">
-                  <span :class="['example-letter', { 'slash-marked': exampleSlashMarks[1].includes(cIdx) }]">
+                  <span :class="['example-letter', { marked: exampleMarked[1].includes(cIdx) }]">
                     {{ ch }}
                   </span>
-                  <span v-if="exampleSlashAfterMarks[1].includes(cIdx)" class="example-slash-after">/</span>
                 </template>
               </div>
               <input value="7" readonly aria-label="Beispiel Fehleranzahl"
                 class="answer-box count-box row-span-2 self-center justify-self-center" />
               <div class="mt-1">
                 <template v-for="(ch, cIdx) in getExampleCopyChars(2)" :key="'ex-copy-2-' + cIdx">
-                  <span :class="['example-letter', { 'slash-marked': exampleSlashMarks[2].includes(cIdx) }]">
+                  <span :class="['example-letter', { marked: exampleMarked[2].includes(cIdx) }]">
                     {{ ch }}
                   </span>
-                  <span v-if="exampleSlashAfterMarks[2].includes(cIdx)" class="example-slash-after">/</span>
                 </template>
               </div>
               <div class="mt-1">
                 <template v-for="(ch, cIdx) in getExampleCopyChars(3)" :key="'ex-copy-3-' + cIdx">
-                  <span :class="['example-letter', { 'slash-marked': exampleSlashMarks[3].includes(cIdx) }]">
+                  <span :class="['example-letter', { marked: exampleMarked[3].includes(cIdx) }]">
                     {{ ch }}
                   </span>
-                  <span v-if="exampleSlashAfterMarks[3].includes(cIdx)" class="example-slash-after">/</span>
                 </template>
               </div>
             </div>
@@ -1058,27 +1053,6 @@ ul .answer-box {
 .example-tk {
   cursor: default;
   pointer-events: none;
-}
-
-.slash-marked::after {
-  content: "/";
-  position: absolute;
-  left: 50%;
-  top: -0.15em;
-  transform: translateX(-50%);
-  color: #dc2626;
-  font-weight: 700;
-  font-size: 1.05em;
-  line-height: 1;
-}
-
-.example-slash-after {
-  color: #dc2626;
-  font-weight: 700;
-  font-size: 1.05em;
-  line-height: 1;
-  display: inline-block;
-  margin: 0 0.05em;
 }
 
 .marked {
