@@ -947,7 +947,11 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
       </div>
       <div class="h-[3px] bg-black my-2"></div>
 
-      <div class="mb-6 space-y-2">
+      <p class="text-[18px] leading-snug mb-4">
+        Bei den folgenden 10 Zeilen müssen alle Buchstaben „u“ erkannt werden, die zwei Striche besitzen.
+      </p>
+
+      <div class="mb-8 space-y-6">
         <p class="text-[18px] font-semibold">Beispiele:</p>
         <div class="tick-line text-[22px] leading-[1.35]">
           <span class="tk example-tk" data-top="2">u</span>
@@ -960,6 +964,7 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
         Markieren und zählen Sie pro Reihe alle Buchstaben <b>„u“</b>, die <b>zwei Striche</b> besitzen und tragen
         Sie die jeweilige Summe (pro Reihe) in die Kästchen ein!
       </p>
+
 
       <div class="space-y-4">
         <div v-for="(row, r) in page5TickRows" :key="'p5r' + r" class="flex flex-wrap items-start gap-3 mb-12">
@@ -977,7 +982,8 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
             </span>
           </div>
           <!-- right input -->
-          <Input v-model="page5TickSums[r]" class="inline w-16 h-9 text-[18px] border border-gray-400 bg-white" placeholder="" />
+          <Input v-model="page5TickSums[r]" class="inline w-16 h-9 text-[18px] border border-gray-400 bg-white"
+            placeholder="" />
         </div>
       </div>
 
