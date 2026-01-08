@@ -276,7 +276,7 @@ export const LPS_PAGE1_SOLUTIONS_A: LpsPage1Solution[] = buildSolutions(
 );
 
 const LPS_PAGE1_COLUMN1_B: LpsColumnEntry[] = [
-  { id: 1, word: 'Auyzug', correctIndex: 2 },
+  { id: 1, word: 'Auvzug', correctIndex: 2 },
   { id: 2, word: 'Freute', correctIndex: 4 },
   { id: 3, word: 'Alaske', correctIndex: 5 },
   { id: 4, word: 'Bezirg', correctIndex: 5 },
@@ -362,12 +362,12 @@ const LPS_PAGE1_COLUMN2_B: LpsColumnEntry[] = [
 ];
 const LPS_PAGE1_COLUMN4_B: LpsColumnEntry[] = [
   { id: 1, word: 'x x x x x x x o x', correctIndex: 7 },
-  { id: 2, word: 'a b a b a b a B b', correctIndex: 8 },
+  { id: 2, word: 'a b a b a b a b b', correctIndex: 8 },
   { id: 3, word: 'x o x o x o x o o', correctIndex: 8 },
   { id: 4, word: '1 2 3 1 2 3 4 2 3', correctIndex: 6 },
   { id: 5, word: '0 0 n 0 0 n 0 0 0', correctIndex: 8 },
   { id: 6, word: 'a b c d e f c h i', correctIndex: 6 },
-  { id: 7, word: 'a B a B a B a B a', correctIndex: 7 },
+  { id: 7, word: 'a B a B a B a b a', correctIndex: 7 },
   { id: 8, word: '2 4 6 8 9 12 14 16 18', correctIndex: 4 },
   { id: 9, word: 'a b c a b c d b c', correctIndex: 6 },
   { id: 10, word: '1 2 1 2 2 2 1 2 1', correctIndex: 4 },
