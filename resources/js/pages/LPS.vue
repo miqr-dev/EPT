@@ -1706,7 +1706,8 @@ const totalMaxScore = computed(
 .page7-arrow {
   position: absolute;
   top: 54px;
-  height: 36px;
+  height: 64px;
+  width: 64px;
   color: #4b5563;
   z-index: 1;
 }
