@@ -1769,8 +1769,8 @@ const totalMaxScore = computed(
 
 .page8-arrow {
   position: absolute;
-  height: 36px;
-  width: 10px;
+  height: 44px;
+  width: 14px;
   transform: translate(-50%, -50%);
   border-radius: 9999px;
   background: #4b5563;
@@ -1781,11 +1781,11 @@ const totalMaxScore = computed(
   content: '';
   position: absolute;
   left: 50%;
-  bottom: -12px;
+  bottom: -14px;
   transform: translateX(-50%);
-  border-top: 14px solid #4b5563;
-  border-left: 9px solid transparent;
-  border-right: 9px solid transparent;
+  border-top: 16px solid #4b5563;
+  border-left: 11px solid transparent;
+  border-right: 11px solid transparent;
 }
 
 .page8-option {
