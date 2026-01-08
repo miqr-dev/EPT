@@ -947,6 +947,15 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
       </div>
       <div class="h-[3px] bg-black my-2"></div>
 
+      <div class="mb-6 space-y-2">
+        <p class="text-[18px] font-semibold">Beispiele:</p>
+        <div class="tick-line text-[22px] leading-[1.35]">
+          <span class="tk example-tk" data-top="2">u</span>
+          <span class="tk example-tk" data-bot="2">u</span>
+          <span class="tk example-tk" data-top="1" data-bot="1">u</span>
+        </div>
+      </div>
+
       <p class="text-[18px] leading-snug mb-10">
         Markieren und zählen Sie pro Reihe alle Buchstaben <b>„u“</b>, die <b>zwei Striche</b> besitzen und tragen
         Sie die jeweilige Summe (pro Reihe) in die Kästchen ein!
@@ -1038,6 +1047,11 @@ ul .answer-box {
   pointer-events: none;
   padding: 0 0.25px;
   position: relative;
+}
+
+.example-tk {
+  cursor: default;
+  pointer-events: none;
 }
 
 .slash-marked::after {
