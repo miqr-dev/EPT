@@ -1,7 +1,6 @@
 export type LpsPage11Entry = {
   id: number;
   value: string;
-  correctIndex?: number;
   correctIndices?: number[];
 };
 
@@ -192,21 +191,42 @@ S 1 5 T 0 6 2 1
   .split('\n')
   .map((row) => row.trim());
 
+const LPS_PAGE11_COLUMN13_CORRECT: Record<number, number[]> = {
+  3: [4],
+  5: [0],
+  7: [1],
+  9: [5],
+  14: [1, 3],
+  16: [1, 5],
+  19: [0],
+  21: [1],
+  22: [4],
+  24: [2, 5],
+  26: [4],
+  27: [1],
+  28: [4],
+  29: [0],
+  30: [4],
+  31: [0],
+  32: [4],
+  34: [1, 4, 7],
+  41: [5, 7],
+  43: [1, 7],
+  45: [0, 2],
+  47: [4],
+  50: [1],
+  53: [6],
+  55: [0],
+  56: [4],
+  57: [2],
+  58: [0, 4],
+  59: [2],
+  60: [0, 5],
+};
+
 function splitTokens(value: string) {
   if (!value) return [];
   return value.trim().split(/\s+/);
-}
-
-function findMismatchIndex(value: string, reference: string) {
-  const tokens = splitTokens(value);
-  const referenceTokens = splitTokens(reference);
-  const maxLength = Math.max(tokens.length, referenceTokens.length);
-
-  for (let idx = 0; idx < maxLength; idx += 1) {
-    if (tokens[idx] !== referenceTokens[idx]) return idx;
-  }
-
-  return undefined;
 }
 
 const LPS_PAGE11_COLUMN14_B: LpsPage11Entry[] = LPS_PAGE11_COLUMN14_VALUES.map((value, idx) => ({
@@ -218,7 +238,7 @@ const LPS_PAGE11_COLUMN14_B: LpsPage11Entry[] = LPS_PAGE11_COLUMN14_VALUES.map((
 const LPS_PAGE11_COLUMN13_B: LpsPage11Entry[] = LPS_PAGE11_COLUMN13_VALUES.map((value, idx) => ({
   id: idx + 1,
   value,
-  correctIndex: findMismatchIndex(value, LPS_PAGE11_COLUMN14_VALUES[idx] ?? ''),
+  correctIndices: LPS_PAGE11_COLUMN13_CORRECT[idx + 1] ?? [],
 }));
 
 function buildRow(rowIdx: number, column13: LpsPage11Entry[], column14: LpsPage11Entry[]): LpsPage11Row {
@@ -238,13 +258,6 @@ function buildRows(column13: LpsPage11Entry[], column14: LpsPage11Entry[]) {
   return Array.from({ length: rowCount }, (_, idx) => buildRow(idx, column13, column14));
 }
 
-function extractSolution(entry?: LpsPage11Entry): number[] {
-  if (!entry || typeof entry.correctIndex !== 'number') return [];
-  const tokens = splitTokens(entry.value);
-  if (entry.correctIndex < 0 || entry.correctIndex >= tokens.length) return [];
-  return [entry.correctIndex];
-}
-
 function extractColumn14Solution(entry?: LpsPage11Entry): number[] {
   if (!entry?.correctIndices?.length) return [];
   const tokens = splitTokens(entry.value);
@@ -253,7 +266,7 @@ function extractColumn14Solution(entry?: LpsPage11Entry): number[] {
 
 function buildSolutions(column13: LpsPage11Entry[]) {
   return buildRows(column13, LPS_PAGE11_COLUMN14_B).map((_, idx) => ({
-    col13: extractSolution(column13[idx]),
+    col13: extractColumn14Solution(column13[idx]),
     col14: extractColumn14Solution(LPS_PAGE11_COLUMN14_B[idx]),
   }));
 }
