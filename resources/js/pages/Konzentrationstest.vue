@@ -136,7 +136,7 @@ const exampleOriginalRow: { parts: RowParts } = {
   parts: ['Sylvia Müller', '45678 Pasching', 'Leipziger Str. 4', 'Tel. 0212 7874624'],
 }
 const exampleCopyRow: { parts: RowParts } = {
-  parts: ['Silvya Müller', '45678 P aching', 'Laibziger Str. 4', 'Tel. 0122 787462 '],
+  parts: ['Silvya Müller', '45678 P aching', 'Laibziger Str. 4', 'Tel. 0122 787462-'],
 }
 const exampleMarked: number[][] = [[1, 4], [7], [1], [6, 7, 16]]
 const getExampleOriginalChars = (partIndex: number) => Array.from(exampleOriginalRow.parts[partIndex])
