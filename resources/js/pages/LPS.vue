@@ -10,7 +10,7 @@ import { getLpsPage5Dataset, type LpsPage5Solution } from '@/pages/Questions/LPS
 import { getLpsPage6Dataset, type LpsPage6Option, type LpsPage6Solution } from '@/pages/Questions/LPSPage6';
 import { getLpsPage7Dataset, type LpsPage7Prompt, type LpsPage7Solution } from '@/pages/Questions/LPSPage7';
 import { getLpsPage8Dataset, type LpsPage8Prompt, type LpsPage8Solution } from '@/pages/Questions/LPSPage8';
-import { getLpsPage9Dataset, type LpsPage9Solution } from '@/pages/Questions/LPSPage9';
+import { getLpsPage9Dataset, type LpsPage9Prompt, type LpsPage9Solution } from '@/pages/Questions/LPSPage9';
 import { getLpsPage10Dataset } from '@/pages/Questions/LPSPage10';
 import { getLpsPage11Dataset, type LpsPage11Solution } from '@/pages/Questions/LPSPage11';
 import { LPS_PAGE8_OPTION_SVGS } from '@/pages/Questions/lpsPage8SvgShapes';
@@ -92,6 +92,9 @@ const PAGE7_GRID_GAP_PX = 12;
 const PAGE7_DEFAULT_SHAPE_WIDTH = 170;
 // Increase/decrease this inset to shorten/lengthen the page 7 arrows without touching the CSS.
 const PAGE7_ARROW_INSET_PX = 18;
+const PAGE9_GRID_GAP_PX = 12;
+const PAGE9_DEFAULT_SHAPE_WIDTH = 170;
+const PAGE9_ARROW_INSET_PX = 18;
 const PAGE8_ARROW_ROWS: Record<number, number[]> = {
   0: [1],
   1: [0],
@@ -103,9 +106,12 @@ const page7Arrows: Record<number, Array<{ from: number; to: number }>> = {
   0: [{ from: 2, to: 3 }],
   1: [{ from: 1, to: 2 }],
 };
+const page9Arrows = page7Arrows;
 const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
 const isPage8ExamplePrompt = (rowIdx: number, promptIdx: number) =>
+  props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
+const isPage9ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
 const isPage10ExampleRow = (rowIdx: number) => props.testName === 'LPS-B' && rowIdx < 2;
 
@@ -137,6 +143,9 @@ function getShapePanelStyle(svgMeta?: { width: number; height: number }) {
 function getPage7ShapeWidth(rowIdx: number) {
   return lpsPage7Rows[rowIdx]?.prompts?.[0]?.svgMeta?.width ?? PAGE7_DEFAULT_SHAPE_WIDTH;
 }
+function getPage9ShapeWidth(rowIdx: number) {
+  return lpsPage9Rows[rowIdx]?.prompts?.[0]?.svgMeta?.width ?? PAGE9_DEFAULT_SHAPE_WIDTH;
+}
 
 function getPage7ArrowStyle(rowIdx: number, fromCol: number, toCol: number) {
   const columnWidth = `calc((100% - (${PAGE7_GRID_GAP_PX * 2}px)) / 3)`;
@@ -144,6 +153,16 @@ function getPage7ArrowStyle(rowIdx: number, fromCol: number, toCol: number) {
   const startLeft = `calc((${columnWidth} * ${fromCol - 0.5}) + ${PAGE7_GRID_GAP_PX * (fromCol - 1)}px + ${shapeWidth / 2 + PAGE7_ARROW_INSET_PX
     }px)`;
   const width = `calc((${columnWidth} * ${toCol - fromCol}) + ${PAGE7_GRID_GAP_PX * (toCol - fromCol)}px - ${shapeWidth + PAGE7_ARROW_INSET_PX * 2
+    }px)`;
+
+  return { left: startLeft, width } as const;
+}
+function getPage9ArrowStyle(rowIdx: number, fromCol: number, toCol: number) {
+  const columnWidth = `calc((100% - (${PAGE9_GRID_GAP_PX * 2}px)) / 3)`;
+  const shapeWidth = getPage9ShapeWidth(rowIdx);
+  const startLeft = `calc((${columnWidth} * ${fromCol - 0.5}) + ${PAGE9_GRID_GAP_PX * (fromCol - 1)}px + ${shapeWidth / 2 + PAGE9_ARROW_INSET_PX
+    }px)`;
+  const width = `calc((${columnWidth} * ${toCol - fromCol}) + ${PAGE9_GRID_GAP_PX * (toCol - fromCol)}px - ${shapeWidth + PAGE9_ARROW_INSET_PX * 2
     }px)`;
 
   return { left: startLeft, width } as const;
@@ -243,6 +262,17 @@ function buildPage8ExamplePromptSelection(rowIdx: number, promptIdx: number, pro
   return selection;
 }
 
+function buildPage9ExamplePromptSelection(rowIdx: number, promptIdx: number, prompt: LpsPage9Prompt) {
+  const selection = buildSelection(prompt.options.length ?? 0);
+  const correctIdx = lpsPage9Solutions[rowIdx]?.correctOptionIndices?.[promptIdx];
+
+  if (typeof correctIdx === 'number' && selection[correctIdx] !== undefined) {
+    selection[correctIdx] = true;
+  }
+
+  return selection;
+}
+
 const page8Responses = ref<LpsPage8ResponseRow[]>(
   lpsPage8Rows.map((row, idx) => {
     const pausedRow = props.pausedTestResult?.page8?.[idx];
@@ -262,7 +292,13 @@ const page9Responses = ref<LpsPage9ResponseRow[]>(
   lpsPage9Rows.map((row, idx) => {
     const pausedRow = props.pausedTestResult?.page9?.[idx];
     return {
-      prompts: row.prompts.map((prompt, promptIdx) => buildSelection(prompt.options.length ?? 0, pausedRow?.prompts?.[promptIdx])),
+      prompts: row.prompts.map((prompt, promptIdx) => {
+        if (isPage9ExamplePrompt(idx, promptIdx)) {
+          return buildPage9ExamplePromptSelection(idx, promptIdx, prompt);
+        }
+
+        return buildSelection(prompt.options.length ?? 0, pausedRow?.prompts?.[promptIdx]);
+      }),
     };
   }),
 );
@@ -578,7 +614,7 @@ function togglePage8Selection(rowIdx: number, promptIdx: number, optionIdx: numb
 }
 
 function togglePage9Selection(rowIdx: number, promptIdx: number, optionIdx: number) {
-  if (!isColumnInteractive('col11')) return;
+  if (!isColumnInteractive('col11') || isPage9ExamplePrompt(rowIdx, promptIdx)) return;
   const row = page9Responses.value[rowIdx];
   if (!row?.prompts?.[promptIdx]?.length) return;
   const currentlySelected = row.prompts[promptIdx][optionIdx];
@@ -852,6 +888,7 @@ const page8MaxScore = computed(() =>
 
 function scorePage9Row(rowIdx: number, solutions: LpsPage9Solution, responses: LpsPage9ResponseRow) {
   return solutions.correctOptionIndices.reduce((sum, correctIdx, promptIdx) => {
+    if (isPage9ExamplePrompt(rowIdx, promptIdx)) return sum;
     if (correctIdx === null || correctIdx === undefined) return sum;
     const picks = responses.prompts?.[promptIdx];
     if (!picks?.length) return sum;
@@ -907,8 +944,11 @@ const page11PositiveScore = computed(() => page11Scores.value.positive);
 const page11NegativeScore = computed(() => page11Scores.value.negative);
 
 const page9MaxScore = computed(() =>
-  lpsPage9Solutions.reduce((total, solution) => {
-    const rowTotal = solution.correctOptionIndices.reduce((rowSum, idx) => (idx !== null ? rowSum + 1 : rowSum), 0);
+  lpsPage9Solutions.reduce((total, solution, rowIdx) => {
+    const rowTotal = solution.correctOptionIndices.reduce((rowSum, idx, promptIdx) => {
+      if (isPage9ExamplePrompt(rowIdx, promptIdx)) return rowSum;
+      return idx !== null ? rowSum + 1 : rowSum;
+    }, 0);
     return total + rowTotal;
   }, 0),
 );
@@ -1343,7 +1383,18 @@ const totalMaxScore = computed(
 
               <div class="space-y-4">
                 <div v-for="(row, rowIdx) in lpsPage9Rows" :key="`${row.id}-c11`"
-                  class="rounded-xl border bg-muted/30 p-4 shadow-sm">
+                  class="relative rounded-xl border bg-muted/30 p-4 shadow-sm">
+                  <div v-if="page9Arrows[rowIdx]?.length" class="pointer-events-none absolute inset-x-0 top-0 w-full"
+                    aria-hidden="true">
+                    <svg v-for="(arrow, arrowIdx) in page9Arrows[rowIdx]" :key="`${row.id}-arrow-${arrowIdx}`"
+                      class="page7-arrow" :style="getPage9ArrowStyle(rowIdx, arrow.from, arrow.to)"
+                      viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path
+                        d="M492.888 159.339 359.286 25.738c-12.347-12.346-28.691-19.112-46.115-19.112q-.463 0-.926.006c-17.763.245-34.282 7.495-46.513 20.417-11.8 12.466-18.025 28.906-17.531 46.295.489 17.172 7.455 33.325 19.615 45.486l22.083 22.083c-71.908 12.999-137.081 47.191-189.527 99.638-51.575 51.575-85.891 116.367-99.236 187.373-3.609 19.202 1.471 38.833 13.935 53.859 12.437 14.992 30.743 23.591 50.224 23.591 31.36 0 58.309-22.214 64.078-52.821 15.542-82.461 75.257-149.309 153.301-175.281l-14.886 14.886c-25.298 25.299-26.126 66.559-1.844 91.976 12.443 13.026 29.207 20.199 47.203 20.199 17.429 0 33.815-6.787 46.14-19.111L492.888 251.62C505.212 239.295 512 222.909 512 205.479s-6.788-33.815-19.112-46.14m-14.425 77.858L344.862 370.798c-8.472 8.472-19.736 13.137-31.716 13.137-12.37 0-23.895-4.933-32.453-13.891-16.687-17.466-16.006-45.934 1.519-63.459l40.756-40.756a10.2 10.2 0 0 0-8.876-17.276C210.973 265.6 128.684 346.064 109.326 448.776c-3.953 20.974-22.471 36.198-44.032 36.198a44.73 44.73 0 0 1-34.524-16.216c-8.577-10.339-12.071-23.849-9.586-37.067 12.583-66.95 44.953-128.057 93.613-176.713 54.075-54.076 122.482-87.581 197.828-96.892a10.2 10.2 0 0 0 5.961-17.335l-36.344-36.344c-17.462-17.461-18.222-45.874-1.695-63.334 8.412-8.887 19.769-13.874 31.979-14.041q.318-.005.636-.005c11.978 0 23.214 4.651 31.702 13.137l133.601 133.601c8.472 8.472 13.137 19.736 13.137 31.716-.001 11.98-4.666 23.243-13.139 31.716" />
+                      <path
+                        d="M472.17 209.312c-3.984-3.981-10.441-3.981-14.424 0l-74.149 74.148c-3.983 3.984-3.983 10.442 0 14.425a10.17 10.17 0 0 0 7.212 2.987c2.61 0 5.221-.997 7.212-2.987l74.149-74.148c3.983-3.984 3.983-10.442 0-14.425M372.907 308.399c-3.984-3.982-10.442-3.982-14.425 0l-5.665 5.665c-3.983 3.984-3.983 10.442 0 14.425a10.17 10.17 0 0 0 7.212 2.987c2.61 0 5.221-.996 7.213-2.987l5.665-5.665c3.983-3.984 3.983-10.443 0-14.425" />
+                    </svg>
+                  </div>
                   <div class="grid gap-3 md:grid-cols-3">
                     <div v-for="(prompt, promptIdx) in row.prompts" :key="prompt.id"
                       class="space-y-3 rounded-lg bg-background p-3 shadow-sm">
@@ -1356,7 +1407,7 @@ const totalMaxScore = computed(
                         <button v-for="(option, optionIdx) in prompt.options" :key="`${prompt.id}-${option}`"
                           type="button" class="page9-letter"
                           :class="page9Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx] ? 'page9-letter--selected' : ''"
-                          :disabled="!isColumnInteractive('col11')"
+                          :disabled="!isColumnInteractive('col11') || isPage9ExamplePrompt(rowIdx, promptIdx)"
                           :aria-pressed="page9Responses[rowIdx]?.prompts?.[promptIdx]?.[optionIdx]"
                           @click="togglePage9Selection(rowIdx, promptIdx, optionIdx)">
                           {{ option }}
