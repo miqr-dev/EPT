@@ -420,7 +420,7 @@ const LPS_PAGE1_COLUMN5_B: LpsColumnEntry[] = [
   { id: 14, word: 'AWODK', correctIndex: 1 },
   { id: 15, word: 'ELAUN', correctIndex: 1 },
   { id: 16, word: 'TIGRE', correctIndex: 0 },
-  { id: 17, word: 'TOURS', correctIndex: 1 },
+  { id: 17, word: 'TDURS', correctIndex: 1 },
   { id: 18, word: 'MUSKI', correctIndex: 0 },
   { id: 19, word: 'ENLAK', correctIndex: 2 },
   { id: 20, word: 'NROMA', correctIndex: 1 },
