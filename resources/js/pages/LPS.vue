@@ -93,7 +93,8 @@ const PAGE7_DEFAULT_SHAPE_WIDTH = 170;
 // Increase/decrease this inset to shorten/lengthen the page 7 arrows without touching the CSS.
 const PAGE7_ARROW_INSET_PX = 18;
 const PAGE8_ARROW_ROWS = new Set([0, 1]);
-const PAGE8_ARROW_TOP_PX = 190;
+const PAGE8_ARROW_TOP_PX = 150;
+const PAGE8_ARROW_LEFT_PCT = 25;
 const page7Arrows: Record<number, Array<{ from: number; to: number }>> = {
   0: [{ from: 2, to: 3 }],
   1: [{ from: 1, to: 2 }],
@@ -144,7 +145,7 @@ function getPage7ArrowStyle(rowIdx: number, fromCol: number, toCol: number) {
   return { left: startLeft, width } as const;
 }
 function getPage8ArrowStyle() {
-  return { left: '50%', top: `${PAGE8_ARROW_TOP_PX}px` } as const;
+  return { left: `${PAGE8_ARROW_LEFT_PCT}%`, top: `${PAGE8_ARROW_TOP_PX}px` } as const;
 }
 const elapsedSecondsBeforeResume = ref(props.pausedTestResult?.total_time_seconds ?? 0);
 const runningElapsedSeconds = ref(0);
