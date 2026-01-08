@@ -93,7 +93,6 @@ const PAGE7_DEFAULT_SHAPE_WIDTH = 170;
 // Increase/decrease this inset to shorten/lengthen the page 7 arrows without touching the CSS.
 const PAGE7_ARROW_INSET_PX = 18;
 const PAGE8_ARROW_ROWS = new Set([0, 1]);
-const PAGE8_ARROW_TOP_PX = 58;
 const page7Arrows: Record<number, Array<{ from: number; to: number }>> = {
   0: [{ from: 2, to: 3 }],
   1: [{ from: 1, to: 2 }],
@@ -144,7 +143,7 @@ function getPage7ArrowStyle(rowIdx: number, fromCol: number, toCol: number) {
   return { left: startLeft, width } as const;
 }
 function getPage8ArrowStyle() {
-  return { left: '50%', top: `${PAGE8_ARROW_TOP_PX}px` } as const;
+  return { left: '50%', top: '50%' } as const;
 }
 const elapsedSecondsBeforeResume = ref(props.pausedTestResult?.total_time_seconds ?? 0);
 const runningElapsedSeconds = ref(0);
@@ -1759,9 +1758,9 @@ const totalMaxScore = computed(
 
 .page8-arrow {
   position: absolute;
-  height: 72px;
-  width: 18px;
-  transform: translateX(-50%);
+  height: 36px;
+  width: 10px;
+  transform: translate(-50%, -50%);
   border-radius: 9999px;
   background: #4b5563;
   z-index: 1;
@@ -1771,11 +1770,11 @@ const totalMaxScore = computed(
   content: '';
   position: absolute;
   left: 50%;
-  bottom: -26px;
+  bottom: -12px;
   transform: translateX(-50%);
-  border-top: 34px solid #4b5563;
-  border-left: 18px solid transparent;
-  border-right: 18px solid transparent;
+  border-top: 14px solid #4b5563;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
 }
 
 .page8-option {
