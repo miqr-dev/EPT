@@ -1456,8 +1456,12 @@ const totalMaxScore = computed(
                   class="relative rounded-xl border bg-muted/30 p-4 shadow-sm">
                   <div v-if="PAGE8_ARROW_ROWS[rowIdx]?.length" class="pointer-events-none absolute inset-x-0 top-0 h-full"
                     aria-hidden="true">
-                    <div v-for="columnIdx in PAGE8_ARROW_ROWS[rowIdx]" :key="`page8-arrow-${row.id}-${columnIdx}`"
-                      class="page8-arrow" :style="getPage8ArrowStyle(columnIdx)"></div>
+                    <svg v-for="columnIdx in PAGE8_ARROW_ROWS[rowIdx]" :key="`page8-arrow-${row.id}-${columnIdx}`"
+                      class="page8-arrow" :style="getPage8ArrowStyle(columnIdx)" viewBox="0 0 24 56"
+                      xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <rect x="5" y="0" width="14" height="36" rx="7" />
+                      <path d="M12 56L0 38h24L12 56z" />
+                    </svg>
                   </div>
                   <div class="grid gap-3 md:grid-cols-2">
                     <div v-for="(prompt, promptIdx) in row.prompts" :key="prompt.id"
@@ -1769,37 +1773,16 @@ const totalMaxScore = computed(
 
 .page8-arrow {
   position: absolute;
-  height: 44px;
-  width: 14px;
+  height: 56px;
+  width: 24px;
   transform: translate(-50%, -50%);
-  border-radius: 6px;
-  border: 1px solid #6f6f6f;
-  background: linear-gradient(180deg, #cfcfcf 0%, #9a9a9a 100%);
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+  color: #4b5563;
   z-index: 1;
 }
 
-.page8-arrow::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -16px;
-  transform: translateX(-50%);
-  border-top: 18px solid #8f8f8f;
-  border-left: 12px solid transparent;
-  border-right: 12px solid transparent;
-  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.2));
-}
-
-.page8-arrow::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -12px;
-  transform: translateX(-50%);
-  border-top: 12px solid #d9d9d9;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
+.page8-arrow rect,
+.page8-arrow path {
+  fill: currentColor;
 }
 
 .page8-option {
