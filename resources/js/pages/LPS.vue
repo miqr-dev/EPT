@@ -1772,8 +1772,10 @@ const totalMaxScore = computed(
   height: 44px;
   width: 14px;
   transform: translate(-50%, -50%);
-  border-radius: 9999px;
-  background: #4b5563;
+  border-radius: 6px;
+  border: 1px solid #6f6f6f;
+  background: linear-gradient(180deg, #cfcfcf 0%, #9a9a9a 100%);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
   z-index: 1;
 }
 
@@ -1781,11 +1783,23 @@ const totalMaxScore = computed(
   content: '';
   position: absolute;
   left: 50%;
-  bottom: -14px;
+  bottom: -16px;
   transform: translateX(-50%);
-  border-top: 16px solid #4b5563;
-  border-left: 11px solid transparent;
-  border-right: 11px solid transparent;
+  border-top: 18px solid #8f8f8f;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.2));
+}
+
+.page8-arrow::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -12px;
+  transform: translateX(-50%);
+  border-top: 12px solid #d9d9d9;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
 }
 
 .page8-option {
