@@ -92,7 +92,10 @@ const PAGE7_GRID_GAP_PX = 12;
 const PAGE7_DEFAULT_SHAPE_WIDTH = 170;
 // Increase/decrease this inset to shorten/lengthen the page 7 arrows without touching the CSS.
 const PAGE7_ARROW_INSET_PX = 18;
-const PAGE8_ARROW_ROWS = new Set([0]);
+const PAGE8_ARROW_ROWS: Record<number, number[]> = {
+  0: [1],
+  1: [0],
+};
 const PAGE8_ARROW_TOP = 'calc(100% - 8px)';
 const PAGE8_GRID_GAP_PX = 12;
 const PAGE8_ROW_PADDING_PX = 16;
@@ -1451,10 +1454,10 @@ const totalMaxScore = computed(
               <div class="space-y-4">
                 <div v-for="(row, rowIdx) in lpsPage8Rows" :key="`${row.id}-c10`"
                   class="relative rounded-xl border bg-muted/30 p-4 shadow-sm">
-                  <div v-if="PAGE8_ARROW_ROWS.has(rowIdx)" class="pointer-events-none absolute inset-x-0 top-0 h-full"
+                  <div v-if="PAGE8_ARROW_ROWS[rowIdx]?.length" class="pointer-events-none absolute inset-x-0 top-0 h-full"
                     aria-hidden="true">
-                    <div class="page8-arrow" :style="getPage8ArrowStyle(0)"></div>
-                    <div class="page8-arrow" :style="getPage8ArrowStyle(1)"></div>
+                    <div v-for="columnIdx in PAGE8_ARROW_ROWS[rowIdx]" :key="`page8-arrow-${row.id}-${columnIdx}`"
+                      class="page8-arrow" :style="getPage8ArrowStyle(columnIdx)"></div>
                   </div>
                   <div class="grid gap-3 md:grid-cols-2">
                     <div v-for="(prompt, promptIdx) in row.prompts" :key="prompt.id"
