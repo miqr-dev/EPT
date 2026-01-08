@@ -94,7 +94,8 @@ const PAGE7_DEFAULT_SHAPE_WIDTH = 170;
 const PAGE7_ARROW_INSET_PX = 18;
 const PAGE8_ARROW_ROWS = new Set([0, 1]);
 const PAGE8_ARROW_TOP_PX = 150;
-const PAGE8_ARROW_LEFT_PCT = 25;
+const PAGE8_GRID_GAP_PX = 12;
+const PAGE8_ROW_PADDING_PX = 16;
 const page7Arrows: Record<number, Array<{ from: number; to: number }>> = {
   0: [{ from: 2, to: 3 }],
   1: [{ from: 1, to: 2 }],
@@ -144,8 +145,12 @@ function getPage7ArrowStyle(rowIdx: number, fromCol: number, toCol: number) {
 
   return { left: startLeft, width } as const;
 }
-function getPage8ArrowStyle() {
-  return { left: `${PAGE8_ARROW_LEFT_PCT}%`, top: `${PAGE8_ARROW_TOP_PX}px` } as const;
+function getPage8ArrowStyle(columnIdx: number) {
+  const columnWidth = `calc((100% - ${PAGE8_GRID_GAP_PX}px) / 2)`;
+  const left = columnIdx === 0
+    ? `${PAGE8_ROW_PADDING_PX}px`
+    : `calc(${PAGE8_ROW_PADDING_PX}px + ${columnWidth} + ${PAGE8_GRID_GAP_PX}px)`;
+  return { left, top: `${PAGE8_ARROW_TOP_PX}px` } as const;
 }
 const elapsedSecondsBeforeResume = ref(props.pausedTestResult?.total_time_seconds ?? 0);
 const runningElapsedSeconds = ref(0);
@@ -1448,7 +1453,8 @@ const totalMaxScore = computed(
                   class="relative rounded-xl border bg-muted/30 p-4 shadow-sm">
                   <div v-if="PAGE8_ARROW_ROWS.has(rowIdx)" class="pointer-events-none absolute inset-x-0 top-0 h-full"
                     aria-hidden="true">
-                    <div class="page8-arrow" :style="getPage8ArrowStyle()"></div>
+                    <div class="page8-arrow" :style="getPage8ArrowStyle(0)"></div>
+                    <div class="page8-arrow" :style="getPage8ArrowStyle(1)"></div>
                   </div>
                   <div class="grid gap-3 md:grid-cols-2">
                     <div v-for="(prompt, promptIdx) in row.prompts" :key="prompt.id"
