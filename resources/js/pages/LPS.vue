@@ -229,7 +229,7 @@ const page1Responses = ref<LpsPage1ResponseRow[]>(
 );
 
 const columnDurations = computed(() =>
-  props.testName === 'LPS-B' ? [...BASE_COLUMN_DURATION_SECONDS, 120, 180] : BASE_COLUMN_DURATION_SECONDS,
+  props.testName === 'LPS-B' ? [...BASE_COLUMN_DURATION_SECONDS, 180, 180] : BASE_COLUMN_DURATION_SECONDS,
 );
 const columnLabels = computed(() =>
   props.testName === 'LPS-B' ? [...BASE_COLUMN_LABELS, 14, 13] : BASE_COLUMN_LABELS,
@@ -729,9 +729,6 @@ function finishColumn(columnIdx: number, unlockNext = true) {
       status: 'ready',
       remaining: nextState.remaining || getColumnDuration(columnIdx + 1),
     };
-  }
-  if (columnIdx === COLUMN_INDEX_BY_KEY.col14 && columnStates.value[columnIdx + 1]?.status === 'ready') {
-    startColumn(columnIdx + 1);
   }
 }
 
