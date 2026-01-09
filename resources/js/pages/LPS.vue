@@ -977,8 +977,25 @@ function scorePage11ColumnRow(
   if (!picks?.length) return { positive: 0, negative: 0 };
   const selectedIndices = picks.flatMap((selected, idx) => (selected ? [idx] : []));
   if (!selectedIndices.length) return { positive: 0, negative: 0 };
-  const positive = selectedIndices.filter((idx) => correctIndices.includes(idx)).length;
-  const negative = selectedIndices.filter((idx) => !correctIndices.includes(idx)).length;
+  const row = lpsPage11Rows[rowIdx];
+  const columnValue = columnKey === 'col13' ? row?.column13 : row?.column14;
+  const tokens = getSequenceTokens(columnValue ?? '');
+  const correctTokens = correctIndices.map((idx) => tokens[idx]).filter((token) => token !== undefined);
+  const remainingCorrect = [...correctTokens];
+  let positive = 0;
+  let negative = 0;
+
+  selectedIndices.forEach((idx) => {
+    const token = tokens[idx];
+    const matchIndex = remainingCorrect.indexOf(token);
+    if (matchIndex !== -1) {
+      positive += 1;
+      remainingCorrect.splice(matchIndex, 1);
+      return;
+    }
+    negative += 1;
+  });
+
   return { positive, negative };
 }
 
@@ -1016,8 +1033,8 @@ const page11ColumnScores = computed(() => {
 });
 
 const page11ColumnMaxScores = computed(() => ({
-  col13: lpsPage11Solutions.reduce((total, solution) => total + (solution.col13?.length ? 1 : 0), 0),
-  col14: lpsPage11Solutions.reduce((total, solution) => total + (solution.col14?.length ? 1 : 0), 0),
+  col13: lpsPage11Solutions.reduce((total, solution) => total + (solution.col13?.length ?? 0), 0),
+  col14: lpsPage11Solutions.reduce((total, solution) => total + (solution.col14?.length ?? 0), 0),
 }));
 
 const page11PositiveScore = computed(() => page11ColumnScores.value.col13.positive);
