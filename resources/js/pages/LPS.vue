@@ -974,14 +974,12 @@ function scorePage11ColumnRow(
 ) {
   const correctIndices = solutions[columnKey] ?? [];
   const picks = responses[columnKey as keyof LpsPage11ResponseRow] as boolean[] | undefined;
-  if (!correctIndices.length || !picks?.length) return { positive: 0, negative: 0 };
-  const selectedIndices = picks
-    .map((selected, idx) => (selected ? idx : -1))
-    .filter((idx) => idx !== -1);
+  if (!picks?.length) return { positive: 0, negative: 0 };
+  const selectedIndices = picks.flatMap((selected, idx) => (selected ? [idx] : []));
   if (!selectedIndices.length) return { positive: 0, negative: 0 };
-  const hasCorrect = selectedIndices.some((idx) => correctIndices.includes(idx));
-  const hasIncorrect = selectedIndices.some((idx) => !correctIndices.includes(idx));
-  return { positive: hasCorrect ? 1 : 0, negative: hasIncorrect ? 1 : 0 };
+  const positive = selectedIndices.filter((idx) => correctIndices.includes(idx)).length;
+  const negative = selectedIndices.filter((idx) => !correctIndices.includes(idx)).length;
+  return { positive, negative };
 }
 
 const page9Score = computed(() =>
