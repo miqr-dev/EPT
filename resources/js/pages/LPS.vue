@@ -117,17 +117,35 @@ const isPage10ExampleRow = (rowIdx: number) => props.testName === 'LPS-B' && row
 
 const showTest = ref(false);
 const pageIndex = ref(0);
-const pageSections = computed(() =>
-  props.testName === 'LPS-B'
-    ? [...BASE_PAGE_SECTIONS, { title: 'Spalten 14 + 13', columnIndices: [11, 12] }]
-    : BASE_PAGE_SECTIONS,
-);
+const isLpsB = computed(() => props.testName === 'LPS-B');
+const pageSections = computed(() => {
+  if (!isLpsB.value) return BASE_PAGE_SECTIONS;
+  return [
+    ...BASE_PAGE_SECTIONS.slice(0, 4),
+    { title: 'Spalte 6', columnIndices: [] },
+    ...BASE_PAGE_SECTIONS.slice(4),
+    { title: 'Spalten 14 + 13', columnIndices: [11, 12] },
+  ];
+});
 const pageCount = computed(() => pageSections.value.length);
 const currentSection = computed(() => pageSections.value[pageIndex.value] ?? pageSections.value[0]);
 const visibleColumnIndices = computed(() => currentSection.value.columnIndices);
 const visibleColumnStates = computed(() =>
   visibleColumnIndices.value.map((idx) => ({ idx, state: columnStates.value[idx] })),
 );
+const pageIndexByColumn = computed(() => {
+  const offset = isLpsB.value ? 1 : 0;
+  return {
+    col6: isLpsB.value ? 4 : -1,
+    col7: 4 + offset,
+    col8: 5 + offset,
+    col9: 6 + offset,
+    col10: 7 + offset,
+    col11: 8 + offset,
+    col12: 9 + offset,
+    col14: 10 + offset,
+  } as const;
+});
 const alphabetLetters = 'abcdefghijklmnopqrstuvwxyz'.split('');
 const isAnyVisibleColumnActive = computed(() =>
   visibleColumnIndices.value.some((idx) => columnStates.value[idx]?.status === 'active'),
@@ -764,6 +782,16 @@ function scoreRow(rowIdx: number, solutions: LpsPage1Solution, responses: LpsPag
   }, 0);
 }
 
+function scorePage1Column(columnKey: keyof LpsPage1Solution, responseKey: keyof LpsPage1ResponseRow) {
+  return page1Responses.value.reduce((total, response, idx) => {
+    const correctIndices = lpsSolutions[idx]?.[columnKey] ?? [];
+    const picks = response[responseKey];
+    if (!correctIndices.length || !picks?.length) return total;
+    const correctPicks = correctIndices.filter((index) => picks[index]);
+    return total + correctPicks.length;
+  }, 0);
+}
+
 const page1Score = computed(() =>
   page1Responses.value.reduce((total, response, idx) => {
     const solutions = lpsSolutions[idx] ?? {};
@@ -783,6 +811,22 @@ const page1MaxScore = computed(() =>
     0,
   ),
 );
+
+const page1ColumnScores = computed(() => ({
+  col1: scorePage1Column('col1', 'col1'),
+  col2: scorePage1Column('col2', 'col2'),
+  col3: scorePage1Column('col3', 'col3'),
+  col4: scorePage1Column('col4', 'col4'),
+  col5: scorePage1Column('col5', 'col5'),
+}));
+
+const page1ColumnMaxScores = computed(() => ({
+  col1: lpsSolutions.reduce((total, solution) => total + (solution.col1?.length ?? 0), 0),
+  col2: lpsSolutions.reduce((total, solution) => total + (solution.col2?.length ?? 0), 0),
+  col3: lpsSolutions.reduce((total, solution) => total + (solution.col3?.length ?? 0), 0),
+  col4: lpsSolutions.reduce((total, solution) => total + (solution.col4?.length ?? 0), 0),
+  col5: lpsSolutions.reduce((total, solution) => total + (solution.col5?.length ?? 0), 0),
+}));
 
 function scorePage5Row(rowIdx: number, solutions: LpsPage5Solution, responses: LpsPage5ResponseRow) {
   const cols: Array<keyof LpsPage5Solution> = ['col7'];
@@ -904,10 +948,16 @@ function scorePage10Row(rowIdx: number, responses: LpsPage10ResponseRow) {
   return picks[correctIdx] ? 1 : 0;
 }
 
-function scorePage11Row(rowIdx: number, solutions: LpsPage11Solution, responses: LpsPage11ResponseRow) {
-  const correctIndices = solutions.col13 ?? [];
-  if (!correctIndices.length || !responses.col13?.length) return { positive: 0, negative: 0 };
-  const selectedIdx = responses.col13.findIndex(Boolean);
+function scorePage11ColumnRow(
+  rowIdx: number,
+  columnKey: keyof LpsPage11Solution,
+  solutions: LpsPage11Solution,
+  responses: LpsPage11ResponseRow,
+) {
+  const correctIndices = solutions[columnKey] ?? [];
+  const picks = responses[columnKey as keyof LpsPage11ResponseRow] as boolean[] | undefined;
+  if (!correctIndices.length || !picks?.length) return { positive: 0, negative: 0 };
+  const selectedIdx = picks.findIndex(Boolean);
   if (selectedIdx === -1) return { positive: 0, negative: 0 };
   if (correctIndices.includes(selectedIdx)) return { positive: 1, negative: 0 };
   return { positive: 0, negative: 1 };
@@ -925,23 +975,34 @@ const page10Score = computed(() =>
   page10Responses.value.reduce((total, response, idx) => total + scorePage10Row(idx, response), 0),
 );
 
-const page11Scores = computed(() =>
-  page11Responses.value.reduce(
-    (totals, response, idx) => {
-      const solutions = lpsPage11Solutions[idx];
-      if (!solutions) return totals;
-      const rowScore = scorePage11Row(idx, solutions, response);
-      return {
-        positive: totals.positive + rowScore.positive,
-        negative: totals.negative + rowScore.negative,
-      };
-    },
-    { positive: 0, negative: 0 },
-  ),
-);
+const page11ColumnScores = computed(() => {
+  const scoreColumn = (columnKey: keyof LpsPage11Solution) =>
+    page11Responses.value.reduce(
+      (totals, response, idx) => {
+        const solutions = lpsPage11Solutions[idx];
+        if (!solutions) return totals;
+        const rowScore = scorePage11ColumnRow(idx, columnKey, solutions, response);
+        return {
+          positive: totals.positive + rowScore.positive,
+          negative: totals.negative + rowScore.negative,
+        };
+      },
+      { positive: 0, negative: 0 },
+    );
 
-const page11PositiveScore = computed(() => page11Scores.value.positive);
-const page11NegativeScore = computed(() => page11Scores.value.negative);
+  return {
+    col13: scoreColumn('col13'),
+    col14: scoreColumn('col14'),
+  };
+});
+
+const page11ColumnMaxScores = computed(() => ({
+  col13: lpsPage11Solutions.reduce((total, solution) => total + (solution.col13?.length ? 1 : 0), 0),
+  col14: lpsPage11Solutions.reduce((total, solution) => total + (solution.col14?.length ? 1 : 0), 0),
+}));
+
+const page11PositiveScore = computed(() => page11ColumnScores.value.col13.positive);
+const page11NegativeScore = computed(() => page11ColumnScores.value.col13.negative);
 
 const page9MaxScore = computed(() =>
   lpsPage9Solutions.reduce((total, solution, rowIdx) => {
@@ -982,6 +1043,42 @@ const totalMaxScore = computed(
     page9MaxScore.value +
     page10MaxScore.value,
 );
+
+type ColumnScoreSummary = { score: number | null; max: number | null; negative?: number | null };
+
+const columnScoreByIndex = computed<Record<number, ColumnScoreSummary>>(() => ({
+  0: { score: page1ColumnScores.value.col1, max: page1ColumnMaxScores.value.col1 },
+  1: { score: page1ColumnScores.value.col2, max: page1ColumnMaxScores.value.col2 },
+  2: { score: page1ColumnScores.value.col3, max: page1ColumnMaxScores.value.col3 },
+  3: { score: page1ColumnScores.value.col4, max: page1ColumnMaxScores.value.col4 },
+  4: { score: page1ColumnScores.value.col5, max: page1ColumnMaxScores.value.col5 },
+  5: { score: page5Score.value, max: page5MaxScore.value },
+  6: { score: page6Score.value, max: page6MaxScore.value },
+  7: { score: page7Score.value, max: page7MaxScore.value },
+  8: { score: page8Score.value, max: page8MaxScore.value },
+  9: { score: page9Score.value, max: page9MaxScore.value },
+  10: { score: page10Score.value, max: page10MaxScore.value },
+  11: {
+    score: page11ColumnScores.value.col14.positive,
+    max: page11ColumnMaxScores.value.col14,
+    negative: page11ColumnScores.value.col14.negative,
+  },
+  12: {
+    score: page11ColumnScores.value.col13.positive,
+    max: page11ColumnMaxScores.value.col13,
+    negative: page11ColumnScores.value.col13.negative,
+  },
+}));
+
+function formatColumnScore(columnIdx: number) {
+  const scoreEntry = columnScoreByIndex.value[columnIdx];
+  if (!scoreEntry || scoreEntry.score === null || scoreEntry.max === null) return '–';
+  const scoreText = `${scoreEntry.score} / ${scoreEntry.max}`;
+  if (scoreEntry.negative) {
+    return `${scoreText} • -${scoreEntry.negative}`;
+  }
+  return scoreText;
+}
 </script>
 
 <template>
@@ -1045,7 +1142,7 @@ const totalMaxScore = computed(
           </div>
 
           <!-- Column timers / start buttons -->
-          <div class="rounded-xl border bg-background px-4 py-3 shadow-sm">
+          <div v-if="visibleColumnIndices.length" class="rounded-xl border bg-background px-4 py-3 shadow-sm">
             <div class="flex items-center justify-between gap-4">
               <div class="text-xs text-muted-foreground">
                 Spalte starten (Dauer: {{ sectionDurationText }}). Nur eine Spalte gleichzeitig.
@@ -1069,6 +1166,12 @@ const totalMaxScore = computed(
                       <span v-else-if="entry.state?.status === 'ready'">bereit</span>
                       <span v-else-if="entry.state?.status === 'finished'">fertig</span>
                       <span v-else>gesperrt</span>
+                    </div>
+                    <div v-if="entry.state?.status === 'finished'" class="mt-1 text-[11px] text-muted-foreground">
+                      Punkte:
+                      <span class="font-semibold text-foreground">
+                        {{ formatColumnScore(entry.idx) }}
+                      </span>
                     </div>
                   </div>
 
@@ -1226,8 +1329,18 @@ const totalMaxScore = computed(
             </div>
           </div>
 
+          <!-- Page 5: Spalte 6 -->
+          <div v-else-if="pageIndex === pageIndexByColumn.col6" class="space-y-3">
+            <div class="rounded-2xl border bg-background p-6 shadow-sm">
+              <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 6</div>
+              <p class="text-center text-sm text-muted-foreground">
+                Bitte beachten Sie die Anweisungen des Prüfers.
+              </p>
+            </div>
+          </div>
+
           <!-- Page 5: Spalte 7 -->
-          <div v-else-if="pageIndex === 4" class="space-y-3">
+          <div v-else-if="pageIndex === pageIndexByColumn.col7" class="space-y-3">
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 7</div>
 
@@ -1279,7 +1392,7 @@ const totalMaxScore = computed(
           </div>
 
           <!-- Page 6: Spalte 8 -->
-          <div v-else-if="pageIndex === 5" class="space-y-3">
+          <div v-else-if="pageIndex === pageIndexByColumn.col8" class="space-y-3">
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 8</div>
 
@@ -1334,7 +1447,7 @@ const totalMaxScore = computed(
           </div>
 
           <!-- Page 7: Spalte 9 -->
-          <div v-else-if="pageIndex === 6" class="space-y-3">
+          <div v-else-if="pageIndex === pageIndexByColumn.col9" class="space-y-3">
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 9</div>
 
@@ -1376,7 +1489,7 @@ const totalMaxScore = computed(
             </div>
           </div>
 
-          <div v-else-if="pageIndex === 8" class="space-y-3">
+          <div v-else-if="pageIndex === pageIndexByColumn.col11" class="space-y-3">
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-1 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 11</div>
               <p class="text-center text-xs text-muted-foreground">Finde den richtigen Buchstaben zu jeder Form.</p>
@@ -1420,7 +1533,7 @@ const totalMaxScore = computed(
             </div>
           </div>
 
-          <div v-else-if="pageIndex === 9" class="space-y-3">
+          <div v-else-if="pageIndex === pageIndexByColumn.col12" class="space-y-3">
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-1 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 12</div>
               <!-- <p class="text-center text-xs text-muted-foreground">Wähle den passenden Pfad in jeder Vorlage aus.</p> -->
@@ -1450,7 +1563,7 @@ const totalMaxScore = computed(
             </div>
           </div>
 
-          <div v-else-if="pageIndex === 10" class="space-y-3">
+          <div v-else-if="pageIndex === pageIndexByColumn.col14" class="space-y-3">
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalten 14 + 13</div>
 
@@ -1498,7 +1611,7 @@ const totalMaxScore = computed(
             </div>
           </div>
 
-          <div v-else-if="pageIndex === 7" class="space-y-3">
+          <div v-else-if="pageIndex === pageIndexByColumn.col10" class="space-y-3">
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-1 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 10</div>
               <!-- <p class="text-center text-xs text-muted-foreground">Finde die passende Form zu jeder Vorlage.</p> -->
