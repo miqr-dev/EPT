@@ -124,7 +124,7 @@ const pageSections = computed(() => {
     ...BASE_PAGE_SECTIONS.slice(0, 4),
     { title: 'Spalte 6', columnIndices: [] },
     ...BASE_PAGE_SECTIONS.slice(4),
-    { title: 'Spalten 14 + 13', columnIndices: [11, 12] },
+    { title: 'Spalten 13 + 14', columnIndices: [11, 12] },
   ];
 });
 const pageCount = computed(() => pageSections.value.length);
@@ -143,7 +143,7 @@ const pageIndexByColumn = computed(() => {
     col10: 7 + offset,
     col11: 8 + offset,
     col12: 9 + offset,
-    col14: 10 + offset,
+    col13: 10 + offset,
   } as const;
 });
 const alphabetLetters = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -231,7 +231,7 @@ const columnDurations = computed(() =>
   props.testName === 'LPS-B' ? [...BASE_COLUMN_DURATION_SECONDS, 120, 180] : BASE_COLUMN_DURATION_SECONDS,
 );
 const columnLabels = computed(() =>
-  props.testName === 'LPS-B' ? [...BASE_COLUMN_LABELS, 14, 13] : BASE_COLUMN_LABELS,
+  props.testName === 'LPS-B' ? [...BASE_COLUMN_LABELS, 13, 14] : BASE_COLUMN_LABELS,
 );
 
 const columnStates = ref<LpsColumnState[]>(
@@ -558,8 +558,8 @@ const COLUMN_INDEX_BY_KEY: Record<ColumnKey, number> = {
   col10: 8,
   col11: 9,
   col12: 10,
-  col14: 11,
-  col13: 12,
+  col13: 11,
+  col14: 12,
 };
 
 function buildPage6OptionGroups(options: LpsPage6Option[]): LpsPage6OptionGroup[] {
@@ -712,7 +712,7 @@ function finishColumn(columnIdx: number, unlockNext = true) {
       remaining: nextState.remaining || getColumnDuration(columnIdx + 1),
     };
   }
-  if (columnIdx === COLUMN_INDEX_BY_KEY.col14 && columnStates.value[columnIdx + 1]?.status === 'ready') {
+  if (columnIdx === COLUMN_INDEX_BY_KEY.col13 && columnStates.value[columnIdx + 1]?.status === 'ready') {
     startColumn(columnIdx + 1);
   }
 }
@@ -1563,25 +1563,11 @@ function formatColumnScore(columnIdx: number) {
             </div>
           </div>
 
-          <div v-else-if="pageIndex === pageIndexByColumn.col14" class="space-y-3">
+          <div v-else-if="pageIndex === pageIndexByColumn.col13" class="space-y-3">
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
-              <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalten 14 + 13</div>
+              <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalten 13 + 14</div>
 
               <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c14`" class="py-[1px]">
-                    <div class="lps-sequence-row">
-                      <button v-for="(token, tokenIdx) in getSequenceTokens(row.column14)"
-                        :key="`${row.id}-14-${tokenIdx}`" type="button" class="lps-letter"
-                        :class="page11Responses[idx].col14[tokenIdx] ? 'lps-letter--selected' : ''"
-                        :disabled="!isColumnInteractive('col14')" :aria-pressed="page11Responses[idx].col14[tokenIdx]"
-                        @click="togglePage11Selection(idx, 'col14', tokenIdx)">
-                        {{ token }}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
                 <div class="lps-sep">
                   <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c13`" class="py-[1px]">
                     <div class="lps-sequence-row">
@@ -1590,6 +1576,20 @@ function formatColumnScore(columnIdx: number) {
                         :class="page11Responses[idx].col13[tokenIdx] ? 'lps-letter--selected' : ''"
                         :disabled="!isColumnInteractive('col13')" :aria-pressed="page11Responses[idx].col13[tokenIdx]"
                         @click="togglePage11Selection(idx, 'col13', tokenIdx)">
+                        {{ token }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c14`" class="py-[1px]">
+                    <div class="lps-sequence-row">
+                      <button v-for="(token, tokenIdx) in getSequenceTokens(row.column14)"
+                        :key="`${row.id}-14-${tokenIdx}`" type="button" class="lps-letter"
+                        :class="page11Responses[idx].col14[tokenIdx] ? 'lps-letter--selected' : ''"
+                        :disabled="!isColumnInteractive('col14')" :aria-pressed="page11Responses[idx].col14[tokenIdx]"
+                        @click="togglePage11Selection(idx, 'col14', tokenIdx)">
                         {{ token }}
                       </button>
                     </div>
