@@ -125,7 +125,7 @@ const pageSections = computed(() => {
     ...BASE_PAGE_SECTIONS.slice(0, 4),
     { title: 'Spalte 6', columnIndices: [] },
     ...BASE_PAGE_SECTIONS.slice(4),
-    { title: 'Spalten 14 + 13', columnIndices: [11, 12] },
+    { title: 'Spalten 13 + 14', columnIndices: [11, 12] },
   ];
 });
 const pageCount = computed(() => pageSections.value.length);
@@ -653,7 +653,24 @@ function togglePage11Selection(rowIdx: number, columnKey: 'col13' | 'col14', tok
   const row = page11Responses.value[rowIdx];
   if (!row?.[columnKey]?.length) return;
   const currentlySelected = row[columnKey][tokenIdx];
-  row[columnKey] = row[columnKey].map((_, idx) => (idx === tokenIdx ? !currentlySelected : false));
+  row[columnKey] = row[columnKey].map((selected, idx) => (idx === tokenIdx ? !currentlySelected : selected));
+}
+
+function clearPage11Selection(rowIdx: number, columnKey: 'col13' | 'col14', tokenIdx: number) {
+  if (!isColumnInteractive(columnKey)) return;
+  const row = page11Responses.value[rowIdx];
+  if (!row?.[columnKey]?.length) return;
+  row[columnKey] = row[columnKey].map((selected, idx) => (idx === tokenIdx ? false : selected));
+}
+
+function handlePage11Click(
+  event: MouseEvent,
+  rowIdx: number,
+  columnKey: 'col13' | 'col14',
+  tokenIdx: number,
+) {
+  if (event.detail > 1) return;
+  togglePage11Selection(rowIdx, columnKey, tokenIdx);
 }
 
 function resetColumns() {
@@ -958,10 +975,13 @@ function scorePage11ColumnRow(
   const correctIndices = solutions[columnKey] ?? [];
   const picks = responses[columnKey as keyof LpsPage11ResponseRow] as boolean[] | undefined;
   if (!correctIndices.length || !picks?.length) return { positive: 0, negative: 0 };
-  const selectedIdx = picks.findIndex(Boolean);
-  if (selectedIdx === -1) return { positive: 0, negative: 0 };
-  if (correctIndices.includes(selectedIdx)) return { positive: 1, negative: 0 };
-  return { positive: 0, negative: 1 };
+  const selectedIndices = picks
+    .map((selected, idx) => (selected ? idx : -1))
+    .filter((idx) => idx !== -1);
+  if (!selectedIndices.length) return { positive: 0, negative: 0 };
+  const hasCorrect = selectedIndices.some((idx) => correctIndices.includes(idx));
+  const hasIncorrect = selectedIndices.some((idx) => !correctIndices.includes(idx));
+  return { positive: hasCorrect ? 1 : 0, negative: hasIncorrect ? 1 : 0 };
 }
 
 const page9Score = computed(() =>
@@ -1566,17 +1586,18 @@ function formatColumnScore(columnIdx: number) {
 
           <div v-else-if="pageIndex === pageIndexByColumn.col14" class="space-y-3">
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
-              <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalten 14 + 13</div>
+              <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalten 13 + 14</div>
 
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c14`" class="py-[1px]">
+                  <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c13`" class="py-[1px]">
                     <div class="lps-sequence-row">
-                      <button v-for="(token, tokenIdx) in getSequenceTokens(row.column14)"
-                        :key="`${row.id}-14-${tokenIdx}`" type="button" class="lps-letter"
-                        :class="page11Responses[idx].col14[tokenIdx] ? 'lps-letter--selected' : ''"
-                        :disabled="!isColumnInteractive('col14')" :aria-pressed="page11Responses[idx].col14[tokenIdx]"
-                        @click="togglePage11Selection(idx, 'col14', tokenIdx)">
+                      <button v-for="(token, tokenIdx) in getSequenceTokens(row.column13)"
+                        :key="`${row.id}-13-${tokenIdx}`" type="button" class="lps-letter"
+                        :class="page11Responses[idx].col13[tokenIdx] ? 'lps-letter--selected' : ''"
+                        :disabled="!isColumnInteractive('col13')" :aria-pressed="page11Responses[idx].col13[tokenIdx]"
+                        @click="handlePage11Click($event, idx, 'col13', tokenIdx)"
+                        @dblclick.prevent="clearPage11Selection(idx, 'col13', tokenIdx)">
                         {{ token }}
                       </button>
                     </div>
@@ -1584,13 +1605,14 @@ function formatColumnScore(columnIdx: number) {
                 </div>
 
                 <div class="lps-sep">
-                  <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c13`" class="py-[1px]">
+                  <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c14`" class="py-[1px]">
                     <div class="lps-sequence-row">
-                      <button v-for="(token, tokenIdx) in getSequenceTokens(row.column13)"
-                        :key="`${row.id}-13-${tokenIdx}`" type="button" class="lps-letter"
-                        :class="page11Responses[idx].col13[tokenIdx] ? 'lps-letter--selected' : ''"
-                        :disabled="!isColumnInteractive('col13')" :aria-pressed="page11Responses[idx].col13[tokenIdx]"
-                        @click="togglePage11Selection(idx, 'col13', tokenIdx)">
+                      <button v-for="(token, tokenIdx) in getSequenceTokens(row.column14)"
+                        :key="`${row.id}-14-${tokenIdx}`" type="button" class="lps-letter"
+                        :class="page11Responses[idx].col14[tokenIdx] ? 'lps-letter--selected' : ''"
+                        :disabled="!isColumnInteractive('col14')" :aria-pressed="page11Responses[idx].col14[tokenIdx]"
+                        @click="handlePage11Click($event, idx, 'col14', tokenIdx)"
+                        @dblclick.prevent="clearPage11Selection(idx, 'col14', tokenIdx)">
                         {{ token }}
                       </button>
                     </div>
