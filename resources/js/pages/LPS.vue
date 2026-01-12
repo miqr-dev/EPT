@@ -993,7 +993,7 @@ function scorePage11ColumnRow(
     negative += 1;
   });
 
-  return { positive, negative };
+  return { positive, negative: columnKey === 'col13' ? negative : 0 };
 }
 
 const page9Score = computed(() =>
