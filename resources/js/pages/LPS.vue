@@ -117,6 +117,10 @@ const column2Examples: LpsColumnExample[] = [
   { word: 'Ffeife', selectedIndex: 0 },
   { word: 'Schole', selectedIndex: 3 },
 ];
+const column4Examples: LpsColumnExample[] = [
+  { word: '2 2 2 2 2 3 2 2 2', selectedIndex: 5 },
+  { word: 'a b a b a b a a a', selectedIndex: 7 },
+];
 const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
 const isPage8ExamplePrompt = (rowIdx: number, promptIdx: number) =>
@@ -1363,6 +1367,20 @@ function formatColumnScore(columnIdx: number) {
               <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 4</div>
 
               <div>
+                <div class="mb-3">
+                  <div class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                  <div v-for="example in column4Examples" :key="`example-col4-${example.word}`" class="py-[1px]">
+                    <div class="lps-letters">
+                      <button v-for="(char, charIdx) in example.word.split(' ')" :key="`example-col4-${example.word}-${charIdx}`"
+                        type="button" class="lps-letter"
+                        :class="charIdx === example.selectedIndex ? 'lps-letter--selected' : ''" disabled
+                        :aria-pressed="charIdx === example.selectedIndex">
+                        {{ char }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c4`" class="py-[1px]">
                   <div class="lps-letters">
                     <button v-for="(char, charIdx) in row.column4.split(' ')" :key="`${row.id}-4-${charIdx}`"
