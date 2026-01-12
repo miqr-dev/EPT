@@ -184,49 +184,49 @@ const BASE_ROWS: LpsPage8SvgRow[] = [
     {
         prompts: [
             { svg: FIRST_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
-            { svg: TWENTYTWO_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: TWENTYTWO_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'triangle' },
         ],
     },
     {
         prompts: [
             { svg: TWO_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'u-shape' },
-            { svg: TWENTYTHREE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: TWENTYTHREE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'triangle' },
         ],
     },
     {
         prompts: [
-            { svg: THREE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
-            { svg: TWENTYTFOUR_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: THREE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'triangle' },
+            { svg: TWENTYTFOUR_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 't-shape' },
         ],
     },
     {
         prompts: [
-            { svg: FOUR_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: FOUR_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'u-shape' },
             { svg: TWENTYFIVE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
         ],
     },
     {
         prompts: [
-            { svg: FIVE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
-            { svg: TWENTYSIX_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: FIVE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'triangle' },
+            { svg: TWENTYSIX_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'square' },
         ],
     },
     {
         prompts: [
-            { svg: SIX_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
-            { svg: TWENTYSEVEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: SIX_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'square' },
+            { svg: TWENTYSEVEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'u-shape' },
         ],
     },
     {
         prompts: [
-            { svg: SEVEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
-            { svg: TWENTYEIGHT_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: SEVEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'u-shape' },
+            { svg: TWENTYEIGHT_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 't-shape' },
         ],
     },
     {
         prompts: [
-            { svg: EIGHT_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
-            { svg: TWENTYNINE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: EIGHT_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'triangle' },
+            { svg: TWENTYNINE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'u-shape' },
         ],
     },
     {
@@ -238,72 +238,72 @@ const BASE_ROWS: LpsPage8SvgRow[] = [
     {
         prompts: [
             { svg: TEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
-            { svg: THIRTYONE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: THIRTYONE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'u-shape' },
         ],
     },
     {
         prompts: [
-            { svg: ELEVEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: ELEVEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'triangle' },
             { svg: THIRTYTWO_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
         ],
     },
     {
         prompts: [
-            { svg: TWELVE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
-            { svg: THIRTYTHREE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: TWELVE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'square' },
+            { svg: THIRTYTHREE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 't-shape' },
         ],
     },
     {
         prompts: [
-            { svg: THIRTEEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: THIRTEEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'square' },
             { svg: THIRTYFOUR_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
         ],
     },
     {
         prompts: [
-            { svg: FOURTEEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
-            { svg: THIRTYFIVE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: FOURTEEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'triangle' },
+            { svg: THIRTYFIVE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 't-shape' },
         ],
     },
     {
         prompts: [
-            { svg: FIFTEEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: FIFTEEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'square' },
             { svg: THIRTYSIX_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
         ],
     },
     {
         prompts: [
-            { svg: SIXTEEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
-            { svg: THIRTYSEVEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: SIXTEEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 't-shape' },
+            { svg: THIRTYSEVEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'square' },
         ],
     },
     {
         prompts: [
-            { svg: SEVENTEEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
-            { svg: THIRTYEIGHT_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: SEVENTEEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 't-shape' },
+            { svg: THIRTYEIGHT_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'u-shape' },
         ],
     },
     {
         prompts: [
-            { svg: EIGHTEEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: EIGHTEEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'triangle' },
             { svg: THIRTYNINE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
         ],
     },
     {
         prompts: [
-            { svg: NINTEEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
-            { svg: FOURTY_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: NINTEEN_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'square' },
+            { svg: FOURTY_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 't-shape' },
         ],
     },
     {
         prompts: [
-            { svg: TWENTY_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
-            { svg: FOURTYONE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: TWENTY_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'triangle' },
+            { svg: FOURTYONE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 't-shape' },
         ],
     },
     {
         prompts: [
-            { svg: TWENTYONE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
+            { svg: TWENTYONE_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'square' },
             { svg: FOURTYTWO_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
         ],
     },

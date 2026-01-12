@@ -29,8 +29,8 @@ type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
-// const BASE_COLUMN_DURATION_SECONDS = [3, 3, 180, 3, 3, 3, 3, 3, 3, 3, 180];
-const BASE_COLUMN_DURATION_SECONDS = [1, 1, 1, 1, 1, 1, 1, 1, 1, 180, 180];
+
+const BASE_COLUMN_DURATION_SECONDS = [60, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120];
 const BASE_COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12];
 const BASE_PAGE_SECTIONS = [
   { title: 'Spalten 1 + 2', columnIndices: [0, 1] },
