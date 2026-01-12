@@ -1,5 +1,23 @@
 import type { LpsColumn3Row } from './LPSPage1';
 
+type Column3PathEntry = { pathData: string; x: number; y: number; order: number };
+
+function extractFirstMoveCoords(pathData: string) {
+  const match = pathData.match(/[Mm]\s*(-?\d*\.?\d+)\s*(-?\d*\.?\d+)/);
+  if (!match) return { x: Number.POSITIVE_INFINITY, y: Number.POSITIVE_INFINITY };
+  return { x: Number.parseFloat(match[1]), y: Number.parseFloat(match[2]) };
+}
+
+function sortColumn3Shapes(paths: string[]) {
+  return paths
+    .map((pathData, order): Column3PathEntry => {
+      const { x, y } = extractFirstMoveCoords(pathData);
+      return { pathData, x, y, order };
+    })
+    .sort((a, b) => (a.x - b.x) || (a.y - b.y) || (a.order - b.order))
+    .map(({ pathData }) => pathData);
+}
+
 const LPS_PAGE1_COLUMN3_B_ROW1_SHAPES = [
 `M 66.37 40.32 L 40.03 65.65 A 2.70 2.70 0.0 0 1 36.29 65.64 L 9.18 39.50 A 2.70 2.70 0.0 0 1 9.18 35.61 L 35.52 10.28 A 2.70 2.70 0.0 0 1 39.26 10.29 L 66.37 36.43 A 2.70 2.70 0.0 0 1 66.37 40.32 Z 
 M 25.03 47.01 L 46.53 26.11 A 0.25 0.25 0.0 0 0 46.53 25.76 L 38.69 17.70 A 4.45 1.99 -44.2 0 0 34.12 19.38 L 18.65 34.42 A 4.45 1.99 -44.2 0 0 16.84 38.95 L 24.68 47.01 A 0.25 0.25 0.0 0 0 25.03 47.01 Z 
@@ -743,7 +761,7 @@ const LPS_PAGE1_COLUMN3_B_ROW40_SHAPES = [
 export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     {
         id: 1,
-        options: LPS_PAGE1_COLUMN3_B_ROW1_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW1_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r1-shape${idx + 1}`,
             pathData,
         })),
@@ -752,7 +770,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 2,
-        options: LPS_PAGE1_COLUMN3_B_ROW2_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW2_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r2-shape${idx + 1}`,
             pathData,
         })),
@@ -761,7 +779,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 3,
-        options: LPS_PAGE1_COLUMN3_B_ROW3_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW3_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r3-shape${idx + 1}`,
             pathData,
         })),
@@ -770,7 +788,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 4,
-        options: LPS_PAGE1_COLUMN3_B_ROW4_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW4_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r4-shape${idx + 1}`,
             pathData,
         })),
@@ -779,7 +797,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 5,
-        options: LPS_PAGE1_COLUMN3_B_ROW5_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW5_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r5-shape${idx + 1}`,
             pathData,
         })),
@@ -788,7 +806,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 6,
-        options: LPS_PAGE1_COLUMN3_B_ROW6_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW6_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r6-shape${idx + 1}`,
             pathData,
         })),
@@ -797,7 +815,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 7,
-        options: LPS_PAGE1_COLUMN3_B_ROW7_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW7_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r7-shape${idx + 1}`,
             pathData,
         })),
@@ -806,7 +824,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 8,
-        options: LPS_PAGE1_COLUMN3_B_ROW8_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW8_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r8-shape${idx + 1}`,
             pathData,
         })),
@@ -815,7 +833,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 9,
-        options: LPS_PAGE1_COLUMN3_B_ROW9_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW9_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r9-shape${idx + 1}`,
             pathData,
         })),
@@ -824,7 +842,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 10,
-        options: LPS_PAGE1_COLUMN3_B_ROW10_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW10_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r10-shape${idx + 1}`,
             pathData,
         })),
@@ -833,7 +851,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 11,
-        options: LPS_PAGE1_COLUMN3_B_ROW11_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW11_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r11-shape${idx + 1}`,
             pathData,
         })),
@@ -842,7 +860,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 12,
-        options: LPS_PAGE1_COLUMN3_B_ROW12_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW12_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r12-shape${idx + 1}`,
             pathData,
         })),
@@ -851,7 +869,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 13,
-        options: LPS_PAGE1_COLUMN3_B_ROW13_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW13_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r13-shape${idx + 1}`,
             pathData,
         })),
@@ -860,7 +878,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 14,
-        options: LPS_PAGE1_COLUMN3_B_ROW14_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW14_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r14-shape${idx + 1}`,
             pathData,
         })),
@@ -869,7 +887,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 15,
-        options: LPS_PAGE1_COLUMN3_B_ROW15_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW15_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r15-shape${idx + 1}`,
             pathData,
         })),
@@ -878,7 +896,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 16,
-        options: LPS_PAGE1_COLUMN3_B_ROW16_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW16_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r16-shape${idx + 1}`,
             pathData,
         })),
@@ -887,7 +905,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 17,
-        options: LPS_PAGE1_COLUMN3_B_ROW17_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW17_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r17-shape${idx + 1}`,
             pathData,
         })),
@@ -896,7 +914,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 18,
-        options: LPS_PAGE1_COLUMN3_B_ROW18_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW18_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r18-shape${idx + 1}`,
             pathData,
         })),
@@ -905,7 +923,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 19,
-        options: LPS_PAGE1_COLUMN3_B_ROW19_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW19_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r19-shape${idx + 1}`,
             pathData,
         })),
@@ -914,7 +932,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 20,
-        options: LPS_PAGE1_COLUMN3_B_ROW20_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW20_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r20-shape${idx + 1}`,
             pathData,
         })),
@@ -923,7 +941,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 21,
-        options: LPS_PAGE1_COLUMN3_B_ROW21_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW21_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r21-shape${idx + 1}`,
             pathData,
         })),
@@ -932,7 +950,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 22,
-        options: LPS_PAGE1_COLUMN3_B_ROW22_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW22_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r22-shape${idx + 1}`,
             pathData,
         })),
@@ -941,7 +959,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 23,
-        options: LPS_PAGE1_COLUMN3_B_ROW23_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW23_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r23-shape${idx + 1}`,
             pathData,
         })),
@@ -950,7 +968,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 24,
-        options: LPS_PAGE1_COLUMN3_B_ROW24_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW24_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r24-shape${idx + 1}`,
             pathData,
         })),
@@ -959,7 +977,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 25,
-        options: LPS_PAGE1_COLUMN3_B_ROW25_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW25_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r25-shape${idx + 1}`,
             pathData,
         })),
@@ -968,7 +986,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 26,
-        options: LPS_PAGE1_COLUMN3_B_ROW26_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW26_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r26-shape${idx + 1}`,
             pathData,
         })),
@@ -977,7 +995,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 27,
-        options: LPS_PAGE1_COLUMN3_B_ROW27_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW27_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r27-shape${idx + 1}`,
             pathData,
         })),
@@ -986,7 +1004,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 28,
-        options: LPS_PAGE1_COLUMN3_B_ROW28_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW28_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r28-shape${idx + 1}`,
             pathData,
         })),
@@ -995,7 +1013,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 29,
-        options: LPS_PAGE1_COLUMN3_B_ROW29_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW29_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r29-shape${idx + 1}`,
             pathData,
         })),
@@ -1004,7 +1022,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 30,
-        options: LPS_PAGE1_COLUMN3_B_ROW30_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW30_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r30-shape${idx + 1}`,
             pathData,
         })),
@@ -1013,7 +1031,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 31,
-        options: LPS_PAGE1_COLUMN3_B_ROW31_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW31_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r31-shape${idx + 1}`,
             pathData,
         })),
@@ -1022,7 +1040,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 32,
-        options: LPS_PAGE1_COLUMN3_B_ROW32_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW32_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r32-shape${idx + 1}`,
             pathData,
         })),
@@ -1031,7 +1049,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 33,
-        options: LPS_PAGE1_COLUMN3_B_ROW33_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW33_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r33-shape${idx + 1}`,
             pathData,
         })),
@@ -1040,7 +1058,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 34,
-        options: LPS_PAGE1_COLUMN3_B_ROW34_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW34_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r34-shape${idx + 1}`,
             pathData,
         })),
@@ -1049,7 +1067,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 35,
-        options: LPS_PAGE1_COLUMN3_B_ROW35_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW35_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r35-shape${idx + 1}`,
             pathData,
         })),
@@ -1058,7 +1076,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 36,
-        options: LPS_PAGE1_COLUMN3_B_ROW36_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW36_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r36-shape${idx + 1}`,
             pathData,
         })),
@@ -1067,7 +1085,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 37,
-        options: LPS_PAGE1_COLUMN3_B_ROW37_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW37_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r37-shape${idx + 1}`,
             pathData,
         })),
@@ -1076,7 +1094,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 38,
-        options: LPS_PAGE1_COLUMN3_B_ROW38_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW38_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r38-shape${idx + 1}`,
             pathData,
         })),
@@ -1085,7 +1103,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 39,
-        options: LPS_PAGE1_COLUMN3_B_ROW39_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW39_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r39-shape${idx + 1}`,
             pathData,
         })),
@@ -1094,7 +1112,7 @@ export const LPS_PAGE1_COLUMN3_B: LpsColumn3Row[] = [
     },
     {
         id: 40,
-        options: LPS_PAGE1_COLUMN3_B_ROW40_SHAPES.map((pathData, idx) => ({
+        options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_ROW40_SHAPES).map((pathData, idx) => ({
             id: `lps-b-r40-shape${idx + 1}`,
             pathData,
         })),
