@@ -158,7 +158,7 @@ const column7Examples: LpsColumn3Example[] = [
       id: `lps-p5c7-example1-shape${idx + 1}`,
       pathData,
     })),
-    selectedIndex: 4,
+    selectedIndex: 3,
     svgMeta: column7ExampleMeta,
   },
   {
