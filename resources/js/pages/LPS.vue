@@ -14,6 +14,7 @@ import { getLpsPage9Dataset, type LpsPage9Prompt, type LpsPage9Solution } from '
 import { getLpsPage10Dataset } from '@/pages/Questions/LPSPage10';
 import { getLpsPage11Dataset, type LpsPage11Solution } from '@/pages/Questions/LPSPage11';
 import { LPS_PAGE1_COLUMN3_B_EXMPLE1_SHAPES, LPS_PAGE1_COLUMN3_B_EXMPLE2_SHAPES, sortColumn3Shapes } from '@/pages/Questions/lpsPage1SvgShapes';
+import { LPS_PAGE5_COLUMN7_B_EXAMPLE1_SHAPES, LPS_PAGE5_COLUMN7_B_EXAMPLE2_SHAPES } from '@/pages/Questions/lpsPage5SvgShapes';
 import { LPS_PAGE8_OPTION_SVGS } from '@/pages/Questions/lpsPage8SvgShapes';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
@@ -150,21 +151,25 @@ const column3Examples: LpsColumn3Example[] = [
     svgMeta: column3ExampleMeta,
   },
 ];
-const column7Examples = computed<LpsColumn3Example[]>(() => {
-  const examples = lpsPage5Rows.slice(0, 2);
-  const selectedIndices = [4, 1];
-
-  return examples
-    .map((row, idx) => {
-      if (!row.column7?.length || !row.column7SvgMeta) return null;
-      return {
-        options: row.column7,
-        selectedIndex: selectedIndices[idx] ?? 0,
-        svgMeta: row.column7SvgMeta,
-      };
-    })
-    .filter((example): example is LpsColumn3Example => Boolean(example));
-});
+const column7ExampleMeta = { viewBox: '0 0 320 70', width: 320, height: 70 } as const;
+const column7Examples: LpsColumn3Example[] = [
+  {
+    options: LPS_PAGE5_COLUMN7_B_EXAMPLE1_SHAPES.map((pathData, idx) => ({
+      id: `lps-p5c7-example1-shape${idx + 1}`,
+      pathData,
+    })),
+    selectedIndex: 4,
+    svgMeta: column7ExampleMeta,
+  },
+  {
+    options: LPS_PAGE5_COLUMN7_B_EXAMPLE2_SHAPES.map((pathData, idx) => ({
+      id: `lps-p5c7-example2-shape${idx + 1}`,
+      pathData,
+    })),
+    selectedIndex: 1,
+    svgMeta: column7ExampleMeta,
+  },
+];
 const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
 const isPage8ExamplePrompt = (rowIdx: number, promptIdx: number) =>
