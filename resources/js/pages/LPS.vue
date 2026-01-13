@@ -1325,7 +1325,7 @@ function formatColumnScore(columnIdx: number) {
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <div class="mb-3">
-                    <div class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                    <div class="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
                     <div v-for="example in column1Examples" :key="`example-col1-${example.word}`" class="py-[1px]">
                       <div class="lps-letters">
                         <button v-for="(char, charIdx) in example.word.split('')" :key="`example-col1-${example.word}-${charIdx}`"
@@ -1337,6 +1337,7 @@ function formatColumnScore(columnIdx: number) {
                       </div>
                     </div>
                   </div>
+                  <div class="my-3 border-t border-muted-foreground/20"></div>
 
                   <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c1`" class="py-[1px]">
                     <div class="lps-letters">
@@ -1353,7 +1354,7 @@ function formatColumnScore(columnIdx: number) {
 
                 <div class="lps-sep">
                   <div class="mb-3">
-                    <div class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                    <div class="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
                     <div v-for="example in column2Examples" :key="`example-col2-${example.word}`" class="py-[1px]">
                       <div class="lps-letters">
                         <button v-for="(char, charIdx) in example.word.split('')" :key="`example-col2-${example.word}-${charIdx}`"
@@ -1365,6 +1366,7 @@ function formatColumnScore(columnIdx: number) {
                       </div>
                     </div>
                   </div>
+                  <div class="my-3 border-t border-muted-foreground/20"></div>
 
                   <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[1px]">
                     <div class="lps-letters">
@@ -1390,7 +1392,7 @@ function formatColumnScore(columnIdx: number) {
               <div class="flex justify-center">
                 <div class="w-full max-w-4xl">
                   <div v-if="column3Examples.length" class="mb-4 space-y-3">
-                    <div class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                    <div class="text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
                     <div v-for="(example, exampleIdx) in column3Examples" :key="`example-col3-${exampleIdx}`"
                       class="py-[10px]">
                       <div class="flex items-center justify-center leading-none">
@@ -1415,6 +1417,7 @@ function formatColumnScore(columnIdx: number) {
                       </div>
                     </div>
                   </div>
+                  <div v-if="column3Examples.length" class="my-3 border-t border-muted-foreground/20"></div>
                   <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[10px]">
                     <div v-if="row.column3?.length">
                       <div v-if="row.column3SvgMeta && row.column3.every((option) => option.pathData)"
@@ -1481,7 +1484,7 @@ function formatColumnScore(columnIdx: number) {
 
               <div>
                 <div class="mb-3">
-                  <div class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                  <div class="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
                   <div v-for="example in column4Examples" :key="`example-col4-${example.word}`" class="py-[1px]">
                     <div class="lps-letters">
                       <button v-for="(char, charIdx) in example.word.split(' ')" :key="`example-col4-${example.word}-${charIdx}`"
@@ -1493,6 +1496,7 @@ function formatColumnScore(columnIdx: number) {
                     </div>
                   </div>
                 </div>
+                <div class="my-3 border-t border-muted-foreground/20"></div>
 
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c4`" class="py-[1px]">
                   <div class="lps-letters">
@@ -1516,7 +1520,7 @@ function formatColumnScore(columnIdx: number) {
 
               <div>
                 <div class="mb-3">
-                  <div class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                  <div class="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
                   <div v-for="example in column5Examples" :key="`example-col5-${example.word}`" class="py-[1px]">
                     <div class="lps-letters">
                       <button v-for="(char, charIdx) in example.word.split('')" :key="`example-col5-${example.word}-${charIdx}`"
@@ -1528,6 +1532,7 @@ function formatColumnScore(columnIdx: number) {
                     </div>
                   </div>
                 </div>
+                <div class="my-3 border-t border-muted-foreground/20"></div>
 
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c5`" class="py-[1px]">
                   <div class="lps-letters">
@@ -1573,7 +1578,7 @@ function formatColumnScore(columnIdx: number) {
               <div class="flex justify-center">
                 <div class="w-full max-w-4xl">
                   <div v-if="column7Examples.length" class="mb-4 space-y-3">
-                    <div class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                    <div class="text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
                     <div v-for="(example, exampleIdx) in column7Examples" :key="`example-col7-${exampleIdx}`"
                       class="py-[10px]">
                       <div class="flex items-center justify-center leading-none">
@@ -1598,6 +1603,7 @@ function formatColumnScore(columnIdx: number) {
                       </div>
                     </div>
                   </div>
+                  <div v-if="column7Examples.length" class="my-3 border-t border-muted-foreground/20"></div>
                   <div v-for="(row, idx) in lpsPage5Rows" :key="`${row.id}-c7`" class="py-[10px]">
                     <div v-if="row.column7?.length">
                       <div v-if="row.column7SvgMeta && row.column7.every((option) => option.pathData)"
@@ -1865,8 +1871,8 @@ function formatColumnScore(columnIdx: number) {
 
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                                  <div class="mb-3">
-                    <div class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                  <div class="mb-3">
+                    <div class="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
                     <div v-for="(example, exampleIdx) in column13Examples" :key="`example-col13-${exampleIdx}`"
                       class="py-[1px]">
                       <div class="lps-sequence-row">
@@ -1879,6 +1885,7 @@ function formatColumnScore(columnIdx: number) {
                       </div>
                     </div>
                   </div>
+                  <div class="my-3 border-t border-muted-foreground/20"></div>
 
                   <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c13`" class="py-[1px]">
                     <div class="lps-sequence-row">
@@ -1895,8 +1902,8 @@ function formatColumnScore(columnIdx: number) {
                 </div>
 
                 <div class="lps-sep">
-                                  <div class="mb-3">
-                    <div class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                  <div class="mb-3">
+                    <div class="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
                     <div v-for="(example, exampleIdx) in column14Examples" :key="`example-col14-${exampleIdx}`"
                       class="py-[1px]">
                       <div class="lps-sequence-row">
@@ -1909,6 +1916,7 @@ function formatColumnScore(columnIdx: number) {
                       </div>
                     </div>
                   </div>
+                  <div class="my-3 border-t border-muted-foreground/20"></div>
                   <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c14`" class="py-[1px]">
                     <div class="lps-sequence-row">
                       <button v-for="(token, tokenIdx) in getSequenceTokens(row.column14)"
