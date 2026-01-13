@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
-import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
+import { getLpsDataset, type LpsColumn3Option, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
 import { getLpsPage5Dataset, type LpsPage5Solution } from '@/pages/Questions/LPSPage5';
 import { getLpsPage6Dataset, type LpsPage6Option, type LpsPage6Solution } from '@/pages/Questions/LPSPage6';
 import { getLpsPage7Dataset, type LpsPage7Prompt, type LpsPage7Solution } from '@/pages/Questions/LPSPage7';
@@ -13,6 +13,7 @@ import { getLpsPage8Dataset, type LpsPage8Prompt, type LpsPage8Solution } from '
 import { getLpsPage9Dataset, type LpsPage9Prompt, type LpsPage9Solution } from '@/pages/Questions/LPSPage9';
 import { getLpsPage10Dataset } from '@/pages/Questions/LPSPage10';
 import { getLpsPage11Dataset, type LpsPage11Solution } from '@/pages/Questions/LPSPage11';
+import { LPS_PAGE1_COLUMN3_B_EXMPLE1_SHAPES, LPS_PAGE1_COLUMN3_B_EXMPLE2_SHAPES, sortColumn3Shapes } from '@/pages/Questions/lpsPage1SvgShapes';
 import { LPS_PAGE8_OPTION_SVGS } from '@/pages/Questions/lpsPage8SvgShapes';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
@@ -25,6 +26,11 @@ type LpsPage10ResponseRow = { paths: boolean[] };
 type LpsPage11ResponseRow = { col13: boolean[]; col14: boolean[] };
 type LpsPage6OptionGroup = { label: string; options: Array<{ option: LpsPage6Option; index: number }> };
 type LpsColumnExample = { word: string; selectedIndex: number };
+type LpsColumn3Example = {
+  options: LpsColumn3Option[];
+  selectedIndex: number;
+  svgMeta: { viewBox: string; width: number; height: number };
+};
 
 type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 
@@ -124,6 +130,25 @@ const column4Examples: LpsColumnExample[] = [
 const column5Examples: LpsColumnExample[] = [
   { word: 'GZWER', selectedIndex: 1 },
   { word: 'CKERA', selectedIndex: 4 },
+];
+const column3ExampleMeta = { viewBox: '0 0 670 70', width: 670, height: 70 } as const;
+const column3Examples: LpsColumn3Example[] = [
+  {
+    options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_EXMPLE1_SHAPES).map((pathData, idx) => ({
+      id: `lps-b-example1-shape${idx + 1}`,
+      pathData,
+    })),
+    selectedIndex: 4,
+    svgMeta: column3ExampleMeta,
+  },
+  {
+    options: sortColumn3Shapes(LPS_PAGE1_COLUMN3_B_EXMPLE2_SHAPES).map((pathData, idx) => ({
+      id: `lps-b-example2-shape${idx + 1}`,
+      pathData,
+    })),
+    selectedIndex: 7,
+    svgMeta: column3ExampleMeta,
+  },
 ];
 const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
@@ -1306,6 +1331,32 @@ function formatColumnScore(columnIdx: number) {
 
               <div class="flex justify-center">
                 <div class="w-full max-w-4xl">
+                  <div v-if="isLpsB" class="mb-4 space-y-3">
+                    <div class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                    <div v-for="(example, exampleIdx) in column3Examples" :key="`example-col3-${exampleIdx}`"
+                      class="py-[10px]">
+                      <div class="flex items-center justify-center leading-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="lps-column3-svg select-none"
+                          :viewBox="example.svgMeta.viewBox" :width="example.svgMeta.width"
+                          :height="example.svgMeta.height">
+                          <g v-for="(option, optionIdx) in example.options" :id="option.id" :key="option.id"
+                            role="button" class="lps-figure-shape-group lps-figure-shape--disabled"
+                            :aria-pressed="optionIdx === example.selectedIndex" :aria-disabled="true">
+                            <path class="lps-figure-hit" :d="option.pathData" />
+                            <path fill="#090d0e" class="lps-figure-shape" :class="[
+                              optionIdx === example.selectedIndex ? 'lps-figure-shape--selected' : '',
+                            ]" :d="option.pathData" />
+                            <clipPath :id="`${option.id}-clip`">
+                              <path :d="option.pathData" :transform="option.transform" />
+                            </clipPath>
+                            <line v-if="optionIdx === example.selectedIndex" class="lps-figure-slash"
+                              :clip-path="`url(#${option.id}-clip)`" x1="0" :y1="example.svgMeta.height - 6"
+                              :x2="example.svgMeta.width" y2="6" />
+                          </g>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
                   <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[10px]">
                     <div v-if="row.column3?.length">
                       <div v-if="row.column3SvgMeta && row.column3.every((option) => option.pathData)"
