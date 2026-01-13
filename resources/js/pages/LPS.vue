@@ -150,6 +150,21 @@ const column3Examples: LpsColumn3Example[] = [
     svgMeta: column3ExampleMeta,
   },
 ];
+const column7Examples = computed<LpsColumn3Example[]>(() => {
+  const examples = lpsPage5Rows.slice(0, 2);
+  const selectedIndices = [4, 1];
+
+  return examples
+    .map((row, idx) => {
+      if (!row.column7?.length || !row.column7SvgMeta) return null;
+      return {
+        options: row.column7,
+        selectedIndex: selectedIndices[idx] ?? 0,
+        svgMeta: row.column7SvgMeta,
+      };
+    })
+    .filter((example): example is LpsColumn3Example => Boolean(example));
+});
 const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
 const isPage8ExamplePrompt = (rowIdx: number, promptIdx: number) =>
@@ -1514,6 +1529,32 @@ function formatColumnScore(columnIdx: number) {
 
               <div class="flex justify-center">
                 <div class="w-full max-w-4xl">
+                  <div v-if="column7Examples.length" class="mb-4 space-y-3">
+                    <div class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                    <div v-for="(example, exampleIdx) in column7Examples" :key="`example-col7-${exampleIdx}`"
+                      class="py-[10px]">
+                      <div class="flex items-center justify-center leading-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="lps-column3-svg select-none"
+                          :viewBox="example.svgMeta.viewBox" :width="example.svgMeta.width"
+                          :height="example.svgMeta.height">
+                          <g v-for="(option, optionIdx) in example.options" :id="option.id" :key="option.id"
+                            role="button" class="lps-figure-shape-group lps-figure-shape--disabled"
+                            :aria-pressed="optionIdx === example.selectedIndex" :aria-disabled="true">
+                            <path class="lps-figure-hit" :d="option.pathData" />
+                            <path fill="#090d0e" class="lps-figure-shape" :class="[
+                              optionIdx === example.selectedIndex ? 'lps-figure-shape--selected' : '',
+                            ]" :d="option.pathData" />
+                            <clipPath :id="`${option.id}-clip`">
+                              <path :d="option.pathData" :transform="option.transform" />
+                            </clipPath>
+                            <line v-if="optionIdx === example.selectedIndex" class="lps-figure-slash"
+                              :clip-path="`url(#${option.id}-clip)`" x1="0" :y1="example.svgMeta.height - 6"
+                              :x2="example.svgMeta.width" y2="6" />
+                          </g>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
                   <div v-for="(row, idx) in lpsPage5Rows" :key="`${row.id}-c7`" class="py-[10px]">
                     <div v-if="row.column7?.length">
                       <div v-if="row.column7SvgMeta && row.column7.every((option) => option.pathData)"
