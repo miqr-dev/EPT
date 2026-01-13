@@ -1439,6 +1439,17 @@ function formatColumnScore(columnIdx: number) {
           <div v-else-if="pageIndex === pageIndexByColumn.col6" class="space-y-3">
             <div class="rounded-2xl border bg-background p-6 shadow-sm">
               <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 6</div>
+              <div class="mb-4 space-y-2 text-center">
+                <div class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                <div class="flex flex-col items-center gap-1 text-base text-foreground">
+                  <div>
+                    L.l <span class="lps-handwriting">lernen</span>
+                  </div>
+                  <div>
+                    P.p <span class="lps-handwriting">Pech</span>
+                  </div>
+                </div>
+              </div>
               <p class="text-center text-sm text-muted-foreground">
                 Bitte beachten Sie die Anweisungen des Prüfers.
               </p>
@@ -2216,6 +2227,13 @@ function formatColumnScore(columnIdx: number) {
   display: flex;
   gap: 8px;
   justify-content: center;
+}
+
+.lps-handwriting {
+  font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", "Apple Chancery", cursive;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  font-weight: 500;
 }
 
 /* Vertical separator between column 1 and 2 */
