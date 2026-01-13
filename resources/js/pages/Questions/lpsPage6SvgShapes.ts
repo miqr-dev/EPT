@@ -20,6 +20,27 @@ function buildNumberedLetterSolutions(numbers: number[], answers: Array<{ number
     .filter((idx): idx is number => idx !== null);
 }
 
+export const LPS_PAGE6_COLUMN8_B_EXAMPLE = [
+  {
+    svg: `<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 240 160" width="240" height="160">
+  <rect x="10" y="10" width="220" height="140" rx="16" fill="#f1f5f9" stroke="#0f172a" stroke-width="3" />
+  <circle cx="70" cy="80" r="35" fill="#93c5fd" stroke="#0f172a" stroke-width="3" />
+  <polygon points="150,35 205,125 95,125" fill="#fca5a5" stroke="#0f172a" stroke-width="3" />
+  <path d="M30 120 L55 95 L80 120" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />
+</svg>`,
+    svgMeta: { width: 420, height: 220 },
+    options: buildNumberedLetterOptions([1, 2]),
+    correctIndices: buildNumberedLetterSolutions(
+      [1, 2],
+      [
+        { number: 1, letter: 'E' },
+        { number: 2, letter: 'C' },
+      ],
+    ),
+  },
+] as const;
+
 export const LPS_PAGE6_COLUMN8_B = [
   {
     svg: `<?xml version="1.0" encoding="utf-8"?>

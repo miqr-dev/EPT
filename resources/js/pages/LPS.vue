@@ -15,6 +15,7 @@ import { getLpsPage10Dataset } from '@/pages/Questions/LPSPage10';
 import { getLpsPage11Dataset, type LpsPage11Solution } from '@/pages/Questions/LPSPage11';
 import { LPS_PAGE1_COLUMN3_B_EXMPLE1_SHAPES, LPS_PAGE1_COLUMN3_B_EXMPLE2_SHAPES, sortColumn3Shapes } from '@/pages/Questions/lpsPage1SvgShapes';
 import { LPS_PAGE5_COLUMN7_B_EXAMPLE1_SHAPES, LPS_PAGE5_COLUMN7_B_EXAMPLE2_SHAPES } from '@/pages/Questions/lpsPage5SvgShapes';
+import { LPS_PAGE6_COLUMN8_B_EXAMPLE } from '@/pages/Questions/lpsPage6SvgShapes';
 import { LPS_PAGE8_OPTION_SVGS } from '@/pages/Questions/lpsPage8SvgShapes';
 
 type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
@@ -31,6 +32,13 @@ type LpsColumn3Example = {
   options: LpsColumn3Option[];
   selectedIndex: number;
   svgMeta: { viewBox: string; width: number; height: number };
+};
+type LpsPage6ExampleRow = {
+  svg: string;
+  svgMeta?: { width: number; height: number; viewBox?: string };
+  options: LpsPage6Option[];
+  selected: boolean[];
+  optionGroups: LpsPage6OptionGroup[];
 };
 
 type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
@@ -170,6 +178,24 @@ const column7Examples: LpsColumn3Example[] = [
     svgMeta: column7ExampleMeta,
   },
 ];
+
+function buildPage6ExampleSelection(example: (typeof LPS_PAGE6_COLUMN8_B_EXAMPLE)[number]) {
+  const selection = buildSelection(example.options.length ?? 0);
+  example.correctIndices?.forEach((idx) => {
+    if (selection[idx] !== undefined) {
+      selection[idx] = true;
+    }
+  });
+  return selection;
+}
+
+const page6ExampleRows: LpsPage6ExampleRow[] = LPS_PAGE6_COLUMN8_B_EXAMPLE.map((example) => ({
+  svg: example.svg,
+  svgMeta: example.svgMeta,
+  options: example.options,
+  selected: buildPage6ExampleSelection(example),
+  optionGroups: buildPage6OptionGroups(example.options),
+}));
 const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
 const isPage8ExamplePrompt = (rowIdx: number, promptIdx: number) =>
@@ -1611,6 +1637,50 @@ function formatColumnScore(columnIdx: number) {
               <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 8</div>
 
               <div class="space-y-6">
+                <div v-if="page6ExampleRows.length" class="space-y-3">
+                  <div class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                  <div v-for="(row, idx) in page6ExampleRows" :key="`example-c8-${idx}`"
+                    class="rounded-xl border bg-muted/40 p-4">
+                    <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-[1.25fr_1fr]">
+                      <div class="flex justify-center">
+                        <div v-if="row.svg" class="flex items-center justify-center rounded-lg bg-white p-3 shadow-sm"
+                          v-html="row.svg"
+                          :style="{ width: `${row.svgMeta?.width ?? 420}px`, height: `${row.svgMeta?.height ?? 220}px` }">
+                        </div>
+                        <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
+                      </div>
+
+                      <div class="space-y-2">
+                        <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Antwort auswählen
+                        </div>
+                        <div v-if="row.optionGroups.length" class="space-y-2">
+                          <div v-for="group in row.optionGroups" :key="`example-c8-group-${group.label}`"
+                            class="flex items-center gap-3">
+                            <div class="lps-number-label">
+                              {{ group.label }}
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                              <button v-for="groupOption in group.options"
+                                :key="`example-c8-${groupOption.index}`" type="button" class="lps-letter"
+                                :class="row.selected[groupOption.index] ? 'lps-letter--selected' : ''" disabled
+                                :aria-pressed="row.selected[groupOption.index]">
+                                {{ groupOption.option.label }}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div v-else class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                          <button v-for="(option, optionIdx) in row.options" :key="`example-c8-${optionIdx}`"
+                            type="button" class="lps-letter"
+                            :class="row.selected[optionIdx] ? 'lps-letter--selected' : ''" disabled
+                            :aria-pressed="row.selected[optionIdx]">
+                            {{ option.label }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div v-for="(row, idx) in lpsPage6Rows" :key="`${row.id}-c8`" class="rounded-xl border bg-muted/40 p-4">
                   <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-[1.25fr_1fr]">
                     <div class="flex justify-center">
