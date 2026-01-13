@@ -125,6 +125,32 @@ const column5Examples: LpsColumnExample[] = [
   { word: 'GZWER', selectedIndex: 1 },
   { word: 'CKERA', selectedIndex: 4 },
 ];
+const page6Example = {
+  id: 'example-1',
+  svg: `
+    <svg xmlns="http://www.w3.org/2000/svg" width="260" height="140" viewBox="0 0 260 140" role="img" aria-hidden="true">
+      <rect x="12" y="12" width="70" height="70" rx="10" fill="#94a3b8" />
+      <circle cx="160" cy="50" r="30" fill="#38bdf8" />
+      <polygon points="110,118 140,85 170,118" fill="#facc15" />
+      <line x1="185" y1="95" x2="245" y2="125" stroke="#0f172a" stroke-width="6" />
+    </svg>
+  `,
+  svgMeta: { width: 260, height: 140 },
+  options: [
+    { label: 'A', group: '1' },
+    { label: 'B', group: '1' },
+    { label: 'C', group: '1' },
+    { label: 'D', group: '1' },
+    { label: 'E', group: '1' },
+    { label: 'A', group: '2' },
+    { label: 'B', group: '2' },
+    { label: 'C', group: '2' },
+    { label: 'D', group: '2' },
+    { label: 'E', group: '2' },
+  ] as LpsPage6Option[],
+  selectedIndices: [4, 7],
+};
+const page6ExampleSelection = page6Example.options.map((_, idx) => page6Example.selectedIndices.includes(idx));
 const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
 const isPage8ExamplePrompt = (rowIdx: number, promptIdx: number) =>
@@ -381,6 +407,7 @@ const page11Responses = ref<LpsPage11ResponseRow[]>(
 const page6OptionGroups = computed<LpsPage6OptionGroup[][]>(() =>
   lpsPage6Rows.map((row) => buildPage6OptionGroups(row.column8Options ?? [])),
 );
+const page6ExampleGroups = buildPage6OptionGroups(page6Example.options);
 
 const sectionDurationText = computed(() => formatSectionDurations(visibleColumnIndices.value));
 
@@ -1514,6 +1541,41 @@ function formatColumnScore(columnIdx: number) {
               <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 8</div>
 
               <div class="space-y-6">
+                <div class="rounded-xl border bg-muted/20 p-4">
+                  <div class="mb-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                  <div class="rounded-lg border bg-background p-4 shadow-sm">
+                    <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-[1.25fr_1fr]">
+                      <div class="flex justify-center">
+                        <div class="flex items-center justify-center rounded-lg bg-white p-3 shadow-sm"
+                          v-html="page6Example.svg"
+                          :style="{ width: `${page6Example.svgMeta.width}px`, height: `${page6Example.svgMeta.height}px` }">
+                        </div>
+                      </div>
+                      <div class="space-y-2">
+                        <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          Antwort auswählen
+                        </div>
+                        <div v-if="page6ExampleGroups.length" class="space-y-2">
+                          <div v-for="group in page6ExampleGroups" :key="`page6-example-${group.label}`"
+                            class="flex items-center gap-3">
+                            <div class="lps-number-label">
+                              {{ group.label }}
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                              <button v-for="groupOption in group.options"
+                                :key="`page6-example-${group.label}-${groupOption.index}`" type="button"
+                                class="lps-letter"
+                                :class="page6ExampleSelection[groupOption.index] ? 'lps-letter--selected' : ''" disabled
+                                :aria-pressed="page6ExampleSelection[groupOption.index]">
+                                {{ groupOption.option.label }}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div v-for="(row, idx) in lpsPage6Rows" :key="`${row.id}-c8`" class="rounded-xl border bg-muted/40 p-4">
                   <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-[1.25fr_1fr]">
                     <div class="flex justify-center">
