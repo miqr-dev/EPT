@@ -125,6 +125,38 @@ const column5Examples: LpsColumnExample[] = [
   { word: 'GZWER', selectedIndex: 1 },
   { word: 'CKERA', selectedIndex: 4 },
 ];
+const page6Examples = [
+  {
+    id: 'example-1',
+    label: '1',
+    svg: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="220" height="120" viewBox="0 0 220 120" role="img" aria-hidden="true">
+        <rect x="10" y="10" width="60" height="60" rx="8" fill="#94a3b8" />
+        <circle cx="140" cy="45" r="28" fill="#38bdf8" />
+        <polygon points="90,100 120,70 150,100" fill="#facc15" />
+        <line x1="170" y1="90" x2="210" y2="110" stroke="#0f172a" stroke-width="6" />
+      </svg>
+    `,
+    svgMeta: { width: 220, height: 120 },
+    options: ['A', 'B', 'C', 'D', 'E'],
+    selectedIndex: 4,
+  },
+  {
+    id: 'example-2',
+    label: '2',
+    svg: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="220" height="120" viewBox="0 0 220 120" role="img" aria-hidden="true">
+        <rect x="12" y="18" width="80" height="40" rx="10" fill="#f472b6" />
+        <circle cx="150" cy="70" r="26" fill="#a78bfa" />
+        <path d="M40 95 L70 70 L100 95 Z" fill="#22c55e" />
+        <line x1="120" y1="20" x2="200" y2="20" stroke="#0f172a" stroke-width="5" />
+      </svg>
+    `,
+    svgMeta: { width: 220, height: 120 },
+    options: ['A', 'B', 'C', 'D', 'E'],
+    selectedIndex: 2,
+  },
+];
 const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
 const isPage8ExamplePrompt = (rowIdx: number, promptIdx: number) =>
@@ -1514,6 +1546,40 @@ function formatColumnScore(columnIdx: number) {
               <div class="mb-4 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 8</div>
 
               <div class="space-y-6">
+                <div class="rounded-xl border bg-muted/20 p-4">
+                  <div class="mb-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                  <div class="space-y-4">
+                    <div v-for="example in page6Examples" :key="example.id"
+                      class="rounded-lg border bg-background p-4 shadow-sm">
+                      <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-[1.25fr_1fr]">
+                        <div class="flex justify-center">
+                          <div class="flex items-center justify-center rounded-lg bg-white p-3 shadow-sm"
+                            v-html="example.svg"
+                            :style="{ width: `${example.svgMeta.width}px`, height: `${example.svgMeta.height}px` }">
+                          </div>
+                        </div>
+                        <div class="space-y-2">
+                          <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Antwort auswählen
+                          </div>
+                          <div class="flex items-center gap-3">
+                            <div class="lps-number-label">
+                              {{ example.label }}
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                              <button v-for="(option, optionIdx) in example.options" :key="`${example.id}-${option}`"
+                                type="button" class="lps-letter"
+                                :class="optionIdx === example.selectedIndex ? 'lps-letter--selected' : ''" disabled
+                                :aria-pressed="optionIdx === example.selectedIndex">
+                                {{ option }}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div v-for="(row, idx) in lpsPage6Rows" :key="`${row.id}-c8`" class="rounded-xl border bg-muted/40 p-4">
                   <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-[1.25fr_1fr]">
                     <div class="flex justify-center">
