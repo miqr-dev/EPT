@@ -27,6 +27,7 @@ type LpsPage10ResponseRow = { paths: boolean[] };
 type LpsPage11ResponseRow = { col13: boolean[]; col14: boolean[] };
 type LpsPage6OptionGroup = { label: string; options: Array<{ option: LpsPage6Option; index: number }> };
 type LpsColumnExample = { word: string; selectedIndex: number };
+type LpsSequenceExample = { tokens: string[]; selectedIndex?: number };
 type LpsColumn3Example = {
   options: LpsColumn3Option[];
   selectedIndex: number;
@@ -169,6 +170,18 @@ const column7Examples: LpsColumn3Example[] = [
     selectedIndex: 1,
     svgMeta: column7ExampleMeta,
   },
+];
+const column13Examples: LpsSequenceExample[] = [
+  { tokens: 'A00B00'.split('') },
+  { tokens: '00L0M0'.split(''), selectedIndex: 5 },
+  { tokens: '0S000R'.split('') },
+  { tokens: '00F00T'.split(''), selectedIndex: 4 },
+];
+const column14Examples: LpsSequenceExample[] = [
+  { tokens: 'A03B00'.split(''), selectedIndex: 2 },
+  { tokens: '00L000'.split(''), selectedIndex: 4 },
+  { tokens: '0S000R'.split('') },
+  { tokens: '00F00T'.split('') },
 ];
 const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
@@ -1783,6 +1796,21 @@ function formatColumnScore(columnIdx: number) {
 
               <div class="grid grid-cols-2 gap-4">
                 <div>
+                  <div class="mb-3">
+                    <div class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                    <div v-for="(example, exampleIdx) in column13Examples" :key="`example-col13-${exampleIdx}`"
+                      class="py-[1px]">
+                      <div class="lps-sequence-row">
+                        <button v-for="(token, tokenIdx) in example.tokens"
+                          :key="`example-col13-${exampleIdx}-${tokenIdx}`" type="button" class="lps-letter"
+                          :class="example.selectedIndex === tokenIdx ? 'lps-letter--selected' : ''" disabled
+                          :aria-pressed="example.selectedIndex === tokenIdx">
+                          {{ token }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
                   <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c13`" class="py-[1px]">
                     <div class="lps-sequence-row">
                       <button v-for="(token, tokenIdx) in getSequenceTokens(row.column13)"
@@ -1798,6 +1826,21 @@ function formatColumnScore(columnIdx: number) {
                 </div>
 
                 <div class="lps-sep">
+                  <div class="mb-3">
+                    <div class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
+                    <div v-for="(example, exampleIdx) in column14Examples" :key="`example-col14-${exampleIdx}`"
+                      class="py-[1px]">
+                      <div class="lps-sequence-row">
+                        <button v-for="(token, tokenIdx) in example.tokens"
+                          :key="`example-col14-${exampleIdx}-${tokenIdx}`" type="button" class="lps-letter"
+                          :class="example.selectedIndex === tokenIdx ? 'lps-letter--selected' : ''" disabled
+                          :aria-pressed="example.selectedIndex === tokenIdx">
+                          {{ token }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
                   <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c14`" class="py-[1px]">
                     <div class="lps-sequence-row">
                       <button v-for="(token, tokenIdx) in getSequenceTokens(row.column14)"
