@@ -1331,7 +1331,7 @@ function formatColumnScore(columnIdx: number) {
 
               <div class="flex justify-center">
                 <div class="w-full max-w-4xl">
-                  <div v-if="isLpsB" class="mb-4 space-y-3">
+                  <div v-if="column3Examples.length" class="mb-4 space-y-3">
                     <div class="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
                     <div v-for="(example, exampleIdx) in column3Examples" :key="`example-col3-${exampleIdx}`"
                       class="py-[10px]">
