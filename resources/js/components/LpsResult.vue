@@ -1,13 +1,74 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { getLpsDataset } from '@/pages/Questions/LPSPage1';
+import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
+import { getLpsPage5Dataset } from '@/pages/Questions/LPSPage5';
+import { getLpsPage6Dataset } from '@/pages/Questions/LPSPage6';
+import { getLpsPage7Dataset } from '@/pages/Questions/LPSPage7';
+import { getLpsPage8Dataset } from '@/pages/Questions/LPSPage8';
+import { getLpsPage9Dataset } from '@/pages/Questions/LPSPage9';
+import { getLpsPage10Dataset } from '@/pages/Questions/LPSPage10';
+import { getLpsPage11Dataset, type LpsPage11Solution } from '@/pages/Questions/LPSPage11';
+import {
+  LPS_B_AGE_GROUP_LABELS,
+  LPS_B_IQ_BY_PR_RANGES,
+  LPS_B_SCORE_TABLES,
+  type LpsBAgeGroupKey,
+  type LpsBScoreKey,
+  type LpsBScoreRangeRow,
+  type LpsBScoreRow,
+  type LpsBTotalScoreRow,
+} from '@/pages/Scores/LPS/lpsbScoreTables';
 
-const props = defineProps<{ results: Record<string, any> | null; testName?: string }>();
+type LpsPage1ResponseRow = { col1: boolean[]; col2: boolean[]; col3: boolean[]; col4: boolean[]; col5: boolean[] };
+type LpsPage5ResponseRow = { col7: boolean[] };
+type LpsPage6ResponseRow = { col8: boolean[] };
+type LpsPage7ResponseRow = { prompts: boolean[][] };
+type LpsPage8ResponseRow = { prompts: boolean[][] };
+type LpsPage9ResponseRow = { prompts: boolean[][] };
+type LpsPage10ResponseRow = { paths: boolean[] };
+type LpsPage11ResponseRow = { col13: boolean[]; col14: boolean[] };
 
-const page1 = computed(() => props.results?.page1 ?? []);
-const lpsRows = computed(() => getLpsDataset(props.testName).rows);
+const props = defineProps<{
+  results: Record<string, any> | null;
+  testName?: string;
+  participantProfile?: { age: number; sex?: string } | null;
+}>();
+
+const testLabel = computed(() => props.testName ?? 'LPS');
+const isLpsB = computed(() => props.testName === 'LPS-B');
+const totalTime = computed(() => props.results?.total_time_seconds ?? null);
+const participantProfile = computed(() => props.participantProfile ?? null);
+const page1 = computed<LpsPage1ResponseRow[]>(() => props.results?.page1 ?? []);
+const page5 = computed<LpsPage5ResponseRow[]>(() => props.results?.page5 ?? []);
+const page6 = computed<LpsPage6ResponseRow[]>(() => props.results?.page6 ?? []);
+const page7 = computed<LpsPage7ResponseRow[]>(() => props.results?.page7 ?? []);
+const page8 = computed<LpsPage8ResponseRow[]>(() => props.results?.page8 ?? []);
+const page9 = computed<LpsPage9ResponseRow[]>(() => props.results?.page9 ?? []);
+const page10 = computed<LpsPage10ResponseRow[]>(() => props.results?.page10 ?? []);
+const page11 = computed<LpsPage11ResponseRow[]>(() => props.results?.page11 ?? []);
+const column6Manual = computed<number | null>({
+  get: () => {
+    const raw = props.results?.column6_score;
+    const parsed = raw === '' || raw === null || raw === undefined ? null : Number(raw);
+    return Number.isNaN(parsed) ? null : parsed;
+  },
+  set: (val) => {
+    if (!props.results) return;
+    props.results.column6_score = val ?? null;
+  },
+});
+
+const { rows: lpsRows, solutions: lpsSolutions } = getLpsDataset(props.testName);
+const { solutions: page5Solutions } = getLpsPage5Dataset(props.testName);
+const { solutions: page6Solutions } = getLpsPage6Dataset(props.testName);
+const { solutions: page7Solutions } = getLpsPage7Dataset(props.testName);
+const { solutions: page8Solutions } = getLpsPage8Dataset(props.testName);
+const { solutions: page9Solutions } = getLpsPage9Dataset(props.testName);
+const { solutions: page10Solutions } = getLpsPage10Dataset(props.testName);
+const { rows: page11Rows, solutions: page11Solutions } = getLpsPage11Dataset(props.testName);
+
 const displayRows = computed(() =>
-  lpsRows.value.map((row, idx) => ({
+  lpsRows.map((row, idx) => ({
     row,
     response:
       page1.value[idx] ?? {
@@ -19,10 +80,14 @@ const displayRows = computed(() =>
       },
   })),
 );
-const totalTime = computed(() => props.results?.total_time_seconds ?? null);
-const page1Score = computed(() => props.results?.page1_score ?? null);
-const page1MaxScore = computed(() => props.results?.page1_max_score ?? null);
-const testLabel = computed(() => props.testName ?? 'LPS');
+
+const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
+  props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
+const isPage8ExamplePrompt = (rowIdx: number, promptIdx: number) =>
+  props.testName === 'LPS-B' && promptIdx === 0 && rowIdx < 2;
+const isPage9ExamplePrompt = (rowIdx: number, promptIdx: number) =>
+  props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
+const isPage10ExampleRow = (rowIdx: number) => props.testName === 'LPS-B' && rowIdx < 2;
 
 function formatTime(seconds?: number | null) {
   if (seconds == null) return '–';
@@ -30,10 +95,231 @@ function formatTime(seconds?: number | null) {
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
+
+function scorePage1Column(columnKey: keyof LpsPage1Solution, responseKey: keyof LpsPage1ResponseRow) {
+  return page1.value.reduce((total, response, idx) => {
+    const correctIndices = lpsSolutions[idx]?.[columnKey] ?? [];
+    const picks = response[responseKey];
+    if (!correctIndices.length || !picks?.length) return total;
+    const correctPicks = correctIndices.filter((index) => picks[index]);
+    return total + correctPicks.length;
+  }, 0);
+}
+
+function scorePage5Column() {
+  return page5.value.reduce((total, response, idx) => {
+    const correctIndices = page5Solutions[idx]?.col7 ?? [];
+    if (!correctIndices.length || !response?.col7?.length) return total;
+    const correctPicks = correctIndices.filter((index) => response.col7[index]);
+    return total + correctPicks.length;
+  }, 0);
+}
+
+function scorePage6Column() {
+  return page6.value.reduce((total, response, idx) => {
+    const correctIndices = page6Solutions[idx]?.col8 ?? [];
+    if (!correctIndices.length || !response?.col8?.length) return total;
+    const correctPicks = correctIndices.filter((index) => response.col8[index]);
+    return total + correctPicks.length;
+  }, 0);
+}
+
+function scorePromptRows(
+  responses: Array<{ prompts: boolean[][] }>,
+  solutions: Array<{ correctOptionIndices: (number | null)[] }>,
+  isExample: (rowIdx: number, promptIdx: number) => boolean,
+) {
+  return responses.reduce((total, response, rowIdx) => {
+    const solution = solutions[rowIdx];
+    if (!solution) return total;
+    const rowScore = solution.correctOptionIndices.reduce((sum, correctIdx, promptIdx) => {
+      if (isExample(rowIdx, promptIdx)) return sum;
+      if (correctIdx === null || correctIdx === undefined) return sum;
+      const picks = response.prompts?.[promptIdx];
+      if (!picks?.length) return sum;
+      return picks[correctIdx] ? sum + 1 : sum;
+    }, 0);
+    return total + rowScore;
+  }, 0);
+}
+
+function scorePage10Column() {
+  return page10.value.reduce((total, response, rowIdx) => {
+    if (isPage10ExampleRow(rowIdx)) return total;
+    const correctIdx = page10Solutions[rowIdx]?.correctIndex;
+    if (correctIdx === null || correctIdx === undefined) return total;
+    if (!response?.paths?.length) return total;
+    return total + (response.paths[correctIdx] ? 1 : 0);
+  }, 0);
+}
+
+function getSequenceTokens(value: string) {
+  if (!value) return [];
+  return value.trim().split(/\s+/);
+}
+
+function scorePage11Column(columnKey: keyof LpsPage11Solution) {
+  return page11.value.reduce(
+    (totals, response, idx) => {
+      const solutions = page11Solutions[idx];
+      if (!solutions) return totals;
+      const correctIndices = solutions[columnKey] ?? [];
+      const picks = response[columnKey as keyof LpsPage11ResponseRow] as boolean[] | undefined;
+      if (!picks?.length) return totals;
+      const selectedIndices = picks.flatMap((selected, pickIdx) => (selected ? [pickIdx] : []));
+      if (!selectedIndices.length) return totals;
+      const row = page11Rows[idx];
+      const columnValue = columnKey === 'col13' ? row?.column13 : row?.column14;
+      const tokens = getSequenceTokens(columnValue ?? '');
+      const correctTokens = correctIndices.map((index) => tokens[index]).filter((token) => token !== undefined);
+      const remainingCorrect = [...correctTokens];
+      let positive = 0;
+      let negative = 0;
+
+      selectedIndices.forEach((pickIdx) => {
+        const token = tokens[pickIdx];
+        const matchIndex = remainingCorrect.indexOf(token);
+        if (matchIndex !== -1) {
+          positive += 1;
+          remainingCorrect.splice(matchIndex, 1);
+          return;
+        }
+        negative += 1;
+      });
+
+      return {
+        positive: totals.positive + positive,
+        negative: totals.negative + negative,
+      };
+    },
+    { positive: 0, negative: 0 },
+  );
+}
+
+const columnScores = computed(() => {
+  const col1 = scorePage1Column('col1', 'col1');
+  const col2 = scorePage1Column('col2', 'col2');
+  const col3 = scorePage1Column('col3', 'col3');
+  const col4 = scorePage1Column('col4', 'col4');
+  const col5 = scorePage1Column('col5', 'col5');
+  const col7 = scorePage5Column();
+  const col8 = scorePage6Column();
+  const col9 = scorePromptRows(page7.value, page7Solutions, isPage7ExamplePrompt);
+  const col10 = scorePromptRows(page8.value, page8Solutions, isPage8ExamplePrompt);
+  const col11 = scorePromptRows(page9.value, page9Solutions, isPage9ExamplePrompt);
+  const col12 = scorePage10Column();
+  const col13Stats = scorePage11Column('col13');
+  const col14Stats = scorePage11Column('col14');
+  const col13 = col13Stats.positive;
+  const col14 = col14Stats.positive;
+  const col14Wrong = col14Stats.negative;
+
+  return {
+    col1,
+    col2,
+    col3,
+    col4,
+    col5,
+    col6: column6Manual.value ?? 0,
+    col7,
+    col8,
+    col9,
+    col10,
+    col11,
+    col12,
+    col13,
+    col14,
+    col14Wrong,
+  };
+});
+
+const totalScores = computed(() => {
+  const a = columnScores.value.col1 + columnScores.value.col2;
+  const b = columnScores.value.col3;
+  const c = columnScores.value.col4;
+  const d = columnScores.value.col3 + columnScores.value.col4;
+  const e = columnScores.value.col5;
+  const f = columnScores.value.col6;
+  const g = columnScores.value.col5 + columnScores.value.col6;
+  const h = columnScores.value.col7;
+  const i = columnScores.value.col8;
+  const j = columnScores.value.col9;
+  const k = columnScores.value.col10;
+  const l = columnScores.value.col7 + columnScores.value.col8 + columnScores.value.col9 + columnScores.value.col10;
+  const m = columnScores.value.col11;
+  const n = columnScores.value.col12;
+  const o = columnScores.value.col11 + columnScores.value.col12;
+  const p = columnScores.value.col13;
+  const q = columnScores.value.col14;
+  const r = columnScores.value.col13 + columnScores.value.col14;
+  const s = columnScores.value.col14Wrong;
+  const total = a + d + g + l + o + r;
+
+  return { a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, total };
+});
+
+function getAgeGroupKey(age?: number | null): LpsBAgeGroupKey | null {
+  if (age === null || age === undefined || Number.isNaN(age)) return null;
+  if (age <= 18) return 'under_18';
+  if (age <= 20) return '19_20';
+  if (age <= 29) return '21_29';
+  if (age <= 39) return '30_39';
+  if (age <= 49) return '40_49';
+  return '50_plus';
+}
+
+const ageGroupKey = computed(() => getAgeGroupKey(participantProfile.value?.age));
+const ageGroupLabel = computed(() => (ageGroupKey.value ? LPS_B_AGE_GROUP_LABELS[ageGroupKey.value] : '–'));
+
+function matchesScoreEntry(entry: LpsBScoreRow | LpsBScoreRangeRow, raw: number) {
+  if ('raw' in entry) return entry.raw === raw;
+  return raw >= entry.min && raw <= entry.max;
+}
+
+function lookupColumnScore(key: LpsBScoreKey, raw: number) {
+  if (!ageGroupKey.value) return null;
+  const table = LPS_B_SCORE_TABLES[ageGroupKey.value]?.columns?.[key] ?? [];
+  return table.find((entry) => matchesScoreEntry(entry, raw)) ?? null;
+}
+
+function lookupTotalScore(raw: number) {
+  if (!ageGroupKey.value) return null;
+  const table = LPS_B_SCORE_TABLES[ageGroupKey.value]?.total ?? [];
+  return (table as LpsBTotalScoreRow[]).find((entry) => matchesScoreEntry(entry, raw)) ?? null;
+}
+
+const totalScoreEntry = computed(() => lookupTotalScore(totalScores.value.total));
+const iqFromPr = computed(() => {
+  const pr = totalScoreEntry.value?.pr;
+  if (pr === null || pr === undefined) return null;
+  return LPS_B_IQ_BY_PR_RANGES.find((range) => pr >= range.minPr && pr <= range.maxPr)?.iq ?? null;
+});
+
+const scoringRows = computed(() => [
+  { key: 'a', label: '1 + 2 (Gesamtpunkte)', raw: totalScores.value.a },
+  { key: 'b', label: '3 (Einzelpunkte)', raw: totalScores.value.b },
+  { key: 'c', label: '4', raw: totalScores.value.c },
+  { key: 'd', label: '3 + 4 (Gesamtpunkte)', raw: totalScores.value.d },
+  { key: 'e', label: '5', raw: totalScores.value.e },
+  { key: 'f', label: '6 (manuell)', raw: totalScores.value.f },
+  { key: 'g', label: '5 + 6 (Gesamtpunkte)', raw: totalScores.value.g },
+  { key: 'h', label: '7', raw: totalScores.value.h },
+  { key: 'i', label: '8', raw: totalScores.value.i },
+  { key: 'j', label: '9', raw: totalScores.value.j },
+  { key: 'k', label: '10', raw: totalScores.value.k },
+  { key: 'l', label: '7 + 8 + 9 + 10 (Gesamtpunkte)', raw: totalScores.value.l },
+  { key: 'm', label: '11', raw: totalScores.value.m },
+  { key: 'n', label: '12', raw: totalScores.value.n },
+  { key: 'o', label: '11 + 12 (Gesamtpunkte)', raw: totalScores.value.o },
+  { key: 'p', label: '13', raw: totalScores.value.p },
+  { key: 'q', label: '14', raw: totalScores.value.q },
+  { key: 'r', label: '13 + 14 (Gesamtpunkte)', raw: totalScores.value.r },
+  { key: 's', label: '14 (Fehler insgesamt)', raw: totalScores.value.s },
+]);
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-6">
     <div class="rounded-lg border bg-background">
       <div class="border-b px-4 py-3 text-base font-semibold">{{ testLabel }} – Seite 1</div>
       <div class="overflow-x-auto">
@@ -111,8 +397,82 @@ function formatTime(seconds?: number | null) {
 
     <div class="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
       <div>Benötigte Zeit: {{ formatTime(totalTime) }}</div>
-      <div>
-        Punkte: <span class="text-foreground font-semibold">{{ page1MaxScore ? `${page1Score} / ${page1MaxScore}` : '–' }}</span>
+    </div>
+
+    <div v-if="isLpsB" class="space-y-4 rounded-lg border bg-background p-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h3 class="text-base font-semibold">LPS-B Auswertung</h3>
+        <div class="text-sm text-muted-foreground">
+          Altersgruppe: <span class="font-semibold text-foreground">{{ ageGroupLabel }}</span>
+          <span v-if="participantProfile?.age !== undefined"> (Alter {{ participantProfile?.age }})</span>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3 text-sm">
+        <label class="flex items-center gap-2">
+          <span class="text-muted-foreground">Spalte 6 (manuell)</span>
+          <input
+            v-model.number="column6Manual"
+            type="number"
+            class="h-8 w-24 rounded-md border border-input bg-background px-2 py-1 text-sm"
+            min="0"
+          />
+        </label>
+        <span class="text-xs text-muted-foreground">
+          Tragen Sie den Wert aus der Ergebnisansicht für Spalte 6 ein.
+        </span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-[720px] w-full border-collapse text-sm">
+          <thead>
+            <tr class="bg-muted/40 text-left">
+              <th class="px-3 py-2 font-semibold">Spalte</th>
+              <th class="px-3 py-2 font-semibold">Beschreibung</th>
+              <th class="px-3 py-2 text-right font-semibold">Rohwert</th>
+              <th class="px-3 py-2 text-right font-semibold">T-Wert</th>
+              <th class="px-3 py-2 text-right font-semibold">C-Wert</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in scoringRows" :key="row.key" class="border-t">
+              <td class="px-3 py-2 font-semibold uppercase">{{ row.key }}</td>
+              <td class="px-3 py-2">{{ row.label }}</td>
+              <td class="px-3 py-2 text-right font-mono">{{ row.raw }}</td>
+              <td class="px-3 py-2 text-right">
+                {{ lookupColumnScore(row.key as LpsBScoreKey, row.raw)?.t ?? '–' }}
+              </td>
+              <td class="px-3 py-2 text-right">
+                {{ lookupColumnScore(row.key as LpsBScoreKey, row.raw)?.c ?? '–' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-[640px] w-full border-collapse text-sm">
+          <thead>
+            <tr class="bg-muted/40 text-left">
+              <th class="px-3 py-2 font-semibold">Gesamtwert</th>
+              <th class="px-3 py-2 text-right font-semibold">Rohwert</th>
+              <th class="px-3 py-2 text-right font-semibold">T-Wert</th>
+              <th class="px-3 py-2 text-right font-semibold">C-Wert</th>
+              <th class="px-3 py-2 text-right font-semibold">PR</th>
+              <th class="px-3 py-2 text-right font-semibold">IQ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-t">
+              <td class="px-3 py-2 font-semibold">Summe (a + d + g + l + o + r)</td>
+              <td class="px-3 py-2 text-right font-mono">{{ totalScores.total }}</td>
+              <td class="px-3 py-2 text-right">{{ totalScoreEntry?.t ?? '–' }}</td>
+              <td class="px-3 py-2 text-right">{{ totalScoreEntry?.c ?? '–' }}</td>
+              <td class="px-3 py-2 text-right">{{ totalScoreEntry?.pr ?? '–' }}</td>
+              <td class="px-3 py-2 text-right">{{ iqFromPr ?? '–' }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

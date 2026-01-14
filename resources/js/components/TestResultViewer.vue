@@ -160,6 +160,7 @@ const fpiRohwerte = computed(() => {
           v-else-if="['LPS', 'LPS-A', 'LPS-B'].includes(test.name)"
           :results="local"
           :test-name="test.name"
+          :participant-profile="participantProfile"
         />
         <AvemResult v-else-if="test.name === 'AVEM'" :results="local" />
     <template v-else>
