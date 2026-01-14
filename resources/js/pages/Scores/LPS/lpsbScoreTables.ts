@@ -47,6 +47,23 @@ export type LpsBScoreTables = Record<
 const LPS_B_T_VALUES = [30, 35, 40, 45, 50, 55, 60, 65, 70] as const;
 const LPS_B_C_VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
+const LPS_B_TOTAL_C_VALUES = [
+  0.0, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.2, 3.4, 3.6, 3.8, 4.0, 4.2, 4.4, 4.6,
+  4.8, 5.0, 5.2, 5.4, 5.6, 5.8, 6.0, 6.2, 6.4, 6.6, 6.8, 7.0, 7.2, 7.4, 7.6, 7.8, 8.0, 8.2, 8.4, 8.6,
+  8.8, 9.0, 9.2, 9.4, 9.6, 9.8, 10.0, 10.2, 10.4, 10.6, 10.8, 11.0,
+] as const;
+
+const LPS_B_TOTAL_T_VALUES = [
+  25, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
+  56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80,
+] as const;
+
+const LPS_B_TOTAL_PR_VALUES = [
+  0.6, 2.3, 2.9, 3.6, 4.5, 5.5, 6.7, 8.1, 9.7, 11.5, 13.6, 15.9, 18.4, 21.2, 24.2, 27.4, 30.8, 34.5, 38.2,
+  42.1, 46.0, 50.0, 54.0, 57.9, 61.8, 65.5, 69.2, 72.6, 75.8, 78.8, 81.6, 84.1, 86.4, 88.5, 90.3, 91.9,
+  93.3, 94.5, 95.5, 96.4, 97.1, 97.7, 98.2, 98.6, 98.9, 99.2, 99.4, 99.5, 99.6, 99.7, 99.8, 99.9,
+] as const;
+
 function buildScoreRows(values: Array<number | null>): LpsBScoreRow[] {
   return values.flatMap((raw, index) => {
     if (raw === null || raw === undefined) return [];
@@ -59,6 +76,56 @@ function buildScoreRows(values: Array<number | null>): LpsBScoreRow[] {
     ];
   });
 }
+
+function buildTotalRows(rawValues: number[]): LpsBTotalScoreRow[] {
+  return rawValues.map((raw, index) => {
+    const nextRaw = rawValues[index + 1];
+    const max = typeof nextRaw === 'number' ? nextRaw - 1 : raw;
+    return {
+      min: raw,
+      max,
+      t: LPS_B_TOTAL_T_VALUES[index] ?? 0,
+      c: LPS_B_TOTAL_C_VALUES[index] ?? 0,
+      pr: LPS_B_TOTAL_PR_VALUES[index] ?? 0,
+    };
+  });
+}
+
+const LPS_B_TOTAL_UNDER_18 = [
+  77, 119, 127, 135, 143, 151, 158, 166, 174, 182, 189, 196, 203, 210, 217, 224, 230, 239, 248, 256, 264, 272, 282,
+  292, 302, 313, 322, 331, 340, 349, 357, 365, 373, 380, 387, 394, 401, 407, 412, 417, 422, 427, 433, 438, 443, 448,
+  453, 459, 464, 469, 474, 479,
+];
+
+const LPS_B_TOTAL_19_20 = [
+  64, 102, 111, 119, 127, 135, 143, 152, 161, 170, 179, 187, 195, 203, 211, 219, 226, 236, 245, 254, 263, 272, 283,
+  294, 305, 316, 326, 336, 345, 354, 363, 372, 380, 388, 396, 404, 412, 418, 423, 428, 433, 438, 443, 448, 453, 458,
+  463, 469, 474, 479, 484, 489,
+];
+
+const LPS_B_TOTAL_21_29 = [
+  51, 86, 94, 102, 110, 118, 126, 135, 144, 153, 162, 171, 181, 190, 199, 208, 217, 227, 237, 247, 257, 267, 278, 289,
+  300, 311, 322, 332, 342, 352, 362, 371, 380, 389, 398, 407, 415, 421, 427, 432, 437, 442, 447, 452, 457, 462, 467,
+  472, 477, 482, 487, 492,
+];
+
+const LPS_B_TOTAL_30_39 = [
+  36, 69, 76, 83, 90, 97, 104, 114, 124, 134, 143, 152, 162, 172, 182, 192, 201, 212, 223, 234, 245, 256, 267, 278,
+  289, 299, 309, 320, 330, 340, 350, 360, 370, 379, 388, 397, 406, 411, 417, 423, 429, 437, 442, 447, 452, 457, 462,
+  467, 472, 477, 482, 487,
+];
+
+const LPS_B_TOTAL_40_49 = [
+  21, 51, 58, 65, 72, 79, 86, 96, 106, 115, 124, 133, 143, 153, 163, 173, 182, 193, 204, 215, 226, 236, 247, 258, 269,
+  279, 289, 300, 311, 322, 332, 341, 350, 359, 368, 376, 385, 392, 399, 406, 412, 418, 424, 429, 434, 439, 444, 449,
+  454, 459, 464, 469,
+];
+
+const LPS_B_TOTAL_50_PLUS = [
+  3, 29, 36, 43, 50, 57, 63, 71, 79, 87, 95, 103, 113, 123, 132, 141, 150, 160, 170, 180, 190, 199, 209, 219, 229,
+  239, 249, 260, 270, 280, 290, 300, 309, 318, 327, 336, 345, 352, 359, 366, 373, 379, 386, 393, 399, 405, 411, 416,
+  421, 426, 431, 436,
+];
 
 export const LPS_B_AGE_GROUP_LABELS: Record<LpsBAgeGroupKey, string> = {
   under_18: 'Bis 18',
@@ -92,7 +159,7 @@ export const LPS_B_SCORE_TABLES: LpsBScoreTables = {
       test_13_14: buildScoreRows([16, 23, 27, 32, 37, 42, 47, 52, 57]),
       test_14_wrong: buildScoreRows([21, 18, 15, 13, 10, 8, 5, 2, null]),
     },
-    total: [],
+    total: buildTotalRows(LPS_B_TOTAL_UNDER_18),
   },
   '19_20': {
     columns: {
@@ -116,7 +183,7 @@ export const LPS_B_SCORE_TABLES: LpsBScoreTables = {
       test_13_14: buildScoreRows([16, 23, 27, 32, 37, 42, 47, 53, 59]),
       test_14_wrong: buildScoreRows([21, 18, 15, 13, 10, 7, 4, 1, null]),
     },
-    total: [],
+    total: buildTotalRows(LPS_B_TOTAL_19_20),
   },
   '21_29': {
     columns: {
@@ -140,7 +207,7 @@ export const LPS_B_SCORE_TABLES: LpsBScoreTables = {
       test_13_14: buildScoreRows([15, 22, 27, 32, 37, 42, 47, 54, 60]),
       test_14_wrong: buildScoreRows([21, 18, 15, 12, 9, 6, 3, 1, null]),
     },
-    total: [],
+    total: buildTotalRows(LPS_B_TOTAL_21_29),
   },
   '30_39': {
     columns: {
@@ -164,7 +231,7 @@ export const LPS_B_SCORE_TABLES: LpsBScoreTables = {
       test_13_14: buildScoreRows([13, 20, 25, 30, 35, 40, 45, 52, 59]),
       test_14_wrong: buildScoreRows([21, 17, 14, 11, 8, 5, 2, null, null]),
     },
-    total: [],
+    total: buildTotalRows(LPS_B_TOTAL_30_39),
   },
   '40_49': {
     columns: {
@@ -188,7 +255,7 @@ export const LPS_B_SCORE_TABLES: LpsBScoreTables = {
       test_13_14: buildScoreRows([11, 18, 23, 28, 32, 37, 43, 49, 56]),
       test_14_wrong: buildScoreRows([20, 16, 13, 10, 7, 4, 1, null, null]),
     },
-    total: [],
+    total: buildTotalRows(LPS_B_TOTAL_40_49),
   },
   '50_plus': {
     columns: {
@@ -212,7 +279,7 @@ export const LPS_B_SCORE_TABLES: LpsBScoreTables = {
       test_13_14: buildScoreRows([9, 15, 20, 25, 29, 33, 38, 43, 49]),
       test_14_wrong: buildScoreRows([18, 15, 11, 8, 5, 2, null, null, null]),
     },
-    total: [],
+    total: buildTotalRows(LPS_B_TOTAL_50_PLUS),
   },
 };
 
