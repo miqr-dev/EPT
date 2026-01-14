@@ -190,7 +190,30 @@ export const LPS_B_SCORE_TABLES: LpsBScoreTables = {
     },
     total: [],
   },
-  '50_plus': { columns: {}, total: [] },
+  '50_plus': {
+    columns: {
+      test_1_2: buildScoreRows([1, 4, 16, 29, 41, 52, 62, 70, 77]),
+      test_3: buildScoreRows([4, 7, 11, 14, 18, 22, 25, 29, 32]),
+      test_4: buildScoreRows([4, 8, 12, 16, 20, 24, 27, 30, 33]),
+      test_3_4: buildScoreRows([8, 15, 22, 29, 37, 45, 51, 57, 63]),
+      test_5: buildScoreRows([null, 1, 2, 5, 11, 18, 28, 34, 39]),
+      test_6: buildScoreRows([null, 1, 6, 12, 18, 23, 28, 34, 39]),
+      test_5_6: buildScoreRows([null, 1, 10, 19, 29, 41, 52, 63, 74]),
+      test_7: buildScoreRows([3, 5, 7, 9, 12, 16, 21, 26, 32]),
+      test_8: buildScoreRows([null, null, 1, 3, 9, 16, 24, 32, 39]),
+      test_9: buildScoreRows([null, 1, 5, 9, 14, 19, 23, 26, 29]),
+      test_10: buildScoreRows([null, 1, 2, 7, 12, 18, 23, 28, 34]),
+      test_7_10: buildScoreRows([1, 9, 19, 29, 40, 52, 65, 76, 89]),
+      test_11: buildScoreRows([1, 2, 6, 10, 15, 19, 24, 29, 33]),
+      test_12: buildScoreRows([1, 2, 8, 13, 17, 21, 25, 30, 34]),
+      test_11_12: buildScoreRows([1, 5, 15, 22, 29, 37, 44, 52, 59]),
+      test_13: buildScoreRows([null, 1, 2, 5, 8, 11, 14, 17, 20]),
+      test_14: buildScoreRows([4, 8, 12, 15, 19, 23, 28, 33, 37]),
+      test_13_14: buildScoreRows([9, 15, 20, 25, 29, 33, 38, 43, 49]),
+      test_14_wrong: buildScoreRows([18, 15, 11, 8, 5, 2, null, null, null]),
+    },
+    total: [],
+  },
 };
 
 export const LPS_B_IQ_BY_PR_RANGES: Array<{ minPr: number; maxPr: number; iq: number }> = [];
