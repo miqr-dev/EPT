@@ -16,25 +16,25 @@ export type LpsBScoreRangeRow = {
 export type LpsBTotalScoreRow = (LpsBScoreRow | LpsBScoreRangeRow) & { pr?: number };
 
 export type LpsBScoreKey =
-  | 'a'
-  | 'b'
-  | 'c'
-  | 'd'
-  | 'e'
-  | 'f'
-  | 'g'
-  | 'h'
-  | 'i'
-  | 'j'
-  | 'k'
-  | 'l'
-  | 'm'
-  | 'n'
-  | 'o'
-  | 'p'
-  | 'q'
-  | 'r'
-  | 's';
+  | 'test_1_2'
+  | 'test_3'
+  | 'test_4'
+  | 'test_3_4'
+  | 'test_5'
+  | 'test_6'
+  | 'test_5_6'
+  | 'test_7'
+  | 'test_8'
+  | 'test_9'
+  | 'test_10'
+  | 'test_7_10'
+  | 'test_11'
+  | 'test_12'
+  | 'test_11_12'
+  | 'test_13'
+  | 'test_14'
+  | 'test_13_14'
+  | 'test_14_wrong';
 
 export type LpsBScoreTables = Record<
   LpsBAgeGroupKey,
@@ -72,25 +72,25 @@ export const LPS_B_AGE_GROUP_LABELS: Record<LpsBAgeGroupKey, string> = {
 export const LPS_B_SCORE_TABLES: LpsBScoreTables = {
   under_18: {
     columns: {
-      a: buildScoreRows([6, 11, 18, 25, 33, 42, 51, 59, 66]),
-      b: buildScoreRows([9, 12, 15, 19, 22, 26, 29, 31, 34]),
-      c: buildScoreRows([11, 14, 18, 21, 24, 26, 28, 30, 33]),
-      d: buildScoreRows([23, 30, 35, 41, 47, 52, 56, 61, 65]),
-      e: buildScoreRows([1, 3, 6, 10, 17, 24, 29, 34, 38]),
-      f: buildScoreRows([5, 10, 16, 21, 26, 31, 37, 43, 49]),
-      g: buildScoreRows([7, 17, 25, 34, 43, 55, 65, 73, 81]),
-      h: buildScoreRows([5, 7, 9, 12, 16, 19, 23, 27, 32]),
-      i: buildScoreRows([null, 1, 5, 9, 14, 23, 33, 39, 40]),
-      j: buildScoreRows([4, 9, 14, 18, 23, 26, 30, 32, 35]),
-      k: buildScoreRows([3, 7, 11, 14, 18, 23, 27, 32, 37]),
-      l: buildScoreRows([23, 33, 45, 57, 70, 85, 101, 118, 132]),
-      m: buildScoreRows([7, 12, 16, 19, 22, 26, 29, 32, 35]),
-      n: buildScoreRows([5, 10, 15, 19, 23, 27, 30, 33, 36]),
-      o: buildScoreRows([14, 23, 33, 40, 46, 52, 58, 63, 69]),
-      p: buildScoreRows([2, 4, 7, 9, 12, 15, 17, 21, 24]),
-      q: buildScoreRows([10, 14, 18, 22, 24, 28, 31, 35, 39]),
-      r: buildScoreRows([16, 23, 27, 32, 37, 42, 47, 52, 57]),
-      s: buildScoreRows([21, 18, 15, 13, 10, 8, 5, 2, null]),
+      test_1_2: buildScoreRows([6, 11, 18, 25, 33, 42, 51, 59, 66]),
+      test_3: buildScoreRows([9, 12, 15, 19, 22, 26, 29, 31, 34]),
+      test_4: buildScoreRows([11, 14, 18, 21, 24, 26, 28, 30, 33]),
+      test_3_4: buildScoreRows([23, 30, 35, 41, 47, 52, 56, 61, 65]),
+      test_5: buildScoreRows([1, 3, 6, 10, 17, 24, 29, 34, 38]),
+      test_6: buildScoreRows([5, 10, 16, 21, 26, 31, 37, 43, 49]),
+      test_5_6: buildScoreRows([7, 17, 25, 34, 43, 55, 65, 73, 81]),
+      test_7: buildScoreRows([5, 7, 9, 12, 16, 19, 23, 27, 32]),
+      test_8: buildScoreRows([null, 1, 5, 9, 14, 23, 33, 39, 40]),
+      test_9: buildScoreRows([4, 9, 14, 18, 23, 26, 30, 32, 35]),
+      test_10: buildScoreRows([3, 7, 11, 14, 18, 23, 27, 32, 37]),
+      test_7_10: buildScoreRows([23, 33, 45, 57, 70, 85, 101, 118, 132]),
+      test_11: buildScoreRows([7, 12, 16, 19, 22, 26, 29, 32, 35]),
+      test_12: buildScoreRows([5, 10, 15, 19, 23, 27, 30, 33, 36]),
+      test_11_12: buildScoreRows([14, 23, 33, 40, 46, 52, 58, 63, 69]),
+      test_13: buildScoreRows([2, 4, 7, 9, 12, 15, 17, 21, 24]),
+      test_14: buildScoreRows([10, 14, 18, 22, 24, 28, 31, 35, 39]),
+      test_13_14: buildScoreRows([16, 23, 27, 32, 37, 42, 47, 52, 57]),
+      test_14_wrong: buildScoreRows([21, 18, 15, 13, 10, 8, 5, 2, null]),
     },
     total: [],
   },

@@ -296,25 +296,25 @@ const iqFromPr = computed(() => {
 });
 
 const scoringRows = computed(() => [
-  { key: 'a', label: '1 + 2 (Gesamtpunkte)', raw: totalScores.value.a },
-  { key: 'b', label: '3 (Einzelpunkte)', raw: totalScores.value.b },
-  { key: 'c', label: '4', raw: totalScores.value.c },
-  { key: 'd', label: '3 + 4 (Gesamtpunkte)', raw: totalScores.value.d },
-  { key: 'e', label: '5', raw: totalScores.value.e },
-  { key: 'f', label: '6 (manuell)', raw: totalScores.value.f },
-  { key: 'g', label: '5 + 6 (Gesamtpunkte)', raw: totalScores.value.g },
-  { key: 'h', label: '7', raw: totalScores.value.h },
-  { key: 'i', label: '8', raw: totalScores.value.i },
-  { key: 'j', label: '9', raw: totalScores.value.j },
-  { key: 'k', label: '10', raw: totalScores.value.k },
-  { key: 'l', label: '7 + 8 + 9 + 10 (Gesamtpunkte)', raw: totalScores.value.l },
-  { key: 'm', label: '11', raw: totalScores.value.m },
-  { key: 'n', label: '12', raw: totalScores.value.n },
-  { key: 'o', label: '11 + 12 (Gesamtpunkte)', raw: totalScores.value.o },
-  { key: 'p', label: '13', raw: totalScores.value.p },
-  { key: 'q', label: '14', raw: totalScores.value.q },
-  { key: 'r', label: '13 + 14 (Gesamtpunkte)', raw: totalScores.value.r },
-  { key: 's', label: '14 (Fehler insgesamt)', raw: totalScores.value.s },
+  { key: 'test_1_2', name: 'Test 1 + 2', description: 'Gesamtpunkte', raw: totalScores.value.a },
+  { key: 'test_3', name: 'Test 3', description: 'Einzelpunkte', raw: totalScores.value.b },
+  { key: 'test_4', name: 'Test 4', description: 'Einzelpunkte', raw: totalScores.value.c },
+  { key: 'test_3_4', name: 'Test 3 + 4', description: 'Gesamtpunkte', raw: totalScores.value.d },
+  { key: 'test_5', name: 'Test 5', description: 'Einzelpunkte', raw: totalScores.value.e },
+  { key: 'test_6', name: 'Test 6', description: 'manuell', raw: totalScores.value.f },
+  { key: 'test_5_6', name: 'Test 5 + 6', description: 'Gesamtpunkte', raw: totalScores.value.g },
+  { key: 'test_7', name: 'Test 7', description: 'Einzelpunkte', raw: totalScores.value.h },
+  { key: 'test_8', name: 'Test 8', description: 'Einzelpunkte', raw: totalScores.value.i },
+  { key: 'test_9', name: 'Test 9', description: 'Einzelpunkte', raw: totalScores.value.j },
+  { key: 'test_10', name: 'Test 10', description: 'Einzelpunkte', raw: totalScores.value.k },
+  { key: 'test_7_10', name: 'Test 7 + 8 + 9 + 10', description: 'Gesamtpunkte', raw: totalScores.value.l },
+  { key: 'test_11', name: 'Test 11', description: 'Einzelpunkte', raw: totalScores.value.m },
+  { key: 'test_12', name: 'Test 12', description: 'Einzelpunkte', raw: totalScores.value.n },
+  { key: 'test_11_12', name: 'Test 11 + 12', description: 'Gesamtpunkte', raw: totalScores.value.o },
+  { key: 'test_13', name: 'Test 13', description: 'Einzelpunkte', raw: totalScores.value.p },
+  { key: 'test_14', name: 'Test 14', description: 'Einzelpunkte', raw: totalScores.value.q },
+  { key: 'test_13_14', name: 'Test 13 + 14', description: 'Gesamtpunkte', raw: totalScores.value.r },
+  { key: 'test_14_wrong', name: 'Test 14', description: 'Fehler insgesamt', raw: totalScores.value.s },
 ]);
 </script>
 
@@ -427,7 +427,7 @@ const scoringRows = computed(() => [
         <table class="min-w-[720px] w-full border-collapse text-sm">
           <thead>
             <tr class="bg-muted/40 text-left">
-              <th class="px-3 py-2 font-semibold">Spalte</th>
+              <th class="px-3 py-2 font-semibold">Test</th>
               <th class="px-3 py-2 font-semibold">Beschreibung</th>
               <th class="px-3 py-2 text-right font-semibold">Rohwert</th>
               <th class="px-3 py-2 text-right font-semibold">T-Wert</th>
@@ -436,8 +436,8 @@ const scoringRows = computed(() => [
           </thead>
           <tbody>
             <tr v-for="row in scoringRows" :key="row.key" class="border-t">
-              <td class="px-3 py-2 font-semibold uppercase">{{ row.key }}</td>
-              <td class="px-3 py-2">{{ row.label }}</td>
+              <td class="px-3 py-2 font-semibold">{{ row.name }}</td>
+              <td class="px-3 py-2">{{ row.description }}</td>
               <td class="px-3 py-2 text-right font-mono">{{ row.raw }}</td>
               <td class="px-3 py-2 text-right">
                 {{ lookupColumnScore(row.key as LpsBScoreKey, row.raw)?.t ?? '–' }}
@@ -464,7 +464,9 @@ const scoringRows = computed(() => [
           </thead>
           <tbody>
             <tr class="border-t">
-              <td class="px-3 py-2 font-semibold">Summe (a + d + g + l + o + r)</td>
+              <td class="px-3 py-2 font-semibold">
+                Summe (Test 1+2 + Test 3+4 + Test 5+6 + Test 7–10 + Test 11+12 + Test 13+14)
+              </td>
               <td class="px-3 py-2 text-right font-mono">{{ totalScores.total }}</td>
               <td class="px-3 py-2 text-right">{{ totalScoreEntry?.t ?? '–' }}</td>
               <td class="px-3 py-2 text-right">{{ totalScoreEntry?.c ?? '–' }}</td>
