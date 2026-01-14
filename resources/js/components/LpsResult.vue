@@ -10,7 +10,7 @@ import { getLpsPage10Dataset } from '@/pages/Questions/LPSPage10';
 import { getLpsPage11Dataset, type LpsPage11Solution } from '@/pages/Questions/LPSPage11';
 import {
   LPS_B_AGE_GROUP_LABELS,
-  LPS_B_IQ_BY_PR_RANGES,
+  LPS_B_IQ_BY_T_RANGES,
   LPS_B_SCORE_TABLES,
   type LpsBAgeGroupKey,
   type LpsBScoreKey,
@@ -289,10 +289,10 @@ function lookupTotalScore(raw: number) {
 }
 
 const totalScoreEntry = computed(() => lookupTotalScore(totalScores.value.total));
-const iqFromPr = computed(() => {
-  const pr = totalScoreEntry.value?.pr;
-  if (pr === null || pr === undefined) return null;
-  return LPS_B_IQ_BY_PR_RANGES.find((range) => pr >= range.minPr && pr <= range.maxPr)?.iq ?? null;
+const iqFromT = computed(() => {
+  const tValue = totalScoreEntry.value?.t;
+  if (tValue === null || tValue === undefined) return null;
+  return LPS_B_IQ_BY_T_RANGES.find((range) => tValue >= range.minT && tValue <= range.maxT)?.iq ?? null;
 });
 
 const scoringRows = computed(() => [
@@ -471,7 +471,7 @@ const scoringRows = computed(() => [
               <td class="px-3 py-2 text-right">{{ totalScoreEntry?.t ?? '–' }}</td>
               <td class="px-3 py-2 text-right">{{ totalScoreEntry?.c ?? '–' }}</td>
               <td class="px-3 py-2 text-right">{{ totalScoreEntry?.pr ?? '–' }}</td>
-              <td class="px-3 py-2 text-right">{{ iqFromPr ?? '–' }}</td>
+              <td class="px-3 py-2 text-right">{{ iqFromT ?? '–' }}</td>
             </tr>
           </tbody>
         </table>
