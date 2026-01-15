@@ -303,25 +303,25 @@ const iqFromT = computed(() => {
 });
 
 const scoringRows = computed(() => [
-  { key: 'test_1_2', name: 'Test 1 + 2', description: 'Gesamtpunkte', raw: totalScores.value.a },
-  { key: 'test_3', name: 'Test 3', description: 'Einzelpunkte', raw: totalScores.value.b },
-  { key: 'test_4', name: 'Test 4', description: 'Einzelpunkte', raw: totalScores.value.c },
-  { key: 'test_3_4', name: 'Test 3 + 4', description: 'Gesamtpunkte', raw: totalScores.value.d },
-  { key: 'test_5', name: 'Test 5', description: 'Einzelpunkte', raw: totalScores.value.e },
-  { key: 'test_6', name: 'Test 6', description: 'manuell', raw: totalScores.value.f },
-  { key: 'test_5_6', name: 'Test 5 + 6', description: 'Gesamtpunkte', raw: totalScores.value.g },
-  { key: 'test_7', name: 'Test 7', description: 'Einzelpunkte', raw: totalScores.value.h },
-  { key: 'test_8', name: 'Test 8', description: 'Einzelpunkte', raw: totalScores.value.i },
-  { key: 'test_9', name: 'Test 9', description: 'Einzelpunkte', raw: totalScores.value.j },
-  { key: 'test_10', name: 'Test 10', description: 'Einzelpunkte', raw: totalScores.value.k },
-  { key: 'test_7_10', name: 'Test 7 + 8 + 9 + 10', description: 'Gesamtpunkte', raw: totalScores.value.l },
-  { key: 'test_11', name: 'Test 11', description: 'Einzelpunkte', raw: totalScores.value.m },
-  { key: 'test_12', name: 'Test 12', description: 'Einzelpunkte', raw: totalScores.value.n },
-  { key: 'test_11_12', name: 'Test 11 + 12', description: 'Gesamtpunkte', raw: totalScores.value.o },
-  { key: 'test_13', name: 'Test 13', description: 'Einzelpunkte', raw: totalScores.value.p },
-  { key: 'test_14', name: 'Test 14', description: 'Einzelpunkte', raw: totalScores.value.q },
-  { key: 'test_13_14', name: 'Test 13 + 14', description: 'Gesamtpunkte', raw: totalScores.value.r },
-  { key: 'test_14_wrong', name: 'Test 14', description: 'Fehler insgesamt', raw: totalScores.value.s },
+  { key: 'test_1_2', name: '1+2', description: 'Gesamtpunkte', raw: totalScores.value.a },
+  { key: 'test_3', name: '3', description: 'Einzelpunkte', raw: totalScores.value.b },
+  { key: 'test_4', name: '4', description: 'Einzelpunkte', raw: totalScores.value.c },
+  { key: 'test_3_4', name: '3+4', description: 'Gesamtpunkte', raw: totalScores.value.d },
+  { key: 'test_5', name: '5', description: 'Einzelpunkte', raw: totalScores.value.e },
+  { key: 'test_6', name: '6', description: 'manuell', raw: totalScores.value.f },
+  { key: 'test_5_6', name: '5+6', description: 'Gesamtpunkte', raw: totalScores.value.g },
+  { key: 'test_7', name: '7', description: 'Einzelpunkte', raw: totalScores.value.h },
+  { key: 'test_8', name: '8', description: 'Einzelpunkte', raw: totalScores.value.i },
+  { key: 'test_9', name: '9', description: 'Einzelpunkte', raw: totalScores.value.j },
+  { key: 'test_10', name: '10', description: 'Einzelpunkte', raw: totalScores.value.k },
+  { key: 'test_7_10', name: '7-10', description: 'Gesamtpunkte', raw: totalScores.value.l },
+  { key: 'test_11', name: '11', description: 'Einzelpunkte', raw: totalScores.value.m },
+  { key: 'test_12', name: '12', description: 'Einzelpunkte', raw: totalScores.value.n },
+  { key: 'test_11_12', name: '11-12', description: 'Gesamtpunkte', raw: totalScores.value.o },
+  { key: 'test_13', name: '13', description: 'Einzelpunkte', raw: totalScores.value.p },
+  { key: 'test_14', name: '14', description: 'Einzelpunkte', raw: totalScores.value.q },
+  { key: 'test_13_14', name: '13-14', description: 'Gesamtpunkte', raw: totalScores.value.r },
+  { key: 'test_14_wrong', name: '-13', description: 'Fehler insgesamt', raw: totalScores.value.s },
 ]);
 
 const scoringRowsWithScores = computed(() =>
@@ -338,6 +338,9 @@ const scoringRowsWithScores = computed(() =>
 const lpsbGridWidth = computed(() => lpsbTValues.length * lpsbScoreWidth);
 const lpsbGridHeight = computed(() => scoringRows.value.length * lpsbRowHeight);
 const lpsbScoreOffsetX = lpsbLabelWidth + lpsbRawWidth + lpsbHatchWidth;
+const lpsbDisplayTValues = computed(() =>
+  lpsbTValues.map((value) => (value % 10 === 0 ? value : '')),
+);
 
 const lpsbPoints = computed(() =>
   scoringRowsWithScores.value.map((row, index) => {
@@ -491,11 +494,11 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
             <div class="lpsb-header lpsb-header-raw">Roh</div>
             <div class="lpsb-header lpsb-header-hatch">C</div>
             <div
-              v-for="tValue in lpsbTValues"
-              :key="`lpsb-t-${tValue}`"
+              v-for="(tLabel, tIndex) in lpsbDisplayTValues"
+              :key="`lpsb-t-${tIndex}`"
               class="lpsb-header lpsb-header-score"
             >
-              {{ tValue }}
+              {{ tLabel }}
             </div>
 
             <template v-for="(row, rowIdx) in scoringRowsWithScores" :key="row.key">
