@@ -478,6 +478,9 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
       <div class="overflow-x-auto">
         <div class="lpsb-sheet">
           <div class="lpsb-top" :style="{ width: `${lpsbTopWidth}px` }">
+            <span class="lpsb-top-spacer" aria-hidden="true"></span>
+            <span class="lpsb-top-spacer" aria-hidden="true"></span>
+            <span class="lpsb-top-spacer" aria-hidden="true"></span>
             <img :src="lpsbHeaderSvg" class="lpsb-top-curve" alt="" />
           </div>
           <div class="lpsb-grid">
@@ -628,11 +631,19 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 .lpsb-top {
   position: relative;
   margin-bottom: 6px;
+  display: grid;
+  grid-template-columns: 70px 36px 18px repeat(9, 26px);
+  align-items: end;
 }
 
 .lpsb-top-curve {
   display: block;
   width: 100%;
   height: auto;
+  grid-column: 4 / -1;
+}
+
+.lpsb-top-spacer {
+  display: block;
 }
 </style>
