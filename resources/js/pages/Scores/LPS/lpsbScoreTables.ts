@@ -1,9 +1,5 @@
 /**
-<<<<<<< HEAD
  * Altersgruppen-Schlüssel für die LPS‑B Auswertung.
-=======
- * Altersgruppen-Schlüssel für die LPS‑B Auswertung.    
->>>>>>> codex/update-result-table-for-lps-b
  * Diese Bezeichnungen sagen nur, in welche Altersklasse eine Person fällt.
  */
 export type LpsBAgeGroupKey = 'under_18' | '19_20' | '21_29' | '30_39' | '40_49' | '50_plus';
