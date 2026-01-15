@@ -339,8 +339,8 @@ const lpsbGridWidth = computed(() => lpsbTValues.length * lpsbScoreWidth);
 const lpsbGridHeight = computed(() => scoringRows.value.length * lpsbRowHeight);
 const lpsbScoreOffsetX = lpsbLabelWidth + lpsbRawWidth + lpsbHatchWidth;
 const lpsbTopWidth = computed(() => lpsbScoreOffsetX + lpsbGridWidth.value);
-const lpsbVertical40X = computed(() => lpsbScoreOffsetX + 2 * lpsbScoreWidth + lpsbScoreWidth / 2);
-const lpsbVertical60X = computed(() => lpsbScoreOffsetX + 6 * lpsbScoreWidth + lpsbScoreWidth / 2);
+const lpsbVertical40X = computed(() => lpsbScoreOffsetX + 2 * lpsbScoreWidth);
+const lpsbVertical60X = computed(() => lpsbScoreOffsetX + 6 * lpsbScoreWidth);
 
 const lpsbPoints = computed(() =>
   scoringRowsWithScores.value.map((row, index) => {
