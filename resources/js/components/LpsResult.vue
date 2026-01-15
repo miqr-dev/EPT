@@ -548,7 +548,7 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   background: var(--background);
   border: 1px solid var(--border);
   display: inline-block;
-  padding: 12px;
+  padding: 0 12px 12px;
 }
 
 .lpsb-grid {
@@ -628,7 +628,7 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 
 .lpsb-top {
   position: relative;
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 </style>
