@@ -328,6 +328,16 @@ const scoringRowsWithScores = computed(() =>
     };
   }),
 );
+
+const lpsbDividerKeys = new Set<LpsBScoreKey>([
+  'test_1_2',
+  'test_3_4',
+  'test_5_6',
+  'test_7_10',
+  'test_11_12',
+  'test_13_14',
+  'test_14_wrong',
+]);
 </script>
 
 <template>
@@ -436,44 +446,42 @@ const scoringRowsWithScores = computed(() =>
       </div>
 
       <div class="overflow-x-auto">
-        <table class="min-w-[720px] w-full border-collapse text-sm">
-          <thead>
-            <tr class="bg-muted/40 text-left">
-              <th class="px-3 py-2 font-semibold">Test</th>
-              <th class="px-3 py-2 text-right font-semibold">Rohwert</th>
-              <th :colspan="lpsbTValues.length" class="px-3 py-2 text-center font-semibold">T-Wert</th>
-            </tr>
-            <tr class="bg-muted/20 text-left">
-              <th class="px-3 py-1 text-sm font-semibold"></th>
-              <th class="px-3 py-1 text-right text-sm font-semibold"></th>
-              <th
-                v-for="tValue in lpsbTValues"
-                :key="`lpsb-t-${tValue}`"
-                class="px-2 py-1 text-center text-xs font-semibold"
+        <div class="lpsb-sheet">
+          <div class="lpsb-grid">
+            <div class="lpsb-header lpsb-header-label">T</div>
+            <div class="lpsb-header lpsb-header-raw">Roh</div>
+            <div
+              v-for="tValue in lpsbTValues"
+              :key="`lpsb-t-${tValue}`"
+              class="lpsb-header lpsb-header-score"
+            >
+              {{ tValue }}
+            </div>
+
+            <template v-for="(row, rowIdx) in scoringRowsWithScores" :key="row.key">
+              <div
+                class="lpsb-cell lpsb-label"
+                :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
               >
-                {{ tValue }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in scoringRowsWithScores" :key="row.key" class="border-t">
-              <td class="px-3 py-2 font-semibold">{{ row.name }}</td>
-              <td class="px-3 py-2 text-right font-mono">{{ row.raw }}</td>
-              <td
+                {{ row.name }}
+              </div>
+              <div
+                class="lpsb-cell lpsb-raw"
+                :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
+              >
+                {{ row.raw }}
+              </div>
+              <div
                 v-for="tValue in lpsbTValues"
                 :key="`${row.key}-${tValue}`"
-                class="px-2 py-2 text-center"
+                class="lpsb-cell lpsb-score"
+                :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
               >
-                <span
-                  v-if="row.t === tValue"
-                  class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background"
-                >
-                  ●
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <span v-if="row.t === tValue" class="lpsb-marker">●</span>
+              </div>
+            </template>
+          </div>
+        </div>
       </div>
 
       <div class="overflow-x-auto">
@@ -505,3 +513,84 @@ const scoringRowsWithScores = computed(() =>
     </div>
   </div>
 </template>
+
+<style scoped>
+.lpsb-sheet {
+  background: var(--background);
+  border: 1px solid var(--border);
+  display: inline-block;
+  padding: 12px;
+}
+
+.lpsb-grid {
+  display: grid;
+  grid-template-columns: 110px 48px repeat(9, 36px);
+  gap: 0;
+  border: 1px solid var(--border);
+  background: var(--background);
+}
+
+.lpsb-header {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--muted) 60%, transparent);
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 6px;
+  text-align: center;
+}
+
+.lpsb-header-label,
+.lpsb-label {
+  text-align: left;
+}
+
+.lpsb-header-raw,
+.lpsb-raw {
+  text-align: center;
+}
+
+.lpsb-cell {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+.lpsb-label {
+  justify-content: flex-start;
+  font-weight: 600;
+}
+
+.lpsb-raw {
+  font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  font-weight: 600;
+}
+
+.lpsb-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.lpsb-divider {
+  border-top: 2px solid var(--foreground);
+}
+
+.lpsb-grid > :nth-child(11n) {
+  border-right: none;
+}
+</style>
