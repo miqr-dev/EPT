@@ -607,6 +607,8 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 
 .lpsb-svg {
   position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .lpsb-vertical {
