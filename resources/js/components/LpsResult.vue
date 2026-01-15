@@ -476,10 +476,10 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
       </div>
 
       <div class="overflow-x-auto">
-        <div class="lpsb-top" :style="{ width: `${lpsbTopWidth}px` }">
-          <img :src="lpsbHeaderSvg" class="lpsb-top-curve" alt="" />
-        </div>
         <div class="lpsb-sheet">
+          <div class="lpsb-top" :style="{ width: `${lpsbTopWidth}px` }">
+            <img :src="lpsbHeaderSvg" class="lpsb-top-curve" alt="" />
+          </div>
           <div class="lpsb-grid">
             <template v-for="(row, rowIdx) in scoringRowsWithScores" :key="row.key">
               <div
