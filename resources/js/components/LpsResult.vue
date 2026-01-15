@@ -477,9 +477,9 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 
       <div class="overflow-x-auto">
         <div class="lpsb-top" :style="{ width: `${lpsbTopWidth}px` }">
-          <svg class="lpsb-top-curve" viewBox="0 0 260 90" aria-hidden="true">
+          <svg class="lpsb-top-curve" viewBox="0 0 234 80" aria-hidden="true">
             <path
-              d="M10,80 C70,20 190,20 250,80"
+              d="M0,70 C58,10 176,10 234,70"
               fill="none"
               stroke="currentColor"
               stroke-width="2"
@@ -490,20 +490,19 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
             <div>LPS/B</div>
           </div>
           <div class="lpsb-top-labels">
-            <span class="lpsb-top-plus">+</span>
-            <span class="lpsb-top-co">C₀</span>
-            <span class="lpsb-top-one">1</span>
+            <span class="lpsb-top-plus" :style="{ left: `${lpsbScoreOffsetX - 40}px` }">+</span>
+            <span class="lpsb-top-co" :style="{ left: `${lpsbScoreOffsetX - 20}px` }">C₀</span>
             <span
               v-for="(value, idx) in lpsbTValues"
               :key="`lpsb-top-${value}`"
               class="lpsb-top-num"
               :style="{ left: `${lpsbScoreOffsetX + idx * lpsbScoreWidth + lpsbScoreWidth / 2}px` }"
             >
-              {{ idx + 2 }}
+              {{ idx + 1 }}
             </span>
           </div>
           <div class="lpsb-top-t">
-            <span class="lpsb-top-t-label">T</span>
+            <span class="lpsb-top-t-label" :style="{ left: `${lpsbScoreOffsetX - 14}px` }">T</span>
             <span
               v-for="(label, idx) in lpsbDisplayTValues"
               :key="`lpsb-top-t-${idx}`"
@@ -710,8 +709,9 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 
 .lpsb-top-title {
   position: absolute;
-  top: 14px;
-  left: calc(70px + 36px + 18px + 4 * 26px - 30px);
+  top: 10px;
+  left: calc(70px + 36px + 18px + (9 * 26px) / 2);
+  transform: translateX(-50%);
   text-align: center;
   font-weight: 700;
   font-size: 12px;
@@ -736,19 +736,9 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   font-size: 12px;
 }
 
-.lpsb-top-plus {
-  position: absolute;
-  left: 6px;
-}
-
+.lpsb-top-plus,
 .lpsb-top-co {
   position: absolute;
-  left: 22px;
-}
-
-.lpsb-top-one {
-  position: absolute;
-  left: 48px;
 }
 
 .lpsb-top-num,
@@ -759,6 +749,5 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 
 .lpsb-top-t-label {
   position: absolute;
-  left: calc(70px + 36px + 18px - 14px);
 }
 </style>
