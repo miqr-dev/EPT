@@ -36,6 +36,7 @@ const props = defineProps<{
 
 const testLabel = computed(() => props.testName ?? 'LPS');
 const isLpsB = computed(() => props.testName === 'LPS-B');
+const lpsbTValues = [30, 35, 40, 45, 50, 55, 60, 65, 70];
 const totalTime = computed(() => props.results?.total_time_seconds ?? null);
 const participantProfile = computed(() => props.participantProfile ?? null);
 const page1 = computed<LpsPage1ResponseRow[]>(() => props.results?.page1 ?? []);
@@ -316,11 +317,22 @@ const scoringRows = computed(() => [
   { key: 'test_13_14', name: 'Test 13 + 14', description: 'Gesamtpunkte', raw: totalScores.value.r },
   { key: 'test_14_wrong', name: 'Test 14', description: 'Fehler insgesamt', raw: totalScores.value.s },
 ]);
+
+const scoringRowsWithScores = computed(() =>
+  scoringRows.value.map((row) => {
+    const entry = lookupColumnScore(row.key as LpsBScoreKey, row.raw);
+    return {
+      ...row,
+      t: entry?.t ?? null,
+      c: entry?.c ?? null,
+    };
+  }),
+);
 </script>
 
 <template>
   <div class="space-y-6">
-    <div class="rounded-lg border bg-background">
+    <div v-if="!isLpsB" class="rounded-lg border bg-background">
       <div class="border-b px-4 py-3 text-base font-semibold">{{ testLabel }} – Seite 1</div>
       <div class="overflow-x-auto">
         <table class="min-w-[960px] w-full border-collapse text-sm">
@@ -428,22 +440,36 @@ const scoringRows = computed(() => [
           <thead>
             <tr class="bg-muted/40 text-left">
               <th class="px-3 py-2 font-semibold">Test</th>
-              <th class="px-3 py-2 font-semibold">Beschreibung</th>
               <th class="px-3 py-2 text-right font-semibold">Rohwert</th>
-              <th class="px-3 py-2 text-right font-semibold">T-Wert</th>
-              <th class="px-3 py-2 text-right font-semibold">C-Wert</th>
+              <th :colspan="lpsbTValues.length" class="px-3 py-2 text-center font-semibold">T-Wert</th>
+            </tr>
+            <tr class="bg-muted/20 text-left">
+              <th class="px-3 py-1 text-sm font-semibold"></th>
+              <th class="px-3 py-1 text-right text-sm font-semibold"></th>
+              <th
+                v-for="tValue in lpsbTValues"
+                :key="`lpsb-t-${tValue}`"
+                class="px-2 py-1 text-center text-xs font-semibold"
+              >
+                {{ tValue }}
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in scoringRows" :key="row.key" class="border-t">
+            <tr v-for="row in scoringRowsWithScores" :key="row.key" class="border-t">
               <td class="px-3 py-2 font-semibold">{{ row.name }}</td>
-              <td class="px-3 py-2">{{ row.description }}</td>
               <td class="px-3 py-2 text-right font-mono">{{ row.raw }}</td>
-              <td class="px-3 py-2 text-right">
-                {{ lookupColumnScore(row.key as LpsBScoreKey, row.raw)?.t ?? '–' }}
-              </td>
-              <td class="px-3 py-2 text-right">
-                {{ lookupColumnScore(row.key as LpsBScoreKey, row.raw)?.c ?? '–' }}
+              <td
+                v-for="tValue in lpsbTValues"
+                :key="`${row.key}-${tValue}`"
+                class="px-2 py-2 text-center"
+              >
+                <span
+                  v-if="row.t === tValue"
+                  class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background"
+                >
+                  ●
+                </span>
               </td>
             </tr>
           </tbody>
