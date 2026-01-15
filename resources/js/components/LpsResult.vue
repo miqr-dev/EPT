@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import lpsbHeaderSvg from '@/assets/lpsb-header.svg';
+import lpsbHeaderSvg from '@/assets/lpsb-template-header.svg';
 import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
 import { getLpsPage5Dataset } from '@/pages/Questions/LPSPage5';
 import { getLpsPage6Dataset } from '@/pages/Questions/LPSPage6';
@@ -41,9 +41,9 @@ const lpsbTValues = [30, 35, 40, 45, 50, 55, 60, 65, 70];
 const lpsbLabelWidth = 70;
 const lpsbRawWidth = 36;
 const lpsbHatchWidth = 18;
+const lpsbDescWidth = 120;
 const lpsbScoreWidth = 26;
 const lpsbRowHeight = 28;
-const lpsbHeaderHeight = 0;
 const totalTime = computed(() => props.results?.total_time_seconds ?? null);
 const participantProfile = computed(() => props.participantProfile ?? null);
 const page1 = computed<LpsPage1ResponseRow[]>(() => props.results?.page1 ?? []);
@@ -304,24 +304,24 @@ const iqFromT = computed(() => {
 });
 
 const scoringRows = computed(() => [
-  { key: 'test_1_2', name: '1+2', description: 'Gesamtpunkte', raw: totalScores.value.a },
+  { key: 'test_1_2', name: '1+2', description: 'Gesamtpunkte', raw: totalScores.value.a, labelText: 'ALLGEMEINBILDUNG' },
   { key: 'test_3', name: '3', description: 'Einzelpunkte', raw: totalScores.value.b },
   { key: 'test_4', name: '4', description: 'Einzelpunkte', raw: totalScores.value.c },
-  { key: 'test_3_4', name: '3+4', description: 'Gesamtpunkte', raw: totalScores.value.d },
+  { key: 'test_3_4', name: '3+4', description: 'Gesamtpunkte', raw: totalScores.value.d, labelText: 'DENKFÄHIGKEIT' },
   { key: 'test_5', name: '5', description: 'Einzelpunkte', raw: totalScores.value.e },
   { key: 'test_6', name: '6', description: 'manuell', raw: totalScores.value.f },
-  { key: 'test_5_6', name: '5+6', description: 'Gesamtpunkte', raw: totalScores.value.g },
+  { key: 'test_5_6', name: '5+6', description: 'Gesamtpunkte', raw: totalScores.value.g, labelText: 'MODELLEINFALL' },
   { key: 'test_7', name: '7', description: 'Einzelpunkte', raw: totalScores.value.h },
   { key: 'test_8', name: '8', description: 'Einzelpunkte', raw: totalScores.value.i },
   { key: 'test_9', name: '9', description: 'Einzelpunkte', raw: totalScores.value.j },
   { key: 'test_10', name: '10', description: 'Einzelpunkte', raw: totalScores.value.k },
-  { key: 'test_7_10', name: '7-10', description: 'Gesamtpunkte', raw: totalScores.value.l },
+  { key: 'test_7_10', name: '7-10', description: 'Gesamtpunkte', raw: totalScores.value.l, labelText: 'TECHN. BEGABUNG' },
   { key: 'test_11', name: '11', description: 'Einzelpunkte', raw: totalScores.value.m },
   { key: 'test_12', name: '12', description: 'Einzelpunkte', raw: totalScores.value.n },
-  { key: 'test_11_12', name: '11-12', description: 'Gesamtpunkte', raw: totalScores.value.o },
+  { key: 'test_11_12', name: '11-12', description: 'Gesamtpunkte', raw: totalScores.value.o, labelText: 'RAUMFÄHIGKEIT' },
   { key: 'test_13', name: '13', description: 'Einzelpunkte', raw: totalScores.value.p },
   { key: 'test_14', name: '14', description: 'Einzelpunkte', raw: totalScores.value.q },
-  { key: 'test_13_14', name: '13-14', description: 'Gesamtpunkte', raw: totalScores.value.r },
+  { key: 'test_13_14', name: '13-14', description: 'Gesamtpunkte', raw: totalScores.value.r, labelText: 'WAHRNEHM.-TEMPO' },
   { key: 'test_14_wrong', name: '-13', description: 'Fehler insgesamt', raw: totalScores.value.s },
 ]);
 
@@ -337,9 +337,10 @@ const scoringRowsWithScores = computed(() =>
 );
 
 const lpsbGridWidth = computed(() => lpsbTValues.length * lpsbScoreWidth);
-const lpsbGridHeight = computed(() => scoringRows.value.length * lpsbRowHeight);
-const lpsbScoreOffsetX = lpsbLabelWidth + lpsbRawWidth + lpsbHatchWidth;
+const lpsbScoreOffsetX = lpsbLabelWidth + lpsbRawWidth + lpsbHatchWidth + lpsbDescWidth;
 const lpsbTopWidth = computed(() => lpsbScoreOffsetX + lpsbGridWidth.value);
+
+const lpsbGridHeight = computed(() => scoringRows.value.length * lpsbRowHeight);
 
 const lpsbPoints = computed(() =>
   scoringRowsWithScores.value.map((row, index) => {
@@ -476,10 +477,10 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
       </div>
 
       <div class="overflow-x-auto">
-        <div class="lpsb-top" :style="{ width: `${lpsbTopWidth}px` }">
-          <img :src="lpsbHeaderSvg" class="lpsb-top-curve" alt="" />
-        </div>
         <div class="lpsb-sheet">
+          <div class="lpsb-top" :style="{ width: `${lpsbTopWidth}px` }">
+            <img :src="lpsbHeaderSvg" class="lpsb-top-curve" alt="" />
+          </div>
           <div class="lpsb-grid">
             <template v-for="(row, rowIdx) in scoringRowsWithScores" :key="row.key">
               <div
@@ -499,10 +500,19 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
                 :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
               ></div>
               <div
+                class="lpsb-cell lpsb-description-label"
+                :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
+              >
+                {{ (row as any).labelText }}
+              </div>
+              <div
                 v-for="tValue in lpsbTValues"
                 :key="`${row.key}-${tValue}`"
                 class="lpsb-cell lpsb-score"
-                :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
+                :class="{
+                  'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey),
+                  'lpsb-score-shaded': tValue >= 40 && tValue < 60,
+                }"
               ></div>
             </template>
             <div class="lpsb-overlay">
@@ -549,13 +559,12 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   background: var(--background);
   border: 1px solid var(--border);
   display: inline-block;
-  padding: 12px;
 }
 
 .lpsb-grid {
   position: relative;
   display: grid;
-  grid-template-columns: 70px 36px 18px repeat(9, 26px);
+  grid-template-columns: 70px 36px 18px 120px repeat(9, 26px);
   gap: 0;
   border: 1px solid var(--border);
   background: var(--background);
@@ -574,9 +583,11 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 
 .lpsb-hatch {
   background: repeating-linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--foreground) 20%, transparent) 0 3px,
-    transparent 3px 6px
+    -45deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.1) 3px,
+    rgba(0, 0, 0, 0.1) 6px
   );
 }
 
@@ -591,11 +602,25 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   font-weight: 600;
 }
 
+.lpsb-score-shaded {
+  background-color: #e9e9e9;
+}
+
 .lpsb-divider {
   border-top: 2px solid var(--foreground);
 }
 
-.lpsb-grid > :nth-child(12n) {
+.lpsb-description-label {
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.lpsb-grid > :nth-child(13n) {
   border-right: none;
 }
 
@@ -618,21 +643,22 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 }
 
 .lpsb-vertical-40 {
-  left: calc(70px + 36px + 18px + 2 * 26px + 13px);
+  left: calc(12px + 70px + 36px + 18px + 120px + 2 * 26px + 13px);
 }
 
 .lpsb-vertical-60 {
-  left: calc(70px + 36px + 18px + 6 * 26px + 13px);
+  left: calc(12px + 70px + 36px + 18px + 120px + 6 * 26px + 13px);
 }
 
 .lpsb-top {
   position: relative;
-  margin-bottom: 6px;
+  padding: 12px 12px 6px;
 }
 
 .lpsb-top-curve {
   display: block;
   width: 100%;
   height: auto;
+  box-sizing: content-box;
 }
 </style>
