@@ -127,6 +127,11 @@ const LPS_B_TOTAL_50_PLUS = [
   421, 426, 431, 436,
 ];
 
+/**
+ * @description
+ * Bildet die technischen Schlüssel der Altersgruppen auf für Menschen lesbare Bezeichnungen ab.
+ * Wird für die Anzeige in der Benutzeroberfläche verwendet.
+ */
 export const LPS_B_AGE_GROUP_LABELS: Record<LpsBAgeGroupKey, string> = {
   under_18: 'Bis 18',
   '19_20': '19–20',
@@ -136,6 +141,26 @@ export const LPS_B_AGE_GROUP_LABELS: Record<LpsBAgeGroupKey, string> = {
   '50_plus': '50+',
 };
 
+/**
+ * @description
+ * Normtabelle für den LPS-B Test.
+ *
+ * Diese Datenstruktur enthält die Normwerte für den LPS-B Test, die zur Umrechnung
+ * von Rohwerten in standardisierte T-Werte und C-Werte verwendet werden.
+ *
+ * @example
+ * // Die Struktur ist hierarchisch aufgebaut:
+ * // 1. Ebene: Altersgruppe (z.B. 'under_18')
+ * // 2. Ebene: 'columns' für die einzelnen Untertests oder 'total' für den Gesamtwert
+ * // 3. Ebene (unter 'columns'): Der spezifische Untertest (z.B. 'test_1_2')
+ *
+ * // Jeder Untertest enthält ein Array von Objekten, die jeweils einen Rohwert (`raw`),
+ * // einen T-Wert (`t`) und einen C-Wert (`c`) umfassen.
+ *
+ * // Beispiel:
+ * // Für eine Person in der Altersgruppe 'under_18' im Untertest 'test_1_2'
+ * // entspricht ein Rohwert von 6 einem T-Wert von 30 und einem C-Wert von 1.
+ */
 export const LPS_B_SCORE_TABLES: LpsBScoreTables = {
   under_18: {
     columns: {
