@@ -42,7 +42,7 @@ const lpsbRawWidth = 36;
 const lpsbHatchWidth = 18;
 const lpsbScoreWidth = 26;
 const lpsbRowHeight = 28;
-const lpsbHeaderHeight = 52;
+const lpsbHeaderHeight = 0;
 const totalTime = computed(() => props.results?.total_time_seconds ?? null);
 const participantProfile = computed(() => props.participantProfile ?? null);
 const page1 = computed<LpsPage1ResponseRow[]>(() => props.results?.page1 ?? []);
@@ -338,9 +338,8 @@ const scoringRowsWithScores = computed(() =>
 const lpsbGridWidth = computed(() => lpsbTValues.length * lpsbScoreWidth);
 const lpsbGridHeight = computed(() => scoringRows.value.length * lpsbRowHeight);
 const lpsbScoreOffsetX = lpsbLabelWidth + lpsbRawWidth + lpsbHatchWidth;
-const lpsbDisplayTValues = computed(() =>
-  lpsbTValues.map((value) => (value % 10 === 0 ? value : '')),
-);
+const lpsbDisplayTValues = computed(() => lpsbTValues.map((value) => (value % 10 === 0 ? value : '')));
+const lpsbTopWidth = computed(() => lpsbScoreOffsetX + lpsbGridWidth.value);
 
 const lpsbPoints = computed(() =>
   scoringRowsWithScores.value.map((row, index) => {
@@ -477,30 +476,46 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
       </div>
 
       <div class="overflow-x-auto">
+        <div class="lpsb-top" :style="{ width: `${lpsbTopWidth}px` }">
+          <svg class="lpsb-top-curve" viewBox="0 0 260 90" aria-hidden="true">
+            <path
+              d="M10,80 C70,20 190,20 250,80"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+          </svg>
+          <div class="lpsb-top-title">
+            <div>HORN</div>
+            <div>LPS/B</div>
+          </div>
+          <div class="lpsb-top-labels">
+            <span class="lpsb-top-plus">+</span>
+            <span class="lpsb-top-co">C₀</span>
+            <span class="lpsb-top-one">1</span>
+            <span
+              v-for="(value, idx) in lpsbTValues"
+              :key="`lpsb-top-${value}`"
+              class="lpsb-top-num"
+              :style="{ left: `${lpsbScoreOffsetX + idx * lpsbScoreWidth + lpsbScoreWidth / 2}px` }"
+            >
+              {{ idx + 2 }}
+            </span>
+          </div>
+          <div class="lpsb-top-t">
+            <span class="lpsb-top-t-label">T</span>
+            <span
+              v-for="(label, idx) in lpsbDisplayTValues"
+              :key="`lpsb-top-t-${idx}`"
+              class="lpsb-top-t-num"
+              :style="{ left: `${lpsbScoreOffsetX + idx * lpsbScoreWidth + lpsbScoreWidth / 2}px` }"
+            >
+              {{ label }}
+            </span>
+          </div>
+        </div>
         <div class="lpsb-sheet">
           <div class="lpsb-grid">
-            <div class="lpsb-header lpsb-header-label"></div>
-            <div class="lpsb-header lpsb-header-raw"></div>
-            <div class="lpsb-header lpsb-header-hatch"></div>
-            <div
-              v-for="colIndex in lpsbTValues.length"
-              :key="`lpsb-col-${colIndex}`"
-              class="lpsb-header lpsb-header-score"
-            >
-              {{ colIndex }}
-            </div>
-
-            <div class="lpsb-header lpsb-header-label">T</div>
-            <div class="lpsb-header lpsb-header-raw">Roh</div>
-            <div class="lpsb-header lpsb-header-hatch">C</div>
-            <div
-              v-for="(tLabel, tIndex) in lpsbDisplayTValues"
-              :key="`lpsb-t-${tIndex}`"
-              class="lpsb-header lpsb-header-score"
-            >
-              {{ tLabel }}
-            </div>
-
             <template v-for="(row, rowIdx) in scoringRowsWithScores" :key="row.key">
               <div
                 class="lpsb-cell lpsb-label"
@@ -614,40 +629,6 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   background: var(--background);
 }
 
-.lpsb-header {
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--muted) 60%, transparent);
-  color: var(--muted-foreground);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 6px;
-  text-align: center;
-  min-height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.lpsb-header-label,
-.lpsb-label {
-  text-align: left;
-}
-
-.lpsb-header-raw,
-.lpsb-raw {
-  text-align: center;
-}
-
-.lpsb-header-hatch,
-.lpsb-hatch {
-  background: repeating-linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--foreground) 20%, transparent) 0 3px,
-    transparent 3px 6px
-  );
-}
-
 .lpsb-cell {
   border-right: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -657,6 +638,14 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   justify-content: center;
   font-size: 12px;
   padding: 2px 4px;
+}
+
+.lpsb-hatch {
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--foreground) 20%, transparent) 0 3px,
+    transparent 3px 6px
+  );
 }
 
 .lpsb-label {
@@ -702,5 +691,74 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 
 .lpsb-vertical-60 {
   left: calc(70px + 36px + 18px + 6 * 26px + 13px);
+}
+
+.lpsb-top {
+  position: relative;
+  height: 110px;
+  margin-bottom: 6px;
+  color: var(--foreground);
+}
+
+.lpsb-top-curve {
+  position: absolute;
+  top: 0;
+  left: calc(70px + 36px + 18px);
+  width: calc(9 * 26px);
+  height: 80px;
+}
+
+.lpsb-top-title {
+  position: absolute;
+  top: 14px;
+  left: calc(70px + 36px + 18px + 4 * 26px - 30px);
+  text-align: center;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.1;
+}
+
+.lpsb-top-labels,
+.lpsb-top-t {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 20px;
+}
+
+.lpsb-top-labels {
+  top: 64px;
+  font-size: 12px;
+}
+
+.lpsb-top-t {
+  top: 84px;
+  font-size: 12px;
+}
+
+.lpsb-top-plus {
+  position: absolute;
+  left: 6px;
+}
+
+.lpsb-top-co {
+  position: absolute;
+  left: 22px;
+}
+
+.lpsb-top-one {
+  position: absolute;
+  left: 48px;
+}
+
+.lpsb-top-num,
+.lpsb-top-t-num {
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+.lpsb-top-t-label {
+  position: absolute;
+  left: calc(70px + 36px + 18px - 14px);
 }
 </style>
