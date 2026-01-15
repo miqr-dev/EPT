@@ -339,7 +339,6 @@ const scoringRowsWithScores = computed(() =>
 const lpsbGridWidth = computed(() => lpsbTValues.length * lpsbScoreWidth);
 const lpsbGridHeight = computed(() => scoringRows.value.length * lpsbRowHeight);
 const lpsbScoreOffsetX = lpsbLabelWidth + lpsbRawWidth + lpsbHatchWidth;
-const lpsbDisplayTValues = computed(() => lpsbTValues.map((value) => (value % 10 === 0 ? value : '')));
 const lpsbTopWidth = computed(() => lpsbScoreOffsetX + lpsbGridWidth.value);
 
 const lpsbPoints = computed(() =>
@@ -479,33 +478,6 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
       <div class="overflow-x-auto">
         <div class="lpsb-top" :style="{ width: `${lpsbTopWidth}px` }">
           <img :src="lpsbHeaderSvg" class="lpsb-top-curve" alt="" />
-          <div class="lpsb-top-title">
-            <div>HORN</div>
-            <div>LPS/B</div>
-          </div>
-          <div class="lpsb-top-labels">
-            <span class="lpsb-top-plus" :style="{ left: `${lpsbScoreOffsetX - 40}px` }">+</span>
-            <span class="lpsb-top-co" :style="{ left: `${lpsbScoreOffsetX - 20}px` }">C₀</span>
-            <span
-              v-for="(value, idx) in lpsbTValues"
-              :key="`lpsb-top-${value}`"
-              class="lpsb-top-num"
-              :style="{ left: `${lpsbScoreOffsetX + idx * lpsbScoreWidth + lpsbScoreWidth / 2}px` }"
-            >
-              {{ idx + 1 }}
-            </span>
-          </div>
-          <div class="lpsb-top-t">
-            <span class="lpsb-top-t-label" :style="{ left: `${lpsbScoreOffsetX - 14}px` }">T</span>
-            <span
-              v-for="(label, idx) in lpsbDisplayTValues"
-              :key="`lpsb-top-t-${idx}`"
-              class="lpsb-top-t-num"
-              :style="{ left: `${lpsbScoreOffsetX + idx * lpsbScoreWidth + lpsbScoreWidth / 2}px` }"
-            >
-              {{ label }}
-            </span>
-          </div>
         </div>
         <div class="lpsb-sheet">
           <div class="lpsb-grid">
@@ -688,60 +660,12 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 
 .lpsb-top {
   position: relative;
-  height: 110px;
   margin-bottom: 6px;
-  color: var(--foreground);
 }
 
 .lpsb-top-curve {
-  position: absolute;
-  top: 0;
-  left: calc(70px + 36px + 18px);
-  width: calc(9 * 26px);
-  height: 80px;
-}
-
-.lpsb-top-title {
-  position: absolute;
-  top: 10px;
-  left: calc(70px + 36px + 18px + (9 * 26px) / 2);
-  transform: translateX(-50%);
-  text-align: center;
-  font-weight: 700;
-  font-size: 12px;
-  line-height: 1.1;
-}
-
-.lpsb-top-labels,
-.lpsb-top-t {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 20px;
-}
-
-.lpsb-top-labels {
-  top: 64px;
-  font-size: 12px;
-}
-
-.lpsb-top-t {
-  top: 84px;
-  font-size: 12px;
-}
-
-.lpsb-top-plus,
-.lpsb-top-co {
-  position: absolute;
-}
-
-.lpsb-top-num,
-.lpsb-top-t-num {
-  position: absolute;
-  transform: translateX(-50%);
-}
-
-.lpsb-top-t-label {
-  position: absolute;
+  display: block;
+  width: 100%;
+  height: auto;
 }
 </style>
