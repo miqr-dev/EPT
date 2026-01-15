@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import lpsbHeaderSvg from '@/assets/lpsb-header.svg';
 import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
 import { getLpsPage5Dataset } from '@/pages/Questions/LPSPage5';
 import { getLpsPage6Dataset } from '@/pages/Questions/LPSPage6';
@@ -477,14 +478,7 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 
       <div class="overflow-x-auto">
         <div class="lpsb-top" :style="{ width: `${lpsbTopWidth}px` }">
-          <svg class="lpsb-top-curve" viewBox="0 0 234 80" aria-hidden="true">
-            <path
-              d="M0,70 C58,10 176,10 234,70"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-          </svg>
+          <img :src="lpsbHeaderSvg" class="lpsb-top-curve" alt="" />
           <div class="lpsb-top-title">
             <div>HORN</div>
             <div>LPS/B</div>
