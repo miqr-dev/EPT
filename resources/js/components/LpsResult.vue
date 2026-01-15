@@ -37,6 +37,12 @@ const props = defineProps<{
 const testLabel = computed(() => props.testName ?? 'LPS');
 const isLpsB = computed(() => props.testName === 'LPS-B');
 const lpsbTValues = [30, 35, 40, 45, 50, 55, 60, 65, 70];
+const lpsbLabelWidth = 70;
+const lpsbRawWidth = 36;
+const lpsbHatchWidth = 18;
+const lpsbScoreWidth = 26;
+const lpsbRowHeight = 28;
+const lpsbHeaderHeight = 26;
 const totalTime = computed(() => props.results?.total_time_seconds ?? null);
 const participantProfile = computed(() => props.participantProfile ?? null);
 const page1 = computed<LpsPage1ResponseRow[]>(() => props.results?.page1 ?? []);
@@ -329,6 +335,28 @@ const scoringRowsWithScores = computed(() =>
   }),
 );
 
+const lpsbGridWidth = computed(() => lpsbTValues.length * lpsbScoreWidth);
+const lpsbGridHeight = computed(() => scoringRows.value.length * lpsbRowHeight);
+const lpsbScoreOffsetX = lpsbLabelWidth + lpsbRawWidth + lpsbHatchWidth;
+
+const lpsbPoints = computed(() =>
+  scoringRowsWithScores.value.map((row, index) => {
+    if (!row.t) return null;
+    const tIndex = lpsbTValues.indexOf(row.t);
+    if (tIndex === -1) return null;
+    const x = tIndex * lpsbScoreWidth + lpsbScoreWidth / 2;
+    const y = index * lpsbRowHeight + lpsbRowHeight / 2;
+    return { x, y };
+  }),
+);
+
+const lpsbPolylinePoints = computed(() =>
+  lpsbPoints.value
+    .map((point) => (point ? `${point.x},${point.y}` : null))
+    .filter((point) => point !== null)
+    .join(' '),
+);
+
 const lpsbDividerKeys = new Set<LpsBScoreKey>([
   'test_1_2',
   'test_3_4',
@@ -450,6 +478,7 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
           <div class="lpsb-grid">
             <div class="lpsb-header lpsb-header-label">T</div>
             <div class="lpsb-header lpsb-header-raw">Roh</div>
+            <div class="lpsb-header lpsb-header-hatch">C</div>
             <div
               v-for="tValue in lpsbTValues"
               :key="`lpsb-t-${tValue}`"
@@ -472,14 +501,54 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
                 {{ row.raw }}
               </div>
               <div
+                class="lpsb-cell lpsb-hatch"
+                :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
+              ></div>
+              <div
                 v-for="tValue in lpsbTValues"
                 :key="`${row.key}-${tValue}`"
                 class="lpsb-cell lpsb-score"
                 :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
-              >
-                <span v-if="row.t === tValue" class="lpsb-marker">●</span>
-              </div>
+              ></div>
             </template>
+            <div class="lpsb-overlay">
+              <div class="lpsb-vertical lpsb-vertical-40"></div>
+              <div class="lpsb-vertical lpsb-vertical-60"></div>
+              <svg
+                :width="lpsbGridWidth"
+                :height="lpsbGridHeight"
+                class="lpsb-svg"
+                :style="{ top: `${lpsbHeaderHeight}px`, left: `${lpsbScoreOffsetX}px` }"
+              >
+                <polyline
+                  v-if="lpsbPolylinePoints"
+                  :points="lpsbPolylinePoints"
+                  fill="none"
+                  stroke="#e11d48"
+                  stroke-width="1.25"
+                />
+                <g v-for="(point, pointIdx) in lpsbPoints" :key="`lpsb-point-${pointIdx}`">
+                  <line
+                    v-if="point"
+                    :x1="point.x - 5"
+                    :y1="point.y - 5"
+                    :x2="point.x + 5"
+                    :y2="point.y + 5"
+                    stroke="var(--foreground)"
+                    stroke-width="1.5"
+                  />
+                  <line
+                    v-if="point"
+                    :x1="point.x - 5"
+                    :y1="point.y + 5"
+                    :x2="point.x + 5"
+                    :y2="point.y - 5"
+                    stroke="var(--foreground)"
+                    stroke-width="1.5"
+                  />
+                </g>
+              </svg>
+            </div>
           </div>
         </div>
       </div>
@@ -523,8 +592,9 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 }
 
 .lpsb-grid {
+  position: relative;
   display: grid;
-  grid-template-columns: 110px 48px repeat(9, 36px);
+  grid-template-columns: 70px 36px 18px repeat(9, 26px);
   gap: 0;
   border: 1px solid var(--border);
   background: var(--background);
@@ -539,6 +609,10 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   font-weight: 600;
   padding: 4px 6px;
   text-align: center;
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .lpsb-header-label,
@@ -549,6 +623,15 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 .lpsb-header-raw,
 .lpsb-raw {
   text-align: center;
+}
+
+.lpsb-header-hatch,
+.lpsb-hatch {
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--foreground) 20%, transparent) 0 3px,
+    transparent 3px 6px
+  );
 }
 
 .lpsb-cell {
@@ -573,24 +656,37 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   font-weight: 600;
 }
 
-.lpsb-marker {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  background: var(--foreground);
-  color: var(--background);
-  font-size: 12px;
-  line-height: 1;
-}
-
 .lpsb-divider {
   border-top: 2px solid var(--foreground);
 }
 
-.lpsb-grid > :nth-child(11n) {
+.lpsb-grid > :nth-child(12n) {
   border-right: none;
+}
+
+.lpsb-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.lpsb-svg {
+  position: absolute;
+}
+
+.lpsb-vertical {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 2px;
+  background: #63b3ed;
+}
+
+.lpsb-vertical-40 {
+  left: calc(70px + 36px + 18px + 2 * 26px + 13px);
+}
+
+.lpsb-vertical-60 {
+  left: calc(70px + 36px + 18px + 6 * 26px + 13px);
 }
 </style>
