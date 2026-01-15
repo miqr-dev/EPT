@@ -42,7 +42,7 @@ const lpsbRawWidth = 36;
 const lpsbHatchWidth = 18;
 const lpsbScoreWidth = 26;
 const lpsbRowHeight = 28;
-const lpsbHeaderHeight = 26;
+const lpsbHeaderHeight = 52;
 const totalTime = computed(() => props.results?.total_time_seconds ?? null);
 const participantProfile = computed(() => props.participantProfile ?? null);
 const page1 = computed<LpsPage1ResponseRow[]>(() => props.results?.page1 ?? []);
@@ -476,6 +476,17 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
       <div class="overflow-x-auto">
         <div class="lpsb-sheet">
           <div class="lpsb-grid">
+            <div class="lpsb-header lpsb-header-label"></div>
+            <div class="lpsb-header lpsb-header-raw"></div>
+            <div class="lpsb-header lpsb-header-hatch"></div>
+            <div
+              v-for="colIndex in lpsbTValues.length"
+              :key="`lpsb-col-${colIndex}`"
+              class="lpsb-header lpsb-header-score"
+            >
+              {{ colIndex }}
+            </div>
+
             <div class="lpsb-header lpsb-header-label">T</div>
             <div class="lpsb-header lpsb-header-raw">Roh</div>
             <div class="lpsb-header lpsb-header-hatch">C</div>
