@@ -339,6 +339,8 @@ const lpsbGridWidth = computed(() => lpsbTValues.length * lpsbScoreWidth);
 const lpsbGridHeight = computed(() => scoringRows.value.length * lpsbRowHeight);
 const lpsbScoreOffsetX = lpsbLabelWidth + lpsbRawWidth + lpsbHatchWidth;
 const lpsbTopWidth = computed(() => lpsbScoreOffsetX + lpsbGridWidth.value);
+const lpsbVertical40X = computed(() => lpsbScoreOffsetX + 2 * lpsbScoreWidth + lpsbScoreWidth / 2);
+const lpsbVertical60X = computed(() => lpsbScoreOffsetX + 6 * lpsbScoreWidth + lpsbScoreWidth / 2);
 
 const lpsbPoints = computed(() =>
   scoringRowsWithScores.value.map((row, index) => {
@@ -505,8 +507,8 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
               ></div>
             </template>
             <div class="lpsb-overlay">
-              <div class="lpsb-vertical lpsb-vertical-40"></div>
-              <div class="lpsb-vertical lpsb-vertical-60"></div>
+              <div class="lpsb-vertical" :style="{ left: `${lpsbVertical40X}px` }"></div>
+              <div class="lpsb-vertical" :style="{ left: `${lpsbVertical60X}px` }"></div>
 
             </div>
           </div>
@@ -616,14 +618,6 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   height: 100%;
   width: 2px;
   background: #63b3ed;
-}
-
-.lpsb-vertical-40 {
-  left: calc(70px + 36px + 18px + 2 * 26px + 13px);
-}
-
-.lpsb-vertical-60 {
-  left: calc(70px + 36px + 18px + 6 * 26px + 13px);
 }
 
 .lpsb-top {
