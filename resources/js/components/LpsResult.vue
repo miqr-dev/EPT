@@ -39,10 +39,6 @@ const isLpsB = computed(() => props.testName === 'LPS-B');
 const lpsbTValues = [30, 35, 40, 45, 50, 55, 60, 65, 70];
 const lpsbTickStep = 5;
 const lpsbMinorTicks = 4;
-<<<<<<< HEAD
-=======
-const lpsbMinorTickOffsets = Array.from({ length: lpsbMinorTicks }, (_, idx) => idx);
->>>>>>> codex/fix-chart-generation-for-test-results-q9xooi
 const lpsbLabelWidth = 44;
 const lpsbRawWidth = 36;
 const lpsbTValueWidth = 26;
@@ -638,11 +634,7 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
               >
                 <div v-if="row.key === 'total_raw'" class="lpsb-ticks">
                   <span
-<<<<<<< HEAD
                     v-for="tickOffset in lpsbMinorTicks"
-=======
-                    v-for="tickOffset in lpsbMinorTickOffsets"
->>>>>>> codex/fix-chart-generation-for-test-results-q9xooi
                     :key="`gl-tick-${tIdx}-${tickOffset}`"
                     class="lpsb-tick"
                     :class="{
