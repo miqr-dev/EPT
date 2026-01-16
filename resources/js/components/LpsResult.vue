@@ -355,6 +355,8 @@ const glTickIndex = computed(() => {
   if (tValue < lpsbTValues[0] || tValue > lpsbTValues[lpsbTValues.length - 1]) return null;
   return tValue - lpsbTValues[0];
 });
+const glTickCellIndex = computed(() => (glTickIndex.value === null ? null : Math.floor(glTickIndex.value / lpsbTickStep)));
+const glTickOffset = computed(() => (glTickIndex.value === null ? null : glTickIndex.value % lpsbTickStep));
 
 type LpsbRowKey = LpsBScoreKey | 'total_raw';
 
@@ -600,7 +602,11 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
                 v-for="(tValue, tIdx) in lpsbTValues"
                 :key="`${row.key}-${tValue}`"
                 class="lpsb-cell lpsb-score"
-                :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
+                :class="{
+                  'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey),
+                  'lpsb-score--boundary':
+                    row.key === 'total_raw' && glTickOffset === 0 && glTickCellIndex === tIdx,
+                }"
               >
                 <div v-if="row.key === 'total_raw'" class="lpsb-ticks">
                   <span
@@ -608,7 +614,7 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
                     :key="`gl-tick-${tIdx}-${tickOffset}`"
                     class="lpsb-tick"
                     :class="{
-                      'lpsb-tick--active': glTickIndex === tIdx * lpsbTickStep + tickOffset,
+                      'lpsb-tick--active': glTickCellIndex === tIdx && glTickOffset === tickOffset,
                     }"
                   ></span>
                 </div>
@@ -797,12 +803,12 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   height: 100%;
 }
 
-.lpsb-tick:last-child {
-  border-right: none;
-}
-
 .lpsb-tick--active {
   border-right: 2px solid #dc2626;
+}
+
+.lpsb-score--boundary {
+  box-shadow: inset 2px 0 0 #dc2626;
 }
 
 .lpsb-top {
