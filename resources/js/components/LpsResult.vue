@@ -434,6 +434,21 @@ const lpsbPolylinePoints = computed(() =>
 
 const lpsbPointsFiltered = computed(() => lpsbPoints.value.filter((point): point is { x: number; y: number } => !!point));
 const lpsbPrimaryKeys = new Set<LpsBScoreKey>(['test_1_2', 'test_3_4', 'test_5_6', 'test_7_10', 'test_11_12', 'test_13_14']);
+const lpsbSecondaryKeys = new Set<LpsBScoreKey>([
+  'test_3',
+  'test_4',
+  'test_5',
+  'test_6',
+  'test_7',
+  'test_8',
+  'test_9',
+  'test_10',
+  'test_11',
+  'test_12',
+  'test_13',
+  'test_14',
+  'test_14_wrong',
+]);
 const lpsbPrimaryPoints = computed(() =>
   scoringRows.value
     .map((row, index) => {
@@ -590,7 +605,11 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
               </div>
               <div
                 class="lpsb-cell lpsb-tvalue"
-                :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
+                :class="{
+                  'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey),
+                  'lpsb-tvalue--primary': lpsbPrimaryKeys.has(row.key as LpsBScoreKey),
+                  'lpsb-tvalue--secondary': lpsbSecondaryKeys.has(row.key as LpsBScoreKey),
+                }"
               >
                 {{ row.t ?? '–' }}
               </div>
@@ -751,6 +770,14 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
     monospace;
   font-weight: 600;
+}
+
+.lpsb-tvalue--primary {
+  color: #dc2626;
+}
+
+.lpsb-tvalue--secondary {
+  color: #065f46;
 }
 
 .lpsb-divider {
