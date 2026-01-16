@@ -348,7 +348,7 @@ const iqFromT = computed(() => {
   return LPS_B_IQ_BY_T_RANGES.find((range) => tValue >= range.minT && tValue <= range.maxT)?.iq ?? null;
 });
 
-type LpsbRowKey = LpsBScoreKey | 'total_raw' | 'total_t';
+type LpsbRowKey = LpsBScoreKey | 'total_raw';
 
 const scoringRows = computed(() => [
   { key: 'test_1_2' as LpsbRowKey, name: '1+2', description: 'Gesamtpunkte', raw: totalScores.value.a, plot: true },
@@ -371,20 +371,16 @@ const scoringRows = computed(() => [
   { key: 'test_13_14' as LpsbRowKey, name: '13-14', description: 'Gesamtpunkte', raw: totalScores.value.r, plot: true },
   { key: 'test_14_wrong' as LpsbRowKey, name: '-13', description: 'Fehler insgesamt', raw: totalScores.value.s, plot: true },
   { key: 'total_raw' as LpsbRowKey, name: 'GL', description: 'Gesamtrohwert', raw: totalScores.value.total, plot: false },
-  { key: 'total_t' as LpsbRowKey, name: 'T', description: 'T-Wert', raw: null, plot: false },
 ]);
 
 function isScoreKey(key: LpsbRowKey): key is LpsBScoreKey {
-  return key !== 'total_raw' && key !== 'total_t';
+  return key !== 'total_raw';
 }
 
 const scoringRowsWithScores = computed(() =>
   scoringRows.value.map((row) => {
     if (!isScoreKey(row.key)) {
-      if (row.key === 'total_raw') {
-        return { ...row, t: totalScoreEntry.value?.t ?? null, c: totalScoreEntry.value?.c ?? null };
-      }
-      return { ...row, t: null, c: null };
+      return { ...row, t: totalScoreEntry.value?.t ?? null, c: totalScoreEntry.value?.c ?? null };
     }
     const entry = lookupColumnScore(row.key, row.raw ?? 0);
     return {
@@ -598,7 +594,7 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
                 class="lpsb-cell lpsb-score"
                 :class="{
                   'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey),
-                  'lpsb-score-ticks': row.key === 'total_t',
+                  'lpsb-score-ticks': row.key === 'total_raw',
                 }"
               ></div>
             </template>
