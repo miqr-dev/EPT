@@ -347,7 +347,7 @@ const lpsbPoints = computed(() =>
     if (!row.t) return null;
     const tIndex = lpsbTValues.indexOf(row.t);
     if (tIndex === -1) return null;
-    const x = tIndex * lpsbScoreWidth + lpsbScoreWidth / 2;
+    const x = lpsbScoreOffsetX + tIndex * lpsbScoreWidth + lpsbScoreWidth / 2;
     const y = index * lpsbRowHeight + lpsbRowHeight / 2;
     return { x, y };
   }),
@@ -359,6 +359,8 @@ const lpsbPolylinePoints = computed(() =>
     .filter((point) => point !== null)
     .join(' '),
 );
+
+const lpsbPointsFiltered = computed(() => lpsbPoints.value.filter((point): point is { x: number; y: number } => !!point));
 
 const lpsbDividerKeys = new Set<LpsBScoreKey>([
   'test_1_2',
@@ -509,7 +511,27 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
             <div class="lpsb-overlay">
               <div class="lpsb-vertical" :style="{ left: `${lpsbVertical40X}px` }"></div>
               <div class="lpsb-vertical" :style="{ left: `${lpsbVertical60X}px` }"></div>
-
+              <svg
+                class="lpsb-chart"
+                :width="lpsbTopWidth"
+                :height="lpsbGridHeight"
+                :viewBox="`0 0 ${lpsbTopWidth} ${lpsbGridHeight}`"
+              >
+                <polyline
+                  v-if="lpsbPolylinePoints"
+                  :points="lpsbPolylinePoints"
+                  fill="none"
+                  stroke="#f87171"
+                  stroke-width="2"
+                />
+                <circle
+                  v-for="(point, idx) in lpsbPointsFiltered"
+                  :key="`lpsb-point-${idx}`"
+                  v-bind="point"
+                  r="4"
+                  fill="#f87171"
+                />
+              </svg>
             </div>
           </div>
         </div>
@@ -618,6 +640,11 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   height: 100%;
   width: 2px;
   background: #63b3ed;
+}
+
+.lpsb-chart {
+  position: absolute;
+  inset: 0;
 }
 
 .lpsb-top {
