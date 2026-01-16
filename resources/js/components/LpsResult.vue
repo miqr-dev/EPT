@@ -37,12 +37,17 @@ const props = defineProps<{
 const testLabel = computed(() => props.testName ?? 'LPS');
 const isLpsB = computed(() => props.testName === 'LPS-B');
 const lpsbTValues = [30, 35, 40, 45, 50, 55, 60, 65, 70];
-const lpsbLabelWidth = 70;
+const lpsbTickStep = 5;
+const lpsbMinorTicks = 4;
+const lpsbMinorTickOffsets = Array.from({ length: lpsbMinorTicks }, (_, idx) => idx);
+const lpsbLabelWidth = 44;
 const lpsbRawWidth = 36;
+const lpsbTValueWidth = 26;
 const lpsbHatchWidth = 18;
 const lpsbScoreWidth = 26;
 const lpsbRowHeight = 28;
 const lpsbHeaderHeight = 0;
+const lpsbMarkerSize = 8;
 const totalTime = computed(() => props.results?.total_time_seconds ?? null);
 const participantProfile = computed(() => props.participantProfile ?? null);
 const page1 = computed<LpsPage1ResponseRow[]>(() => props.results?.page1 ?? []);
@@ -286,7 +291,51 @@ function matchesScoreEntry(entry: LpsBScoreRow | LpsBScoreRangeRow, raw: number)
 function lookupColumnScore(key: LpsBScoreKey, raw: number) {
   if (!ageGroupKey.value) return null;
   const table = LPS_B_SCORE_TABLES[ageGroupKey.value]?.columns?.[key] ?? [];
-  return table.find((entry) => matchesScoreEntry(entry, raw)) ?? null;
+  const directMatch = table.find((entry) => matchesScoreEntry(entry, raw));
+  if (directMatch) return directMatch;
+  const sorted = [...table].sort((a, b) => {
+    const aMin = 'raw' in a ? a.raw : a.min;
+    const bMin = 'raw' in b ? b.raw : b.min;
+    return aMin - bMin;
+  });
+  const lowerMatch = sorted.reduce<LpsBScoreRow | LpsBScoreRangeRow | null>((closest, entry) => {
+    const entryMax = 'raw' in entry ? entry.raw : entry.max;
+    if (entryMax <= raw) return entry;
+    return closest;
+  }, null);
+  if (lowerMatch) return lowerMatch;
+  return sorted[0] ?? null;
+}
+
+function getScoreRowBounds(rows: Array<LpsBScoreRow | LpsBScoreRangeRow>) {
+  let minRaw = Number.POSITIVE_INFINITY;
+  let maxRaw = Number.NEGATIVE_INFINITY;
+  let minT: number | null = null;
+  let maxT: number | null = null;
+
+  rows.forEach((entry) => {
+    const entryMin = 'raw' in entry ? entry.raw : entry.min;
+    const entryMax = 'raw' in entry ? entry.raw : entry.max;
+    if (entryMin < minRaw) {
+      minRaw = entryMin;
+      minT = entry.t;
+    }
+    if (entryMax > maxRaw) {
+      maxRaw = entryMax;
+      maxT = entry.t;
+    }
+  });
+
+  if (!Number.isFinite(minRaw) || !Number.isFinite(maxRaw)) {
+    return null;
+  }
+
+  return { minRaw, maxRaw, minT, maxT };
+}
+
+function getChartTValue(key: LpsBScoreKey, raw: number) {
+  const entry = lookupColumnScore(key, raw);
+  return entry?.t ?? null;
 }
 
 function lookupTotalScore(raw: number) {
@@ -301,32 +350,50 @@ const iqFromT = computed(() => {
   if (tValue === null || tValue === undefined) return null;
   return LPS_B_IQ_BY_T_RANGES.find((range) => tValue >= range.minT && tValue <= range.maxT)?.iq ?? null;
 });
+const glTickIndex = computed(() => {
+  const tValue = totalScoreEntry.value?.t;
+  if (tValue === null || tValue === undefined) return null;
+  if (tValue < lpsbTValues[0] || tValue > lpsbTValues[lpsbTValues.length - 1]) return null;
+  return tValue - lpsbTValues[0];
+});
+const glTickCellIndex = computed(() => (glTickIndex.value === null ? null : Math.floor(glTickIndex.value / lpsbTickStep)));
+const glTickOffset = computed(() => (glTickIndex.value === null ? null : glTickIndex.value % lpsbTickStep));
+
+type LpsbRowKey = LpsBScoreKey | 'total_raw';
 
 const scoringRows = computed(() => [
-  { key: 'test_1_2', name: '1+2', description: 'Gesamtpunkte', raw: totalScores.value.a },
-  { key: 'test_3', name: '3', description: 'Einzelpunkte', raw: totalScores.value.b },
-  { key: 'test_4', name: '4', description: 'Einzelpunkte', raw: totalScores.value.c },
-  { key: 'test_3_4', name: '3+4', description: 'Gesamtpunkte', raw: totalScores.value.d },
-  { key: 'test_5', name: '5', description: 'Einzelpunkte', raw: totalScores.value.e },
-  { key: 'test_6', name: '6', description: 'manuell', raw: totalScores.value.f },
-  { key: 'test_5_6', name: '5+6', description: 'Gesamtpunkte', raw: totalScores.value.g },
-  { key: 'test_7', name: '7', description: 'Einzelpunkte', raw: totalScores.value.h },
-  { key: 'test_8', name: '8', description: 'Einzelpunkte', raw: totalScores.value.i },
-  { key: 'test_9', name: '9', description: 'Einzelpunkte', raw: totalScores.value.j },
-  { key: 'test_10', name: '10', description: 'Einzelpunkte', raw: totalScores.value.k },
-  { key: 'test_7_10', name: '7-10', description: 'Gesamtpunkte', raw: totalScores.value.l },
-  { key: 'test_11', name: '11', description: 'Einzelpunkte', raw: totalScores.value.m },
-  { key: 'test_12', name: '12', description: 'Einzelpunkte', raw: totalScores.value.n },
-  { key: 'test_11_12', name: '11-12', description: 'Gesamtpunkte', raw: totalScores.value.o },
-  { key: 'test_13', name: '13', description: 'Einzelpunkte', raw: totalScores.value.p },
-  { key: 'test_14', name: '14', description: 'Einzelpunkte', raw: totalScores.value.q },
-  { key: 'test_13_14', name: '13-14', description: 'Gesamtpunkte', raw: totalScores.value.r },
-  { key: 'test_14_wrong', name: '-13', description: 'Fehler insgesamt', raw: totalScores.value.s },
+  { key: 'test_1_2' as LpsbRowKey, name: '1+2', description: 'Gesamtpunkte', raw: totalScores.value.a, plot: true },
+  { key: 'test_3' as LpsbRowKey, name: '3', description: 'Einzelpunkte', raw: totalScores.value.b, plot: true },
+  { key: 'test_4' as LpsbRowKey, name: '4', description: 'Einzelpunkte', raw: totalScores.value.c, plot: true },
+  { key: 'test_3_4' as LpsbRowKey, name: '3+4', description: 'Gesamtpunkte', raw: totalScores.value.d, plot: true },
+  { key: 'test_5' as LpsbRowKey, name: '5', description: 'Einzelpunkte', raw: totalScores.value.e, plot: true },
+  { key: 'test_6' as LpsbRowKey, name: '6', description: 'manuell', raw: totalScores.value.f, plot: true },
+  { key: 'test_5_6' as LpsbRowKey, name: '5+6', description: 'Gesamtpunkte', raw: totalScores.value.g, plot: true },
+  { key: 'test_7' as LpsbRowKey, name: '7', description: 'Einzelpunkte', raw: totalScores.value.h, plot: true },
+  { key: 'test_8' as LpsbRowKey, name: '8', description: 'Einzelpunkte', raw: totalScores.value.i, plot: true },
+  { key: 'test_9' as LpsbRowKey, name: '9', description: 'Einzelpunkte', raw: totalScores.value.j, plot: true },
+  { key: 'test_10' as LpsbRowKey, name: '10', description: 'Einzelpunkte', raw: totalScores.value.k, plot: true },
+  { key: 'test_7_10' as LpsbRowKey, name: '7-10', description: 'Gesamtpunkte', raw: totalScores.value.l, plot: true },
+  { key: 'test_11' as LpsbRowKey, name: '11', description: 'Einzelpunkte', raw: totalScores.value.m, plot: true },
+  { key: 'test_12' as LpsbRowKey, name: '12', description: 'Einzelpunkte', raw: totalScores.value.n, plot: true },
+  { key: 'test_11_12' as LpsbRowKey, name: '11-12', description: 'Gesamtpunkte', raw: totalScores.value.o, plot: true },
+  { key: 'test_13' as LpsbRowKey, name: '13', description: 'Einzelpunkte', raw: totalScores.value.p, plot: true },
+  { key: 'test_14' as LpsbRowKey, name: '14', description: 'Einzelpunkte', raw: totalScores.value.q, plot: true },
+  { key: 'test_13_14' as LpsbRowKey, name: '13-14', description: 'Gesamtpunkte', raw: totalScores.value.r, plot: true },
+  { key: 'test_14_wrong' as LpsbRowKey, name: '-13', description: 'Fehler insgesamt', raw: totalScores.value.s, plot: true },
+  { key: 'total_raw' as LpsbRowKey, name: 'GL', description: 'Gesamtrohwert', raw: totalScores.value.total, plot: false },
 ]);
+
+function isScoreKey(key: LpsbRowKey): key is LpsBScoreKey {
+  return key !== 'total_raw';
+}
 
 const scoringRowsWithScores = computed(() =>
   scoringRows.value.map((row) => {
-    const entry = lookupColumnScore(row.key as LpsBScoreKey, row.raw);
+    if (!isScoreKey(row.key)) {
+      return { ...row, t: totalScoreEntry.value?.t ?? null, c: totalScoreEntry.value?.c ?? null };
+    }
+    const entry = lookupColumnScore(row.key, row.raw ?? 0);
     return {
       ...row,
       t: entry?.t ?? null,
@@ -337,17 +404,23 @@ const scoringRowsWithScores = computed(() =>
 
 const lpsbGridWidth = computed(() => lpsbTValues.length * lpsbScoreWidth);
 const lpsbGridHeight = computed(() => scoringRows.value.length * lpsbRowHeight);
-const lpsbScoreOffsetX = lpsbLabelWidth + lpsbRawWidth + lpsbHatchWidth;
+const lpsbScoreOffsetX = lpsbLabelWidth + lpsbRawWidth + lpsbTValueWidth + lpsbHatchWidth;
 const lpsbTopWidth = computed(() => lpsbScoreOffsetX + lpsbGridWidth.value);
 const lpsbVertical40X = computed(() => lpsbScoreOffsetX + 2 * lpsbScoreWidth);
+const lpsbVertical50X = computed(() => lpsbScoreOffsetX + 4 * lpsbScoreWidth);
 const lpsbVertical60X = computed(() => lpsbScoreOffsetX + 6 * lpsbScoreWidth);
+const lpsbMinT = lpsbTValues[0];
+const lpsbMaxT = lpsbTValues[lpsbTValues.length - 1];
+const lpsbStepT = lpsbTickStep;
 
 const lpsbPoints = computed(() =>
-  scoringRowsWithScores.value.map((row, index) => {
-    if (!row.t) return null;
-    const tIndex = lpsbTValues.indexOf(row.t);
-    if (tIndex === -1) return null;
-    const x = tIndex * lpsbScoreWidth + lpsbScoreWidth / 2;
+  scoringRows.value.map((row, index) => {
+    if (!row.plot || !isScoreKey(row.key)) return null;
+    const tValue = getChartTValue(row.key as LpsBScoreKey, row.raw);
+    if (tValue === null || tValue === undefined) return null;
+    if (tValue < lpsbMinT || tValue > lpsbMaxT) return null;
+    const tOffset = (tValue - lpsbMinT) / lpsbStepT;
+    const x = lpsbScoreOffsetX + tOffset * lpsbScoreWidth;
     const y = index * lpsbRowHeight + lpsbRowHeight / 2;
     return { x, y };
   }),
@@ -358,6 +431,42 @@ const lpsbPolylinePoints = computed(() =>
     .map((point) => (point ? `${point.x},${point.y}` : null))
     .filter((point) => point !== null)
     .join(' '),
+);
+
+const lpsbPointsFiltered = computed(() => lpsbPoints.value.filter((point): point is { x: number; y: number } => !!point));
+const lpsbPrimaryKeys = new Set<LpsBScoreKey>(['test_1_2', 'test_3_4', 'test_5_6', 'test_7_10', 'test_11_12', 'test_13_14']);
+const lpsbSecondaryKeys = new Set<LpsBScoreKey>([
+  'test_3',
+  'test_4',
+  'test_5',
+  'test_6',
+  'test_7',
+  'test_8',
+  'test_9',
+  'test_10',
+  'test_11',
+  'test_12',
+  'test_13',
+  'test_14',
+  'test_14_wrong',
+]);
+const lpsbPrimaryPoints = computed(() =>
+  scoringRows.value
+    .map((row, index) => {
+      if (!row.plot || !isScoreKey(row.key)) return null;
+      if (!lpsbPrimaryKeys.has(row.key)) return null;
+      const tValue = getChartTValue(row.key as LpsBScoreKey, row.raw);
+      if (tValue === null || tValue === undefined) return null;
+      if (tValue < lpsbMinT || tValue > lpsbMaxT) return null;
+      const tOffset = (tValue - lpsbMinT) / lpsbStepT;
+      const x = lpsbScoreOffsetX + tOffset * lpsbScoreWidth;
+      const y = index * lpsbRowHeight + lpsbRowHeight / 2;
+      return { x, y };
+    })
+    .filter((point): point is { x: number; y: number } => !!point),
+);
+const lpsbPrimaryPolylinePoints = computed(() =>
+  lpsbPrimaryPoints.value.map((point) => `${point.x},${point.y}`).join(' '),
 );
 
 const lpsbDividerKeys = new Set<LpsBScoreKey>([
@@ -493,23 +602,93 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
                 class="lpsb-cell lpsb-raw"
                 :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
               >
-                {{ row.raw }}
+                {{ row.raw ?? '–' }}
+              </div>
+              <div
+                class="lpsb-cell lpsb-tvalue"
+                :class="{
+                  'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey),
+                  'lpsb-tvalue--primary': lpsbPrimaryKeys.has(row.key as LpsBScoreKey),
+                  'lpsb-tvalue--secondary': lpsbSecondaryKeys.has(row.key as LpsBScoreKey),
+                }"
+              >
+                {{ row.t ?? '–' }}
               </div>
               <div
                 class="lpsb-cell lpsb-hatch"
                 :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
               ></div>
               <div
-                v-for="tValue in lpsbTValues"
+                v-for="(tValue, tIdx) in lpsbTValues"
                 :key="`${row.key}-${tValue}`"
                 class="lpsb-cell lpsb-score"
-                :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
-              ></div>
+                :class="{
+                  'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey),
+                  'lpsb-score--boundary':
+                    row.key === 'total_raw' && glTickOffset === 0 && glTickCellIndex === tIdx,
+                }"
+              >
+                <div v-if="row.key === 'total_raw'" class="lpsb-ticks">
+                  <span
+                    v-for="tickOffset in lpsbMinorTickOffsets"
+                    :key="`gl-tick-${tIdx}-${tickOffset}`"
+                    class="lpsb-tick"
+                    :class="{
+                      'lpsb-tick--active': glTickCellIndex === tIdx && glTickOffset === tickOffset,
+                    }"
+                  ></span>
+                </div>
+              </div>
             </template>
             <div class="lpsb-overlay">
               <div class="lpsb-vertical" :style="{ left: `${lpsbVertical40X}px` }"></div>
+              <div class="lpsb-vertical lpsb-vertical--mid" :style="{ left: `${lpsbVertical50X}px` }"></div>
               <div class="lpsb-vertical" :style="{ left: `${lpsbVertical60X}px` }"></div>
-
+              <svg
+                class="lpsb-chart"
+                :width="lpsbTopWidth"
+                :height="lpsbGridHeight"
+                :viewBox="`0 0 ${lpsbTopWidth} ${lpsbGridHeight}`"
+              >
+                <polyline
+                  v-if="lpsbPolylinePoints"
+                  :points="lpsbPolylinePoints"
+                  fill="none"
+                  stroke="#065f46"
+                  stroke-width="2"
+                />
+                <polyline
+                  v-if="lpsbPrimaryPolylinePoints"
+                  :points="lpsbPrimaryPolylinePoints"
+                  fill="none"
+                  stroke="#dc2626"
+                  stroke-width="2"
+                />
+                <g v-for="(point, idx) in lpsbPointsFiltered" :key="`lpsb-point-${idx}`" stroke="#065f46" stroke-width="2">
+                  <line
+                    :x1="point.x - lpsbMarkerSize / 2"
+                    :y1="point.y - lpsbMarkerSize / 2"
+                    :x2="point.x + lpsbMarkerSize / 2"
+                    :y2="point.y + lpsbMarkerSize / 2"
+                  />
+                  <line
+                    :x1="point.x - lpsbMarkerSize / 2"
+                    :y1="point.y + lpsbMarkerSize / 2"
+                    :x2="point.x + lpsbMarkerSize / 2"
+                    :y2="point.y - lpsbMarkerSize / 2"
+                  />
+                </g>
+                <circle
+                  v-for="(point, idx) in lpsbPrimaryPoints"
+                  :key="`lpsb-primary-point-${idx}`"
+                  :cx="point.x"
+                  :cy="point.y"
+                  r="4"
+                  fill="none"
+                  stroke="#dc2626"
+                  stroke-width="2"
+                />
+              </svg>
             </div>
           </div>
         </div>
@@ -556,7 +735,7 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 .lpsb-grid {
   position: relative;
   display: grid;
-  grid-template-columns: 70px 36px 18px repeat(9, 26px);
+  grid-template-columns: 44px 36px 26px 18px repeat(9, 26px);
   gap: 0;
   border: 1px solid var(--border);
   background: var(--background);
@@ -574,11 +753,7 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 }
 
 .lpsb-hatch {
-  background: repeating-linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--foreground) 20%, transparent) 0 3px,
-    transparent 3px 6px
-  );
+  background: transparent;
 }
 
 .lpsb-label {
@@ -592,11 +767,25 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   font-weight: 600;
 }
 
+.lpsb-tvalue {
+  font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  font-weight: 600;
+}
+
+.lpsb-tvalue--primary {
+  color: #dc2626;
+}
+
+.lpsb-tvalue--secondary {
+  color: #065f46;
+}
+
 .lpsb-divider {
   border-top: 2px solid var(--foreground);
 }
 
-.lpsb-grid > :nth-child(12n) {
+.lpsb-grid > :nth-child(13n) {
   border-right: none;
 }
 
@@ -618,6 +807,36 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   height: 100%;
   width: 2px;
   background: #63b3ed;
+}
+
+.lpsb-vertical--mid {
+  background: #111827;
+}
+
+.lpsb-chart {
+  position: absolute;
+  inset: 0;
+}
+
+.lpsb-ticks {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: stretch;
+  height: 100%;
+  width: 100%;
+}
+
+.lpsb-tick {
+  border-right: 1px solid color-mix(in srgb, var(--foreground) 45%, transparent);
+  height: 100%;
+}
+
+.lpsb-tick--active {
+  border-right: 2px solid #dc2626;
+}
+
+.lpsb-score--boundary {
+  box-shadow: inset 2px 0 0 #dc2626;
 }
 
 .lpsb-top {
