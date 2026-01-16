@@ -39,6 +39,10 @@ const isLpsB = computed(() => props.testName === 'LPS-B');
 const lpsbTValues = [30, 35, 40, 45, 50, 55, 60, 65, 70];
 const lpsbTickStep = 5;
 const lpsbMinorTicks = 4;
+<<<<<<< HEAD
+=======
+const lpsbMinorTickOffsets = Array.from({ length: lpsbMinorTicks }, (_, idx) => idx);
+>>>>>>> codex/fix-chart-generation-for-test-results-q9xooi
 const lpsbLabelWidth = 44;
 const lpsbRawWidth = 36;
 const lpsbTValueWidth = 26;
@@ -57,6 +61,11 @@ const page8 = computed<LpsPage8ResponseRow[]>(() => props.results?.page8 ?? []);
 const page9 = computed<LpsPage9ResponseRow[]>(() => props.results?.page9 ?? []);
 const page10 = computed<LpsPage10ResponseRow[]>(() => props.results?.page10 ?? []);
 const page11 = computed<LpsPage11ResponseRow[]>(() => props.results?.page11 ?? []);
+const col14WrongOverride = computed<number | null>(() => {
+  const raw = props.results?.column14_wrong ?? props.results?.col14_wrong ?? null;
+  const parsed = raw === '' || raw === null || raw === undefined ? null : Number(raw);
+  return Number.isNaN(parsed) ? null : parsed;
+});
 const column6Manual = computed<number | null>({
   get: () => {
     const raw = props.results?.column6_score;
@@ -223,7 +232,7 @@ const columnScores = computed(() => {
   const col14Stats = scorePage11Column('col14');
   const col13 = col13Stats.positive;
   const col14 = col14Stats.positive;
-  const col14Wrong = col14Stats.negative;
+  const col14Wrong = col14WrongOverride.value ?? col14Stats.negative;
 
   return {
     col1,
@@ -629,7 +638,11 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
               >
                 <div v-if="row.key === 'total_raw'" class="lpsb-ticks">
                   <span
+<<<<<<< HEAD
                     v-for="tickOffset in lpsbMinorTicks"
+=======
+                    v-for="tickOffset in lpsbMinorTickOffsets"
+>>>>>>> codex/fix-chart-generation-for-test-results-q9xooi
                     :key="`gl-tick-${tIdx}-${tickOffset}`"
                     class="lpsb-tick"
                     :class="{
