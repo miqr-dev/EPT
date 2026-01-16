@@ -348,31 +348,45 @@ const iqFromT = computed(() => {
   return LPS_B_IQ_BY_T_RANGES.find((range) => tValue >= range.minT && tValue <= range.maxT)?.iq ?? null;
 });
 
+type LpsbRowKey = LpsBScoreKey | 'total_raw' | 'total_t';
+
 const scoringRows = computed(() => [
-  { key: 'test_1_2', name: '1+2', description: 'Gesamtpunkte', raw: totalScores.value.a },
-  { key: 'test_3', name: '3', description: 'Einzelpunkte', raw: totalScores.value.b },
-  { key: 'test_4', name: '4', description: 'Einzelpunkte', raw: totalScores.value.c },
-  { key: 'test_3_4', name: '3+4', description: 'Gesamtpunkte', raw: totalScores.value.d },
-  { key: 'test_5', name: '5', description: 'Einzelpunkte', raw: totalScores.value.e },
-  { key: 'test_6', name: '6', description: 'manuell', raw: totalScores.value.f },
-  { key: 'test_5_6', name: '5+6', description: 'Gesamtpunkte', raw: totalScores.value.g },
-  { key: 'test_7', name: '7', description: 'Einzelpunkte', raw: totalScores.value.h },
-  { key: 'test_8', name: '8', description: 'Einzelpunkte', raw: totalScores.value.i },
-  { key: 'test_9', name: '9', description: 'Einzelpunkte', raw: totalScores.value.j },
-  { key: 'test_10', name: '10', description: 'Einzelpunkte', raw: totalScores.value.k },
-  { key: 'test_7_10', name: '7-10', description: 'Gesamtpunkte', raw: totalScores.value.l },
-  { key: 'test_11', name: '11', description: 'Einzelpunkte', raw: totalScores.value.m },
-  { key: 'test_12', name: '12', description: 'Einzelpunkte', raw: totalScores.value.n },
-  { key: 'test_11_12', name: '11-12', description: 'Gesamtpunkte', raw: totalScores.value.o },
-  { key: 'test_13', name: '13', description: 'Einzelpunkte', raw: totalScores.value.p },
-  { key: 'test_14', name: '14', description: 'Einzelpunkte', raw: totalScores.value.q },
-  { key: 'test_13_14', name: '13-14', description: 'Gesamtpunkte', raw: totalScores.value.r },
-  { key: 'test_14_wrong', name: '-13', description: 'Fehler insgesamt', raw: totalScores.value.s },
+  { key: 'test_1_2' as LpsbRowKey, name: '1+2', description: 'Gesamtpunkte', raw: totalScores.value.a, plot: true },
+  { key: 'test_3' as LpsbRowKey, name: '3', description: 'Einzelpunkte', raw: totalScores.value.b, plot: true },
+  { key: 'test_4' as LpsbRowKey, name: '4', description: 'Einzelpunkte', raw: totalScores.value.c, plot: true },
+  { key: 'test_3_4' as LpsbRowKey, name: '3+4', description: 'Gesamtpunkte', raw: totalScores.value.d, plot: true },
+  { key: 'test_5' as LpsbRowKey, name: '5', description: 'Einzelpunkte', raw: totalScores.value.e, plot: true },
+  { key: 'test_6' as LpsbRowKey, name: '6', description: 'manuell', raw: totalScores.value.f, plot: true },
+  { key: 'test_5_6' as LpsbRowKey, name: '5+6', description: 'Gesamtpunkte', raw: totalScores.value.g, plot: true },
+  { key: 'test_7' as LpsbRowKey, name: '7', description: 'Einzelpunkte', raw: totalScores.value.h, plot: true },
+  { key: 'test_8' as LpsbRowKey, name: '8', description: 'Einzelpunkte', raw: totalScores.value.i, plot: true },
+  { key: 'test_9' as LpsbRowKey, name: '9', description: 'Einzelpunkte', raw: totalScores.value.j, plot: true },
+  { key: 'test_10' as LpsbRowKey, name: '10', description: 'Einzelpunkte', raw: totalScores.value.k, plot: true },
+  { key: 'test_7_10' as LpsbRowKey, name: '7-10', description: 'Gesamtpunkte', raw: totalScores.value.l, plot: true },
+  { key: 'test_11' as LpsbRowKey, name: '11', description: 'Einzelpunkte', raw: totalScores.value.m, plot: true },
+  { key: 'test_12' as LpsbRowKey, name: '12', description: 'Einzelpunkte', raw: totalScores.value.n, plot: true },
+  { key: 'test_11_12' as LpsbRowKey, name: '11-12', description: 'Gesamtpunkte', raw: totalScores.value.o, plot: true },
+  { key: 'test_13' as LpsbRowKey, name: '13', description: 'Einzelpunkte', raw: totalScores.value.p, plot: true },
+  { key: 'test_14' as LpsbRowKey, name: '14', description: 'Einzelpunkte', raw: totalScores.value.q, plot: true },
+  { key: 'test_13_14' as LpsbRowKey, name: '13-14', description: 'Gesamtpunkte', raw: totalScores.value.r, plot: true },
+  { key: 'test_14_wrong' as LpsbRowKey, name: '-13', description: 'Fehler insgesamt', raw: totalScores.value.s, plot: true },
+  { key: 'total_raw' as LpsbRowKey, name: 'GL', description: 'Gesamtrohwert', raw: totalScores.value.total, plot: false },
+  { key: 'total_t' as LpsbRowKey, name: 'T', description: 'T-Wert', raw: null, plot: false },
 ]);
+
+function isScoreKey(key: LpsbRowKey): key is LpsBScoreKey {
+  return key !== 'total_raw' && key !== 'total_t';
+}
 
 const scoringRowsWithScores = computed(() =>
   scoringRows.value.map((row) => {
-    const entry = lookupColumnScore(row.key as LpsBScoreKey, row.raw);
+    if (!isScoreKey(row.key)) {
+      if (row.key === 'total_raw') {
+        return { ...row, t: totalScoreEntry.value?.t ?? null, c: totalScoreEntry.value?.c ?? null };
+      }
+      return { ...row, t: null, c: null };
+    }
+    const entry = lookupColumnScore(row.key, row.raw ?? 0);
     return {
       ...row,
       t: entry?.t ?? null,
@@ -394,6 +408,7 @@ const lpsbStepT = 5;
 
 const lpsbPoints = computed(() =>
   scoringRows.value.map((row, index) => {
+    if (!row.plot || !isScoreKey(row.key)) return null;
     const tValue = getChartTValue(row.key as LpsBScoreKey, row.raw);
     if (tValue === null || tValue === undefined) return null;
     if (tValue < lpsbMinT || tValue > lpsbMaxT) return null;
@@ -416,7 +431,8 @@ const lpsbPrimaryKeys = new Set<LpsBScoreKey>(['test_1_2', 'test_3_4', 'test_5_6
 const lpsbPrimaryPoints = computed(() =>
   scoringRows.value
     .map((row, index) => {
-      if (!lpsbPrimaryKeys.has(row.key as LpsBScoreKey)) return null;
+      if (!row.plot || !isScoreKey(row.key)) return null;
+      if (!lpsbPrimaryKeys.has(row.key)) return null;
       const tValue = getChartTValue(row.key as LpsBScoreKey, row.raw);
       if (tValue === null || tValue === undefined) return null;
       if (tValue < lpsbMinT || tValue > lpsbMaxT) return null;
@@ -564,7 +580,7 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
                 class="lpsb-cell lpsb-raw"
                 :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
               >
-                {{ row.raw }}
+                {{ row.raw ?? '–' }}
               </div>
               <div
                 class="lpsb-cell lpsb-tvalue"
@@ -580,7 +596,10 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
                 v-for="tValue in lpsbTValues"
                 :key="`${row.key}-${tValue}`"
                 class="lpsb-cell lpsb-score"
-                :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
+                :class="{
+                  'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey),
+                  'lpsb-score-ticks': row.key === 'total_t',
+                }"
               ></div>
             </template>
             <div class="lpsb-overlay">
@@ -693,6 +712,14 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   justify-content: center;
   font-size: 12px;
   padding: 2px 4px;
+}
+
+.lpsb-score-ticks {
+  background: repeating-linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--foreground) 30%, transparent) 0 1px,
+    transparent 1px 4px
+  );
 }
 
 .lpsb-hatch {
