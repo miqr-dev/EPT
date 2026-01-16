@@ -290,6 +290,45 @@ function lookupColumnScore(key: LpsBScoreKey, raw: number) {
   return table.find((entry) => matchesScoreEntry(entry, raw)) ?? null;
 }
 
+function getScoreRowBounds(rows: Array<LpsBScoreRow | LpsBScoreRangeRow>) {
+  let minRaw = Number.POSITIVE_INFINITY;
+  let maxRaw = Number.NEGATIVE_INFINITY;
+  let minT: number | null = null;
+  let maxT: number | null = null;
+
+  rows.forEach((entry) => {
+    const entryMin = 'raw' in entry ? entry.raw : entry.min;
+    const entryMax = 'raw' in entry ? entry.raw : entry.max;
+    if (entryMin < minRaw) {
+      minRaw = entryMin;
+      minT = entry.t;
+    }
+    if (entryMax > maxRaw) {
+      maxRaw = entryMax;
+      maxT = entry.t;
+    }
+  });
+
+  if (!Number.isFinite(minRaw) || !Number.isFinite(maxRaw)) {
+    return null;
+  }
+
+  return { minRaw, maxRaw, minT, maxT };
+}
+
+function getChartTValue(key: LpsBScoreKey, raw: number) {
+  if (!ageGroupKey.value) return null;
+  const table = LPS_B_SCORE_TABLES[ageGroupKey.value]?.columns?.[key] ?? [];
+  const entry = table.find((row) => matchesScoreEntry(row, raw));
+  if (entry) return entry.t;
+
+  const bounds = getScoreRowBounds(table);
+  if (!bounds) return null;
+  if (raw <= bounds.minRaw) return bounds.minT;
+  if (raw >= bounds.maxRaw) return bounds.maxT;
+  return null;
+}
+
 function lookupTotalScore(raw: number) {
   if (!ageGroupKey.value) return null;
   const table = LPS_B_SCORE_TABLES[ageGroupKey.value]?.total ?? [];
@@ -347,10 +386,11 @@ const lpsbMaxT = lpsbTValues[lpsbTValues.length - 1];
 const lpsbStepT = 5;
 
 const lpsbPoints = computed(() =>
-  scoringRowsWithScores.value.map((row, index) => {
-    if (row.t === null || row.t === undefined) return null;
-    if (row.t < lpsbMinT || row.t > lpsbMaxT) return null;
-    const tOffset = (row.t - lpsbMinT) / lpsbStepT;
+  scoringRows.value.map((row, index) => {
+    const tValue = getChartTValue(row.key as LpsBScoreKey, row.raw);
+    if (tValue === null || tValue === undefined) return null;
+    if (tValue < lpsbMinT || tValue > lpsbMaxT) return null;
+    const tOffset = (tValue - lpsbMinT) / lpsbStepT;
     const x = lpsbScoreOffsetX + tOffset * lpsbScoreWidth + lpsbScoreWidth / 2;
     const y = index * lpsbRowHeight + lpsbRowHeight / 2;
     return { x, y };
