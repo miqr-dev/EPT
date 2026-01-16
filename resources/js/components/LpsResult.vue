@@ -43,6 +43,7 @@ const lpsbHatchWidth = 18;
 const lpsbScoreWidth = 26;
 const lpsbRowHeight = 28;
 const lpsbHeaderHeight = 0;
+const lpsbMarkerSize = 8;
 const totalTime = computed(() => props.results?.total_time_seconds ?? null);
 const participantProfile = computed(() => props.participantProfile ?? null);
 const page1 = computed<LpsPage1ResponseRow[]>(() => props.results?.page1 ?? []);
@@ -341,13 +342,16 @@ const lpsbScoreOffsetX = lpsbLabelWidth + lpsbRawWidth + lpsbHatchWidth;
 const lpsbTopWidth = computed(() => lpsbScoreOffsetX + lpsbGridWidth.value);
 const lpsbVertical40X = computed(() => lpsbScoreOffsetX + 2 * lpsbScoreWidth);
 const lpsbVertical60X = computed(() => lpsbScoreOffsetX + 6 * lpsbScoreWidth);
+const lpsbMinT = lpsbTValues[0];
+const lpsbMaxT = lpsbTValues[lpsbTValues.length - 1];
+const lpsbStepT = 5;
 
 const lpsbPoints = computed(() =>
   scoringRowsWithScores.value.map((row, index) => {
-    if (!row.t) return null;
-    const tIndex = lpsbTValues.indexOf(row.t);
-    if (tIndex === -1) return null;
-    const x = lpsbScoreOffsetX + tIndex * lpsbScoreWidth + lpsbScoreWidth / 2;
+    if (row.t === null || row.t === undefined) return null;
+    if (row.t < lpsbMinT || row.t > lpsbMaxT) return null;
+    const tOffset = (row.t - lpsbMinT) / lpsbStepT;
+    const x = lpsbScoreOffsetX + tOffset * lpsbScoreWidth + lpsbScoreWidth / 2;
     const y = index * lpsbRowHeight + lpsbRowHeight / 2;
     return { x, y };
   }),
@@ -524,13 +528,20 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
                   stroke="#f87171"
                   stroke-width="2"
                 />
-                <circle
-                  v-for="(point, idx) in lpsbPointsFiltered"
-                  :key="`lpsb-point-${idx}`"
-                  v-bind="point"
-                  r="4"
-                  fill="#f87171"
-                />
+                <g v-for="(point, idx) in lpsbPointsFiltered" :key="`lpsb-point-${idx}`" stroke="#f87171" stroke-width="2">
+                  <line
+                    :x1="point.x - lpsbMarkerSize / 2"
+                    :y1="point.y - lpsbMarkerSize / 2"
+                    :x2="point.x + lpsbMarkerSize / 2"
+                    :y2="point.y + lpsbMarkerSize / 2"
+                  />
+                  <line
+                    :x1="point.x - lpsbMarkerSize / 2"
+                    :y1="point.y + lpsbMarkerSize / 2"
+                    :x2="point.x + lpsbMarkerSize / 2"
+                    :y2="point.y - lpsbMarkerSize / 2"
+                  />
+                </g>
               </svg>
             </div>
           </div>
