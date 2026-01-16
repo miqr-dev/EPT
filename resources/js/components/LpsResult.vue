@@ -37,6 +37,8 @@ const props = defineProps<{
 const testLabel = computed(() => props.testName ?? 'LPS');
 const isLpsB = computed(() => props.testName === 'LPS-B');
 const lpsbTValues = [30, 35, 40, 45, 50, 55, 60, 65, 70];
+const lpsbTickStep = 5;
+const lpsbMinorTicks = 4;
 const lpsbLabelWidth = 44;
 const lpsbRawWidth = 36;
 const lpsbTValueWidth = 26;
@@ -347,6 +349,12 @@ const iqFromT = computed(() => {
   if (tValue === null || tValue === undefined) return null;
   return LPS_B_IQ_BY_T_RANGES.find((range) => tValue >= range.minT && tValue <= range.maxT)?.iq ?? null;
 });
+const glTickIndex = computed(() => {
+  const tValue = totalScoreEntry.value?.t;
+  if (tValue === null || tValue === undefined) return null;
+  if (tValue < lpsbTValues[0] || tValue > lpsbTValues[lpsbTValues.length - 1]) return null;
+  return tValue - lpsbTValues[0];
+});
 
 type LpsbRowKey = LpsBScoreKey | 'total_raw';
 
@@ -400,7 +408,7 @@ const lpsbVertical50X = computed(() => lpsbScoreOffsetX + 4 * lpsbScoreWidth);
 const lpsbVertical60X = computed(() => lpsbScoreOffsetX + 6 * lpsbScoreWidth);
 const lpsbMinT = lpsbTValues[0];
 const lpsbMaxT = lpsbTValues[lpsbTValues.length - 1];
-const lpsbStepT = 5;
+const lpsbStepT = lpsbTickStep;
 
 const lpsbPoints = computed(() =>
   scoringRows.value.map((row, index) => {
@@ -589,14 +597,22 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
                 :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
               ></div>
               <div
-                v-for="tValue in lpsbTValues"
+                v-for="(tValue, tIdx) in lpsbTValues"
                 :key="`${row.key}-${tValue}`"
                 class="lpsb-cell lpsb-score"
-                :class="{
-                  'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey),
-                  'lpsb-score-ticks': row.key === 'total_raw',
-                }"
-              ></div>
+                :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
+              >
+                <div v-if="row.key === 'total_raw'" class="lpsb-ticks">
+                  <span
+                    v-for="tickOffset in lpsbMinorTicks"
+                    :key="`gl-tick-${tIdx}-${tickOffset}`"
+                    class="lpsb-tick"
+                    :class="{
+                      'lpsb-tick--active': glTickIndex === tIdx * lpsbTickStep + tickOffset,
+                    }"
+                  ></span>
+                </div>
+              </div>
             </template>
             <div class="lpsb-overlay">
               <div class="lpsb-vertical" :style="{ left: `${lpsbVertical40X}px` }"></div>
@@ -710,14 +726,6 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   padding: 2px 4px;
 }
 
-.lpsb-score-ticks {
-  background: repeating-linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--foreground) 30%, transparent) 0 1px,
-    transparent 1px 4px
-  );
-}
-
 .lpsb-hatch {
   background: transparent;
 }
@@ -774,6 +782,27 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 .lpsb-chart {
   position: absolute;
   inset: 0;
+}
+
+.lpsb-ticks {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: stretch;
+  height: 100%;
+  width: 100%;
+}
+
+.lpsb-tick {
+  border-right: 1px solid color-mix(in srgb, var(--foreground) 45%, transparent);
+  height: 100%;
+}
+
+.lpsb-tick:last-child {
+  border-right: none;
+}
+
+.lpsb-tick--active {
+  border-right: 2px solid #dc2626;
 }
 
 .lpsb-top {
