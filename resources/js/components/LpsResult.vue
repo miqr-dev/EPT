@@ -398,7 +398,7 @@ const lpsbPoints = computed(() =>
     if (tValue === null || tValue === undefined) return null;
     if (tValue < lpsbMinT || tValue > lpsbMaxT) return null;
     const tOffset = (tValue - lpsbMinT) / lpsbStepT;
-    const x = lpsbScoreOffsetX + tOffset * lpsbScoreWidth + lpsbScoreWidth / 2;
+    const x = lpsbScoreOffsetX + tOffset * lpsbScoreWidth;
     const y = index * lpsbRowHeight + lpsbRowHeight / 2;
     return { x, y };
   }),
