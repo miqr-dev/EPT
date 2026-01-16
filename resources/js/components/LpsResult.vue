@@ -386,6 +386,7 @@ const lpsbGridHeight = computed(() => scoringRows.value.length * lpsbRowHeight);
 const lpsbScoreOffsetX = lpsbLabelWidth + lpsbRawWidth + lpsbTValueWidth + lpsbHatchWidth;
 const lpsbTopWidth = computed(() => lpsbScoreOffsetX + lpsbGridWidth.value);
 const lpsbVertical40X = computed(() => lpsbScoreOffsetX + 2 * lpsbScoreWidth);
+const lpsbVertical50X = computed(() => lpsbScoreOffsetX + 4 * lpsbScoreWidth);
 const lpsbVertical60X = computed(() => lpsbScoreOffsetX + 6 * lpsbScoreWidth);
 const lpsbMinT = lpsbTValues[0];
 const lpsbMaxT = lpsbTValues[lpsbTValues.length - 1];
@@ -566,6 +567,7 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
             </template>
             <div class="lpsb-overlay">
               <div class="lpsb-vertical" :style="{ left: `${lpsbVertical40X}px` }"></div>
+              <div class="lpsb-vertical lpsb-vertical--mid" :style="{ left: `${lpsbVertical50X}px` }"></div>
               <div class="lpsb-vertical" :style="{ left: `${lpsbVertical60X}px` }"></div>
               <svg
                 class="lpsb-chart"
@@ -659,11 +661,7 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 }
 
 .lpsb-hatch {
-  background: repeating-linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--foreground) 20%, transparent) 0 3px,
-    transparent 3px 6px
-  );
+  background: transparent;
 }
 
 .lpsb-label {
@@ -709,6 +707,10 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   height: 100%;
   width: 2px;
   background: #63b3ed;
+}
+
+.lpsb-vertical--mid {
+  background: #111827;
 }
 
 .lpsb-chart {
