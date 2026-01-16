@@ -427,6 +427,9 @@ const lpsbPrimaryPoints = computed(() =>
     })
     .filter((point): point is { x: number; y: number } => !!point),
 );
+const lpsbPrimaryPolylinePoints = computed(() =>
+  lpsbPrimaryPoints.value.map((point) => `${point.x},${point.y}`).join(' '),
+);
 
 const lpsbDividerKeys = new Set<LpsBScoreKey>([
   'test_1_2',
@@ -595,6 +598,13 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
                   :points="lpsbPolylinePoints"
                   fill="none"
                   stroke="#065f46"
+                  stroke-width="2"
+                />
+                <polyline
+                  v-if="lpsbPrimaryPolylinePoints"
+                  :points="lpsbPrimaryPolylinePoints"
+                  fill="none"
+                  stroke="#dc2626"
                   stroke-width="2"
                 />
                 <g v-for="(point, idx) in lpsbPointsFiltered" :key="`lpsb-point-${idx}`" stroke="#065f46" stroke-width="2">
