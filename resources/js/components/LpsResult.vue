@@ -287,7 +287,20 @@ function matchesScoreEntry(entry: LpsBScoreRow | LpsBScoreRangeRow, raw: number)
 function lookupColumnScore(key: LpsBScoreKey, raw: number) {
   if (!ageGroupKey.value) return null;
   const table = LPS_B_SCORE_TABLES[ageGroupKey.value]?.columns?.[key] ?? [];
-  return table.find((entry) => matchesScoreEntry(entry, raw)) ?? null;
+  const directMatch = table.find((entry) => matchesScoreEntry(entry, raw));
+  if (directMatch) return directMatch;
+  const sorted = [...table].sort((a, b) => {
+    const aMin = 'raw' in a ? a.raw : a.min;
+    const bMin = 'raw' in b ? b.raw : b.min;
+    return aMin - bMin;
+  });
+  const lowerMatch = sorted.reduce<LpsBScoreRow | LpsBScoreRangeRow | null>((closest, entry) => {
+    const entryMax = 'raw' in entry ? entry.raw : entry.max;
+    if (entryMax <= raw) return entry;
+    return closest;
+  }, null);
+  if (lowerMatch) return lowerMatch;
+  return sorted[0] ?? null;
 }
 
 function getScoreRowBounds(rows: Array<LpsBScoreRow | LpsBScoreRangeRow>) {
@@ -317,16 +330,8 @@ function getScoreRowBounds(rows: Array<LpsBScoreRow | LpsBScoreRangeRow>) {
 }
 
 function getChartTValue(key: LpsBScoreKey, raw: number) {
-  if (!ageGroupKey.value) return null;
-  const table = LPS_B_SCORE_TABLES[ageGroupKey.value]?.columns?.[key] ?? [];
-  const entry = table.find((row) => matchesScoreEntry(row, raw));
-  if (entry) return entry.t;
-
-  const bounds = getScoreRowBounds(table);
-  if (!bounds) return null;
-  if (raw <= bounds.minRaw) return bounds.minT;
-  if (raw >= bounds.maxRaw) return bounds.maxT;
-  return null;
+  const entry = lookupColumnScore(key, raw);
+  return entry?.t ?? null;
 }
 
 function lookupTotalScore(raw: number) {
