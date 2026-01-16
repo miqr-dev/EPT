@@ -37,8 +37,9 @@ const props = defineProps<{
 const testLabel = computed(() => props.testName ?? 'LPS');
 const isLpsB = computed(() => props.testName === 'LPS-B');
 const lpsbTValues = [30, 35, 40, 45, 50, 55, 60, 65, 70];
-const lpsbLabelWidth = 70;
+const lpsbLabelWidth = 44;
 const lpsbRawWidth = 36;
+const lpsbTValueWidth = 26;
 const lpsbHatchWidth = 18;
 const lpsbScoreWidth = 26;
 const lpsbRowHeight = 28;
@@ -382,7 +383,7 @@ const scoringRowsWithScores = computed(() =>
 
 const lpsbGridWidth = computed(() => lpsbTValues.length * lpsbScoreWidth);
 const lpsbGridHeight = computed(() => scoringRows.value.length * lpsbRowHeight);
-const lpsbScoreOffsetX = lpsbLabelWidth + lpsbRawWidth + lpsbHatchWidth;
+const lpsbScoreOffsetX = lpsbLabelWidth + lpsbRawWidth + lpsbTValueWidth + lpsbHatchWidth;
 const lpsbTopWidth = computed(() => lpsbScoreOffsetX + lpsbGridWidth.value);
 const lpsbVertical40X = computed(() => lpsbScoreOffsetX + 2 * lpsbScoreWidth);
 const lpsbVertical60X = computed(() => lpsbScoreOffsetX + 6 * lpsbScoreWidth);
@@ -547,6 +548,12 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
                 {{ row.raw }}
               </div>
               <div
+                class="lpsb-cell lpsb-tvalue"
+                :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
+              >
+                {{ row.t ?? '–' }}
+              </div>
+              <div
                 class="lpsb-cell lpsb-hatch"
                 :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
               ></div>
@@ -634,7 +641,7 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
 .lpsb-grid {
   position: relative;
   display: grid;
-  grid-template-columns: 70px 36px 18px repeat(9, 26px);
+  grid-template-columns: 44px 36px 26px 18px repeat(9, 26px);
   gap: 0;
   border: 1px solid var(--border);
   background: var(--background);
@@ -670,11 +677,17 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
   font-weight: 600;
 }
 
+.lpsb-tvalue {
+  font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  font-weight: 600;
+}
+
 .lpsb-divider {
   border-top: 2px solid var(--foreground);
 }
 
-.lpsb-grid > :nth-child(12n) {
+.lpsb-grid > :nth-child(13n) {
   border-right: none;
 }
 
