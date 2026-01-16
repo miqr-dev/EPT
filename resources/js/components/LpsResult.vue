@@ -412,6 +412,21 @@ const lpsbPolylinePoints = computed(() =>
 );
 
 const lpsbPointsFiltered = computed(() => lpsbPoints.value.filter((point): point is { x: number; y: number } => !!point));
+const lpsbPrimaryKeys = new Set<LpsBScoreKey>(['test_1_2', 'test_3_4', 'test_5_6', 'test_7_10', 'test_11_12', 'test_13_14']);
+const lpsbPrimaryPoints = computed(() =>
+  scoringRows.value
+    .map((row, index) => {
+      if (!lpsbPrimaryKeys.has(row.key as LpsBScoreKey)) return null;
+      const tValue = getChartTValue(row.key as LpsBScoreKey, row.raw);
+      if (tValue === null || tValue === undefined) return null;
+      if (tValue < lpsbMinT || tValue > lpsbMaxT) return null;
+      const tOffset = (tValue - lpsbMinT) / lpsbStepT;
+      const x = lpsbScoreOffsetX + tOffset * lpsbScoreWidth;
+      const y = index * lpsbRowHeight + lpsbRowHeight / 2;
+      return { x, y };
+    })
+    .filter((point): point is { x: number; y: number } => !!point),
+);
 
 const lpsbDividerKeys = new Set<LpsBScoreKey>([
   'test_1_2',
@@ -579,10 +594,10 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
                   v-if="lpsbPolylinePoints"
                   :points="lpsbPolylinePoints"
                   fill="none"
-                  stroke="#f87171"
+                  stroke="#065f46"
                   stroke-width="2"
                 />
-                <g v-for="(point, idx) in lpsbPointsFiltered" :key="`lpsb-point-${idx}`" stroke="#f87171" stroke-width="2">
+                <g v-for="(point, idx) in lpsbPointsFiltered" :key="`lpsb-point-${idx}`" stroke="#065f46" stroke-width="2">
                   <line
                     :x1="point.x - lpsbMarkerSize / 2"
                     :y1="point.y - lpsbMarkerSize / 2"
@@ -596,6 +611,16 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
                     :y2="point.y - lpsbMarkerSize / 2"
                   />
                 </g>
+                <circle
+                  v-for="(point, idx) in lpsbPrimaryPoints"
+                  :key="`lpsb-primary-point-${idx}`"
+                  :cx="point.x"
+                  :cy="point.y"
+                  r="4"
+                  fill="none"
+                  stroke="#dc2626"
+                  stroke-width="2"
+                />
               </svg>
             </div>
           </div>
