@@ -27,7 +27,7 @@ export async function generatePdfFromElement(
   }
 
   const canvas = await html2canvas(element, {
-    scale: 2, // Higher scale for better quality
+    scale: 4, // Higher scale for better quality
     useCORS: true,
   });
 
