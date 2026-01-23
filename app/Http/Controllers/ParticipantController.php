@@ -329,13 +329,20 @@ class ParticipantController extends Controller
     return back(303);
   }
 
-  public function list()
+  public function list(Request $request)
   {
     $user = Auth::user();
     $cityId = $user->city_id;
+    $search = trim($request->input('search', ''));
 
     $participants = \App\Models\User::where('role', 'participant')
       ->where('city_id', $cityId)
+      ->when($search !== '', function ($query) use ($search) {
+        $query->where(function ($subQuery) use ($search) {
+          $subQuery->where('name', 'like', "%{$search}%")
+            ->orWhere('firstname', 'like', "%{$search}%");
+        });
+      })
       ->with([
         'participantProfile',
         'testAssignments.test',
@@ -375,6 +382,9 @@ class ParticipantController extends Controller
 
     return Inertia::render('Participants/List', [
       'participants' => $participants,
+      'filters' => [
+        'search' => $search,
+      ],
     ]);
   }
 

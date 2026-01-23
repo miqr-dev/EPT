@@ -7,10 +7,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import TestResultModal from '@/components/TestResultModal.vue';
 import { Checkbox } from '@/components/ui/checkbox';
 
-defineProps<{
+const props = defineProps<{
   participants: {
     data: any[];
     links: Array<{ url: string | null; label: string; active: boolean }>;
+  };
+  filters: {
+    search: string;
   };
 }>();
 
@@ -18,6 +21,7 @@ const isModalOpen = ref(false);
 const selectedAssignment = ref(null);
 const selectedParticipant = ref(null);
 const togglingIds = ref<number[]>([]);
+const searchQuery = ref(props.filters.search ?? '');
 
 const dateFormatter = computed(() =>
   new Intl.DateTimeFormat('de-DE', {
@@ -60,6 +64,18 @@ function toggleLoginPermission(participant: any, value: boolean | string | undef
     },
   );
 }
+
+function updateSearch() {
+  router.get(
+    route('participants.list'),
+    { search: searchQuery.value || undefined },
+    {
+      preserveState: true,
+      preserveScroll: true,
+      replace: true,
+    },
+  );
+}
 </script>
 
 <template>
@@ -67,7 +83,20 @@ function toggleLoginPermission(participant: any, value: boolean | string | undef
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <Card>
         <CardHeader>
-          <CardTitle>Teilnehmer</CardTitle>
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle>Teilnehmer</CardTitle>
+            <div class="w-full sm:w-72">
+              <label class="sr-only" for="participant-search">Teilnehmer suchen</label>
+              <input
+                id="participant-search"
+                v-model="searchQuery"
+                type="search"
+                placeholder="Teilnehmer suchen"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                @input="updateSearch"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
