@@ -72,20 +72,20 @@ class ParticipantController extends Controller
     $profile = $user->participantProfile ?: new ParticipantProfile(['user_id' => $user->id]);
     $profile->fill($data)->save();
 
-    $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
-      if ($examParticipant) {
-        $exam = Exam::find($examParticipant->exam_id);
-        if ($exam && in_array($exam->status, ['in_progress', 'paused', 'completed'], true)) {
-          return redirect()->route('my-exam');
-        }
+    $examParticipant = ExamParticipant::latestForParticipant($user->id);
+    if ($examParticipant) {
+      $exam = Exam::find($examParticipant->exam_id);
+      if ($exam && in_array($exam->status, ['in_progress', 'paused', 'completed'], true)) {
+        return redirect()->route('my-exam');
       }
-      return redirect()->route('participant.no-exam');
+    }
+    return redirect()->route('participant.no-exam');
     }
 
   public function examLauncher()
   {
     $user = Auth::user();
-    $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
+    $examParticipant = ExamParticipant::latestForParticipant($user->id);
 
     if (!$examParticipant) {
       // Redirect to onboarding if not yet assigned to an exam.
@@ -106,16 +106,33 @@ class ParticipantController extends Controller
       ->get()
       ->keyBy('exam_step_id');
 
+    $completedTestIds = TestAssignment::where('participant_id', $user->id)
+      ->where('status', 'completed')
+      ->whereHas('results')
+      ->pluck('test_id')
+      ->unique();
+
     // Ensure step statuses exist for all steps, creating them if necessary.
     foreach ($exam->steps as $step) {
       if (!isset($stepStatuses[$step->id])) {
+        $isCompleted = $step->test_id && $completedTestIds->contains($step->test_id);
         $newStatus = ExamStepStatus::create([
           'exam_id' => $exam->id,
           'exam_step_id' => $step->id,
           'participant_id' => $user->id,
-          'status' => 'not_started',
+          'status' => $isCompleted ? 'completed' : 'not_started',
+          'completed_at' => $isCompleted ? now() : null,
         ]);
         $stepStatuses[$step->id] = $newStatus;
+      } else {
+        $status = $stepStatuses[$step->id];
+        if ($status->status === 'not_started' && $step->test_id && $completedTestIds->contains($step->test_id)) {
+          $status->update([
+            'status' => 'completed',
+            'completed_at' => $status->completed_at ?? now(),
+          ]);
+          $stepStatuses[$step->id] = $status->fresh();
+        }
       }
     }
 
@@ -269,23 +286,26 @@ class ParticipantController extends Controller
           $resultData = \App\Services\Bit2Scorer::score($answers, $sex);
         }
 
+        $existingResult = TestResult::where('assignment_id', $assignment->id)->latest()->first();
         $exam = Exam::find($examStepStatus->exam_id);
         $teacherId = $exam ? $exam->teacher_id : null;
 
-        $testResult = TestResult::updateOrCreate(
-          [
-            'assignment_id' => $assignment->id,
-          ],
-          [
-            'result_json' => $resultData,
-            'teacher_id' => $teacherId,
-          ]
-        );
+        if (!($assignment->status === 'completed' && $existingResult)) {
+          TestResult::updateOrCreate(
+            [
+              'assignment_id' => $assignment->id,
+            ],
+            [
+              'result_json' => $resultData,
+              'teacher_id' => $teacherId,
+            ]
+          );
 
-        $assignment->update([
-          'status' => 'completed',
-          'completed_at' => now(),
-        ]);
+          $assignment->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+          ]);
+        }
       }
     }
 
@@ -461,18 +481,21 @@ class ParticipantController extends Controller
           ]
         );
 
+        $existingResult = TestResult::where('assignment_id', $assignment->id)->latest()->first();
         $exam = Exam::find($examStepStatus->exam_id);
         $teacherId = $exam ? $exam->teacher_id : null;
 
-        TestResult::updateOrCreate(
-          [
-            'assignment_id' => $assignment->id,
-          ],
-          [
-            'result_json' => $results,
-            'teacher_id' => $teacherId,
-          ]
-        );
+        if (!($assignment->status === 'completed' && $existingResult)) {
+          TestResult::updateOrCreate(
+            [
+              'assignment_id' => $assignment->id,
+            ],
+            [
+              'result_json' => $results,
+              'teacher_id' => $teacherId,
+            ]
+          );
+        }
       }
     }
 

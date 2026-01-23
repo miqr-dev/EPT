@@ -8,6 +8,13 @@ class ExamParticipant extends Model
 {
   protected $fillable = ['exam_id', 'participant_id', 'status'];
 
+  public static function latestForParticipant(int $participantId): ?self
+  {
+    return static::where('participant_id', $participantId)
+      ->latest('created_at')
+      ->first();
+  }
+
   public function exam()
   {
     return $this->belongsTo(Exam::class);

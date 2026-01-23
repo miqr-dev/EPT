@@ -58,7 +58,7 @@ class AuthenticatedSessionController extends Controller
       if (!$profileComplete) {
         return redirect()->intended(route('participant.onboarding', absolute: false));
       }
-      $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
+      $examParticipant = ExamParticipant::latestForParticipant($user->id);
       if (!$examParticipant) {
         return redirect()->intended(route('participant.no-exam', absolute: false));
       }

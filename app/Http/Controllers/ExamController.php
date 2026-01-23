@@ -8,6 +8,7 @@ use App\Models\ExamStep;
 use App\Models\ExamStepStatus;
 use App\Models\User;
 use App\Models\Test;
+use App\Models\TestAssignment;
 use App\Models\City;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -179,12 +180,25 @@ class ExamController extends Controller
 
     // Create status records for all participants for the first step
     $exam->load('participants');
+    $participantIds = $exam->participants->pluck('participant_id');
+    $completedAssignments = collect();
+    if ($firstStep->test_id) {
+      $completedAssignments = TestAssignment::where('test_id', $firstStep->test_id)
+        ->whereIn('participant_id', $participantIds)
+        ->where('status', 'completed')
+        ->whereHas('results')
+        ->get(['participant_id', 'completed_at'])
+        ->keyBy('participant_id');
+    }
     foreach ($exam->participants as $participant) {
+      $completedAssignment = $completedAssignments->get($participant->participant_id);
+      $isCompleted = $completedAssignment !== null;
       ExamStepStatus::create([
         'exam_id' => $exam->id,
         'exam_step_id' => $firstStep->id,
         'participant_id' => $participant->participant_id,
-        'status' => 'not_started',
+        'status' => $isCompleted ? 'completed' : 'not_started',
+        'completed_at' => $isCompleted ? ($completedAssignment->completed_at ?? now()) : null,
       ]);
     }
     return back(303)->with('success', 'Exam started!');
@@ -200,12 +214,25 @@ class ExamController extends Controller
 
       // Create status records for all participants for the new step
       $exam->load('participants');
+      $participantIds = $exam->participants->pluck('participant_id');
+      $completedAssignments = collect();
+      if ($nextStep->test_id) {
+        $completedAssignments = TestAssignment::where('test_id', $nextStep->test_id)
+          ->whereIn('participant_id', $participantIds)
+          ->where('status', 'completed')
+          ->whereHas('results')
+          ->get(['participant_id', 'completed_at'])
+          ->keyBy('participant_id');
+      }
       foreach ($exam->participants as $participant) {
+        $completedAssignment = $completedAssignments->get($participant->participant_id);
+        $isCompleted = $completedAssignment !== null;
         ExamStepStatus::create([
           'exam_id' => $exam->id,
           'exam_step_id' => $nextStep->id,
           'participant_id' => $participant->participant_id,
-          'status' => 'not_started',
+          'status' => $isCompleted ? 'completed' : 'not_started',
+          'completed_at' => $isCompleted ? ($completedAssignment->completed_at ?? now()) : null,
         ]);
       }
       return back(303)->with('success', 'Moved to next step.');
@@ -247,13 +274,27 @@ class ExamController extends Controller
 
     // Create status records for all participants for the new step
     $exam->load('participants');
+    $participantIds = $exam->participants->pluck('participant_id');
+    $step = $exam->steps()->whereKey($data['step_id'])->first();
+    $completedAssignments = collect();
+    if ($step?->test_id) {
+      $completedAssignments = TestAssignment::where('test_id', $step->test_id)
+        ->whereIn('participant_id', $participantIds)
+        ->where('status', 'completed')
+        ->whereHas('results')
+        ->get(['participant_id', 'completed_at'])
+        ->keyBy('participant_id');
+    }
     foreach ($exam->participants as $participant) {
+      $completedAssignment = $completedAssignments->get($participant->participant_id);
+      $isCompleted = $completedAssignment !== null;
       ExamStepStatus::firstOrCreate([
         'exam_id' => $exam->id,
         'exam_step_id' => $data['step_id'],
         'participant_id' => $participant->participant_id,
       ], [
-        'status' => 'not_started',
+        'status' => $isCompleted ? 'completed' : 'not_started',
+        'completed_at' => $isCompleted ? ($completedAssignment->completed_at ?? now()) : null,
       ]);
     }
 

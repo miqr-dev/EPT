@@ -97,7 +97,7 @@ class RedirectBasedOnRole
         $allowedRoutes = $participantRoutes;
         $examAccessible = false;
         if ($profileComplete) {
-          $examParticipant = ExamParticipant::where('participant_id', $user->id)->first();
+          $examParticipant = ExamParticipant::latestForParticipant($user->id);
           $exam = $examParticipant?->exam;
           $examAccessible = $exam && in_array($exam->status, ['in_progress', 'paused', 'completed'], true);
           $allowedRoutes = array_merge($allowedRoutes, [
