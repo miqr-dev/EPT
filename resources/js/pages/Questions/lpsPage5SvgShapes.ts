@@ -395,9 +395,9 @@ const LPS_PAGE5_COLUMN7_B_CORRECT_INDICES: number[] = [
     0, // row 28
     4, // row 29
     3, // row 30
-    2, // row 31
-    4, // row 32
-    1, // row 33
+    2, // row 31    
+    5, // row 32
+    1, // row 33     
     3, // row 34
     0, // row 35
     0, // row 36

@@ -184,7 +184,7 @@ const BASE_ROWS: LpsPage8SvgRow[] = [
     {
         prompts: [
             { svg: FIRST_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
-            { svg: TWENTYTWO_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'triangle' },
+            { svg: TWENTYTWO_SVG, svgMeta: PLACEHOLDER_META, correctOptionId: 'l-shape' },
         ],
     },
     {
