@@ -570,14 +570,6 @@ watch(
   { deep: true },
 );
 
-watch(
-  page1Responses,
-  () => {
-    maybeReactivateColumn1FromColumn2();
-  },
-  { deep: true },
-);
-
 function startTest() {
   showTest.value = true;
   pageIndex.value = 0;
@@ -786,9 +778,22 @@ function startColumn(columnIdx: number) {
   const currentState = columnStates.value[columnIdx];
   if (!currentState || currentState.status !== 'ready' || isAnyColumnActive.value) return;
   stopColumnTimer();
+  const remaining = currentState.remaining || getColumnDuration(columnIdx);
+  if (columnIdx === 1) {
+    columnStates.value[columnIdx] = {
+      status: 'active',
+      remaining,
+    };
+    columnStates.value[0] = {
+      status: 'active',
+      remaining,
+    };
+    beginColumnCountdown(columnIdx, { syncColumnIndex: 0 });
+    return;
+  }
   columnStates.value[columnIdx] = {
     status: 'active',
-    remaining: currentState.remaining || getColumnDuration(columnIdx),
+    remaining,
   };
   beginColumnCountdown(columnIdx);
 }
@@ -800,8 +805,11 @@ function stopColumnTimer() {
   }
 }
 
-function beginColumnCountdown(columnIdx: number, options: { unlockNext?: boolean } = {}) {
-  const { unlockNext = true } = options;
+function beginColumnCountdown(
+  columnIdx: number,
+  options: { unlockNext?: boolean; syncColumnIndex?: number } = {},
+) {
+  const { unlockNext = true, syncColumnIndex } = options;
   stopColumnTimer();
   columnTimerHandle.value = window.setInterval(() => {
     const activeState = columnStates.value[columnIdx];
@@ -810,7 +818,16 @@ function beginColumnCountdown(columnIdx: number, options: { unlockNext?: boolean
       return;
     }
     activeState.remaining = Math.max(activeState.remaining - 1, 0);
+    if (typeof syncColumnIndex === 'number') {
+      const syncState = columnStates.value[syncColumnIndex];
+      if (syncState?.status === 'active') {
+        syncState.remaining = activeState.remaining;
+      }
+    }
     if (activeState.remaining === 0) {
+      if (typeof syncColumnIndex === 'number') {
+        finishColumn(syncColumnIndex, false);
+      }
       finishColumn(columnIdx, unlockNext);
     }
   }, 1000);
@@ -864,30 +881,6 @@ function createInitialColumnStates(): LpsColumnState[] {
     status: idx === 0 ? 'ready' : 'locked',
     remaining: duration,
   }));
-}
-
-function isColumnFullyAnswered(columnKey: 'col1' | 'col2') {
-  return lpsRows.every((row, idx) => {
-    const word = columnKey === 'col1' ? row.column1 : row.column2;
-    if (!word.length) return true;
-    const picks = page1Responses.value[idx]?.[columnKey];
-    return picks?.some(Boolean) ?? false;
-  });
-}
-
-function maybeReactivateColumn1FromColumn2() {
-  const column2State = columnStates.value[1];
-  if (!column2State || column2State.status !== 'active') return;
-  if (!isColumnFullyAnswered('col2')) return;
-  if (column2State.remaining <= 0) return;
-
-  const column1State = columnStates.value[0];
-  if (column1State?.status === 'active') return;
-
-  stopColumnTimer();
-  columnStates.value[1] = { status: 'finished', remaining: column2State.remaining };
-  columnStates.value[0] = { status: 'active', remaining: column2State.remaining };
-  beginColumnCountdown(0, { unlockNext: false });
 }
 
 function scoreRow(rowIdx: number, solutions: LpsPage1Solution, responses: LpsPage1ResponseRow) {
