@@ -373,10 +373,12 @@ class ParticipantController extends Controller
 
     $participants->getCollection()->transform(function ($participant) use ($examTestIdsByParticipant) {
       $allowedTestIds = $examTestIdsByParticipant->get($participant->id, collect());
-      $filteredAssignments = $participant->testAssignments->whereIn('test_id', $allowedTestIds);
-      $participant->setRelation('testAssignments', $filteredAssignments->values());
-      $filteredTests = $participant->tests->whereIn('id', $allowedTestIds);
-      $participant->setRelation('tests', $filteredTests->values());
+      if ($allowedTestIds->isNotEmpty()) {
+        $filteredAssignments = $participant->testAssignments->whereIn('test_id', $allowedTestIds);
+        $participant->setRelation('testAssignments', $filteredAssignments->values());
+        $filteredTests = $participant->tests->whereIn('id', $allowedTestIds);
+        $participant->setRelation('tests', $filteredTests->values());
+      }
       return $participant;
     });
 
