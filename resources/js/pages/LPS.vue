@@ -118,6 +118,13 @@ const PAGE8_ARROW_ROWS: Record<number, number[]> = {
   0: [1],
   1: [0],
 };
+const page8HeaderShape = computed(() => {
+  if (!LPS_PAGE8_OPTION_SVGS.length) {
+    return null;
+  }
+
+  return LPS_PAGE8_OPTION_SVGS[Math.floor(Math.random() * LPS_PAGE8_OPTION_SVGS.length)];
+});
 const PAGE8_ARROW_TOP = 'calc(100% - 8px)';
 const PAGE8_GRID_GAP_PX = 12;
 const PAGE8_ROW_PADDING_PX = 16;
@@ -1956,8 +1963,7 @@ function formatColumnScore(columnIdx: number) {
               <!-- <p class="text-center text-xs text-muted-foreground">Finde die passende Form zu jeder Vorlage.</p> -->
 
               <div class="mb-4 flex flex-wrap justify-center gap-3 rounded-xl border bg-background p-3 shadow-sm">
-                <div v-for="option in LPS_PAGE8_OPTION_SVGS" :key="`page8-options-${option.id}`"
-                  class="page8-option-preview" v-html="option.svg"></div>
+                <div v-if="page8HeaderShape" class="page8-option-preview" v-html="page8HeaderShape.svg"></div>
               </div>
 
               <div class="space-y-4">
