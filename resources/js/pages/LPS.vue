@@ -47,8 +47,8 @@ type ColumnStatus = 'locked' | 'ready' | 'active' | 'finished';
 type LpsColumnState = { status: ColumnStatus; remaining: number };
 
 
-const BASE_COLUMN_DURATION_SECONDS = [121, 180, 300, 480, 180, 120, 240, 180, 180, 60, 120];
-// const BASE_COLUMN_DURATION_SECONDS = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+const BASE_COLUMN_DURATION_SECONDS = [120, 180, 300, 480, 180, 120, 240, 180, 180, 60, 120];
+// const BASE_COLUMN_DURATION_SECONDS = [1, 1, 1, 1, 1, 31, 1, 1, 1, 1, 1];
 const BASE_COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12];
 const BASE_PAGE_SECTIONS = [
   { title: 'Spalten 1 + 2', columnIndices: [0, 1] },
@@ -468,11 +468,7 @@ const page6OptionGroups = computed<LpsPage6OptionGroup[][]>(() =>
 
 const sectionDurationText = computed(() => formatSectionDurations(visibleColumnIndices.value));
 
-const activeColumnIndex = computed(() => {
-  const column2State = columnStates.value[1];
-  if (isLpsB.value && column2State?.status === 'active') return 1;
-  return columnStates.value.findIndex((c) => c.status === 'active');
-});
+const activeColumnIndex = computed(() => columnStates.value.findIndex((c) => c.status === 'active'));
 const isAnyColumnActive = computed(() => activeColumnIndex.value !== -1);
 const columnTimerHandle = ref<number | null>(null);
 
@@ -484,7 +480,7 @@ if (props.pausedTestResult) {
   showTest.value = true;
   startTimer();
   if (activeColumnIndex.value !== -1) {
-    beginColumnCountdown(activeColumnIndex.value, getCountdownOptions(activeColumnIndex.value));
+    beginColumnCountdown(activeColumnIndex.value);
   }
 }
 
@@ -570,6 +566,14 @@ watch(
       page11_positive_score: page11PositiveScore.value,
       page11_negative_score: page11NegativeScore.value,
     });
+  },
+  { deep: true },
+);
+
+watch(
+  page1Responses,
+  () => {
+    maybeReactivateColumn1FromColumn2();
   },
   { deep: true },
 );
@@ -782,18 +786,11 @@ function startColumn(columnIdx: number) {
   const currentState = columnStates.value[columnIdx];
   if (!currentState || currentState.status !== 'ready' || isAnyColumnActive.value) return;
   stopColumnTimer();
-  const remaining = currentState.remaining || getColumnDuration(columnIdx);
-  if (isLpsB.value && columnIdx === 1) {
-    columnStates.value[0] = {
-      status: 'active',
-      remaining,
-    };
-  }
   columnStates.value[columnIdx] = {
     status: 'active',
-    remaining,
+    remaining: currentState.remaining || getColumnDuration(columnIdx),
   };
-  beginColumnCountdown(columnIdx, getCountdownOptions(columnIdx));
+  beginColumnCountdown(columnIdx);
 }
 
 function stopColumnTimer() {
@@ -803,11 +800,8 @@ function stopColumnTimer() {
   }
 }
 
-function beginColumnCountdown(
-  columnIdx: number,
-  options: { unlockNext?: boolean; syncColumnIdx?: number | null } = {},
-) {
-  const { unlockNext = true, syncColumnIdx = null } = options;
+function beginColumnCountdown(columnIdx: number, options: { unlockNext?: boolean } = {}) {
+  const { unlockNext = true } = options;
   stopColumnTimer();
   columnTimerHandle.value = window.setInterval(() => {
     const activeState = columnStates.value[columnIdx];
@@ -816,12 +810,6 @@ function beginColumnCountdown(
       return;
     }
     activeState.remaining = Math.max(activeState.remaining - 1, 0);
-    if (syncColumnIdx !== null) {
-      const syncState = columnStates.value[syncColumnIdx];
-      if (syncState?.status === 'active') {
-        syncState.remaining = activeState.remaining;
-      }
-    }
     if (activeState.remaining === 0) {
       finishColumn(columnIdx, unlockNext);
     }
@@ -833,12 +821,6 @@ function finishColumn(columnIdx: number, unlockNext = true) {
   if (!currentState) return;
   columnStates.value[columnIdx] = { status: 'finished', remaining: 0 };
   stopColumnTimer();
-  if (isLpsB.value && columnIdx === 1) {
-    const column1State = columnStates.value[0];
-    if (column1State?.status === 'active') {
-      columnStates.value[0] = { status: 'finished', remaining: 0 };
-    }
-  }
   if (!unlockNext) {
     if (columnIdx === 0 && columnStates.value[1]?.status === 'finished') {
       columnStates.value[1] = { ...columnStates.value[1], remaining: 0 };
@@ -852,13 +834,6 @@ function finishColumn(columnIdx: number, unlockNext = true) {
       remaining: nextState.remaining || getColumnDuration(columnIdx + 1),
     };
   }
-}
-
-function getCountdownOptions(columnIdx: number) {
-  if (isLpsB.value && columnIdx === 1) {
-    return { syncColumnIdx: 0 };
-  }
-  return {};
 }
 
 function isColumnInteractive(columnKey: ColumnKey) {
@@ -891,6 +866,29 @@ function createInitialColumnStates(): LpsColumnState[] {
   }));
 }
 
+function isColumnFullyAnswered(columnKey: 'col1' | 'col2') {
+  return lpsRows.every((row, idx) => {
+    const word = columnKey === 'col1' ? row.column1 : row.column2;
+    if (!word.length) return true;
+    const picks = page1Responses.value[idx]?.[columnKey];
+    return picks?.some(Boolean) ?? false;
+  });
+}
+
+function maybeReactivateColumn1FromColumn2() {
+  const column2State = columnStates.value[1];
+  if (!column2State || column2State.status !== 'active') return;
+  if (!isColumnFullyAnswered('col2')) return;
+  if (column2State.remaining <= 0) return;
+
+  const column1State = columnStates.value[0];
+  if (column1State?.status === 'active') return;
+
+  stopColumnTimer();
+  columnStates.value[1] = { status: 'finished', remaining: column2State.remaining };
+  columnStates.value[0] = { status: 'active', remaining: column2State.remaining };
+  beginColumnCountdown(0, { unlockNext: false });
+}
 
 function scoreRow(rowIdx: number, solutions: LpsPage1Solution, responses: LpsPage1ResponseRow) {
   const cols: Array<keyof LpsPage1Solution> = ['col1', 'col2', 'col3', 'col4', 'col5'];
