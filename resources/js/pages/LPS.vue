@@ -105,6 +105,7 @@ const { rows: lpsPage8Rows, solutions: lpsPage8Solutions } = getLpsPage8Dataset(
 const { rows: lpsPage9Rows, solutions: lpsPage9Solutions } = getLpsPage9Dataset(props.testName);
 const { rows: lpsPage10Rows, solutions: lpsPage10Solutions } = getLpsPage10Dataset(props.testName);
 const { rows: lpsPage11Rows, solutions: lpsPage11Solutions } = getLpsPage11Dataset(props.testName);
+const page8HeaderShape = LPS_PAGE8_OPTION_SVGS[Math.floor(Math.random() * LPS_PAGE8_OPTION_SVGS.length)];
 
 const PAGE7_GRID_GAP_PX = 12;
 // Update this width if the shape panels get larger/smaller so the arrows anchor to the panel edges.
@@ -1956,7 +1957,8 @@ function formatColumnScore(columnIdx: number) {
               <!-- <p class="text-center text-xs text-muted-foreground">Finde die passende Form zu jeder Vorlage.</p> -->
 
               <div class="mb-4 flex flex-wrap justify-center gap-3 rounded-xl border bg-background p-3 shadow-sm">
-                <div v-for="option in LPS_PAGE8_OPTION_SVGS" :key="`page8-options-${option.id}`"
+                <div v-if="isLpsB" class="page8-option-preview" v-html="page8HeaderShape.svg"></div>
+                <div v-else v-for="option in LPS_PAGE8_OPTION_SVGS" :key="`page8-options-${option.id}`"
                   class="page8-option-preview" v-html="option.svg"></div>
               </div>
 
