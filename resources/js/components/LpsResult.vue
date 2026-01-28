@@ -727,9 +727,7 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
           </thead>
           <tbody>
             <tr class="border-t">
-              <td class="px-3 py-2 font-semibold">
-                Summe (Test 1+2 + Test 3+4 + Test 5+6 + Test 7–10 + Test 11+12 + Test 13+14)
-              </td>
+              <td class="px-3 py-2 font-semibold">Summe</td>
               <td class="px-3 py-2 text-right font-mono">{{ totalScores.total }}</td>
               <td class="px-3 py-2 text-right">{{ totalScoreEntry?.t ?? '–' }}</td>
               <td class="px-3 py-2 text-right">{{ totalScoreEntry?.c ?? '–' }}</td>
