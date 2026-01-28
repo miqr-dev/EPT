@@ -719,7 +719,7 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
           :style="{ width: `${lpsbTopWidth + 24}px` }"
         >
           <thead>
-            <tr class="bg-muted/40 text-left">
+            <tr class="bg-muted/40 text-left">git 
               <th class="px-3 py-2 text-right font-semibold">Rohwert</th>
               <th class="px-3 py-2 text-right font-semibold">T-Wert</th>
               <!-- <th class="px-3 py-2 text-right font-semibold">C-Wert</th> -->
