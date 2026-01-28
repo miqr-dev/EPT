@@ -717,7 +717,6 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
         <table class="min-w-[640px] w-full border-collapse text-sm">
           <thead>
             <tr class="bg-muted/40 text-left">
-              <th class="px-3 py-2 font-semibold">Gesamtwert</th>
               <th class="px-3 py-2 text-right font-semibold">Rohwert</th>
               <th class="px-3 py-2 text-right font-semibold">T-Wert</th>
               <th class="px-3 py-2 text-right font-semibold">C-Wert</th>
@@ -727,7 +726,6 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
           </thead>
           <tbody>
             <tr class="border-t">
-              <td class="px-3 py-2 font-semibold">Summe</td>
               <td class="px-3 py-2 text-right font-mono">{{ totalScores.total }}</td>
               <td class="px-3 py-2 text-right">{{ totalScoreEntry?.t ?? '–' }}</td>
               <td class="px-3 py-2 text-right">{{ totalScoreEntry?.c ?? '–' }}</td>
