@@ -1957,7 +1957,8 @@ function formatColumnScore(columnIdx: number) {
               <!-- <p class="text-center text-xs text-muted-foreground">Finde die passende Form zu jeder Vorlage.</p> -->
 
               <div class="mb-4 flex flex-wrap justify-center gap-3 rounded-xl border bg-background p-3 shadow-sm">
-                <div v-if="isLpsB" class="page8-option-preview" v-html="page8HeaderShapeSvg"></div>
+                <div v-if="isLpsB" class="page8-option-preview page8-option-preview--plain"
+                  v-html="page8HeaderShapeSvg"></div>
                 <div v-else v-for="option in LPS_PAGE8_OPTION_SVGS" :key="`page8-options-${option.id}`"
                   class="page8-option-preview" v-html="option.svg"></div>
               </div>
@@ -2275,6 +2276,21 @@ function formatColumnScore(columnIdx: number) {
 .page8-option-preview svg {
   width: 52px;
   height: 52px;
+}
+
+.page8-option-preview--plain {
+  width: auto;
+  height: auto;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.page8-option-preview--plain svg {
+  width: auto;
+  height: auto;
+  max-width: 100%;
 }
 
 .page8-arrow {
