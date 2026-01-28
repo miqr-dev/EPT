@@ -1463,20 +1463,22 @@ function formatColumnScore(columnIdx: number) {
 
           <!-- Page 3: Spalte 4 -->
           <div v-else-if="pageIndex === 2" class="space-y-3">
-            <div class="lps-alphabet-float" aria-hidden="true">
-              <div class="lps-alphabet-box">
-                <div class="lps-alphabet-row">
-                  <span v-for="(char, charIdx) in alphabetLetters.slice(0, 13)" :key="`alpha-top-${charIdx}`">
-                    {{ char }}
-                  </span>
-                </div>
-                <div class="lps-alphabet-row">
-                  <span v-for="(char, charIdx) in alphabetLetters.slice(13)" :key="`alpha-bottom-${charIdx}`">
-                    {{ char }}
-                  </span>
+            <Teleport to="body">
+              <div class="lps-alphabet-float" aria-hidden="true">
+                <div class="lps-alphabet-box">
+                  <div class="lps-alphabet-row">
+                    <span v-for="(char, charIdx) in alphabetLetters.slice(0, 13)" :key="`alpha-top-${charIdx}`">
+                      {{ char }}
+                    </span>
+                  </div>
+                  <div class="lps-alphabet-row">
+                    <span v-for="(char, charIdx) in alphabetLetters.slice(13)" :key="`alpha-bottom-${charIdx}`">
+                      {{ char }}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            </Teleport>
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalte 4</div>
 
