@@ -714,7 +714,10 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
       </div>
 
       <div class="overflow-x-auto">
-        <table class="min-w-[640px] w-full border-collapse text-sm">
+        <table
+          class="min-w-[640px] border-collapse text-sm"
+          :style="{ width: `${lpsbTopWidth + 24}px` }"
+        >
           <thead>
             <tr class="bg-muted/40 text-left">
               <th class="px-3 py-2 text-right font-semibold">Rohwert</th>
