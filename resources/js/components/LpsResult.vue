@@ -715,14 +715,14 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
 
       <div class="overflow-x-auto">
         <table
-          class="min-w-[640px] border-collapse text-sm"
+          class="min-w-[320px] border-collapse text-sm"
           :style="{ width: `${lpsbTopWidth + 24}px` }"
         >
           <thead>
             <tr class="bg-muted/40 text-left">
               <th class="px-3 py-2 text-right font-semibold">Rohwert</th>
               <th class="px-3 py-2 text-right font-semibold">T-Wert</th>
-              <th class="px-3 py-2 text-right font-semibold">C-Wert</th>
+              <!-- <th class="px-3 py-2 text-right font-semibold">C-Wert</th> -->
               <th class="px-3 py-2 text-right font-semibold">PR</th>
               <th class="px-3 py-2 text-right font-semibold">IQ</th>
             </tr>
@@ -731,7 +731,7 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
             <tr class="border-t">
               <td class="px-3 py-2 text-right font-mono">{{ totalScores.total }}</td>
               <td class="px-3 py-2 text-right">{{ totalScoreEntry?.t ?? '–' }}</td>
-              <td class="px-3 py-2 text-right">{{ totalScoreEntry?.c ?? '–' }}</td>
+              <!-- <td class="px-3 py-2 text-right">{{ totalScoreEntry?.c ?? '–' }}</td> -->
               <td class="px-3 py-2 text-right">{{ totalScoreEntry?.pr ?? '–' }}</td>
               <td class="px-3 py-2 text-right">{{ iqFromT ?? '–' }}</td>
             </tr>
