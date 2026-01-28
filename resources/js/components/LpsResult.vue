@@ -431,9 +431,19 @@ const lpsbPoints = computed(() =>
 );
 
 const lpsbPolylinePoints = computed(() =>
-  lpsbPoints.value
-    .map((point) => (point ? `${point.x},${point.y}` : null))
-    .filter((point) => point !== null)
+  scoringRows.value
+    .map((row, index) => {
+      if (!row.plot || !isScoreKey(row.key)) return null;
+      if (row.key === 'test_14_wrong') return null;
+      const tValue = getChartTValue(row.key as LpsBScoreKey, row.raw);
+      if (tValue === null || tValue === undefined) return null;
+      if (tValue < lpsbMinT || tValue > lpsbMaxT) return null;
+      const tOffset = (tValue - lpsbMinT) / lpsbStepT;
+      const x = lpsbScoreOffsetX + tOffset * lpsbScoreWidth;
+      const y = index * lpsbRowHeight + lpsbRowHeight / 2;
+      return `${x},${y}`;
+    })
+    .filter((point): point is string => point !== null)
     .join(' '),
 );
 
@@ -473,14 +483,19 @@ const lpsbPrimaryPolylinePoints = computed(() =>
   lpsbPrimaryPoints.value.map((point) => `${point.x},${point.y}`).join(' '),
 );
 
-const lpsbDividerKeys = new Set<LpsBScoreKey>([
-  'test_1_2',
+const lpsbDividerKeys = new Set<LpsbRowKey>([
+  'test_3',
   'test_3_4',
+  'test_5',
   'test_5_6',
+  'test_7',
   'test_7_10',
+  'test_11',
   'test_11_12',
+  'test_13',
   'test_13_14',
   'test_14_wrong',
+  'total_raw',
 ]);
 </script>
 
@@ -595,23 +610,23 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
         </div>
         <div class="lpsb-sheet">
           <div class="lpsb-grid">
-            <template v-for="(row, rowIdx) in scoringRowsWithScores" :key="row.key">
+            <template v-for="row in scoringRowsWithScores" :key="row.key">
               <div
                 class="lpsb-cell lpsb-label"
-                :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
+                :class="{ 'lpsb-divider': lpsbDividerKeys.has(row.key as LpsbRowKey) }"
               >
                 {{ row.name }}
               </div>
               <div
                 class="lpsb-cell lpsb-raw"
-                :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
+                :class="{ 'lpsb-divider': lpsbDividerKeys.has(row.key as LpsbRowKey) }"
               >
                 {{ row.raw ?? '–' }}
               </div>
               <div
                 class="lpsb-cell lpsb-tvalue"
                 :class="{
-                  'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey),
+                  'lpsb-divider': lpsbDividerKeys.has(row.key as LpsbRowKey),
                   'lpsb-tvalue--primary': lpsbPrimaryKeys.has(row.key as LpsBScoreKey),
                   'lpsb-tvalue--secondary': lpsbSecondaryKeys.has(row.key as LpsBScoreKey),
                 }"
@@ -620,14 +635,14 @@ const lpsbDividerKeys = new Set<LpsBScoreKey>([
               </div>
               <div
                 class="lpsb-cell lpsb-hatch"
-                :class="{ 'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey) }"
+                :class="{ 'lpsb-divider': lpsbDividerKeys.has(row.key as LpsbRowKey) }"
               ></div>
               <div
                 v-for="(tValue, tIdx) in lpsbTValues"
                 :key="`${row.key}-${tValue}`"
                 class="lpsb-cell lpsb-score"
                 :class="{
-                  'lpsb-divider': rowIdx === 0 || lpsbDividerKeys.has(row.key as LpsBScoreKey),
+                  'lpsb-divider': lpsbDividerKeys.has(row.key as LpsbRowKey),
                   'lpsb-score--boundary':
                     row.key === 'total_raw' && glTickOffset === 0 && glTickCellIndex === tIdx,
                 }"
