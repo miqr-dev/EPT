@@ -2039,7 +2039,7 @@ function formatColumnScore(columnIdx: number) {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  width: 200px;
+  width: 180px;
   margin: 0 auto;
 }
 
