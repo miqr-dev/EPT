@@ -38,6 +38,10 @@ const props = defineProps<{
   manualScores?: Record<string, number | string | null>;
 }>();
 
+const emit = defineEmits<{
+  'manual-score-updated': [{ key: string; value: number | null }];
+}>();
+
 const testLabel = computed(() => props.testName ?? 'LPS');
 const isLpsB = computed(() => props.testName === 'LPS-B');
 const lpsbTValues = [30, 35, 40, 45, 50, 55, 60, 65, 70];
@@ -101,6 +105,7 @@ async function saveManualColumn6() {
       value: column6Manual.value,
     });
     manualSaveMessage.value = 'Gespeichert';
+    emit('manual-score-updated', { key: 'column6_score', value: column6Manual.value });
   } catch (error) {
     manualSaveError.value = 'Speichern fehlgeschlagen';
     console.error(error);

@@ -69,6 +69,19 @@ function closeModal() {
   emit('close');
 }
 
+function handleManualScoreUpdated(payload: { key: string; value: number | null }) {
+  const result = props.assignment?.results?.[0];
+  if (!result) return;
+  const scores = (result.manual_scores ?? []) as Array<{ key: string; value: number | string | null }>;
+  const existing = scores.find((entry) => entry.key === payload.key);
+  if (existing) {
+    existing.value = payload.value;
+  } else {
+    scores.push({ key: payload.key, value: payload.value });
+  }
+  result.manual_scores = [...scores];
+}
+
 async function downloadUnifiedPdf() {
   isGeneratingPdf.value = true;
   await nextTick(); // Wait for the v-if to render the component
@@ -108,6 +121,7 @@ async function downloadUnifiedPdf() {
         :participant-profile="participant?.participant_profile"
         :test-result-id="assignment?.results?.[0]?.id ?? null"
         :manual-scores="assignment?.results?.[0]?.manual_scores ?? []"
+        @manual-score-updated="handleManualScoreUpdated"
         class="flex-1 overflow-y-auto mb-4"
       />
       <!-- <DialogFooter>

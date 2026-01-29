@@ -52,11 +52,14 @@ const props = withDefaults(
   },
 );
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue', 'manual-score-updated']);
 
 const local = ref<ResultJson | null>(null);
+const localManualScores = ref<Array<{ key: string; value: number | string | null }> | Record<string, any>>(
+  props.manualScores ?? [],
+);
 const manualScoreMap = computed<Record<string, number | string | null>>(() => {
-  const src: any = props.manualScores ?? [];
+  const src: any = localManualScores.value ?? [];
   if (Array.isArray(src)) {
     return src.reduce<Record<string, number | string | null>>((acc, entry) => {
       if (entry && typeof entry.key === 'string') {
@@ -83,6 +86,14 @@ watch(
 );
 
 watch(
+  () => props.manualScores,
+  (val) => {
+    localManualScores.value = (val as any) ?? [];
+  },
+  { immediate: true, deep: true },
+);
+
+watch(
   local,
   (val) => {
     emit('update:modelValue', val as any);
@@ -95,6 +106,24 @@ function formatTime(seconds?: number | null) {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function handleManualScoreUpdated(payload: { key: string; value: number | null }) {
+  const current = localManualScores.value;
+  if (Array.isArray(current)) {
+    const existing = current.find((entry) => entry.key === payload.key);
+    if (existing) {
+      existing.value = payload.value;
+    } else {
+      current.push({ key: payload.key, value: payload.value });
+    }
+    localManualScores.value = [...current];
+  } else if (current && typeof current === 'object') {
+    localManualScores.value = { ...current, [payload.key]: payload.value };
+  } else {
+    localManualScores.value = { [payload.key]: payload.value };
+  }
+  emit('manual-score-updated', payload);
 }
 
 function getFpiNormTable(sex?: string, age?: number) {
@@ -180,6 +209,7 @@ const fpiRohwerte = computed(() => {
           :participant-profile="participantProfile"
           :test-result-id="testResultId"
           :manual-scores="manualScoreMap"
+          @manual-score-updated="handleManualScoreUpdated"
         />
         <AvemResult v-else-if="test.name === 'AVEM'" :results="local" />
     <template v-else>
