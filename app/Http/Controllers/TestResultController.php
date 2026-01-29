@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\TestResult;
+use App\Models\TestResultManualScore;
 use Illuminate\Http\Request;
 use App\Services\MrtAScorer;
 use Illuminate\Support\Facades\Storage;
@@ -56,6 +57,26 @@ class TestResultController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Test result updated successfully.');
+    }
+
+    public function updateManualScore(Request $request, TestResult $testResult)
+    {
+        $validated = $request->validate([
+            'key' => 'required|string|max:64',
+            'value' => 'nullable|numeric',
+        ]);
+
+        TestResultManualScore::updateOrCreate(
+            [
+                'test_result_id' => $testResult->id,
+                'key' => $validated['key'],
+            ],
+            [
+                'value' => $validated['value'],
+            ]
+        );
+
+        return response()->json(['status' => 'ok']);
     }
 
 }

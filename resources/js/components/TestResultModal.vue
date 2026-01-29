@@ -20,9 +20,6 @@ const form = useForm({
 });
 
 const editable = ref<any | null>(null);
-const hasLoadedEditable = ref(false);
-const autoSaveTimeout = ref<number | null>(null);
-const autoSaveForm = useForm({ result_json: '' });
 const viewerRef = ref<any>(null);
 const pdfTemplateRef = ref<any>(null);
 const isGeneratingPdf = ref(false);
@@ -44,39 +41,7 @@ watch(
   () => props.assignment,
   (val) => {
     editable.value = val && val.results.length > 0 ? JSON.parse(JSON.stringify(val.results[0].result_json)) : null;
-    hasLoadedEditable.value = false;
   }
-);
-
-const shouldAutoSave = computed(() => !['MRT-A', 'MRT-B'].includes(props.assignment?.test?.name ?? ''));
-
-function scheduleAutoSave() {
-  if (!props.assignment?.results?.length || !editable.value) return;
-  if (autoSaveTimeout.value) {
-    window.clearTimeout(autoSaveTimeout.value);
-  }
-  autoSaveTimeout.value = window.setTimeout(() => {
-    if (autoSaveForm.processing) return;
-    autoSaveForm.result_json = JSON.stringify(editable.value);
-    autoSaveForm.put(route('test-results.update', { testResult: props.assignment.results[0].id }), {
-      preserveScroll: true,
-      preserveState: true,
-    });
-  }, 600);
-}
-
-watch(
-  editable,
-  (val) => {
-    if (!val) return;
-    if (!shouldAutoSave.value) return;
-    if (!hasLoadedEditable.value) {
-      hasLoadedEditable.value = true;
-      return;
-    }
-    scheduleAutoSave();
-  },
-  { deep: true }
 );
 
 function submit() {
@@ -135,8 +100,16 @@ async function downloadUnifiedPdf() {
           </div>
         </div>
       </DialogHeader>
-      <TestResultViewer v-if="editable" ref="viewerRef" :test="assignment?.test" v-model="editable"
-        :participant-profile="participant?.participant_profile" class="flex-1 overflow-y-auto mb-4" />
+      <TestResultViewer
+        v-if="editable"
+        ref="viewerRef"
+        :test="assignment?.test"
+        v-model="editable"
+        :participant-profile="participant?.participant_profile"
+        :test-result-id="assignment?.results?.[0]?.id ?? null"
+        :manual-scores="assignment?.results?.[0]?.manual_scores ?? []"
+        class="flex-1 overflow-y-auto mb-4"
+      />
       <!-- <DialogFooter>
         <Button type="submit" @click="submit">Änderungen speichern</Button>
       </DialogFooter> -->

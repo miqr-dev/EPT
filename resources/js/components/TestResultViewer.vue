@@ -44,6 +44,8 @@ const props = withDefaults(
     test: { name: string };
     participantProfile?: { age: number; sex?: string } | null;
     showAnswers?: boolean;
+    testResultId?: number | null;
+    manualScores?: Array<{ key: string; value: number | string | null }> | Record<string, any>;
   }>(),
   {
     showAnswers: true,
@@ -53,6 +55,21 @@ const props = withDefaults(
 const emit = defineEmits(['update:modelValue']);
 
 const local = ref<ResultJson | null>(null);
+const manualScoreMap = computed<Record<string, number | string | null>>(() => {
+  const src: any = props.manualScores ?? [];
+  if (Array.isArray(src)) {
+    return src.reduce<Record<string, number | string | null>>((acc, entry) => {
+      if (entry && typeof entry.key === 'string') {
+        acc[entry.key] = entry.value ?? null;
+      }
+      return acc;
+    }, {});
+  }
+  if (src && typeof src === 'object') {
+    return src as Record<string, number | string | null>;
+  }
+  return {};
+});
 const isKonzentrationstest = computed(() =>
   ['Konzentrationstest', '628 Test'].includes((props.test?.name || '').trim()),
 );
@@ -161,6 +178,8 @@ const fpiRohwerte = computed(() => {
           :results="local"
           :test-name="test.name"
           :participant-profile="participantProfile"
+          :test-result-id="testResultId"
+          :manual-scores="manualScoreMap"
         />
         <AvemResult v-else-if="test.name === 'AVEM'" :results="local" />
     <template v-else>

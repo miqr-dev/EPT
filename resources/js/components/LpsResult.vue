@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
+import axios from 'axios';
+import { Button } from '@/components/ui/button';
 import { getLpsDataset, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
 import { getLpsPage5Dataset } from '@/pages/Questions/LPSPage5';
 import { getLpsPage6Dataset } from '@/pages/Questions/LPSPage6';
@@ -32,6 +34,8 @@ const props = defineProps<{
   results: Record<string, any> | null;
   testName?: string;
   participantProfile?: { age: number; sex?: string } | null;
+  testResultId?: number | null;
+  manualScores?: Record<string, number | string | null>;
 }>();
 
 const testLabel = computed(() => props.testName ?? 'LPS');
@@ -62,17 +66,48 @@ const col14WrongOverride = computed<number | null>(() => {
   const parsed = raw === '' || raw === null || raw === undefined ? null : Number(raw);
   return Number.isNaN(parsed) ? null : parsed;
 });
-const column6Manual = computed<number | null>({
-  get: () => {
-    const raw = props.results?.column6_score;
-    const parsed = raw === '' || raw === null || raw === undefined ? null : Number(raw);
-    return Number.isNaN(parsed) ? null : parsed;
+const column6Manual = ref<number | null>(null);
+const isSavingManual = ref(false);
+const manualSaveMessage = ref<string | null>(null);
+const manualSaveError = ref<string | null>(null);
+const canSaveManual = computed(() => !!props.testResultId);
+
+function parseManualValue(raw: unknown) {
+  const parsed = raw === '' || raw === null || raw === undefined ? null : Number(raw);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+watch(
+  () => props.manualScores?.column6_score ?? props.results?.column6_score ?? null,
+  (val) => {
+    column6Manual.value = parseManualValue(val);
   },
-  set: (val) => {
-    if (!props.results) return;
-    props.results.column6_score = val ?? null;
-  },
+  { immediate: true },
+);
+
+watch(column6Manual, () => {
+  manualSaveMessage.value = null;
+  manualSaveError.value = null;
 });
+
+async function saveManualColumn6() {
+  if (!props.testResultId) return;
+  isSavingManual.value = true;
+  manualSaveMessage.value = null;
+  manualSaveError.value = null;
+  try {
+    await axios.put(route('test-results.manual-scores.update', { testResult: props.testResultId }), {
+      key: 'column6_score',
+      value: column6Manual.value,
+    });
+    manualSaveMessage.value = 'Gespeichert';
+  } catch (error) {
+    manualSaveError.value = 'Speichern fehlgeschlagen';
+    console.error(error);
+  } finally {
+    isSavingManual.value = false;
+  }
+}
 
 const { rows: lpsRows, solutions: lpsSolutions } = getLpsDataset(props.testName);
 const { solutions: page5Solutions } = getLpsPage5Dataset(props.testName);
@@ -599,6 +634,11 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
             min="0"
           />
         </label>
+        <Button v-if="canSaveManual" size="sm" :disabled="isSavingManual" @click="saveManualColumn6">
+          {{ isSavingManual ? 'Speichern...' : 'Speichern' }}
+        </Button>
+        <span v-if="manualSaveMessage" class="text-xs text-emerald-600">{{ manualSaveMessage }}</span>
+        <span v-if="manualSaveError" class="text-xs text-red-600">{{ manualSaveError }}</span>
         <span class="text-xs text-muted-foreground">
           Tragen Sie den Wert aus der Ergebnisansicht für Spalte 6 ein.
         </span>

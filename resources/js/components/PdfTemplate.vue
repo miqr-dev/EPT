@@ -48,9 +48,14 @@ const testDate = new Date().toLocaleDateString('de-DE', {
     <div class="mt-8">
       <h2 class="text-xl font-semibold mb-4">Auswertung</h2>
       <div class="p-4 border rounded-lg bg-gray-50">
-        <TestResultViewer v-if="assignment && assignment.results.length > 0" :test="assignment.test"
-          :model-value="assignment.results[0].result_json" :participant-profile="participant?.participant_profile"
-          :show-answers="false" />
+        <TestResultViewer
+          v-if="assignment && assignment.results.length > 0"
+          :test="assignment.test"
+          :model-value="assignment.results[0].result_json"
+          :participant-profile="participant?.participant_profile"
+          :manual-scores="assignment.results[0].manual_scores ?? []"
+          :show-answers="false"
+        />
         <div v-else class="text-center text-gray-500">
           <p>Keine Ergebnisse verfügbar.</p>
         </div>
