@@ -1320,7 +1320,7 @@ function formatColumnScore(columnIdx: number) {
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalten 1 + 2</div>
 
-              <div class="grid grid-cols-[auto_auto] justify-center gap-2">
+              <div class="mx-auto grid w-fit grid-cols-2 gap-2">
                 <div>
                   <div class="mb-3">
                     <div class="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
@@ -1869,7 +1869,7 @@ function formatColumnScore(columnIdx: number) {
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalten 13 + 14</div>
 
-              <div class="grid grid-cols-[auto_auto] justify-center gap-2">
+              <div class="mx-auto grid w-fit grid-cols-2 gap-2">
                 <div>
                   <div class="mb-3">
                     <div class="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
@@ -2045,8 +2045,8 @@ function formatColumnScore(columnIdx: number) {
 
 .lps-page11-sequence-row {
   justify-content: center;
-  gap: 8px;
-  width: 220px;
+  gap: 6px;
+  width: fit-content;
 }
 
 .lps-column3-svg {
