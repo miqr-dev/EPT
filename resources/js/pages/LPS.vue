@@ -1321,7 +1321,7 @@ function formatColumnScore(columnIdx: number) {
               <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalten 1 + 2</div>
 
               <div class="grid grid-cols-2 gap-4">
-                <div class="lps-sequence-col lps-sequence-col--right">
+                <div>
                   <div class="mb-3">
                     <div class="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
                     <div v-for="example in column1Examples" :key="`example-col1-${example.word}`" class="py-[1px]">
@@ -1350,7 +1350,7 @@ function formatColumnScore(columnIdx: number) {
                   </div>
                 </div>
 
-                <div class="lps-sep lps-sequence-col lps-sequence-col--left">
+                <div class="lps-sep">
                   <div class="mb-3">
                     <div class="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
                     <div v-for="example in column2Examples" :key="`example-col2-${example.word}`" class="py-[1px]">
@@ -1870,7 +1870,7 @@ function formatColumnScore(columnIdx: number) {
               <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalten 13 + 14</div>
 
               <div class="grid grid-cols-2 gap-4">
-                <div class="lps-sequence-col lps-sequence-col--right">
+                <div class="lps-sequence-col-13">
                   <div class="mb-3">
                     <div class="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
                     <div v-for="(example, exampleIdx) in column13Examples" :key="`example-col13-${exampleIdx}`"
@@ -1901,7 +1901,7 @@ function formatColumnScore(columnIdx: number) {
                   </div>
                 </div>
 
-                <div class="lps-sep lps-sequence-col lps-sequence-col--left">
+                <div class="lps-sep lps-sequence-col-14">
                   <div class="mb-3">
                     <div class="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
                     <div v-for="(example, exampleIdx) in column14Examples" :key="`example-col14-${exampleIdx}`"
@@ -2043,26 +2043,29 @@ function formatColumnScore(columnIdx: number) {
   margin: 0 auto;
 }
 
-.lps-sequence-col {
+.lps-sequence-col-13,
+.lps-sequence-col-14 {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-.lps-sequence-col--right {
+.lps-sequence-col-13 {
   align-items: flex-end;
+  padding-right: 16px;
 }
 
-.lps-sequence-col--right .lps-sequence-row {
+.lps-sequence-col-13 .lps-sequence-row {
   margin-right: 0;
   margin-left: 0;
 }
 
-.lps-sequence-col--left {
+.lps-sequence-col-14 {
   align-items: flex-start;
+  padding-left: 16px;
 }
 
-.lps-sequence-col--left .lps-sequence-row {
+.lps-sequence-col-14 .lps-sequence-row {
   margin-right: 0;
   margin-left: 0;
 }
