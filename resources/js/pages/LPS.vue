@@ -2033,6 +2033,9 @@ function formatColumnScore(columnIdx: number) {
   /* very close */
   align-items: baseline;
   justify-content: center;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  font-variant-ligatures: none;
 }
 
 .lps-sequence-row {
@@ -2090,7 +2093,10 @@ function formatColumnScore(columnIdx: number) {
   font-weight: 900;
   font-size: 24px;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+  font-kerning: none;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
   user-select: none;
 }
 
@@ -2207,7 +2213,10 @@ function formatColumnScore(columnIdx: number) {
   font-weight: 900;
   font-size: 24px;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+  font-kerning: none;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
   color: inherit;
 }
 
