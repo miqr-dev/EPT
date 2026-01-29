@@ -1320,7 +1320,7 @@ function formatColumnScore(columnIdx: number) {
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalten 1 + 2</div>
 
-              <div class="grid grid-cols-2 gap-4">
+              <div class="mx-auto grid w-fit grid-cols-2 gap-2">
                 <div>
                   <div class="mb-3">
                     <div class="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
@@ -1869,13 +1869,13 @@ function formatColumnScore(columnIdx: number) {
             <div class="rounded-2xl border bg-background p-4 shadow-sm">
               <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Spalten 13 + 14</div>
 
-              <div class="grid grid-cols-2 gap-4">
+              <div class="mx-auto grid w-fit grid-cols-2 gap-2">
                 <div>
                   <div class="mb-3">
                     <div class="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
                     <div v-for="(example, exampleIdx) in column13Examples" :key="`example-col13-${exampleIdx}`"
                       class="py-[1px]">
-                      <div class="lps-sequence-row">
+                      <div class="lps-sequence-row lps-page11-sequence-row">
                         <button v-for="(token, tokenIdx) in example.tokens"
                           :key="`example-col13-${exampleIdx}-${tokenIdx}`" type="button" class="lps-letter"
                           :class="example.selectedIndex === tokenIdx ? 'lps-letter--selected' : ''" disabled
@@ -1888,7 +1888,7 @@ function formatColumnScore(columnIdx: number) {
                   <div class="my-3 border-t border-muted-foreground/20"></div>
 
                   <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c13`" class="py-[1px]">
-                    <div class="lps-sequence-row">
+                    <div class="lps-sequence-row lps-page11-sequence-row">
                       <button v-for="(token, tokenIdx) in getSequenceTokens(row.column13)"
                         :key="`${row.id}-13-${tokenIdx}`" type="button" class="lps-letter"
                         :class="page11Responses[idx].col13[tokenIdx] ? 'lps-letter--selected' : ''"
@@ -1906,7 +1906,7 @@ function formatColumnScore(columnIdx: number) {
                     <div class="mb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Beispiel</div>
                     <div v-for="(example, exampleIdx) in column14Examples" :key="`example-col14-${exampleIdx}`"
                       class="py-[1px]">
-                      <div class="lps-sequence-row">
+                      <div class="lps-sequence-row lps-page11-sequence-row">
                         <button v-for="(token, tokenIdx) in example.tokens"
                           :key="`example-col14-${exampleIdx}-${tokenIdx}`" type="button" class="lps-letter"
                           :class="example.selectedIndex === tokenIdx ? 'lps-letter--selected' : ''" disabled
@@ -1918,7 +1918,7 @@ function formatColumnScore(columnIdx: number) {
                   </div>
                   <div class="my-3 border-t border-muted-foreground/20"></div>
                   <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c14`" class="py-[1px]">
-                    <div class="lps-sequence-row">
+                    <div class="lps-sequence-row lps-page11-sequence-row">
                       <button v-for="(token, tokenIdx) in getSequenceTokens(row.column14)"
                         :key="`${row.id}-14-${tokenIdx}`" type="button" class="lps-letter"
                         :class="page11Responses[idx].col14[tokenIdx] ? 'lps-letter--selected' : ''"
@@ -2041,6 +2041,12 @@ function formatColumnScore(columnIdx: number) {
   justify-content: space-between;
   width: 260px;
   margin: 0 auto;
+}
+
+.lps-page11-sequence-row {
+  justify-content: center;
+  gap: 6px;
+  width: fit-content;
 }
 
 .lps-column3-svg {
