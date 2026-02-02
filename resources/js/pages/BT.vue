@@ -125,9 +125,9 @@ function isAssigned(name: string) {
         <div class="px-4 py-2 text-center">
           <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 1</h1>
         </div>
-        <div class="grid h-full grid-cols-[1.6fr,1fr] gap-8 text-left">
-          <div class="flex flex-col items-center justify-between px-6 py-2">
-            <div class="space-y-3 text-center text-base leading-relaxed">
+        <div class="flex flex-1 gap-4">
+          <div class="flex-1 border border-black/20 px-6 py-4">
+            <div class="space-y-4 text-center text-base leading-relaxed">
               <p>
                 Unser Betrieb beschäftigt 25 Lehrlinge. Von diesen sollen jeweils zwei Lehrlinge für den
                 Post-Frühdienst und drei Lehrlinge für den Post-Spätdienst eingeteilt werden, so dass jeder
@@ -140,11 +140,11 @@ function isAssigned(name: string) {
                 für den Postdienst (Früh oder Spät) auf das Lösungsblatt übertragen.
               </p>
             </div>
-            <div class="text-center text-base">_____</div>
+            <div class="mt-4 text-center text-base">_____</div>
           </div>
 
-          <div class="flex items-center justify-center px-2 py-2">
-            <div class="flex items-start gap-6">
+          <div class="flex-1 border border-black/20 px-4 py-4">
+            <div class="flex h-full items-center justify-center gap-6">
               <div
                 class="border border-black px-4 py-3 text-sm leading-tight"
                 @dragover="allowDrop"
