@@ -204,20 +204,21 @@ function isAssigned(name: string) {
     </div>
 
     <div class="h-1/2 overflow-hidden px-6 pb-4 pt-2 font-serif">
-      <div class="flex h-full flex-col justify-center">
+      <div class="flex h-full flex-col">
         <div class="border-t border-black" />
-        <table class="mt-3 w-full border border-black text-lg">
+        <div class="flex-1">
+          <table class="mt-3 w-full border border-black text-base">
           <thead>
             <tr>
-              <th class="w-24 border border-black p-2 text-left">Aufgabe 1</th>
-              <th v-for="day in days" :key="day" class="border border-black p-2 text-center">
+              <th class="w-24 border border-black p-1 text-left">Aufgabe 1</th>
+              <th v-for="day in days" :key="day" class="border border-black p-1 text-center">
                 {{ day }}
               </th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <th class="border border-black p-2 text-left" rowspan="2">Frühdienst</th>
+              <th class="border border-black p-1 text-left" rowspan="2">Frühdienst</th>
               <td
                 v-for="day in days"
                 :key="`early-1-${day}`"
@@ -262,7 +263,7 @@ function isAssigned(name: string) {
               </td>
             </tr>
             <tr>
-              <th class="border border-black p-2 text-left" rowspan="3">Spätdienst</th>
+              <th class="border border-black p-1 text-left" rowspan="3">Spätdienst</th>
               <td
                 v-for="day in days"
                 :key="`late-1-${day}`"
@@ -329,7 +330,8 @@ function isAssigned(name: string) {
               </td>
             </tr>
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     </div>
   </div>
