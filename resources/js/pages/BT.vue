@@ -143,67 +143,67 @@ function isAssigned(name: string) {
             <div class="mt-4 text-center text-base">_____</div>
           </div>
 
-          <div class="flex-1 border border-black/20 px-4 py-4">
-            <div class="flex h-full items-center justify-center gap-12">
+          <div class="flex-1 border border-black/20 px-4 py-2">
+            <div class="flex h-full items-start justify-center gap-8 overflow-hidden">
               <div
-                class="border-2 border-black px-6 py-6 text-lg leading-snug w-[500px] flex-none"
+                class="border-2 border-black px-4 py-2 text-base leading-tight w-[420px] flex-none"
                 @dragover="allowDrop"
                 @drop="handleDropOnPool"
               >
-                <div class="grid grid-cols-2 gap-x-12">
-                  <div class="space-y-1">
+                <div class="grid grid-cols-2 gap-x-8">
+                  <div class="space-y-0">
                     <div
                       v-for="apprentice in leftNames"
                       :key="apprentice.id"
-                      class="grid grid-cols-[32px,1fr,24px] items-center gap-3"
+                      class="flex items-center gap-2"
                     >
-                      <span class="text-right">{{ apprentice.id }}</span>
+                      <span class="w-6 text-right flex-none">{{ apprentice.id }}</span>
                       <span
-                        class="text-left"
+                        class="flex-1 text-left"
                         :class="{ 'line-through text-gray-500': isAssigned(apprentice.name) }"
                         :draggable="!isAssigned(apprentice.name)"
                         @dragstart="(event) => handleDragStart(event, { name: apprentice.name, from: 'pool' })"
                       >
                         {{ apprentice.name }}
                       </span>
-                      <span class="text-center">{{ apprentice.restriction ?? '' }}</span>
+                      <span class="w-4 text-center flex-none">{{ apprentice.restriction ?? '' }}</span>
                     </div>
                   </div>
-                  <div class="space-y-1">
+                  <div class="space-y-0">
                     <div
                       v-for="apprentice in rightNames"
                       :key="apprentice.id"
-                      class="grid grid-cols-[32px,1fr,24px] items-center gap-3"
+                      class="flex items-center gap-2"
                     >
-                      <span class="text-right">{{ apprentice.id }}</span>
+                      <span class="w-6 text-right flex-none">{{ apprentice.id }}</span>
                       <span
-                        class="text-left"
+                        class="flex-1 text-left"
                         :class="{ 'line-through text-gray-500': isAssigned(apprentice.name) }"
                         :draggable="!isAssigned(apprentice.name)"
                         @dragstart="(event) => handleDragStart(event, { name: apprentice.name, from: 'pool' })"
                       >
                         {{ apprentice.name }}
                       </span>
-                      <span class="text-center">{{ apprentice.restriction ?? '' }}</span>
+                      <span class="w-4 text-center flex-none">{{ apprentice.restriction ?? '' }}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="space-y-10 text-xl text-left leading-tight min-w-[280px]">
+              <div class="space-y-6 text-base text-left leading-tight min-w-[200px]">
                 <div class="text-center">
-                  <p class="text-3xl mb-2" style="letter-spacing: 0.5em;">L i s t e</p>
+                  <p class="text-xl mb-1" style="letter-spacing: 0.4em;">L i s t e</p>
                   <p>der Namen</p>
                 </div>
-                <div class="space-y-1">
-                  <p>F = <span class="ml-2" style="letter-spacing: 0.3em;">k a n n   k e i n e n</span></p>
-                  <p class="pl-12">Frühdienst</p>
-                  <p class="pl-12">machen</p>
+                <div class="space-y-0">
+                  <p>F = <span class="ml-1" style="letter-spacing: 0.2em;">k a n n   k e i n e n</span></p>
+                  <p class="pl-8">Frühdienst</p>
+                  <p class="pl-8">machen</p>
                 </div>
-                <div class="space-y-1">
-                  <p>S = <span class="ml-2" style="letter-spacing: 0.3em;">k a n n   k e i n e n</span></p>
-                  <p class="pl-12">Spätdienst</p>
-                  <p class="pl-12">machen</p>
+                <div class="space-y-0">
+                  <p>S = <span class="ml-1" style="letter-spacing: 0.2em;">k a n n   k e i n e n</span></p>
+                  <p class="pl-8">Spätdienst</p>
+                  <p class="pl-8">machen</p>
                 </div>
               </div>
             </div>
