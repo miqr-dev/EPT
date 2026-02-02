@@ -146,16 +146,16 @@ function isAssigned(name: string) {
           <div class="flex-1 border border-black/20 px-4 py-4">
             <div class="flex h-full items-center justify-center gap-6">
               <div
-                class="border border-black px-4 py-3 text-sm leading-tight"
+                class="border border-black px-4 py-3 text-sm leading-tight min-w-[360px]"
                 @dragover="allowDrop"
                 @drop="handleDropOnPool"
               >
-                <div class="grid grid-cols-[1fr,1fr] gap-x-8">
+                <div class="grid grid-cols-2 gap-x-10">
                   <div class="space-y-0.5">
                     <div
                       v-for="apprentice in leftNames"
                       :key="apprentice.id"
-                      class="flex items-center justify-between gap-2"
+                      class="grid grid-cols-[24px,1fr,20px] items-center gap-2"
                     >
                       <span class="w-4 text-right">{{ apprentice.id }}</span>
                       <span
@@ -173,7 +173,7 @@ function isAssigned(name: string) {
                     <div
                       v-for="apprentice in rightNames"
                       :key="apprentice.id"
-                      class="flex items-center justify-between gap-2"
+                      class="grid grid-cols-[24px,1fr,20px] items-center gap-2"
                     >
                       <span class="w-4 text-right">{{ apprentice.id }}</span>
                       <span
