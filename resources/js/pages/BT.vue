@@ -144,9 +144,9 @@ function isAssigned(name: string) {
           </div>
 
           <div class="flex-1 border border-black/20 px-4 py-4">
-            <div class="flex h-full items-center justify-center gap-6">
+            <div class="flex h-full items-start justify-start gap-6">
               <div
-                class="border border-black px-4 py-3 text-sm leading-tight min-w-[360px]"
+                class="border border-black px-4 py-3 text-sm leading-tight w-[420px] flex-none"
                 @dragover="allowDrop"
                 @drop="handleDropOnPool"
               >
@@ -155,7 +155,7 @@ function isAssigned(name: string) {
                     <div
                       v-for="apprentice in leftNames"
                       :key="apprentice.id"
-                      class="grid grid-cols-[24px,1fr,20px] items-center gap-2"
+                      class="grid grid-cols-[28px,1fr,24px] items-center gap-2"
                     >
                       <span class="w-4 text-right">{{ apprentice.id }}</span>
                       <span
@@ -173,7 +173,7 @@ function isAssigned(name: string) {
                     <div
                       v-for="apprentice in rightNames"
                       :key="apprentice.id"
-                      class="grid grid-cols-[24px,1fr,20px] items-center gap-2"
+                      class="grid grid-cols-[28px,1fr,24px] items-center gap-2"
                     >
                       <span class="w-4 text-right">{{ apprentice.id }}</span>
                       <span
@@ -190,7 +190,7 @@ function isAssigned(name: string) {
                 </div>
               </div>
 
-              <div class="space-y-4 text-sm text-left leading-relaxed">
+              <div class="space-y-4 text-sm text-left leading-relaxed max-w-[180px]">
                 <p class="text-center font-semibold tracking-[0.35em] leading-relaxed">
                   Liste<br />der Namen
                 </p>
