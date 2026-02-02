@@ -121,10 +121,12 @@ function isAssigned(name: string) {
   <Head title="BT" />
   <div class="h-screen overflow-hidden bg-background text-black">
     <div class="h-1/2 overflow-hidden px-6 pt-3 font-serif text-base">
-      <div class="flex h-full flex-col gap-3 text-center">
-        <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 1</h1>
-        <div class="grid h-full grid-cols-[2fr,1fr] gap-8 text-left">
-          <div class="flex flex-col items-center justify-between">
+      <div class="flex h-full flex-col gap-4">
+        <div class="border border-black/10 px-4 py-2 text-center">
+          <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 1</h1>
+        </div>
+        <div class="grid h-full grid-cols-[1.6fr,1fr] gap-8 text-left">
+          <div class="flex flex-col items-center justify-between border border-black/10 px-6 py-4">
             <div class="space-y-3 text-center text-base leading-relaxed">
               <p>
                 Unser Betrieb beschäftigt 25 Lehrlinge. Von diesen sollen jeweils zwei Lehrlinge für den
@@ -141,7 +143,7 @@ function isAssigned(name: string) {
             <div class="text-center text-base">_____</div>
           </div>
 
-          <div class="flex items-center justify-center">
+          <div class="flex items-center justify-center border border-black/10 px-4 py-4">
             <div class="flex items-start gap-6">
               <div
                 class="border border-black px-4 py-3 text-sm leading-tight"
