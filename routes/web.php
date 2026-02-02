@@ -21,6 +21,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('lmt', fn () => Inertia::render('LMT'))->name('lmt');
     Route::get('lmt2', fn () => Inertia::render('LMT2'))->name('lmt2');
     Route::get('bit-2', fn () => Inertia::render('BIT-2'))->name('bit-2');
+    Route::get('bt', fn () => Inertia::render('BT'))->name('bt');
     Route::get('avem', fn () => Inertia::render('AVEM'))->name('avem');
     Route::get('lps-a', fn () => Inertia::render('LPS', ['testName' => 'LPS-A']))->name('lps-a');
     Route::get('lps-b', fn () => Inertia::render('LPS', ['testName' => 'LPS-B']))->name('lps-b');

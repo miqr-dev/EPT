@@ -11,6 +11,7 @@ import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 // Import test components
 import AVEM from '@/pages/AVEM.vue';
 import BIT2 from '@/pages/BIT-2.vue';
+import BT from '@/pages/BT.vue';
 import BRTA from '@/pages/BRT-A.vue';
 import BRTB from '@/pages/BRT-B.vue';
 import FPI from '@/pages/FPI-R.vue';
@@ -104,6 +105,7 @@ const testComponents: Record<string, unknown> = {
   'MRT-B': MRTB,
   LMT2: LMT2,
   'BIT-2': BIT2,
+  BT: BT,
   AVEM: AVEM,
   Konzentrationstest: KONZ,
   628: KONZ,
