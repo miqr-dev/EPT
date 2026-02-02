@@ -66,6 +66,7 @@ class RedirectBasedOnRole
         'brt-a',
         'brt-b',
         'bit-2',
+        'bt',
         'fpi-r',
         'lmt',
         'lmt2',
