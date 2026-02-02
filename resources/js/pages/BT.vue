@@ -144,18 +144,18 @@ function isAssigned(name: string) {
           </div>
 
           <div class="flex-1 border border-black/20 px-4 py-4">
-            <div class="flex h-full items-start justify-start gap-6">
+            <div class="flex h-full items-center justify-center gap-12">
               <div
-                class="border border-black px-4 py-3 text-sm leading-tight w-[420px] flex-none"
+                class="border-2 border-black px-6 py-6 text-lg leading-snug w-[500px] flex-none"
                 @dragover="allowDrop"
                 @drop="handleDropOnPool"
               >
-                <div class="grid grid-cols-2 gap-x-10">
-                  <div class="space-y-0.5">
+                <div class="grid grid-cols-2 gap-x-12">
+                  <div class="space-y-1">
                     <div
                       v-for="apprentice in leftNames"
                       :key="apprentice.id"
-                      class="grid grid-cols-[28px,1fr,24px] items-center gap-2 leading-tight"
+                      class="grid grid-cols-[32px,1fr,24px] items-center gap-3"
                     >
                       <span class="text-right">{{ apprentice.id }}</span>
                       <span
@@ -166,14 +166,14 @@ function isAssigned(name: string) {
                       >
                         {{ apprentice.name }}
                       </span>
-                      <span class="text-right">{{ apprentice.restriction ?? '' }}</span>
+                      <span class="text-center">{{ apprentice.restriction ?? '' }}</span>
                     </div>
                   </div>
-                  <div class="space-y-0.5">
+                  <div class="space-y-1">
                     <div
                       v-for="apprentice in rightNames"
                       :key="apprentice.id"
-                      class="grid grid-cols-[28px,1fr,24px] items-center gap-2 leading-tight"
+                      class="grid grid-cols-[32px,1fr,24px] items-center gap-3"
                     >
                       <span class="text-right">{{ apprentice.id }}</span>
                       <span
@@ -184,18 +184,27 @@ function isAssigned(name: string) {
                       >
                         {{ apprentice.name }}
                       </span>
-                      <span class="text-right">{{ apprentice.restriction ?? '' }}</span>
+                      <span class="text-center">{{ apprentice.restriction ?? '' }}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="space-y-4 text-sm text-left leading-relaxed max-w-[180px]">
-                <p class="text-center font-semibold tracking-[0.35em] leading-relaxed">
-                  Liste<br />der Namen
-                </p>
-                <p>F = kann keinen Frühdienst machen</p>
-                <p>S = kann keinen Spätdienst machen</p>
+              <div class="space-y-10 text-xl text-left leading-tight min-w-[280px]">
+                <div class="text-center">
+                  <p class="text-3xl mb-2" style="letter-spacing: 0.5em;">L i s t e</p>
+                  <p>der Namen</p>
+                </div>
+                <div class="space-y-1">
+                  <p>F = <span class="ml-2" style="letter-spacing: 0.3em;">k a n n   k e i n e n</span></p>
+                  <p class="pl-12">Frühdienst</p>
+                  <p class="pl-12">machen</p>
+                </div>
+                <div class="space-y-1">
+                  <p>S = <span class="ml-2" style="letter-spacing: 0.3em;">k a n n   k e i n e n</span></p>
+                  <p class="pl-12">Spätdienst</p>
+                  <p class="pl-12">machen</p>
+                </div>
               </div>
             </div>
           </div>
