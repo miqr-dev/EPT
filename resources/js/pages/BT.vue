@@ -231,7 +231,7 @@ function isAssigned(name: string) {
                     v-if="assignments[buildCellKey('early', 1, day)]"
                     class="flex-1 cursor-move"
                     draggable="true"
-                    @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('early', 1, day)] as string, from: 'cell', key: buildCellKey('early', 1, day) })"
+                    @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('early', 1, day)] ?? '', from: 'cell', key: buildCellKey('early', 1, day) })"
                   >
                     {{ assignments[buildCellKey('early', 1, day)] }}
                   </span>
@@ -253,7 +253,7 @@ function isAssigned(name: string) {
                     v-if="assignments[buildCellKey('early', 2, day)]"
                     class="flex-1 cursor-move"
                     draggable="true"
-                    @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('early', 2, day)] as string, from: 'cell', key: buildCellKey('early', 2, day) })"
+                    @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('early', 2, day)] ?? '', from: 'cell', key: buildCellKey('early', 2, day) })"
                   >
                     {{ assignments[buildCellKey('early', 2, day)] }}
                   </span>
@@ -276,7 +276,7 @@ function isAssigned(name: string) {
                     v-if="assignments[buildCellKey('late', 1, day)]"
                     class="flex-1 cursor-move"
                     draggable="true"
-                    @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 1, day)] as string, from: 'cell', key: buildCellKey('late', 1, day) })"
+                    @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 1, day)] ?? '', from: 'cell', key: buildCellKey('late', 1, day) })"
                   >
                     {{ assignments[buildCellKey('late', 1, day)] }}
                   </span>
@@ -298,7 +298,7 @@ function isAssigned(name: string) {
                     v-if="assignments[buildCellKey('late', 2, day)]"
                     class="flex-1 cursor-move"
                     draggable="true"
-                    @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 2, day)] as string, from: 'cell', key: buildCellKey('late', 2, day) })"
+                    @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 2, day)] ?? '', from: 'cell', key: buildCellKey('late', 2, day) })"
                   >
                     {{ assignments[buildCellKey('late', 2, day)] }}
                   </span>
@@ -320,7 +320,7 @@ function isAssigned(name: string) {
                     v-if="assignments[buildCellKey('late', 3, day)]"
                     class="flex-1 cursor-move"
                     draggable="true"
-                    @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 3, day)] as string, from: 'cell', key: buildCellKey('late', 3, day) })"
+                    @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 3, day)] ?? '', from: 'cell', key: buildCellKey('late', 3, day) })"
                   >
                     {{ assignments[buildCellKey('late', 3, day)] }}
                   </span>
