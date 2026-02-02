@@ -155,36 +155,36 @@ function isAssigned(name: string) {
                     <div
                       v-for="apprentice in leftNames"
                       :key="apprentice.id"
-                      class="grid grid-cols-[28px,1fr,24px] items-center gap-2"
+                      class="grid grid-cols-[28px,1fr,24px] items-center gap-2 leading-tight"
                     >
-                      <span class="w-4 text-right">{{ apprentice.id }}</span>
+                      <span class="text-right">{{ apprentice.id }}</span>
                       <span
-                        class="flex-1 text-left"
+                        class="text-left"
                         :class="{ 'line-through text-gray-500': isAssigned(apprentice.name) }"
                         :draggable="!isAssigned(apprentice.name)"
                         @dragstart="(event) => handleDragStart(event, { name: apprentice.name, from: 'pool' })"
                       >
                         {{ apprentice.name }}
                       </span>
-                      <span class="w-6 text-right">{{ apprentice.restriction ?? '' }}</span>
+                      <span class="text-right">{{ apprentice.restriction ?? '' }}</span>
                     </div>
                   </div>
                   <div class="space-y-0.5">
                     <div
                       v-for="apprentice in rightNames"
                       :key="apprentice.id"
-                      class="grid grid-cols-[28px,1fr,24px] items-center gap-2"
+                      class="grid grid-cols-[28px,1fr,24px] items-center gap-2 leading-tight"
                     >
-                      <span class="w-4 text-right">{{ apprentice.id }}</span>
+                      <span class="text-right">{{ apprentice.id }}</span>
                       <span
-                        class="flex-1 text-left"
+                        class="text-left"
                         :class="{ 'line-through text-gray-500': isAssigned(apprentice.name) }"
                         :draggable="!isAssigned(apprentice.name)"
                         @dragstart="(event) => handleDragStart(event, { name: apprentice.name, from: 'pool' })"
                       >
                         {{ apprentice.name }}
                       </span>
-                      <span class="w-6 text-right">{{ apprentice.restriction ?? '' }}</span>
+                      <span class="text-right">{{ apprentice.restriction ?? '' }}</span>
                     </div>
                   </div>
                 </div>
