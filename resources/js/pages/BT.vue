@@ -120,77 +120,79 @@ function isAssigned(name: string) {
 <template>
   <Head title="BT" />
   <div class="h-screen overflow-hidden bg-background text-black">
-    <div class="h-1/2 overflow-hidden px-6 pt-4 font-serif text-base">
-      <div class="flex flex-col items-center gap-4 text-center">
-        <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 1</h1>
-        <div class="max-w-4xl space-y-4 text-lg leading-relaxed">
-          <p>
-            Unser Betrieb beschäftigt 25 Lehrlinge. Von diesen sollen jeweils zwei Lehrlinge für den
-            Post-Frühdienst und drei Lehrlinge für den Post-Spätdienst eingeteilt werden, so dass jeder
-            Woche jeder Lehrling einmal Postdienst hat. Aus verkehrstechnischen Gründen können acht
-            Lehrlinge keinen Frühdienst und neun Lehrlinge keinen Spätdienst machen.
-          </p>
-          <p class="text-base">(Siehe Vermerke in der Liste)</p>
-          <p>
-            Stellen Sie bitte einen Wochenplan auf (Montag bis Freitag), in dem Sie alle Namen der Lehrlinge
-            für den Postdienst (Früh oder Spät) auf das Lösungsblatt übertragen.
-          </p>
+    <div class="h-1/2 overflow-hidden px-6 pt-3 font-serif text-base">
+      <div class="flex h-full flex-col items-center justify-between text-center">
+        <div class="flex flex-col items-center gap-3">
+          <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 1</h1>
+          <div class="max-w-4xl space-y-3 text-base leading-relaxed">
+            <p>
+              Unser Betrieb beschäftigt 25 Lehrlinge. Von diesen sollen jeweils zwei Lehrlinge für den
+              Post-Frühdienst und drei Lehrlinge für den Post-Spätdienst eingeteilt werden, so dass jeder
+              Woche jeder Lehrling einmal Postdienst hat. Aus verkehrstechnischen Gründen können acht
+              Lehrlinge keinen Frühdienst und neun Lehrlinge keinen Spätdienst machen.
+            </p>
+            <p class="text-base">(Siehe Vermerke in der Liste)</p>
+            <p>
+              Stellen Sie bitte einen Wochenplan auf (Montag bis Freitag), in dem Sie alle Namen der Lehrlinge
+              für den Postdienst (Früh oder Spät) auf das Lösungsblatt übertragen.
+            </p>
+          </div>
+          <div class="text-base">_____</div>
         </div>
-        <div class="text-base">_____</div>
-      </div>
 
-      <div class="mt-6 flex items-end justify-center gap-10">
-        <div
-          class="border border-black px-5 py-4 text-base"
-          @dragover="allowDrop"
-          @drop="handleDropOnPool"
-        >
-          <div class="grid grid-cols-[1fr,1fr] gap-x-8">
-            <div class="space-y-1.5">
-              <div
-                v-for="apprentice in leftNames"
-                :key="apprentice.id"
-                class="flex items-center justify-between gap-3"
-              >
-                <span class="w-4 text-right">{{ apprentice.id }}</span>
-                <span
-                  class="flex-1 text-left"
-                  :class="{ 'line-through text-gray-500': isAssigned(apprentice.name) }"
-                  :draggable="!isAssigned(apprentice.name)"
-                  @dragstart="(event) => handleDragStart(event, { name: apprentice.name, from: 'pool' })"
+        <div class="mt-2 flex items-end justify-center gap-10">
+          <div
+            class="border border-black px-4 py-3 text-sm leading-tight"
+            @dragover="allowDrop"
+            @drop="handleDropOnPool"
+          >
+            <div class="grid grid-cols-[1fr,1fr] gap-x-8">
+              <div class="space-y-0.5">
+                <div
+                  v-for="apprentice in leftNames"
+                  :key="apprentice.id"
+                  class="flex items-center justify-between gap-2"
                 >
-                  {{ apprentice.name }}
-                </span>
-                <span class="w-6 text-right">{{ apprentice.restriction ?? '' }}</span>
+                  <span class="w-4 text-right">{{ apprentice.id }}</span>
+                  <span
+                    class="flex-1 text-left"
+                    :class="{ 'line-through text-gray-500': isAssigned(apprentice.name) }"
+                    :draggable="!isAssigned(apprentice.name)"
+                    @dragstart="(event) => handleDragStart(event, { name: apprentice.name, from: 'pool' })"
+                  >
+                    {{ apprentice.name }}
+                  </span>
+                  <span class="w-6 text-right">{{ apprentice.restriction ?? '' }}</span>
+                </div>
               </div>
-            </div>
-            <div class="space-y-1.5">
-              <div
-                v-for="apprentice in rightNames"
-                :key="apprentice.id"
-                class="flex items-center justify-between gap-3"
-              >
-                <span class="w-4 text-right">{{ apprentice.id }}</span>
-                <span
-                  class="flex-1 text-left"
-                  :class="{ 'line-through text-gray-500': isAssigned(apprentice.name) }"
-                  :draggable="!isAssigned(apprentice.name)"
-                  @dragstart="(event) => handleDragStart(event, { name: apprentice.name, from: 'pool' })"
+              <div class="space-y-0.5">
+                <div
+                  v-for="apprentice in rightNames"
+                  :key="apprentice.id"
+                  class="flex items-center justify-between gap-2"
                 >
-                  {{ apprentice.name }}
-                </span>
-                <span class="w-6 text-right">{{ apprentice.restriction ?? '' }}</span>
+                  <span class="w-4 text-right">{{ apprentice.id }}</span>
+                  <span
+                    class="flex-1 text-left"
+                    :class="{ 'line-through text-gray-500': isAssigned(apprentice.name) }"
+                    :draggable="!isAssigned(apprentice.name)"
+                    @dragstart="(event) => handleDragStart(event, { name: apprentice.name, from: 'pool' })"
+                  >
+                    {{ apprentice.name }}
+                  </span>
+                  <span class="w-6 text-right">{{ apprentice.restriction ?? '' }}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="space-y-4 text-base text-left">
-          <p class="text-center font-semibold tracking-[0.35em] leading-relaxed">
-            Liste<br />der Namen
-          </p>
-          <p>F = kann keinen Frühdienst machen</p>
-          <p>S = kann keinen Spätdienst machen</p>
+          <div class="space-y-3 text-sm text-left leading-relaxed">
+            <p class="text-center font-semibold tracking-[0.35em] leading-relaxed">
+              Liste<br />der Namen
+            </p>
+            <p>F = kann keinen Frühdienst machen</p>
+            <p>S = kann keinen Spätdienst machen</p>
+          </div>
         </div>
       </div>
     </div>
