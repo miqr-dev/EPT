@@ -120,40 +120,39 @@ function isAssigned(name: string) {
 <template>
   <Head title="BT" />
   <div class="h-screen overflow-hidden bg-background text-black">
-    <div class="h-1/2 overflow-hidden px-6 pt-4 font-serif">
-      <div class="flex flex-col items-center gap-3 text-center">
-        <h1 class="text-lg font-semibold tracking-[0.4em]">Aufgabe 1</h1>
-        <div class="max-w-3xl space-y-3 text-sm leading-relaxed">
+    <div class="h-1/2 overflow-hidden px-6 pt-4 font-serif text-base">
+      <div class="flex flex-col items-center gap-4 text-center">
+        <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 1</h1>
+        <div class="max-w-4xl space-y-4 text-lg leading-relaxed">
           <p>
             Unser Betrieb beschäftigt 25 Lehrlinge. Von diesen sollen jeweils zwei Lehrlinge für den
             Post-Frühdienst und drei Lehrlinge für den Post-Spätdienst eingeteilt werden, so dass jeder
             Woche jeder Lehrling einmal Postdienst hat. Aus verkehrstechnischen Gründen können acht
             Lehrlinge keinen Frühdienst und neun Lehrlinge keinen Spätdienst machen.
           </p>
-          <p class="text-sm">(Siehe Vermerke in der Liste)</p>
+          <p class="text-base">(Siehe Vermerke in der Liste)</p>
           <p>
             Stellen Sie bitte einen Wochenplan auf (Montag bis Freitag), in dem Sie alle Namen der Lehrlinge
             für den Postdienst (Früh oder Spät) auf das Lösungsblatt übertragen.
           </p>
         </div>
-        <div class="text-sm">_____</div>
-        <p class="text-sm font-semibold">In dieses Heft bitte keine Notizen machen!</p>
+        <div class="text-base">_____</div>
       </div>
 
-      <div class="mt-4 flex items-end justify-center gap-6">
+      <div class="mt-6 flex items-end justify-center gap-10">
         <div
-          class="border border-black px-3 py-2 text-xs"
+          class="border border-black px-5 py-4 text-base"
           @dragover="allowDrop"
           @drop="handleDropOnPool"
         >
-          <div class="grid grid-cols-[1fr,1fr] gap-x-6">
-            <div class="space-y-1">
+          <div class="grid grid-cols-[1fr,1fr] gap-x-8">
+            <div class="space-y-1.5">
               <div
                 v-for="apprentice in leftNames"
                 :key="apprentice.id"
-                class="flex items-center justify-between gap-2"
+                class="flex items-center justify-between gap-3"
               >
-                <span>{{ apprentice.id }}</span>
+                <span class="w-4 text-right">{{ apprentice.id }}</span>
                 <span
                   class="flex-1 text-left"
                   :class="{ 'line-through text-gray-500': isAssigned(apprentice.name) }"
@@ -162,16 +161,16 @@ function isAssigned(name: string) {
                 >
                   {{ apprentice.name }}
                 </span>
-                <span class="w-4 text-right">{{ apprentice.restriction ?? '' }}</span>
+                <span class="w-6 text-right">{{ apprentice.restriction ?? '' }}</span>
               </div>
             </div>
-            <div class="space-y-1">
+            <div class="space-y-1.5">
               <div
                 v-for="apprentice in rightNames"
                 :key="apprentice.id"
-                class="flex items-center justify-between gap-2"
+                class="flex items-center justify-between gap-3"
               >
-                <span>{{ apprentice.id }}</span>
+                <span class="w-4 text-right">{{ apprentice.id }}</span>
                 <span
                   class="flex-1 text-left"
                   :class="{ 'line-through text-gray-500': isAssigned(apprentice.name) }"
@@ -180,14 +179,16 @@ function isAssigned(name: string) {
                 >
                   {{ apprentice.name }}
                 </span>
-                <span class="w-4 text-right">{{ apprentice.restriction ?? '' }}</span>
+                <span class="w-6 text-right">{{ apprentice.restriction ?? '' }}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="space-y-2 text-xs text-left">
-          <p class="text-center font-semibold">Liste<br />der Namen</p>
+        <div class="space-y-4 text-base text-left">
+          <p class="text-center font-semibold tracking-[0.35em] leading-relaxed">
+            Liste<br />der Namen
+          </p>
           <p>F = kann keinen Frühdienst machen</p>
           <p>S = kann keinen Spätdienst machen</p>
         </div>
@@ -196,7 +197,8 @@ function isAssigned(name: string) {
 
     <div class="h-1/2 overflow-hidden px-6 pb-4 pt-2 font-serif">
       <div class="flex h-full flex-col justify-center">
-        <table class="w-full border border-black text-sm">
+        <div class="border-t border-black" />
+        <table class="mt-3 w-full border border-black text-lg">
           <thead>
             <tr>
               <th class="w-24 border border-black p-2 text-left">Aufgabe 1</th>
@@ -320,7 +322,6 @@ function isAssigned(name: string) {
             </tr>
           </tbody>
         </table>
-        <p class="mt-2 text-right text-xs">Danach blättern Sie bitte um zur Aufgabe 2</p>
       </div>
     </div>
   </div>
