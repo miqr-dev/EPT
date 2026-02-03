@@ -215,176 +215,31 @@ function isAssigned(name: string) {
     <div class="h-1/2 overflow-hidden px-6 pb-4 pt-2 font-serif">
       <div class="flex h-full flex-col">
         <div class="border-t border-black" />
-        <div class="flex-1">
-          <table class="mt-3 w-full table-fixed border border-black text-base">
-          <thead>
-            <tr>
-              <th class="w-24 border border-black p-1 text-left">Aufgabe 1</th>
-              <th v-for="day in days" :key="day" class="border border-black p-1 text-center">
-                {{ day }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th class="border border-black p-1 text-left" rowspan="2">Frühdienst</th>
-              <td
-                v-for="day in days"
-                :key="`early-1-${day}`"
-                class="border border-black p-1 align-middle"
-                @dragover="allowDrop"
-                @drop="(event) => handleDropOnCell(event, buildCellKey('early', 1, day))"
-              >
-                <div class="flex items-center gap-2">
-                  <span class="w-4 text-right">1.</span>
-                  <span
-                    v-if="assignments[buildCellKey('early', 1, day)]"
-                    class="flex-1 min-w-0 cursor-move"
-                    draggable="true"
-                    @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('early', 1, day)] ?? '', from: 'cell', key: buildCellKey('early', 1, day) })"
-                  >
-                    {{ assignments[buildCellKey('early', 1, day)] }}
-                  </span>
-                  <button
-                    v-if="assignments[buildCellKey('early', 1, day)]"
-                    type="button"
-                    class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
-                    aria-label="Remove assignment"
-                    @click.stop="clearCell(buildCellKey('early', 1, day))"
-                  >
-                    ×
-                  </button>
-                  <span v-else class="flex-1">&nbsp;</span>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td
-                v-for="day in days"
-                :key="`early-2-${day}`"
-                class="border border-black p-1 align-middle"
-                @dragover="allowDrop"
-                @drop="(event) => handleDropOnCell(event, buildCellKey('early', 2, day))"
-              >
-                <div class="flex items-center gap-2">
-                  <span class="w-4 text-right">2.</span>
-                  <span
-                    v-if="assignments[buildCellKey('early', 2, day)]"
-                    class="flex-1 min-w-0 cursor-move"
-                    draggable="true"
-                    @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('early', 2, day)] ?? '', from: 'cell', key: buildCellKey('early', 2, day) })"
-                  >
-                    {{ assignments[buildCellKey('early', 2, day)] }}
-                  </span>
-                  <button
-                    v-if="assignments[buildCellKey('early', 2, day)]"
-                    type="button"
-                    class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
-                    aria-label="Remove assignment"
-                    @click.stop="clearCell(buildCellKey('early', 2, day))"
-                  >
-                    ×
-                  </button>
-                  <span v-else class="flex-1">&nbsp;</span>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <th class="border border-black p-1 text-left" rowspan="3">Spätdienst</th>
-              <td
-                v-for="day in days"
-                :key="`late-1-${day}`"
-                class="border border-black p-1 align-middle"
-                @dragover="allowDrop"
-                @drop="(event) => handleDropOnCell(event, buildCellKey('late', 1, day))"
-              >
-                <div class="flex items-center gap-2">
-                  <span class="w-4 text-right">1.</span>
-                  <span
-                    v-if="assignments[buildCellKey('late', 1, day)]"
-                    class="flex-1 min-w-0 cursor-move"
-                    draggable="true"
-                    @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 1, day)] ?? '', from: 'cell', key: buildCellKey('late', 1, day) })"
-                  >
-                    {{ assignments[buildCellKey('late', 1, day)] }}
-                  </span>
-                  <button
-                    v-if="assignments[buildCellKey('late', 1, day)]"
-                    type="button"
-                    class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
-                    aria-label="Remove assignment"
-                    @click.stop="clearCell(buildCellKey('late', 1, day))"
-                  >
-                    ×
-                  </button>
-                  <span v-else class="flex-1">&nbsp;</span>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td
-                v-for="day in days"
-                :key="`late-2-${day}`"
-                class="border border-black p-1 align-middle"
-                @dragover="allowDrop"
-                @drop="(event) => handleDropOnCell(event, buildCellKey('late', 2, day))"
-              >
-                <div class="flex items-center gap-2">
-                  <span class="w-4 text-right">2.</span>
-                  <span
-                    v-if="assignments[buildCellKey('late', 2, day)]"
-                    class="flex-1 min-w-0 cursor-move"
-                    draggable="true"
-                    @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 2, day)] ?? '', from: 'cell', key: buildCellKey('late', 2, day) })"
-                  >
-                    {{ assignments[buildCellKey('late', 2, day)] }}
-                  </span>
-                  <button
-                    v-if="assignments[buildCellKey('late', 2, day)]"
-                    type="button"
-                    class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
-                    aria-label="Remove assignment"
-                    @click.stop="clearCell(buildCellKey('late', 2, day))"
-                  >
-                    ×
-                  </button>
-                  <span v-else class="flex-1">&nbsp;</span>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td
-                v-for="day in days"
-                :key="`late-3-${day}`"
-                class="border border-black p-1 align-middle"
-                @dragover="allowDrop"
-                @drop="(event) => handleDropOnCell(event, buildCellKey('late', 3, day))"
-              >
-                <div class="flex items-center gap-2">
-                  <span class="w-4 text-right">3.</span>
-                  <span
-                    v-if="assignments[buildCellKey('late', 3, day)]"
-                    class="flex-1 min-w-0 cursor-move"
-                    draggable="true"
-                    @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 3, day)] ?? '', from: 'cell', key: buildCellKey('late', 3, day) })"
-                  >
-                    {{ assignments[buildCellKey('late', 3, day)] }}
-                  </span>
-                  <button
-                    v-if="assignments[buildCellKey('late', 3, day)]"
-                    type="button"
-                    class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
-                    aria-label="Remove assignment"
-                    @click.stop="clearCell(buildCellKey('late', 3, day))"
-                  >
-                    ×
-                  </button>
-                  <span v-else class="flex-1">&nbsp;</span>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-          </table>
+        <div class="flex flex-1 flex-col px-10 pt-6 text-base leading-relaxed">
+          <div class="text-center">
+            <h2 class="text-lg font-semibold tracking-[0.4em]">Aufgabe 2</h2>
+          </div>
+          <div class="mt-6 flex flex-col gap-4 text-center">
+            <p>Sie erhalten ungeordnet 220 Kopien von Rechnungen aus den Orten</p>
+            <p>Essen, Düsseldorf und Köln.</p>
+            <p>Sie sollen möglichst schnell feststellen:</p>
+            <p class="tracking-[0.6em]">_____</p>
+            <p class="mt-2">In diesem Heft bitte keine Notizen machen!</p>
+          </div>
+          <div class="mt-6 flex flex-col gap-2 text-left">
+            <p>a) wie viele dieser Rechnungen aus jedem der drei Orte kommen</p>
+            <p>
+              b) welche bereits bezahlt und welche noch unbezahlt sind
+              <span class="block pl-6">Bezahlte Rechnungen haben entsprechenden Stempelaufdruck</span>
+              <span class="mt-1 inline-block border border-black px-4 py-1 tracking-[0.3em]">BEZAHLT</span>
+            </p>
+            <p>c) welche Höhe die unbezahlten Rechnungen insgesamt haben.</p>
+          </div>
+          <div class="mt-auto pt-4 text-left">
+            <p>
+              Geben Sie bitte auf dem Lösungsblatt in Stichworten an, wie Sie diese Aufgabe angepackt würden.
+            </p>
+          </div>
         </div>
       </div>
     </div>
