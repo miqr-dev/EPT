@@ -61,6 +61,7 @@ const assignments = ref<Record<string, string | null>>(
 const assignedNames = computed(() => new Set(Object.values(assignments.value).filter(Boolean)));
 const leftNames = computed(() => apprentices.value.slice(0, 13));
 const rightNames = computed(() => apprentices.value.slice(13));
+const maxPage = 2;
 const page = ref(1);
 
 function buildCellKey(shift: 'early' | 'late', slot: number, day: string) {
@@ -120,15 +121,25 @@ function isAssigned(name: string) {
 }
 
 function nextPage() {
-  if (page.value < 2) {
+  if (page.value < maxPage) {
     page.value += 1;
+  }
+}
+
+function prevPage() {
+  if (page.value > 1) {
+    page.value -= 1;
   }
 }
 </script>
 
 <template>
   <Head title="BT" />
-  <div class="h-screen overflow-hidden bg-background text-black">
+  <div class="relative h-screen overflow-hidden bg-background text-black">
+    <div class="absolute right-6 top-4 flex items-center gap-2">
+      <Button variant="outline" @click="prevPage" :disabled="page === 1">Zurück</Button>
+      <Button @click="nextPage" :disabled="page === maxPage">Weiter</Button>
+    </div>
     <div v-if="page === 1">
       <div class="h-1/2 overflow-hidden px-6 pt-3 font-serif text-base">
         <div class="flex h-full flex-col gap-4">
@@ -395,9 +406,6 @@ function nextPage() {
               </tr>
             </tbody>
             </table>
-          </div>
-          <div class="mt-3 flex justify-end">
-            <Button @click="nextPage">Weiter</Button>
           </div>
         </div>
       </div>
