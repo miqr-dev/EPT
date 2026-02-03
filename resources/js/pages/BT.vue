@@ -140,8 +140,8 @@ function prevPage() {
       <Button variant="outline" @click="prevPage" :disabled="page === 1">Zurück</Button>
       <Button @click="nextPage" :disabled="page === maxPage">Weiter</Button>
     </div>
-    <div v-if="page === 1" class="h-full">
-      <div class="h-1/2 overflow-hidden px-6 pt-3 font-serif text-base">
+    <div v-if="page === 1" class="flex h-full flex-col">
+      <div class="flex-1 overflow-hidden px-6 pt-3 font-serif text-base">
         <div class="flex h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
             <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 1</h1>
@@ -233,7 +233,7 @@ function prevPage() {
         </div>
       </div>
 
-      <div class="h-1/2 overflow-hidden px-6 pb-4 pt-2 font-serif">
+      <div class="flex-1 overflow-hidden px-6 pb-4 pt-2 font-serif">
         <div class="flex h-full flex-col">
           <div class="border-t border-black" />
           <div class="flex-1">
