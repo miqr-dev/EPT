@@ -216,7 +216,7 @@ function isAssigned(name: string) {
       <div class="flex h-full flex-col">
         <div class="border-t border-black" />
         <div class="flex-1">
-          <table class="mt-3 w-full border border-black text-base">
+          <table class="mt-3 w-full table-fixed border border-black text-base">
           <thead>
             <tr>
               <th class="w-24 border border-black p-1 text-left">Aufgabe 1</th>
@@ -239,12 +239,21 @@ function isAssigned(name: string) {
                   <span class="w-4 text-right">1.</span>
                   <span
                     v-if="assignments[buildCellKey('early', 1, day)]"
-                    class="flex-1 cursor-move"
+                    class="flex-1 min-w-0 cursor-move"
                     draggable="true"
                     @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('early', 1, day)] ?? '', from: 'cell', key: buildCellKey('early', 1, day) })"
                   >
                     {{ assignments[buildCellKey('early', 1, day)] }}
                   </span>
+                  <button
+                    v-if="assignments[buildCellKey('early', 1, day)]"
+                    type="button"
+                    class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
+                    aria-label="Remove assignment"
+                    @click.stop="clearCell(buildCellKey('early', 1, day))"
+                  >
+                    ×
+                  </button>
                   <span v-else class="flex-1">&nbsp;</span>
                 </div>
               </td>
@@ -261,12 +270,21 @@ function isAssigned(name: string) {
                   <span class="w-4 text-right">2.</span>
                   <span
                     v-if="assignments[buildCellKey('early', 2, day)]"
-                    class="flex-1 cursor-move"
+                    class="flex-1 min-w-0 cursor-move"
                     draggable="true"
                     @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('early', 2, day)] ?? '', from: 'cell', key: buildCellKey('early', 2, day) })"
                   >
                     {{ assignments[buildCellKey('early', 2, day)] }}
                   </span>
+                  <button
+                    v-if="assignments[buildCellKey('early', 2, day)]"
+                    type="button"
+                    class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
+                    aria-label="Remove assignment"
+                    @click.stop="clearCell(buildCellKey('early', 2, day))"
+                  >
+                    ×
+                  </button>
                   <span v-else class="flex-1">&nbsp;</span>
                 </div>
               </td>
@@ -284,12 +302,21 @@ function isAssigned(name: string) {
                   <span class="w-4 text-right">1.</span>
                   <span
                     v-if="assignments[buildCellKey('late', 1, day)]"
-                    class="flex-1 cursor-move"
+                    class="flex-1 min-w-0 cursor-move"
                     draggable="true"
                     @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 1, day)] ?? '', from: 'cell', key: buildCellKey('late', 1, day) })"
                   >
                     {{ assignments[buildCellKey('late', 1, day)] }}
                   </span>
+                  <button
+                    v-if="assignments[buildCellKey('late', 1, day)]"
+                    type="button"
+                    class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
+                    aria-label="Remove assignment"
+                    @click.stop="clearCell(buildCellKey('late', 1, day))"
+                  >
+                    ×
+                  </button>
                   <span v-else class="flex-1">&nbsp;</span>
                 </div>
               </td>
@@ -306,12 +333,21 @@ function isAssigned(name: string) {
                   <span class="w-4 text-right">2.</span>
                   <span
                     v-if="assignments[buildCellKey('late', 2, day)]"
-                    class="flex-1 cursor-move"
+                    class="flex-1 min-w-0 cursor-move"
                     draggable="true"
                     @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 2, day)] ?? '', from: 'cell', key: buildCellKey('late', 2, day) })"
                   >
                     {{ assignments[buildCellKey('late', 2, day)] }}
                   </span>
+                  <button
+                    v-if="assignments[buildCellKey('late', 2, day)]"
+                    type="button"
+                    class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
+                    aria-label="Remove assignment"
+                    @click.stop="clearCell(buildCellKey('late', 2, day))"
+                  >
+                    ×
+                  </button>
                   <span v-else class="flex-1">&nbsp;</span>
                 </div>
               </td>
@@ -328,12 +364,21 @@ function isAssigned(name: string) {
                   <span class="w-4 text-right">3.</span>
                   <span
                     v-if="assignments[buildCellKey('late', 3, day)]"
-                    class="flex-1 cursor-move"
+                    class="flex-1 min-w-0 cursor-move"
                     draggable="true"
                     @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 3, day)] ?? '', from: 'cell', key: buildCellKey('late', 3, day) })"
                   >
                     {{ assignments[buildCellKey('late', 3, day)] }}
                   </span>
+                  <button
+                    v-if="assignments[buildCellKey('late', 3, day)]"
+                    type="button"
+                    class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
+                    aria-label="Remove assignment"
+                    @click.stop="clearCell(buildCellKey('late', 3, day))"
+                  >
+                    ×
+                  </button>
                   <span v-else class="flex-1">&nbsp;</span>
                 </div>
               </td>
