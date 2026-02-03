@@ -486,21 +486,48 @@ function prevPage() {
             </div>
 
             <div class="flex-1 border border-black/20 px-4 py-2">
-              <div class="flex h-full items-start justify-center">
-                <div class="border border-black px-8 py-4 text-base leading-relaxed w-[220px]">
-                  <div class="space-y-1 text-right">
-                    <p>€&nbsp;&nbsp;2&nbsp;854,50</p>
-                    <p>&ldquo;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;26,00</p>
-                    <p>&ldquo;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;144,00</p>
-                    <p>&ldquo;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;211,50</p>
-                    <p>&ldquo;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;86,00</p>
-                    <p>&ldquo;&nbsp;&nbsp;3&nbsp;221,50</p>
-                    <p>&ldquo;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;175,50</p>
-                    <p>&ldquo;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;11,00</p>
-                    <div class="border-t border-black pt-2">
-                      <p>€&nbsp;&nbsp;6&nbsp;730,00</p>
-                    </div>
-                  </div>
+              <div class="flex h-full items-stretch justify-center">
+                <div class="h-full w-[240px] border-2 border-black px-10 py-6 text-base">
+                  <table class="h-full w-full border-collapse">
+                    <tbody>
+                      <tr>
+                        <td class="w-8 align-middle text-left">€</td>
+                        <td class="align-middle text-right">2 854,50</td>
+                      </tr>
+                      <tr>
+                        <td class="align-middle text-left">“</td>
+                        <td class="align-middle text-right">26,00</td>
+                      </tr>
+                      <tr>
+                        <td class="align-middle text-left">“</td>
+                        <td class="align-middle text-right">144,00</td>
+                      </tr>
+                      <tr>
+                        <td class="align-middle text-left">“</td>
+                        <td class="align-middle text-right">211,50</td>
+                      </tr>
+                      <tr>
+                        <td class="align-middle text-left">“</td>
+                        <td class="align-middle text-right">86,00</td>
+                      </tr>
+                      <tr>
+                        <td class="align-middle text-left">“</td>
+                        <td class="align-middle text-right">3 221,50</td>
+                      </tr>
+                      <tr>
+                        <td class="align-middle text-left">“</td>
+                        <td class="align-middle text-right">175,50</td>
+                      </tr>
+                      <tr>
+                        <td class="align-middle text-left">“</td>
+                        <td class="align-middle text-right">11,00</td>
+                      </tr>
+                      <tr class="border-t border-black">
+                        <td class="pt-2 align-middle text-left">€</td>
+                        <td class="pt-2 align-middle text-right">6 730,00</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
