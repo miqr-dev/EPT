@@ -140,7 +140,7 @@ function prevPage() {
       <Button variant="outline" @click="prevPage" :disabled="page === 1">Zurück</Button>
       <Button @click="nextPage" :disabled="page === maxPage">Weiter</Button>
     </div>
-    <div v-if="page === 1">
+    <div v-if="page === 1" class="h-full">
       <div class="h-1/2 overflow-hidden px-6 pt-3 font-serif text-base">
         <div class="flex h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
