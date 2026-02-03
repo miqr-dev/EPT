@@ -515,7 +515,7 @@ function prevPage() {
             <table class="mt-3 w-full table-fixed border border-black text-base">
               <thead>
                 <tr>
-                  <th class="w-28 border border-black p-1 text-left">Aufgabe 3</th>
+                  <th class="w-28 border border-black p-1 text-left">Geldsorten</th>
                   <th
                     v-for="denomination in cashDenominations"
                     :key="denomination.key"
