@@ -61,8 +61,21 @@ const assignments = ref<Record<string, string | null>>(
 const assignedNames = computed(() => new Set(Object.values(assignments.value).filter(Boolean)));
 const leftNames = computed(() => apprentices.value.slice(0, 13));
 const rightNames = computed(() => apprentices.value.slice(13));
-const maxPage = 2;
+const maxPage = 3;
 const page = ref(1);
+const cashDenominations = [
+  { label: '100€', key: '100' },
+  { label: '50€', key: '50' },
+  { label: '20€', key: '20' },
+  { label: '10€', key: '10' },
+  { label: '5€', key: '5' },
+  { label: '2€', key: '2' },
+  { label: '1€', key: '1' },
+  { label: '0,50€', key: '0.5' },
+];
+const cashAnswers = ref<Record<string, string>>(
+  Object.fromEntries(cashDenominations.map((denomination) => [denomination.key, ''])),
+);
 
 function buildCellKey(shift: 'early' | 'late', slot: number, day: string) {
   return `${shift}-${slot}-${day}`;
@@ -118,6 +131,13 @@ function clearCell(key: string) {
 
 function isAssigned(name: string) {
   return assignedNames.value.has(name);
+}
+
+function handleCashInput(key: string, event: Event) {
+  const target = event.target as HTMLInputElement;
+  const cleaned = target.value.replace(/\D/g, '').slice(0, 2);
+  cashAnswers.value[key] = cleaned;
+  target.value = cleaned;
 }
 
 function nextPage() {
@@ -411,7 +431,7 @@ function prevPage() {
       </div>
     </div>
 
-    <div v-else class="flex h-full flex-col px-12 py-8 font-serif text-base">
+    <div v-else-if="page === 2" class="flex h-full flex-col px-12 py-8 font-serif text-base">
       <div class="text-center">
         <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 2</h1>
       </div>
@@ -438,6 +458,97 @@ function prevPage() {
         <p class="mt-10 max-w-2xl text-center">
           Geben Sie bitte auf dem Lösungsblatt in Stichworten an, wie Sie diese Aufgabe anpacken würden.
         </p>
+      </div>
+    </div>
+    <div v-else class="flex h-full flex-col">
+      <div class="flex-1 overflow-hidden px-6 pt-3 font-serif text-base">
+        <div class="flex h-full flex-col gap-4">
+          <div class="px-4 py-2 text-center">
+            <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 3</h1>
+          </div>
+          <div class="flex flex-1 gap-4">
+            <div class="flex-1 border border-black/20 px-6 py-4">
+              <div class="space-y-4 text-center text-base leading-relaxed">
+                <p>
+                  Sie sollen jeden der acht Beträge auf nebenstehender Liste gegen Quittung in bar auszahlen.
+                </p>
+                <p>
+                  Rechnen Sie bitte aus, welche Geldsorten Sie benötigen. Sie sollen in keinem Falle wechseln
+                  und möglichst wenig Geldstücke bzw. Scheine brauchen.
+                </p>
+                <p>
+                  Schreiben Sie bitte auf das Lösungsblatt, welche Anzahl Sie hierzu von jeder Geldsorte
+                  benötigen!
+                </p>
+              </div>
+              <div class="mt-4 text-center text-base">_____</div>
+              <p class="mt-6 text-center text-base">In diesem Heft bitte keine Notizen machen!</p>
+            </div>
+
+            <div class="flex-1 border border-black/20 px-4 py-2">
+              <div class="flex h-full items-start justify-center">
+                <div class="border border-black px-8 py-4 text-base leading-relaxed w-[220px]">
+                  <div class="space-y-1 text-right">
+                    <p>€&nbsp;&nbsp;2&nbsp;854,50</p>
+                    <p>&ldquo;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;26,00</p>
+                    <p>&ldquo;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;144,00</p>
+                    <p>&ldquo;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;211,50</p>
+                    <p>&ldquo;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;86,00</p>
+                    <p>&ldquo;&nbsp;&nbsp;3&nbsp;221,50</p>
+                    <p>&ldquo;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;175,50</p>
+                    <p>&ldquo;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;11,00</p>
+                    <div class="border-t border-black pt-2">
+                      <p>€&nbsp;&nbsp;6&nbsp;730,00</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-hidden px-6 pb-4 pt-2 font-serif">
+        <div class="flex h-full flex-col">
+          <div class="border-t border-black" />
+          <div class="flex-1">
+            <table class="mt-3 w-full table-fixed border border-black text-base">
+              <thead>
+                <tr>
+                  <th class="w-28 border border-black p-1 text-left">Aufgabe 3</th>
+                  <th
+                    v-for="denomination in cashDenominations"
+                    :key="denomination.key"
+                    class="border border-black p-1 text-center"
+                  >
+                    {{ denomination.label }}
+                  </th>
+                  <th class="w-10 border border-black p-1" />
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th class="border border-black p-1 text-left">Anzahl</th>
+                  <td
+                    v-for="denomination in cashDenominations"
+                    :key="`input-${denomination.key}`"
+                    class="border border-black p-1 text-center"
+                  >
+                    <input
+                      :value="cashAnswers[denomination.key]"
+                      type="text"
+                      inputmode="numeric"
+                      maxlength="2"
+                      class="h-6 w-10 border border-black text-center text-base"
+                      @input="(event) => handleCashInput(denomination.key, event)"
+                    />
+                  </td>
+                  <td class="border border-black p-1" />
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
