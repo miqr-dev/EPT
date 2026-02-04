@@ -61,7 +61,7 @@ const assignments = ref<Record<string, string | null>>(
 const assignedNames = computed(() => new Set(Object.values(assignments.value).filter(Boolean)));
 const leftNames = computed(() => apprentices.value.slice(0, 13));
 const rightNames = computed(() => apprentices.value.slice(13));
-const maxPage = 4;
+const maxPage = 5;
 const page = ref(1);
 const cashDenominations = [
   { label: '100€', key: '100' },
@@ -78,6 +78,16 @@ const cashAnswers = ref<Record<string, string>>(
 );
 const folderAnswers = ref<Record<number, string>>(
   Object.fromEntries(Array.from({ length: 10 }, (_, index) => [index + 1, ''])),
+);
+const aufgabe5Rows = Array.from({ length: 10 }, (_, index) => index + 1);
+const aufgabe5Options = ['A', 'B', 'C', 'D', 'E'];
+const aufgabe5Answers = ref<Record<number, Record<string, boolean>>>(
+  Object.fromEntries(
+    aufgabe5Rows.map((row) => [
+      row,
+      Object.fromEntries(aufgabe5Options.map((option) => [option, false])),
+    ]),
+  ),
 );
 
 function buildCellKey(shift: 'early' | 'late', slot: number, day: string) {
@@ -148,6 +158,10 @@ function handleFolderInput(index: number, event: Event) {
   const cleaned = target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5);
   folderAnswers.value[index] = cleaned;
   target.value = cleaned;
+}
+
+function toggleAufgabe5Answer(row: number, option: string) {
+  aufgabe5Answers.value[row][option] = !aufgabe5Answers.value[row][option];
 }
 
 function nextPage() {
@@ -588,7 +602,7 @@ function prevPage() {
         </div>
       </div>
     </div>
-    <div v-else class="flex h-full flex-col">
+    <div v-else-if="page === 4" class="flex h-full flex-col">
       <div class="flex-[0.6 overflow-hidden px-6 pt-3 font-serif text-base">
         <div class="flex h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
@@ -768,6 +782,76 @@ function prevPage() {
                       class="h-6 w-16 border border-black text-center text-base uppercase"
                       @input="(event) => handleFolderInput(index, event)"
                     />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-else class="flex h-full flex-col">
+      <div class="flex-[0.6] overflow-hidden px-6 pt-3 font-serif text-base">
+        <div class="flex h-full flex-col gap-4">
+          <div class="px-4 py-2 text-center">
+            <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 5</h1>
+          </div>
+          <div class="flex flex-1 gap-4">
+            <div class="flex flex-1 border border-black/20 px-6 py-4">
+              <div class="flex h-full w-full items-center justify-center">
+                <img
+                  src="/images/BT/10.png"
+                  alt="Aufgabe 5 Frage"
+                  class="max-h-full max-w-full object-contain"
+                />
+              </div>
+            </div>
+            <div class="flex flex-1 border border-black/20 px-6 py-4">
+              <div class="flex h-full w-full items-center justify-center">
+                <img
+                  src="/images/BT/11.png"
+                  alt="Aufgabe 5 Antworttabelle"
+                  class="max-h-full max-w-full object-contain"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex-[0.4] overflow-hidden px-6 pb-4 pt-2 font-serif">
+        <div class="flex h-full flex-col">
+          <div class="border-t border-black" />
+          <div class="flex-1">
+            <div class="mt-3 text-left text-base font-semibold">Aufgabe 5</div>
+            <table class="mt-2 w-full table-fixed border border-black text-base">
+              <thead>
+                <tr>
+                  <th class="w-20 border border-black p-1 text-left">Nr.</th>
+                  <th
+                    v-for="option in aufgabe5Options"
+                    :key="`aufgabe5-header-${option}`"
+                    class="border border-black p-1 text-center"
+                  >
+                    {{ option }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in aufgabe5Rows" :key="`aufgabe5-row-${row}`">
+                  <th class="border border-black p-1 text-left">{{ row }}</th>
+                  <td
+                    v-for="option in aufgabe5Options"
+                    :key="`aufgabe5-${row}-${option}`"
+                    class="border border-black p-1 text-center"
+                  >
+                    <button
+                      type="button"
+                      class="mx-auto flex h-6 w-6 items-center justify-center border border-black text-sm"
+                      :class="{ 'bg-black text-white': aufgabe5Answers[row][option] }"
+                      @click="toggleAufgabe5Answer(row, option)"
+                    >
+                      <span aria-hidden="true">{{ aufgabe5Answers[row][option] ? '✓' : '' }}</span>
+                    </button>
                   </td>
                 </tr>
               </tbody>
