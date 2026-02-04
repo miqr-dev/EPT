@@ -617,26 +617,123 @@ function prevPage() {
               </div>
               <div class="mt-4 text-center text-base">_____</div>
             </div>
-            <div class="flex-1 border border-black/20 px-6 py-4">
-              <div class="flex h-full items-center justify-center">
-                <div class="border border-black px-8 py-6 text-center text-sm leading-relaxed">
-                  <p>Von allen Absendern beginnen</p>
-                  <p>jeweils 2,5 % mit den Anfangsbuchstaben</p>
-                  <p class="font-semibold">A F W B G J</p>
-                  <p class="font-semibold">X Y C H Z D</p>
-                  <p class="mt-1">zusammen = 30 % aller Briefe</p>
-                  <p class="mt-3">jeweils 3,33 % mit den Anfangsbuchstaben</p>
-                  <p class="font-semibold">R P und Q</p>
-                  <p class="mt-1">zusammen = 10 % aller Briefe</p>
-                  <p class="mt-3">jeweils 5,0 % mit den Anfangsbuchstaben</p>
-                  <p class="font-semibold">N K S V T U</p>
-                  <p class="font-semibold">O und L</p>
-                  <p class="mt-1">zusammen = 40 % aller Briefe</p>
-                  <p class="mt-3">jeweils 10,0 % mit den Anfangsbuchstaben</p>
-                  <p class="font-semibold">M und E</p>
-                  <p class="mt-1">zusammen = 20 % aller Briefe</p>
-                  <p class="mt-3">zusammen = 100 % aller Briefe</p>
-                </div>
+            <div class="flex-1 border border-black/20">
+              <div class="flex h-full w-full items-center justify-center border-2 border-black p-8">
+                <table class="w-full border-collapse text-base leading-tight">
+                  <tbody>
+                    <tr>
+                      <td colspan="7" class="pb-8 text-center text-xl">Von allen Absendern beginnen</td>
+                    </tr>
+                    <tr>
+                      <td class="w-[12%] py-1 text-left">jeweils</td>
+                      <td class="w-[8%] py-1 text-right">2,5</td>
+                      <td class="w-[4%] py-1 text-center">%</td>
+                      <td class="py-1 pl-8 text-left">mit den Anfangsbuchstaben</td>
+                      <td class="w-[15%] py-1"></td>
+                      <td class="w-[4%] py-1"></td>
+                      <td class="w-[25%] py-1"></td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td class="py-1 pl-8 text-left tracking-[0.35em]">A F W B G J</td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td class="py-1 pl-8 text-left tracking-[0.35em]">X Y C H Z D</td>
+                      <td class="py-1 pl-4 text-left">zusammen</td>
+                      <td class="py-1 text-center">=</td>
+                      <td class="py-1 text-right">30 % aller Briefe</td>
+                    </tr>
+                    <tr class="h-4">
+                      <td colspan="7"></td>
+                    </tr>
+                    <tr>
+                      <td class="py-1 text-left">jeweils</td>
+                      <td class="py-1 text-right">3,33</td>
+                      <td class="py-1 text-center">%</td>
+                      <td class="py-1 pl-8 text-left">mit den Anfangsbuchstaben</td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td class="py-1 pl-8 text-left"><span class="tracking-[0.35em]">R P</span> und <span class="tracking-[0.35em]">Q</span></td>
+                      <td class="py-1 pl-4 text-left">zusammen</td>
+                      <td class="py-1 text-center">=</td>
+                      <td class="py-1 text-right">10 % aller Briefe</td>
+                    </tr>
+                    <tr class="h-4">
+                      <td colspan="7"></td>
+                    </tr>
+                    <tr>
+                      <td class="py-1 text-left">jeweils</td>
+                      <td class="py-1 text-right">5,0</td>
+                      <td class="py-1 text-center">%</td>
+                      <td class="py-1 pl-8 text-left">mit den Anfangsbuchstaben</td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td class="py-1 pl-8 text-left tracking-[0.35em]">N K S V T U</td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td class="py-1 pl-8 text-left"><span class="tracking-[0.35em]">O</span> und <span class="tracking-[0.35em]">L</span></td>
+                      <td class="py-1 pl-4 text-left">zusammen</td>
+                      <td class="py-1 text-center">=</td>
+                      <td class="py-1 text-right">40 % aller Briefe</td>
+                    </tr>
+                    <tr class="h-4">
+                      <td colspan="7"></td>
+                    </tr>
+                    <tr>
+                      <td class="py-1 text-left">jeweils</td>
+                      <td class="py-1 text-right">10,0</td>
+                      <td class="py-1 text-center">%</td>
+                      <td class="py-1 pl-8 text-left">mit den Anfangsbuchstaben</td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td class="border-b border-black py-1 pl-8 text-left"><span class="tracking-[0.35em]">M</span> und <span class="tracking-[0.35em]">E</span></td>
+                      <td class="border-b border-black py-1 pl-4 text-left">zusammen</td>
+                      <td class="border-b border-black py-1 text-center">=</td>
+                      <td class="border-b border-black py-1 text-right">20 % aller Briefe</td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td class="py-1 pl-4 text-left">zusammen</td>
+                      <td class="py-1 text-center">=</td>
+                      <td class="py-1 text-right">100 % aller Briefe</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
