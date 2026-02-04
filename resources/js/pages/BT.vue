@@ -589,7 +589,7 @@ function prevPage() {
       </div>
     </div>
     <div v-else class="flex h-full flex-col">
-      <div class="flex-1 overflow-hidden px-6 pt-3 font-serif text-base">
+      <div class="flex-[0.6 overflow-hidden px-6 pt-3 font-serif text-base">
         <div class="flex h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
             <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 4</h1>
@@ -739,7 +739,7 @@ function prevPage() {
           </div>
         </div>
       </div>
-      <div class="flex-1 overflow-hidden px-6 pb-4 pt-2 font-serif">
+      <div class="flex-[0.4] overflow-hidden px-6 pb-4 pt-2 font-serif">
         <div class="flex h-full flex-col">
           <div class="border-t border-black" />
           <div class="flex-1">
