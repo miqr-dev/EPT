@@ -61,7 +61,7 @@ const assignments = ref<Record<string, string | null>>(
 const assignedNames = computed(() => new Set(Object.values(assignments.value).filter(Boolean)));
 const leftNames = computed(() => apprentices.value.slice(0, 13));
 const rightNames = computed(() => apprentices.value.slice(13));
-const maxPage = 3;
+const maxPage = 4;
 const page = ref(1);
 const cashDenominations = [
   { label: '100€', key: '100' },
@@ -75,6 +75,9 @@ const cashDenominations = [
 ];
 const cashAnswers = ref<Record<string, string>>(
   Object.fromEntries(cashDenominations.map((denomination) => [denomination.key, ''])),
+);
+const folderAnswers = ref<Record<number, string>>(
+  Object.fromEntries(Array.from({ length: 10 }, (_, index) => [index + 1, ''])),
 );
 
 function buildCellKey(shift: 'early' | 'late', slot: number, day: string) {
@@ -137,6 +140,13 @@ function handleCashInput(key: string, event: Event) {
   const target = event.target as HTMLInputElement;
   const cleaned = target.value.replace(/\D/g, '').slice(0, 2);
   cashAnswers.value[key] = cleaned;
+  target.value = cleaned;
+}
+
+function handleFolderInput(index: number, event: Event) {
+  const target = event.target as HTMLInputElement;
+  const cleaned = target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5);
+  folderAnswers.value[index] = cleaned;
   target.value = cleaned;
 }
 
@@ -460,7 +470,7 @@ function prevPage() {
         </p>
       </div>
     </div>
-    <div v-else class="flex h-full flex-col">
+    <div v-else-if="page === 3" class="flex h-full flex-col">
       <div class="flex-1 overflow-hidden px-6 pt-3 font-serif text-base">
         <div class="flex h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
@@ -571,6 +581,93 @@ function prevPage() {
                     />
                   </td>
                   <td class="border border-black p-1" />
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-else class="flex h-full flex-col">
+      <div class="flex-1 overflow-hidden px-6 pt-3 font-serif text-base">
+        <div class="flex h-full flex-col gap-4">
+          <div class="px-4 py-2 text-center">
+            <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 4</h1>
+          </div>
+          <div class="flex flex-1 gap-4">
+            <div class="flex-1 border border-black/20 px-6 py-4">
+              <div class="space-y-4 text-center text-base leading-relaxed">
+                <p>
+                  Sie erhalten 10 Ordner und eine Menge Briefe. Diese sollen nach den Anfangsbuchstaben der
+                  Absender geordnet in den Ordnern abgelegt werden. Beim Sortieren der Briefe haben Sie
+                  festgestellt, dass die einzelnen Buchstaben des Alphabets prozentual unterschiedlich oft
+                  vorkommen (vgl. nebenstehende Zusammenstellung). Zum Schluss soll jeder Ordner die gleiche
+                  Menge Briefe enthalten.
+                </p>
+                <div class="text-center">Wie müssen die 25 Buchstaben des Alphabets</div>
+                <div class="mx-auto w-fit border border-black px-4 py-1 text-base tracking-[0.35em]">
+                  A B C D E F G H J K L M N O P Q R S T U V W X Y Z
+                </div>
+                <div class="text-center">auf die 10 Ordner aufgeteilt werden?</div>
+                <p>
+                  Schreiben Sie bitte die betreffenden Buchstaben unter die jeweilige Ordner-Nr. auf das
+                  Lösungsblatt!
+                </p>
+                <p>In dieses Heft bitte keine Notizen machen!</p>
+              </div>
+              <div class="mt-4 text-center text-base">_____</div>
+              <div class="mt-6 border border-black px-6 py-4 text-center text-sm leading-relaxed">
+                <p>Von allen Absendern beginnen</p>
+                <p>jeweils 2,5 % mit den Anfangsbuchstaben</p>
+                <p class="font-semibold">A F W B G J</p>
+                <p class="font-semibold">X Y C H Z D</p>
+                <p class="mt-1">zusammen = 30 % aller Briefe</p>
+                <p class="mt-3">jeweils 3,33 % mit den Anfangsbuchstaben</p>
+                <p class="font-semibold">R P und Q</p>
+                <p class="mt-1">zusammen = 10 % aller Briefe</p>
+                <p class="mt-3">jeweils 5,0 % mit den Anfangsbuchstaben</p>
+                <p class="font-semibold">N K S V T U</p>
+                <p class="font-semibold">O und L</p>
+                <p class="mt-1">zusammen = 40 % aller Briefe</p>
+                <p class="mt-3">jeweils 10,0 % mit den Anfangsbuchstaben</p>
+                <p class="font-semibold">M und E</p>
+                <p class="mt-1">zusammen = 20 % aller Briefe</p>
+                <p class="mt-3">zusammen = 100 % aller Briefe</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex-1 overflow-hidden px-6 pb-4 pt-2 font-serif">
+        <div class="flex h-full flex-col">
+          <div class="border-t border-black" />
+          <div class="flex-1">
+            <div class="mt-3 text-left text-base font-semibold">Aufgabe 4</div>
+            <table class="mt-2 w-full table-fixed border border-black text-base">
+              <tbody>
+                <tr>
+                  <th class="w-28 border border-black p-1 text-left">Ordner-Nr</th>
+                  <td v-for="index in 10" :key="`ordner-${index}`" class="border border-black p-1 text-center">
+                    {{ index }}
+                  </td>
+                  <td class="w-16 border border-black p-1" rowspan="2" />
+                </tr>
+                <tr>
+                  <th class="border border-black p-1 text-left">Buchstaben</th>
+                  <td
+                    v-for="index in 10"
+                    :key="`letters-${index}`"
+                    class="border border-black p-1 text-center"
+                  >
+                    <input
+                      :value="folderAnswers[index]"
+                      type="text"
+                      inputmode="text"
+                      maxlength="5"
+                      class="h-6 w-16 border border-black text-center text-base uppercase"
+                      @input="(event) => handleFolderInput(index, event)"
+                    />
+                  </td>
                 </tr>
               </tbody>
             </table>
