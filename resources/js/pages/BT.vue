@@ -171,13 +171,13 @@ function prevPage() {
       <Button @click="nextPage" :disabled="page === maxPage">Weiter</Button>
     </div>
     <div v-if="page === 1" class="flex h-full flex-col">
-      <div class="flex-1 overflow-hidden px-6 pt-3 font-serif text-base">
-        <div class="flex h-full flex-col gap-4">
+      <div class="flex-[3] overflow-y-auto px-6 pt-3 font-serif text-base">
+        <div class="flex min-h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
             <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 1</h1>
           </div>
-          <div class="flex flex-1 gap-4">
-            <div class="flex-1 border border-black/20 px-6 py-4">
+          <div class="flex flex-1 gap-4 items-stretch">
+            <div class="flex-1 border-2 border-black p-8">
               <div class="space-y-4 text-center text-base leading-relaxed">
                 <p>
                   Unser Betrieb beschäftigt 25 Lehrlinge. Von diesen sollen jeweils zwei Lehrlinge für den
@@ -194,7 +194,7 @@ function prevPage() {
               <div class="mt-4 text-center text-base">_____</div>
             </div>
 
-            <div class="flex-1 border border-black/20 px-4 py-2">
+            <div class="flex-1 border-2 border-black px-4 py-2">
               <div class="flex h-full items-start justify-center gap-8 overflow-hidden">
                 <div
                   class="border-2 border-black px-4 py-2 text-base leading-tight w-[420px] flex-none"
@@ -263,10 +263,10 @@ function prevPage() {
         </div>
       </div>
 
-      <div class="flex-1 overflow-hidden px-6 pb-4 pt-2 font-serif">
-        <div class="flex h-full flex-col">
+      <div class="flex-1 px-6 pb-4 pt-2 font-serif">
+        <div class="flex flex-col">
           <div class="border-t border-black" />
-          <div class="flex-1">
+          <div class="mt-2">
             <table class="mt-3 w-full table-fixed border border-black text-base">
             <thead>
               <tr>
@@ -445,7 +445,7 @@ function prevPage() {
       <div class="text-center">
         <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 2</h1>
       </div>
-      <div class="mt-10 flex flex-1 flex-col items-center">
+      <div class="mt-10 flex flex-col items-center">
         <div class="max-w-2xl text-center space-y-6 leading-relaxed">
           <p>
             Sie erhalten ungeordnet 220 Kopien von Rechnungen aus den Orten Essen, Düsseldorf und Köln.
@@ -460,7 +460,7 @@ function prevPage() {
             <p>b) welche bereits bezahlt und welche noch unbezahlt sind</p>
             <div class="flex flex-wrap items-center gap-4 pl-6">
               <p class="text-base">Bezahlte Rechnungen haben entsprechenden Stempelaufdruck</p>
-              <div class="border border-black px-4 py-1 text-sm tracking-[0.5em]">BEZAHLT</div>
+              <div class="border-2 border-black px-4 py-1 text-sm tracking-[0.5em]">BEZAHLT</div>
             </div>
           </div>
           <p>c) welche Höhe die unbezahlten Rechnungen insgesamt haben.</p>
@@ -471,13 +471,13 @@ function prevPage() {
       </div>
     </div>
     <div v-else-if="page === 3" class="flex h-full flex-col">
-      <div class="flex-1 overflow-hidden px-6 pt-3 font-serif text-base">
-        <div class="flex h-full flex-col gap-4">
+      <div class="flex-[3] overflow-y-auto px-6 pt-3 font-serif text-base">
+        <div class="flex min-h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
             <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 3</h1>
           </div>
-          <div class="flex flex-1 gap-4">
-            <div class="flex-1 border border-black/20 px-6 py-4">
+          <div class="flex flex-1 gap-4 items-stretch">
+            <div class="flex-1 border-2 border-black p-8">
               <div class="space-y-4 text-center text-base leading-relaxed">
                 <p>
                   Sie sollen jeden der acht Beträge auf nebenstehender Liste gegen Quittung in bar auszahlen.
@@ -495,7 +495,7 @@ function prevPage() {
               <p class="mt-6 text-center text-base">In diesem Heft bitte keine Notizen machen!</p>
             </div>
 
-            <div class="flex-1 border border-black/20 px-4 py-2">
+            <div class="flex-1 border-2 border-black px-4 py-2">
               <div class="flex h-full items-stretch justify-center">
                 <div class="h-full w-[240px] border-2 border-black px-10 py-6 text-base">
                   <table class="h-full w-full border-collapse">
@@ -545,10 +545,10 @@ function prevPage() {
         </div>
       </div>
 
-      <div class="flex-1 overflow-hidden px-6 pb-4 pt-2 font-serif">
-        <div class="flex h-full flex-col">
+      <div class="flex-1 px-6 pb-4 pt-2 font-serif">
+        <div class="flex flex-col">
           <div class="border-t border-black" />
-          <div class="flex-1">
+          <div class="mt-2">
             <table class="mt-3 w-full table-fixed border border-black text-base">
               <thead>
                 <tr>
@@ -589,13 +589,13 @@ function prevPage() {
       </div>
     </div>
     <div v-else class="flex h-full flex-col">
-      <div class="flex-1 overflow-hidden px-6 pt-3 font-serif text-base">
-        <div class="flex h-full flex-col gap-4">
+      <div class="flex-[3] overflow-y-auto px-6 pt-3 font-serif text-base">
+        <div class="flex min-h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
             <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 4</h1>
           </div>
-          <div class="flex flex-1 gap-4">
-            <div class="flex-1 border border-black/20 px-6 py-4">
+          <div class="flex flex-1 gap-4 items-stretch">
+            <div class="flex-1 border-2 border-black p-8">
               <div class="space-y-4 text-center text-base leading-relaxed">
                 <p>
                   Sie erhalten 10 Ordner und eine Menge Briefe. Diese sollen nach den Anfangsbuchstaben der
@@ -605,7 +605,7 @@ function prevPage() {
                   Menge Briefe enthalten.
                 </p>
                 <div class="text-center">Wie müssen die 25 Buchstaben des Alphabets</div>
-                <div class="mx-auto w-fit border border-black px-4 py-1 text-base tracking-[0.35em]">
+                <div class="mx-auto w-fit border-2 border-black px-4 py-1 text-base tracking-[0.35em]">
                   A B C D E F G H J K L M N O P Q R S T U V W X Y Z
                 </div>
                 <div class="text-center">auf die 10 Ordner aufgeteilt werden?</div>
@@ -617,35 +617,131 @@ function prevPage() {
               </div>
               <div class="mt-4 text-center text-base">_____</div>
             </div>
-            <div class="flex-1 border border-black/20 px-6 py-4">
-              <div class="flex h-full items-center justify-center">
-                <div class="border border-black px-8 py-6 text-center text-sm leading-relaxed">
-                  <p>Von allen Absendern beginnen</p>
-                  <p>jeweils 2,5 % mit den Anfangsbuchstaben</p>
-                  <p class="font-semibold">A F W B G J</p>
-                  <p class="font-semibold">X Y C H Z D</p>
-                  <p class="mt-1">zusammen = 30 % aller Briefe</p>
-                  <p class="mt-3">jeweils 3,33 % mit den Anfangsbuchstaben</p>
-                  <p class="font-semibold">R P und Q</p>
-                  <p class="mt-1">zusammen = 10 % aller Briefe</p>
-                  <p class="mt-3">jeweils 5,0 % mit den Anfangsbuchstaben</p>
-                  <p class="font-semibold">N K S V T U</p>
-                  <p class="font-semibold">O und L</p>
-                  <p class="mt-1">zusammen = 40 % aller Briefe</p>
-                  <p class="mt-3">jeweils 10,0 % mit den Anfangsbuchstaben</p>
-                  <p class="font-semibold">M und E</p>
-                  <p class="mt-1">zusammen = 20 % aller Briefe</p>
-                  <p class="mt-3">zusammen = 100 % aller Briefe</p>
-                </div>
+            <div class="flex-1 border-2 border-black p-8 flex items-center justify-center">
+                <table class="w-full border-collapse text-base leading-tight">
+                  <tbody>
+                    <tr>
+                      <td colspan="7" class="pb-8 text-center text-xl">Von allen Absendern beginnen</td>
+                    </tr>
+                    <tr>
+                      <td class="w-[12%] py-1 text-left">jeweils</td>
+                      <td class="w-[8%] py-1 text-right">2,5</td>
+                      <td class="w-[4%] py-1 text-center">%</td>
+                      <td class="py-1 pl-8 text-left">mit den Anfangsbuchstaben</td>
+                      <td class="w-[15%] py-1"></td>
+                      <td class="w-[4%] py-1"></td>
+                      <td class="w-[25%] py-1"></td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td class="py-1 pl-8 text-left tracking-[0.35em]">A F W B G J</td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td class="py-1 pl-8 text-left tracking-[0.35em]">X Y C H Z D</td>
+                      <td class="py-1 pl-4 text-left">zusammen</td>
+                      <td class="py-1 text-center">=</td>
+                      <td class="py-1 text-right">30 % aller Briefe</td>
+                    </tr>
+                    <tr class="h-4">
+                      <td colspan="7"></td>
+                    </tr>
+                    <tr>
+                      <td class="py-1 text-left">jeweils</td>
+                      <td class="py-1 text-right">3,33</td>
+                      <td class="py-1 text-center">%</td>
+                      <td class="py-1 pl-8 text-left">mit den Anfangsbuchstaben</td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td class="py-1 pl-8 text-left"><span class="tracking-[0.35em]">R P</span> und <span class="tracking-[0.35em]">Q</span></td>
+                      <td class="py-1 pl-4 text-left">zusammen</td>
+                      <td class="py-1 text-center">=</td>
+                      <td class="py-1 text-right">10 % aller Briefe</td>
+                    </tr>
+                    <tr class="h-4">
+                      <td colspan="7"></td>
+                    </tr>
+                    <tr>
+                      <td class="py-1 text-left">jeweils</td>
+                      <td class="py-1 text-right">5,0</td>
+                      <td class="py-1 text-center">%</td>
+                      <td class="py-1 pl-8 text-left">mit den Anfangsbuchstaben</td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td class="py-1 pl-8 text-left tracking-[0.35em]">N K S V T U</td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td class="py-1 pl-8 text-left"><span class="tracking-[0.35em]">O</span> und <span class="tracking-[0.35em]">L</span></td>
+                      <td class="py-1 pl-4 text-left">zusammen</td>
+                      <td class="py-1 text-center">=</td>
+                      <td class="py-1 text-right">40 % aller Briefe</td>
+                    </tr>
+                    <tr class="h-4">
+                      <td colspan="7"></td>
+                    </tr>
+                    <tr>
+                      <td class="py-1 text-left">jeweils</td>
+                      <td class="py-1 text-right">10,0</td>
+                      <td class="py-1 text-center">%</td>
+                      <td class="py-1 pl-8 text-left">mit den Anfangsbuchstaben</td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td class="border-b border-black py-1 pl-8 text-left"><span class="tracking-[0.35em]">M</span> und <span class="tracking-[0.35em]">E</span></td>
+                      <td class="border-b border-black py-1 pl-4 text-left">zusammen</td>
+                      <td class="border-b border-black py-1 text-center">=</td>
+                      <td class="border-b border-black py-1 text-right">20 % aller Briefe</td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td class="py-1 pl-4 text-left">zusammen</td>
+                      <td class="py-1 text-center">=</td>
+                      <td class="py-1 text-right">100 % aller Briefe</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="flex-1 overflow-hidden px-6 pb-4 pt-2 font-serif">
-        <div class="flex h-full flex-col">
+      <div class="flex-1 px-6 pb-4 pt-2 font-serif">
+        <div class="flex flex-col">
           <div class="border-t border-black" />
-          <div class="flex-1">
+          <div class="mt-2">
             <div class="mt-3 text-left text-base font-semibold">Aufgabe 4</div>
             <table class="mt-2 w-full table-fixed border border-black text-base">
               <tbody>
