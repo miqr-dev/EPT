@@ -616,23 +616,27 @@ function prevPage() {
                 <p>In dieses Heft bitte keine Notizen machen!</p>
               </div>
               <div class="mt-4 text-center text-base">_____</div>
-              <div class="mt-6 border border-black px-6 py-4 text-center text-sm leading-relaxed">
-                <p>Von allen Absendern beginnen</p>
-                <p>jeweils 2,5 % mit den Anfangsbuchstaben</p>
-                <p class="font-semibold">A F W B G J</p>
-                <p class="font-semibold">X Y C H Z D</p>
-                <p class="mt-1">zusammen = 30 % aller Briefe</p>
-                <p class="mt-3">jeweils 3,33 % mit den Anfangsbuchstaben</p>
-                <p class="font-semibold">R P und Q</p>
-                <p class="mt-1">zusammen = 10 % aller Briefe</p>
-                <p class="mt-3">jeweils 5,0 % mit den Anfangsbuchstaben</p>
-                <p class="font-semibold">N K S V T U</p>
-                <p class="font-semibold">O und L</p>
-                <p class="mt-1">zusammen = 40 % aller Briefe</p>
-                <p class="mt-3">jeweils 10,0 % mit den Anfangsbuchstaben</p>
-                <p class="font-semibold">M und E</p>
-                <p class="mt-1">zusammen = 20 % aller Briefe</p>
-                <p class="mt-3">zusammen = 100 % aller Briefe</p>
+            </div>
+            <div class="flex-1 border border-black/20 px-6 py-4">
+              <div class="flex h-full items-center justify-center">
+                <div class="border border-black px-8 py-6 text-center text-sm leading-relaxed">
+                  <p>Von allen Absendern beginnen</p>
+                  <p>jeweils 2,5 % mit den Anfangsbuchstaben</p>
+                  <p class="font-semibold">A F W B G J</p>
+                  <p class="font-semibold">X Y C H Z D</p>
+                  <p class="mt-1">zusammen = 30 % aller Briefe</p>
+                  <p class="mt-3">jeweils 3,33 % mit den Anfangsbuchstaben</p>
+                  <p class="font-semibold">R P und Q</p>
+                  <p class="mt-1">zusammen = 10 % aller Briefe</p>
+                  <p class="mt-3">jeweils 5,0 % mit den Anfangsbuchstaben</p>
+                  <p class="font-semibold">N K S V T U</p>
+                  <p class="font-semibold">O und L</p>
+                  <p class="mt-1">zusammen = 40 % aller Briefe</p>
+                  <p class="mt-3">jeweils 10,0 % mit den Anfangsbuchstaben</p>
+                  <p class="font-semibold">M und E</p>
+                  <p class="mt-1">zusammen = 20 % aller Briefe</p>
+                  <p class="mt-3">zusammen = 100 % aller Briefe</p>
+                </div>
               </div>
             </div>
           </div>
