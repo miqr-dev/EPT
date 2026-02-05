@@ -1266,7 +1266,7 @@ const page10MaxScore = computed(
                       </div>
                     </div>
                   </div>
-                  <div class="my-3 border-t border-muted-foreground/20"></div>
+                  <div class="my-3 border-t border-muted-foreground/40"></div>
 
                   <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c1`" class="py-[1px]">
                     <div class="lps-letters">
@@ -1295,7 +1295,7 @@ const page10MaxScore = computed(
                       </div>
                     </div>
                   </div>
-                  <div class="my-3 border-t border-muted-foreground/20"></div>
+                  <div class="my-3 border-t border-muted-foreground/40"></div>
 
                   <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c2`" class="py-[1px]">
                     <div class="lps-letters">
@@ -1346,7 +1346,7 @@ const page10MaxScore = computed(
                       </div>
                     </div>
                   </div>
-                  <div v-if="column3Examples.length" class="my-3 border-t border-muted-foreground/20"></div>
+                  <div v-if="column3Examples.length" class="my-3 border-t border-muted-foreground/40"></div>
                   <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c3`" class="py-[10px]">
                     <div v-if="row.column3?.length">
                       <div v-if="row.column3SvgMeta && row.column3.every((option) => option.pathData)"
@@ -1427,7 +1427,7 @@ const page10MaxScore = computed(
                     </div>
                   </div>
                 </div>
-                <div class="my-3 border-t border-muted-foreground/20"></div>
+                <div class="my-3 border-t border-muted-foreground/40"></div>
 
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c4`" class="py-[1px]">
                   <div class="lps-letters">
@@ -1463,7 +1463,7 @@ const page10MaxScore = computed(
                     </div>
                   </div>
                 </div>
-                <div class="my-3 border-t border-muted-foreground/20"></div>
+                <div class="my-3 border-t border-muted-foreground/40"></div>
 
                 <div v-for="(row, idx) in lpsRows" :key="`${row.id}-c5`" class="py-[1px]">
                   <div class="lps-letters">
@@ -1534,7 +1534,7 @@ const page10MaxScore = computed(
                       </div>
                     </div>
                   </div>
-                  <div v-if="column7Examples.length" class="my-3 border-t border-muted-foreground/20"></div>
+                  <div v-if="column7Examples.length" class="my-3 border-t border-muted-foreground/40"></div>
                   <div v-for="(row, idx) in lpsPage5Rows" :key="`${row.id}-c7`" class="py-[10px]">
                     <div v-if="row.column7?.length">
                       <div v-if="row.column7SvgMeta && row.column7.every((option) => option.pathData)"
@@ -1791,7 +1791,7 @@ const page10MaxScore = computed(
                     <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
                     <!-- <div v-if="isPage10ExampleRow(rowIdx)" class="pt-1 text-center text-[11px] uppercase tracking-wide text-muted-foreground">Beispiel</div> -->
                   </div>
-                  <div v-if="isPage10ExampleRow(1)" class="my-3 border-t border-muted-foreground/20"></div>
+                  <div v-if="isPage10ExampleRow(1)" class="my-3 border-t border-muted-foreground/40"></div>
                 </div>
               </div>
             </div>
@@ -1817,7 +1817,7 @@ const page10MaxScore = computed(
                       </div>
                     </div>
                   </div>
-                  <div class="my-3 border-t border-muted-foreground/20"></div>
+                  <div class="my-3 border-t border-muted-foreground/40"></div>
 
                   <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c13`" class="py-[1px]">
                     <div class="lps-sequence-row">
@@ -1848,7 +1848,7 @@ const page10MaxScore = computed(
                       </div>
                     </div>
                   </div>
-                  <div class="my-3 border-t border-muted-foreground/20"></div>
+                  <div class="my-3 border-t border-muted-foreground/40"></div>
                   <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c14`" class="py-[1px]">
                     <div class="lps-sequence-row">
                       <button v-for="(token, tokenIdx) in getSequenceTokens(row.column14)"
