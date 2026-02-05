@@ -331,7 +331,7 @@ const page1Responses = ref<LpsPage1ResponseRow[]>(
 );
 
 const columnDurations = computed(() =>
-  props.testName === 'LPS-B' ? [...BASE_COLUMN_DURATION_SECONDS, 180, 180] : BASE_COLUMN_DURATION_SECONDS,
+  props.testName === 'LPS-B' ? [...BASE_COLUMN_DURATION_SECONDS, 180, 480] : BASE_COLUMN_DURATION_SECONDS,
 );
 const columnLabels = computed(() =>
   props.testName === 'LPS-B' ? [...BASE_COLUMN_LABELS, 14, 13] : BASE_COLUMN_LABELS,
@@ -1154,62 +1154,6 @@ const page10MaxScore = computed(
     ),
 );
 
-const totalScore = computed(
-  () =>
-    page1Score.value +
-    page5Score.value +
-    page6Score.value +
-    page7Score.value +
-    page8Score.value +
-    page9Score.value +
-    page10Score.value,
-);
-const totalMaxScore = computed(
-  () =>
-    page1MaxScore.value +
-    page5MaxScore.value +
-    page6MaxScore.value +
-    page7MaxScore.value +
-    page8MaxScore.value +
-    page9MaxScore.value +
-    page10MaxScore.value,
-);
-
-type ColumnScoreSummary = { score: number | null; max: number | null; negative?: number | null };
-
-const columnScoreByIndex = computed<Record<number, ColumnScoreSummary>>(() => ({
-  0: { score: page1ColumnScores.value.col1, max: page1ColumnMaxScores.value.col1 },
-  1: { score: page1ColumnScores.value.col2, max: page1ColumnMaxScores.value.col2 },
-  2: { score: page1ColumnScores.value.col3, max: page1ColumnMaxScores.value.col3 },
-  3: { score: page1ColumnScores.value.col4, max: page1ColumnMaxScores.value.col4 },
-  4: { score: page1ColumnScores.value.col5, max: page1ColumnMaxScores.value.col5 },
-  5: { score: page5Score.value, max: page5MaxScore.value },
-  6: { score: page6Score.value, max: page6MaxScore.value },
-  7: { score: page7Score.value, max: page7MaxScore.value },
-  8: { score: page8Score.value, max: page8MaxScore.value },
-  9: { score: page9Score.value, max: page9MaxScore.value },
-  10: { score: page10Score.value, max: page10MaxScore.value },
-  11: {
-    score: page11ColumnScores.value.col14.positive,
-    max: page11ColumnMaxScores.value.col14,
-    negative: page11ColumnScores.value.col14.negative,
-  },
-  12: {
-    score: page11ColumnScores.value.col13.positive,
-    max: page11ColumnMaxScores.value.col13,
-    negative: page11ColumnScores.value.col13.negative,
-  },
-}));
-
-function formatColumnScore(columnIdx: number) {
-  const scoreEntry = columnScoreByIndex.value[columnIdx];
-  if (!scoreEntry || scoreEntry.score === null || scoreEntry.max === null) return '–';
-  const scoreText = `${scoreEntry.score} / ${scoreEntry.max}`;
-  if (scoreEntry.negative) {
-    return `${scoreText} • -${scoreEntry.negative}`;
-  }
-  return scoreText;
-}
 </script>
 
 <template>
@@ -1231,11 +1175,8 @@ function formatColumnScore(columnIdx: number) {
             <div class="w-[520px]">
               <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
             </div>
-            <div v-if="showTest" class="flex items-center gap-3 text-xs text-muted-foreground">
-              <span class="font-medium text-foreground">Zeit: {{ formatTime(totalElapsed) }}</span>
-              <span v-if="isForcedFinish" class="font-semibold text-destructive">
-                Test wird beendet in {{ forcedFinishCountdown }}s
-              </span>
+            <div v-if="showTest && isForcedFinish" class="text-xs font-semibold text-destructive">
+              Test wird beendet in {{ forcedFinishCountdown }}s
             </div>
           </div>
         </div>
@@ -1244,10 +1185,10 @@ function formatColumnScore(columnIdx: number) {
         <div v-if="!showTest" class="rounded-2xl border bg-background p-8 shadow-sm">
           <div class="mx-auto max-w-3xl space-y-4 text-center">
             <p class="text-base text-muted-foreground">
-              Der {{ testLabel }}-Test umfasst sieben Schritte. Beginnen Sie mit den Spalten 1 und 2, anschließend
-              folgen
-              die Spalten 3, 4, 5, 7, 8 und 9 jeweils auf einer eigenen Seite. Arbeiten Sie jede Zeile von oben nach
-              unten durch.
+              Der {{ testLabel }} ist ein Verfahren, bei dem es um Leistung in einer bestimmten Zeit geht. Auf den
+              nächsten Seiten finden Sie verschiedene Spalten, die nacheinander bearbeitet und jeweils gemeinsam
+              vorbesprochen werden. Vor der Bearbeitung jeder Spalte wird Ihnen die zur Verfügung stehende Zeit genannt
+              und der Bearbeitungsbeginn signalisiert.
             </p>
             <Button class="px-8" @click="startTest">Test starten</Button>
           </div>
@@ -1274,11 +1215,7 @@ function formatColumnScore(columnIdx: number) {
 
           <!-- Column timers / start buttons -->
           <div v-if="visibleColumnIndices.length" class="rounded-xl border bg-background px-4 py-3 shadow-sm">
-            <div class="flex items-center justify-between gap-4">
-              <div class="text-xs text-muted-foreground">
-                Spalte starten (Dauer: {{ sectionDurationText }}). Nur eine Spalte gleichzeitig.
-              </div>
-
+            <div class="flex items-center justify-end gap-4">
               <div class="flex items-center gap-3">
                 <div v-for="entry in visibleColumnStates" :key="`column-state-${entry.idx}`"
                   class="flex items-center gap-2">
@@ -1297,12 +1234,6 @@ function formatColumnScore(columnIdx: number) {
                       <span v-else-if="entry.state?.status === 'ready'">bereit</span>
                       <span v-else-if="entry.state?.status === 'finished'">fertig</span>
                       <span v-else>gesperrt</span>
-                    </div>
-                    <div v-if="entry.state?.status === 'finished'" class="mt-1 text-[11px] text-muted-foreground">
-                      Punkte:
-                      <span class="font-semibold text-foreground">
-                        {{ formatColumnScore(entry.idx) }}
-                      </span>
                     </div>
                   </div>
 
@@ -1860,6 +1791,7 @@ function formatColumnScore(columnIdx: number) {
                     <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
                     <!-- <div v-if="isPage10ExampleRow(rowIdx)" class="pt-1 text-center text-[11px] uppercase tracking-wide text-muted-foreground">Beispiel</div> -->
                   </div>
+                  <div v-if="isPage10ExampleRow(1)" class="my-3 border-t border-muted-foreground/20"></div>
                 </div>
               </div>
             </div>
@@ -1933,17 +1865,6 @@ function formatColumnScore(columnIdx: number) {
               </div>
             </div>
 
-            <div
-              class="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-background px-4 py-3 text-xs text-muted-foreground shadow-sm">
-              <div>
-                Pluspunkte:
-                <span class="font-semibold text-foreground">+{{ page11PositiveScore }}</span>
-              </div>
-              <div>
-                Minuspunkte:
-                <span class="font-semibold text-foreground">-{{ page11NegativeScore }}</span>
-              </div>
-            </div>
           </div>
 
           <div v-else-if="pageIndex === pageIndexByColumn.col10" class="space-y-3">
@@ -1996,15 +1917,6 @@ function formatColumnScore(columnIdx: number) {
               </div>
             </div>
 
-            <div
-              class="flex items-center justify-between rounded-xl border bg-background px-4 py-3 text-xs text-muted-foreground shadow-sm">
-              <div>
-                Punkte gesamt:
-                <span class="font-semibold text-foreground">
-                  {{ totalMaxScore ? `${totalScore} / ${totalMaxScore}` : '–' }}
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
