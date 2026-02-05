@@ -1790,8 +1790,8 @@ const page10MaxScore = computed(
                     </div>
                     <div v-else class="text-center text-xs text-muted-foreground/60">—</div>
                     <!-- <div v-if="isPage10ExampleRow(rowIdx)" class="pt-1 text-center text-[11px] uppercase tracking-wide text-muted-foreground">Beispiel</div> -->
+                    <div v-if="rowIdx === 1 && isPage10ExampleRow(rowIdx)" class="my-3 border-t border-muted-foreground/40"></div>
                   </div>
-                  <div v-if="isPage10ExampleRow(1)" class="my-3 border-t border-muted-foreground/40"></div>
                 </div>
               </div>
             </div>
