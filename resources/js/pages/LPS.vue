@@ -1817,20 +1817,6 @@ const page10MaxScore = computed(
                       </div>
                     </div>
                   </div>
-                  <div class="my-3 border-t border-muted-foreground/40"></div>
-
-                  <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c13`" class="py-[1px]">
-                    <div class="lps-sequence-row">
-                      <button v-for="(token, tokenIdx) in getSequenceTokens(row.column13)"
-                        :key="`${row.id}-13-${tokenIdx}`" type="button" class="lps-letter"
-                        :class="page11Responses[idx].col13[tokenIdx] ? 'lps-letter--selected' : ''"
-                        :disabled="!isColumnInteractive('col13')" :aria-pressed="page11Responses[idx].col13[tokenIdx]"
-                        @click="handlePage11Click($event, idx, 'col13', tokenIdx)"
-                        @dblclick.prevent="clearPage11Selection(idx, 'col13', tokenIdx)">
-                        {{ token }}
-                      </button>
-                    </div>
-                  </div>
                 </div>
 
                 <div class="lps-sep lps-sequence-col-14">
@@ -1848,7 +1834,26 @@ const page10MaxScore = computed(
                       </div>
                     </div>
                   </div>
-                  <div class="my-3 border-t border-muted-foreground/40"></div>
+                </div>
+
+                <div class="col-span-2 my-3 border-t border-muted-foreground/40"></div>
+
+                <div class="lps-sequence-col-13">
+                  <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c13`" class="py-[1px]">
+                    <div class="lps-sequence-row">
+                      <button v-for="(token, tokenIdx) in getSequenceTokens(row.column13)"
+                        :key="`${row.id}-13-${tokenIdx}`" type="button" class="lps-letter"
+                        :class="page11Responses[idx].col13[tokenIdx] ? 'lps-letter--selected' : ''"
+                        :disabled="!isColumnInteractive('col13')" :aria-pressed="page11Responses[idx].col13[tokenIdx]"
+                        @click="handlePage11Click($event, idx, 'col13', tokenIdx)"
+                        @dblclick.prevent="clearPage11Selection(idx, 'col13', tokenIdx)">
+                        {{ token }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="lps-sep lps-sequence-col-14">
                   <div v-for="(row, idx) in lpsPage11Rows" :key="`${row.id}-c14`" class="py-[1px]">
                     <div class="lps-sequence-row">
                       <button v-for="(token, tokenIdx) in getSequenceTokens(row.column14)"
