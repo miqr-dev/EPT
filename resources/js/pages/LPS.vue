@@ -211,7 +211,7 @@ const page6ExampleRows: LpsPage6ExampleRow[] = LPS_PAGE6_COLUMN8_B_EXAMPLE.map((
   optionGroups: buildPage6OptionGroups(example.options),
 }));
 const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
-  props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
+  props.testName === 'LPS-B' && rowIdx < 2 && promptIdx === 0;
 const isPage8ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && promptIdx === 0 && rowIdx < 2;
 const isPage9ExamplePrompt = (rowIdx: number, promptIdx: number) =>
