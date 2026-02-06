@@ -825,7 +825,8 @@ function prevPage() {
               <div class="mt-4 text-center text-base">_____</div>
             </div>
             <div class="flex-1 border border-black/20">
-              <div class="flex h-full w-full items-center justify-center border-2 border-black p-6">
+              <div class="flex h-full w-full flex-col items-center justify-center gap-3 border-2 border-black p-6">
+                <div class="text-center text-base">Aufstellung der gebrachten Briefmarken</div>
                 <table class="w-full border-collapse text-base leading-tight">
                   <thead>
                     <tr>
