@@ -61,7 +61,7 @@ const assignments = ref<Record<string, string | null>>(
 const assignedNames = computed(() => new Set(Object.values(assignments.value).filter(Boolean)));
 const leftNames = computed(() => apprentices.value.slice(0, 13));
 const rightNames = computed(() => apprentices.value.slice(13));
-const maxPage = 4;
+const maxPage = 5;
 const page = ref(1);
 const cashDenominations = [
   { label: '100€', key: '100' },
@@ -78,6 +78,21 @@ const cashAnswers = ref<Record<string, string>>(
 );
 const folderAnswers = ref<Record<number, string>>(
   Object.fromEntries(Array.from({ length: 10 }, (_, index) => [index + 1, ''])),
+);
+const stampUsage = [
+  { day: 1, values: ['—', '18', '10', '22', '—'] },
+  { day: 2, values: ['2', '16', '—', '32', '—'] },
+  { day: 3, values: ['4', '16', '—', '10', '—'] },
+  { day: 4, values: ['10', '12', '—', '—', '30'] },
+  { day: 5, values: ['4', '25', '—', '32', '—'] },
+  { day: 6, values: ['10', '18', '12', '—', '—'] },
+  { day: 7, values: ['—', '24', '15', '7', '—'] },
+  { day: 8, values: ['5', '10', '—', '—', '—'] },
+  { day: 9, values: ['—', '—', '—', '12', '50'] },
+  { day: 10, values: ['1', '3', '3', '15', '—'] },
+];
+const stampAnswerDays = ref<Record<number, boolean>>(
+  Object.fromEntries(Array.from({ length: 10 }, (_, index) => [index + 1, false])),
 );
 
 function buildCellKey(shift: 'early' | 'late', slot: number, day: string) {
@@ -148,6 +163,10 @@ function handleFolderInput(index: number, event: Event) {
   const cleaned = target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5);
   folderAnswers.value[index] = cleaned;
   target.value = cleaned;
+}
+
+function toggleStampAnswer(day: number) {
+  stampAnswerDays.value[day] = !stampAnswerDays.value[day];
 }
 
 function nextPage() {
@@ -588,7 +607,7 @@ function prevPage() {
         </div>
       </div>
     </div>
-    <div v-else class="flex h-full flex-col">
+    <div v-else-if="page === 4" class="flex h-full flex-col">
       <div class="flex-[0.6 overflow-hidden px-6 pt-3 font-serif text-base">
         <div class="flex h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
@@ -768,6 +787,109 @@ function prevPage() {
                       class="h-6 w-16 border border-black text-center text-base uppercase"
                       @input="(event) => handleFolderInput(index, event)"
                     />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-else-if="page === 5" class="flex h-full flex-col">
+      <div class="flex-[0.6] overflow-hidden px-6 pt-3 font-serif text-base">
+        <div class="flex h-full flex-col gap-4">
+          <div class="px-4 py-2 text-center">
+            <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 5</h1>
+          </div>
+          <div class="flex flex-1 gap-4">
+            <div class="flex-1 border border-black/20 px-6 py-4">
+              <div class="space-y-4 text-center text-base leading-relaxed">
+                <p>
+                  Am Beginn des 1. Arbeitstages im Monat enthielt Ihre Portokasse Briefmarken für € 50,00.
+                </p>
+                <p class="font-semibold">Die Anweisung lautet:</p>
+                <p>
+                  Es müssen abends auf der Post für € 20,00 neue Briefmarken gekauft werden, sobald der
+                  Markenbestand unter € 12,00 gesunken ist.
+                </p>
+                <p>
+                  An welchen Arbeitstagen müssen Sie neue Briefmarken kaufen, wenn für die Postsendungen die
+                  in der Aufstellung genannten Briefmarken gebraucht worden sind?
+                </p>
+                <p>
+                  Bitte auf der Rückseite Nebenrechnungen vornehmen und dann die betreffenden Tage auf dem
+                  Lösungsblatt deutlich ankreuzen.
+                </p>
+                <p>In dieses Heft bitte keine Notizen machen!</p>
+              </div>
+              <div class="mt-4 text-center text-base">_____</div>
+            </div>
+            <div class="flex-1 border border-black/20">
+              <div class="flex h-full w-full items-center justify-center border-2 border-black p-6">
+                <table class="w-full border-collapse text-base leading-tight">
+                  <thead>
+                    <tr>
+                      <th class="w-24 border border-black p-1 text-left" rowspan="2">Arbeitstag (abends)</th>
+                      <th class="border border-black p-1 text-center" colspan="5">Briefmarken (Werte in €)</th>
+                    </tr>
+                    <tr>
+                      <th class="border border-black p-1 text-center">0,70</th>
+                      <th class="border border-black p-1 text-center">0,20</th>
+                      <th class="border border-black p-1 text-center">0,15</th>
+                      <th class="border border-black p-1 text-center">0,10</th>
+                      <th class="border border-black p-1 text-center">0,07</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="row in stampUsage" :key="`day-${row.day}`">
+                      <td class="border border-black p-1 text-center">{{ row.day }}</td>
+                      <td v-for="(value, index) in row.values" :key="`value-${row.day}-${index}`" class="border border-black p-1 text-center">
+                        {{ value }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex-[0.4] overflow-hidden px-6 pb-4 pt-2 font-serif">
+        <div class="flex h-full flex-col">
+          <div class="border-t border-black" />
+          <div class="flex-1">
+            <table class="mt-3 w-full table-fixed border border-black text-base">
+              <tbody>
+                <tr>
+                  <th class="w-48 border border-black p-2 text-left" rowspan="2">
+                    <div class="text-base font-semibold">Aufgabe 5</div>
+                    <div class="mt-1 text-sm font-normal">
+                      Neue Briefmarken gekauft am (AT = Arbeitstag)
+                    </div>
+                  </th>
+                  <th
+                    v-for="day in 10"
+                    :key="`stamp-day-${day}`"
+                    class="border border-black p-1 text-center"
+                  >
+                    {{ day }}.AT
+                  </th>
+                  <th class="w-16 border border-black p-1" rowspan="2" />
+                </tr>
+                <tr>
+                  <td
+                    v-for="day in 10"
+                    :key="`stamp-answer-${day}`"
+                    class="border border-black p-1 text-center"
+                  >
+                    <button
+                      type="button"
+                      class="h-10 w-full border border-black text-base font-semibold"
+                      :aria-pressed="stampAnswerDays[day]"
+                      @click="() => toggleStampAnswer(day)"
+                    >
+                      {{ stampAnswerDays[day] ? 'X' : '' }}
+                    </button>
                   </td>
                 </tr>
               </tbody>
