@@ -2381,9 +2381,11 @@ const page10MaxScore = computed(
   position: fixed;
   left: 24px;
   top: 50%;
-  transform: translateY(-50%);
-  z-index: 40;
+  transform: translate3d(0, -50%, 0);
+  z-index: 2147483647;
   pointer-events: none;
+  display: block;
+  visibility: visible;
 }
 
 .lps-alphabet-box {
