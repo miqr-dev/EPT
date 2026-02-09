@@ -98,7 +98,7 @@ const routeRows = Array.from({ length: 6 }, (_, index) => index + 1);
 const routeAssignments = ref<Record<string, string | null>>(
   Object.fromEntries(
     routeRows.flatMap((row) => [
-      [`route-from-${row}`, row === 1 ? 'Eigener Wohnung' : null],
+      [`route-from-${row}`, row === 1 ? 'Eigene Wohnung' : null],
       [`route-to-${row}`, null],
     ]),
   ),
@@ -127,7 +127,7 @@ function clearNameFromAssignments(name: string) {
 
 function handleDragStart(event: DragEvent, payload: DragPayload) {
   event.dataTransfer?.setData('text/plain', JSON.stringify(payload));
-  // Use a default drag image or none
+  event.dataTransfer?.setDragImage((event.target as HTMLElement) ?? document.body, 0, 0);
 }
 
 function handleDropOnCell(event: DragEvent, key: string) {
@@ -805,7 +805,7 @@ function prevPage() {
           </div>
         </div>
       </div>
-      <div class="flex-[0.4] overflow-y-auto px-6 pb-4 pt-2 font-serif">
+      <div class="flex-[0.4] overflow-hidden px-6 pb-4 pt-2 font-serif">
         <div class="flex min-h-full flex-col">
           <div class="border-t border-black" />
           <div class="flex-1">
@@ -842,7 +842,7 @@ function prevPage() {
         </div>
       </div>
     </div>
-    <div v-else-if="page === 5" class="flex h-full flex-col">
+    <div v-else-if="page === 5" class="flex h-full flex-col overflow-hidden">
       <div class="flex-[0.6] overflow-hidden px-6 pt-3 font-serif text-base">
         <div class="flex h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
@@ -902,7 +902,7 @@ function prevPage() {
           </div>
         </div>
       </div>
-      <div class="flex-[0.4] overflow-y-auto px-6 pb-4 pt-2 font-serif">
+      <div class="flex-[0.4] overflow-hidden px-6 pb-4 pt-2 font-serif">
         <div class="flex min-h-full flex-col">
           <div class="border-t border-black" />
           <div class="flex-1">
@@ -946,15 +946,15 @@ function prevPage() {
         </div>
       </div>
     </div>
-    <div v-else-if="page === 6" class="flex h-full flex-col">
-      <div class="flex-[0.6] overflow-y-auto px-6 pt-3 font-serif text-base">
-        <div class="flex min-h-full flex-col gap-4">
-          <div class="px-4 py-2 text-center">
+    <div v-else-if="page === 6" class="flex h-full flex-col overflow-hidden">
+      <div class="flex-[0.6] px-6 pt-3 font-serif text-base overflow-hidden">
+        <div class="flex h-full flex-col gap-2">
+          <div class="px-4 py-1 text-center">
             <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 6</h1>
           </div>
-          <div class="flex flex-1 gap-4 items-stretch">
-            <div class="flex-[0.6] border border-black/20 px-6 py-4">
-              <div class="space-y-4 text-center text-base leading-relaxed">
+          <div class="flex flex-1 gap-4 items-stretch overflow-hidden">
+            <div class="flex-[0.45] border border-black/20 px-6 py-4 overflow-hidden">
+              <div class="space-y-2 text-center text-sm leading-relaxed">
                 <p>
                   Sie sollen Ihre Bekannten möglichst rasch benachrichtigen, dass die Feier zu Ihrem
                   Geburtstag aus dienstlichen Gründen um einen Tag verlegt werden muss. Sie wissen, dass Sie
@@ -976,83 +976,83 @@ function prevPage() {
               </div>
               <div class="mt-4 text-center text-base">_____</div>
             </div>
-            <div class="flex-[0.4] border-2 border-black p-4 flex flex-col items-center">
-              <div class="mb-2 text-center text-base font-bold underline underline-offset-4" style="letter-spacing: 0.4em;">P l a n</div>
-              <div class="relative w-full aspect-[1.3/1] select-none">
-                <svg class="absolute inset-0 h-full w-full" viewBox="0 0 600 400">
+            <div class="flex-[0.55] border-2 border-black p-4 flex flex-col items-center overflow-hidden">
+              <div class="mb-2 text-center text-sm font-bold underline underline-offset-4" style="letter-spacing: 0.4em;">P l a n</div>
+              <div class="relative w-full aspect-[2/1] select-none">
+                <svg class="absolute inset-0 h-full w-full" viewBox="0 0 800 400">
                   <!-- Lines -->
-                  <line x1="80" y1="200" x2="300" y2="100" stroke="black" stroke-width="1" /> <!-- M-Fr -->
-                  <line x1="80" y1="200" x2="300" y2="380" stroke="black" stroke-width="1" /> <!-- M-Fu -->
-                  <line x1="300" y1="100" x2="520" y2="60" stroke="black" stroke-width="1" /> <!-- Fr-B -->
-                  <line x1="300" y1="100" x2="520" y2="200" stroke="black" stroke-width="1" /> <!-- Fr-H -->
-                  <line x1="300" y1="100" x2="520" y2="340" stroke="black" stroke-width="1" /> <!-- Fr-S -->
-                  <line x1="300" y1="100" x2="300" y2="240" stroke="black" stroke-width="1" /> <!-- Fr-Ho -->
-                  <line x1="520" y1="60" x2="520" y2="200" stroke="black" stroke-width="1" /> <!-- B-H -->
-                  <line x1="520" y1="200" x2="520" y2="340" stroke="black" stroke-width="1" /> <!-- H-S -->
-                  <line x1="520" y1="200" x2="300" y2="240" stroke="black" stroke-width="1" /> <!-- H-Ho -->
-                  <line x1="520" y1="340" x2="300" y2="240" stroke="black" stroke-width="1" /> <!-- S-Ho -->
-                  <line x1="520" y1="340" x2="300" y2="380" stroke="black" stroke-width="1" /> <!-- S-Fu -->
-                  <line x1="300" y1="380" x2="300" y2="240" stroke="black" stroke-width="1" /> <!-- Fu-Ho -->
+                  <line x1="120" y1="180" x2="400" y2="80" stroke="black" stroke-width="1" /> <!-- M-Fr -->
+                  <line x1="120" y1="180" x2="400" y2="350" stroke="black" stroke-width="1" /> <!-- M-Fu -->
+                  <line x1="400" y1="80" x2="680" y2="50" stroke="black" stroke-width="1" /> <!-- Fr-B -->
+                  <line x1="400" y1="80" x2="680" y2="160" stroke="black" stroke-width="1" /> <!-- Fr-H -->
+                  <line x1="400" y1="80" x2="680" y2="300" stroke="black" stroke-width="1" /> <!-- Fr-S -->
+                  <line x1="400" y1="80" x2="400" y2="220" stroke="black" stroke-width="1" /> <!-- Fr-Ho -->
+                  <line x1="680" y1="50" x2="680" y2="160" stroke="black" stroke-width="1" /> <!-- B-H -->
+                  <line x1="680" y1="160" x2="680" y2="300" stroke="black" stroke-width="1" /> <!-- H-S -->
+                  <line x1="680" y1="160" x2="400" y2="220" stroke="black" stroke-width="1" /> <!-- H-Ho -->
+                  <line x1="680" y1="300" x2="400" y2="220" stroke="black" stroke-width="1" /> <!-- S-Ho -->
+                  <line x1="680" y1="300" x2="400" y2="350" stroke="black" stroke-width="1" /> <!-- S-Fu -->
+                  <line x1="400" y1="350" x2="400" y2="220" stroke="black" stroke-width="1" /> <!-- Fu-Ho -->
 
                   <!-- Numbers -->
-                  <text x="170" y="140" font-size="14">5</text> <!-- M-Fr -->
-                  <text x="170" y="310" font-size="14">20</text> <!-- M-Fu -->
-                  <text x="410" y="70" font-size="14">5</text> <!-- Fr-B -->
-                  <text x="410" y="135" font-size="14">5</text> <!-- Fr-H -->
-                  <text x="420" y="250" font-size="14">12</text> <!-- Fr-S -->
-                  <text x="310" y="160" font-size="14">5</text> <!-- Fr-Ho -->
-                  <text x="530" y="130" font-size="14">5</text> <!-- B-H -->
-                  <text x="530" y="270" font-size="14">5</text> <!-- H-S -->
-                  <text x="400" y="205" font-size="14">8</text> <!-- H-Ho -->
-                  <text x="410" y="280" font-size="14">5</text> <!-- S-Ho -->
-                  <text x="410" y="380" font-size="14">15</text> <!-- S-Fu -->
-                  <text x="310" y="330" font-size="14">15</text> <!-- Fu-Ho -->
+                  <text x="240" y="125" font-size="14" class="font-serif">5</text> <!-- M-Fr -->
+                  <text x="240" y="280" font-size="14" class="font-serif">20</text> <!-- M-Fu -->
+                  <text x="540" y="60" font-size="14" class="font-serif">5</text> <!-- Fr-B -->
+                  <text x="540" y="115" font-size="14" class="font-serif">5</text> <!-- Fr-H -->
+                  <text x="550" y="210" font-size="14" class="font-serif">12</text> <!-- Fr-S -->
+                  <text x="410" y="150" font-size="14" class="font-serif">5</text> <!-- Fr-Ho -->
+                  <text x="690" y="110" font-size="14" class="font-serif">5</text> <!-- B-H -->
+                  <text x="690" y="240" font-size="14" class="font-serif">5</text> <!-- H-S -->
+                  <text x="540" y="185" font-size="14" class="font-serif">8</text> <!-- H-Ho -->
+                  <text x="540" y="275" font-size="14" class="font-serif">5</text> <!-- S-Ho -->
+                  <text x="540" y="340" font-size="14" class="font-serif">15</text> <!-- S-Fu -->
+                  <text x="410" y="290" font-size="14" class="font-serif">15</text> <!-- Fu-Ho -->
                 </svg>
 
                 <!-- Draggable Names -->
                 <div
-                  class="absolute cursor-move border border-black bg-white px-2 py-1 text-sm whitespace-nowrap"
-                  style="left: calc(80/600 * 100%); top: calc(200/400 * 100%); transform: translate(-50%, -50%);"
+                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif whitespace-nowrap"
+                  style="left: calc(120/800 * 100%); top: calc(180/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Müller', from: 'pool' })"
                 >
                   Müller (Tel.)
                 </div>
                 <div
-                  class="absolute cursor-move border border-black bg-white px-2 py-1 text-sm"
-                  style="left: calc(300/600 * 100%); top: calc(100/400 * 100%); transform: translate(-50%, -50%);"
+                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif"
+                  style="left: calc(400/800 * 100%); top: calc(80/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Frey', from: 'pool' })"
                 >
                   Frey
                 </div>
                 <div
-                  class="absolute cursor-move border border-black bg-white px-2 py-1 text-sm whitespace-nowrap"
-                  style="left: calc(520/600 * 100%); top: calc(60/400 * 100%); transform: translate(-50%, -50%);"
+                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif whitespace-nowrap"
+                  style="left: calc(680/800 * 100%); top: calc(50/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Bär', from: 'pool' })"
                 >
                   Bär (Tel.)
                 </div>
                 <div
-                  class="absolute cursor-move border border-black bg-white px-2 py-1 text-sm whitespace-nowrap"
-                  style="left: calc(520/600 * 100%); top: calc(200/400 * 100%); transform: translate(-50%, -50%);"
+                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif whitespace-nowrap"
+                  style="left: calc(680/800 * 100%); top: calc(160/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Hermann', from: 'pool' })"
                 >
                   Hermann (Tel.)
                 </div>
                 <div
-                  class="absolute cursor-move border border-black bg-white px-2 py-1 text-sm whitespace-nowrap"
-                  style="left: calc(520/600 * 100%); top: calc(340/400 * 100%); transform: translate(-50%, -50%);"
+                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif whitespace-nowrap"
+                  style="left: calc(680/800 * 100%); top: calc(300/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Schneider', from: 'pool' })"
                 >
                   Schneider (Tel.)
                 </div>
                 <div
-                  class="absolute cursor-move border border-black bg-white px-2 py-1 text-sm"
-                  style="left: calc(300/600 * 100%); top: calc(380/400 * 100%); transform: translate(-50%, -50%);"
+                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif"
+                  style="left: calc(400/800 * 100%); top: calc(350/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Fuchs', from: 'pool' })"
                 >
@@ -1061,16 +1061,14 @@ function prevPage() {
 
                 <!-- EIGENE WOHNUNG -->
                 <div
-                  class="absolute cursor-move border-[3px] border-double border-black bg-white px-3 py-1 text-sm font-bold whitespace-nowrap"
-                  style="left: calc(300/600 * 100%); top: calc(240/400 * 100%); transform: translate(-50%, -50%);"
-                  draggable="true"
-                  @dragstart="(event) => handleDragStart(event, { name: 'Eigener Wohnung', from: 'pool' })"
+                  class="absolute border-[3px] border-double border-black bg-white px-3 py-0.5 text-xs font-bold font-serif whitespace-nowrap"
+                  style="left: calc(400/800 * 100%); top: calc(220/400 * 100%); transform: translate(-50%, -50%);"
                 >
                   EIGENE WOHNUNG
                 </div>
               </div>
 
-              <div class="w-full mt-4 space-y-1 text-xs">
+              <div class="w-full mt-2 space-y-0.5 text-[10px]">
                 <div class="flex gap-4">
                   <span class="w-12">(Tel.)</span>
                   <span>= hat Telefonanschluss</span>
@@ -1086,12 +1084,12 @@ function prevPage() {
         </div>
       </div>
 
-      <div class="flex-[0.4] overflow-y-auto px-6 pb-4 pt-2 font-serif">
-        <div class="flex min-h-full flex-col">
+      <div class="flex-[0.4] px-6 pb-4 pt-1 font-serif overflow-hidden">
+        <div class="flex h-full flex-col">
           <div class="border-t border-black" />
-          <div class="flex-1">
-            <div class="mt-1 text-left text-base font-bold">Aufgabe 6</div>
-            <table class="mt-1 w-full table-fixed border-2 border-black text-base">
+          <div class="flex-1 overflow-hidden">
+            <div class="mt-0.5 text-left text-sm font-bold">Aufgabe 6</div>
+            <table class="mt-0.5 w-full table-fixed border-2 border-black text-sm">
               <thead>
                 <tr class="border-b border-black">
                   <th class="border-r border-black p-1 text-center font-normal">von</th>
@@ -1118,7 +1116,7 @@ function prevPage() {
                       </span>
                       <span v-else class="flex-1">&nbsp;</span>
                       <button
-                        v-if="routeAssignments[`route-from-${row}`]"
+                        v-if="routeAssignments[`route-from-${row}`] && (row !== 1 || routeAssignments[`route-from-${row}`] !== 'Eigene Wohnung')"
                         type="button"
                         class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
                         @click="routeAssignments[`route-from-${row}`] = null"
