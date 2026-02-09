@@ -188,6 +188,8 @@ function toggleStampAnswer(day: number) {
 }
 
 function handleRouteDropOnCell(event: DragEvent, key: string) {
+  if (key === 'route-from-1' && routeAssignments.value[key] === 'Eigene Wohnung') return;
+
   event.preventDefault();
   const payloadText = event.dataTransfer?.getData('text/plain');
   if (!payloadText) return;
@@ -1061,8 +1063,10 @@ function prevPage() {
 
                 <!-- EIGENE WOHNUNG -->
                 <div
-                  class="absolute border-[3px] border-double border-black bg-white px-3 py-0.5 text-xs font-bold font-serif whitespace-nowrap"
+                  class="absolute cursor-move border-[3px] border-double border-black bg-white px-3 py-0.5 text-xs font-bold font-serif whitespace-nowrap"
                   style="left: calc(400/800 * 100%); top: calc(220/400 * 100%); transform: translate(-50%, -50%);"
+                  draggable="true"
+                  @dragstart="(event) => handleDragStart(event, { name: 'Eigene Wohnung', from: 'pool' })"
                 >
                   EIGENE WOHNUNG
                 </div>
@@ -1108,8 +1112,9 @@ function prevPage() {
                     <div class="flex items-center gap-2">
                       <span
                         v-if="routeAssignments[`route-from-${row}`]"
-                        class="flex-1 min-w-0 cursor-move"
-                        draggable="true"
+                        class="flex-1 min-w-0"
+                        :class="{ 'cursor-move': row !== 1 || routeAssignments[`route-from-${row}`] !== 'Eigene Wohnung' }"
+                        :draggable="row !== 1 || routeAssignments[`route-from-${row}`] !== 'Eigene Wohnung'"
                         @dragstart="(event) => handleDragStart(event, { name: routeAssignments[`route-from-${row}`] ?? '', from: 'cell', key: `route-from-${row}` })"
                       >
                         {{ routeAssignments[`route-from-${row}`] }}
