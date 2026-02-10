@@ -46,19 +46,42 @@ watch(
 
 function submit() {
   if (props.assignment && props.assignment.results.length > 0 && editable.value) {
+    const testResultId = props.assignment.results[0].id;
+    const applyUpdatedResultFromPage = (page: any) => {
+      const participants = page?.props?.participants?.data;
+      if (!Array.isArray(participants)) return;
+
+      for (const participant of participants) {
+        const assignments = participant?.test_assignments ?? [];
+        for (const assignment of assignments) {
+          const result = (assignment?.results ?? []).find((entry: any) => entry?.id === testResultId);
+          if (!result?.result_json) continue;
+
+          const updatedResult = JSON.parse(JSON.stringify(result.result_json));
+          editable.value = updatedResult;
+          props.assignment.results[0].result_json = updatedResult;
+          return;
+        }
+      }
+    };
+
     if (['MRT-A', 'MRT-B', 'BRT-A', 'BRT-B'].includes(props.assignment.test.name)) {
       form.answers = editable.value.answers;
-      form.put(route('test-results.update', { testResult: props.assignment.results[0].id }), {
-        onSuccess: () => {
-          closeModal();
+      form.put(route('test-results.update', { testResult: testResultId }), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: (page) => {
+          applyUpdatedResultFromPage(page);
         },
       });
     } else {
       // Keep old behavior for other tests
       const oldForm = useForm({ result_json: JSON.stringify(editable.value) });
-      oldForm.put(route('test-results.update', { testResult: props.assignment.results[0].id }), {
-        onSuccess: () => {
-          closeModal();
+      oldForm.put(route('test-results.update', { testResult: testResultId }), {
+        preserveState: true,
+        preserveScroll: true,
+        onSuccess: (page) => {
+          applyUpdatedResultFromPage(page);
         },
       });
     }
