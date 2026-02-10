@@ -6,6 +6,8 @@ use App\Models\TestResult;
 use App\Models\TestResultManualScore;
 use Illuminate\Http\Request;
 use App\Services\MrtAScorer;
+use App\Services\BrtAScorer;
+use App\Services\BrtBScorer;
 use Illuminate\Support\Facades\Storage;
 
 class TestResultController extends Controller
@@ -42,6 +44,20 @@ class TestResultController extends Controller
 
             $resultData['answers'] = $newAnswersWithTimes;
             $resultData['total_time_seconds'] = $testResult->result_json['total_time_seconds'] ?? array_sum($questionTimes);
+
+        } elseif (in_array($testName, ['BRT-A', 'BRT-B'], true)) {
+            $validatedData = $request->validate([
+                'answers' => 'required|array',
+                'answers.*.user_answer' => 'nullable|string',
+            ]);
+
+            $userAnswers = array_column($validatedData['answers'], 'user_answer');
+            $originalAnswers = $testResult->result_json['answers'] ?? [];
+            $questionTimes = array_column($originalAnswers, 'time_seconds');
+
+            $resultData = $testName === 'BRT-A'
+                ? BrtAScorer::score($userAnswers, $questionTimes)
+                : BrtBScorer::score($userAnswers, $questionTimes);
 
 
         } else {
