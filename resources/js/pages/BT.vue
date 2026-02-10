@@ -63,6 +63,7 @@ const leftNames = computed(() => apprentices.value.slice(0, 13));
 const rightNames = computed(() => apprentices.value.slice(13));
 const maxPage = 6;
 const page = ref(1);
+const showTest = ref(false);
 const cashDenominations = [
   { label: '100€', key: '100' },
   { label: '50€', key: '50' },
@@ -229,16 +230,59 @@ function prevPage() {
     page.value -= 1;
   }
 }
+
+function startTest() {
+  showTest.value = true;
+  page.value = 1;
+}
 </script>
 
 <template>
   <Head title="BT" />
   <div class="relative h-screen overflow-hidden bg-background text-black">
-    <div class="absolute right-6 top-4 flex items-center gap-2">
+    <div v-if="showTest" class="absolute right-6 top-4 flex items-center gap-2">
       <Button variant="outline" @click="prevPage" :disabled="page === 1">Zurück</Button>
       <Button @click="nextPage" :disabled="page === maxPage">Weiter</Button>
     </div>
-    <div v-if="page === 1" class="flex h-full flex-col">
+    <div v-if="!showTest" class="flex h-full items-center justify-center px-6">
+      <div class="max-w-5xl space-y-6 rounded-2xl border border-black/20 bg-white p-8 font-serif text-base leading-relaxed shadow-sm">
+        <h1 class="text-center text-2xl font-semibold tracking-[0.2em]">EINFÜHRUNG</h1>
+        <p>
+          Die Aufgaben auf den folgenden Seiten geben Ihnen Gelegenheit, Ihr Verständnis für einfache
+          Zusammenhänge verwaltungs-büromäßiger Art zu zeigen. Sie brauchen dazu keine kaufmännischen
+          Fachkenntnisse, sondern müssen nur etwas geschickt und anstellig sein.
+        </p>
+        <p>
+          Die Lösungen tragen Sie auf Ihrem Lösungsblatt ein. Schauen wir uns dieses Blatt einmal an: Es ist
+          bereits für jedes Blatt ein kleines “Formular“ vorgedruckt, in welches jeweils nur einige Wörter oder
+          Zahlen eingesetzt werden sollen, wie das bei derartigen Vordrucken ─ etwa einer Postanweisung oder
+          einem behördlichen Fragebogen ─ üblich ist. Jede Aufgabe wird genau beschrieben. Lesen Sie sich bitte
+          diese Schilderungen Wort für Wort langsam durch und vergleichen Sie das Gelesene bitte mit dem
+          vorgegebenen Antwort-„Formular“. Dann stellen Sie sich in Gedanken vor, wie Sie diese Arbeit in der
+          Praxis durchführen würden und schreiben Sie erst dann die Lösungen hin.
+        </p>
+        <p>
+          Schreiben Sie bitte Ihre Lösungen n u r auf das Lösungsblatt!
+          In dieses Heft weder Notizen noch Bemerkungen oder Lösungen eintragen!
+        </p>
+        <p>
+          Nebenrechnungen und Notizen bitte nur auf der Rückseite des Lösungsblattes machen. Von der Aufgabe 3
+          ab wird keiner ohne derartige Nebenrechnungen auskommen. Jeder im Büro Beschäftigte macht sich
+          derartige Notizen. Es ist daher auch bei diesen Aufgaben ratsam, sich Notizen zu machen. Bei der
+          Aufgabe 5 müssen unbedingt die Nebenrechnungen angegeben werden.
+        </p>
+        <p>
+          Sollten Sie einmal bei einer Aufgabe nicht zurechtkommen, so versuchen Sie wenigstens, einen Ansatz zu
+          finden und einzutragen. Versäumen Sie bei den leichten Aufgaben am Anfang nicht zu viel Zeit, da Ihnen
+          dann nachher bei den umfangreicheren Aufgaben 4-6 Zeit fehlen muss. Halten Sie sich nicht zu lange bei
+          einer Aufgabe auf. Sie haben 30 Minuten Zeit für sechs Aufgaben.
+        </p>
+        <div class="pt-2 text-center">
+          <Button class="px-8" @click="startTest">Test starten</Button>
+        </div>
+      </div>
+    </div>
+    <div v-else-if="page === 1" class="flex h-full flex-col">
       <div class="flex-1 overflow-hidden px-6 pt-3 font-serif text-base">
         <div class="flex h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
