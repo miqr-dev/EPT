@@ -247,12 +247,12 @@ function startTest() {
     <div v-if="!showTest" class="flex h-full items-center justify-center px-6">
       <div class="max-w-5xl space-y-6 rounded-2xl border border-black/20 bg-white p-8 font-serif text-base leading-relaxed shadow-sm">
         <h1 class="text-center text-2xl font-semibold tracking-[0.2em]">EINFÜHRUNG</h1>
-        <p>
+        <p class="text-lg">
           Die Aufgaben auf den folgenden Seiten geben Ihnen Gelegenheit, Ihr Verständnis für einfache
           Zusammenhänge verwaltungs-büromäßiger Art zu zeigen. Sie brauchen dazu keine kaufmännischen
           Fachkenntnisse, sondern müssen nur etwas geschickt und anstellig sein.
         </p>
-        <p>
+        <p class="text-lg">
           Die Lösungen tragen Sie auf Ihrem Lösungsblatt ein. Schauen wir uns dieses Blatt einmal an: Es ist
           bereits für jedes Blatt ein kleines “Formular“ vorgedruckt, in welches jeweils nur einige Wörter oder
           Zahlen eingesetzt werden sollen, wie das bei derartigen Vordrucken ─ etwa einer Postanweisung oder
@@ -261,17 +261,17 @@ function startTest() {
           vorgegebenen Antwort-„Formular“. Dann stellen Sie sich in Gedanken vor, wie Sie diese Arbeit in der
           Praxis durchführen würden und schreiben Sie erst dann die Lösungen hin.
         </p>
-        <p>
+      <p class="text-lg">
           Schreiben Sie bitte Ihre Lösungen n u r auf das Lösungsblatt!
           In dieses Heft weder Notizen noch Bemerkungen oder Lösungen eintragen!
         </p>
-        <p>
+        <p class="text-lg">
           Nebenrechnungen und Notizen bitte nur auf der Rückseite des Lösungsblattes machen. Von der Aufgabe 3
           ab wird keiner ohne derartige Nebenrechnungen auskommen. Jeder im Büro Beschäftigte macht sich
           derartige Notizen. Es ist daher auch bei diesen Aufgaben ratsam, sich Notizen zu machen. Bei der
           Aufgabe 5 müssen unbedingt die Nebenrechnungen angegeben werden.
         </p>
-        <p>
+        <p class="text-lg">
           Sollten Sie einmal bei einer Aufgabe nicht zurechtkommen, so versuchen Sie wenigstens, einen Ansatz zu
           finden und einzutragen. Versäumen Sie bei den leichten Aufgaben am Anfang nicht zu viel Zeit, da Ihnen
           dann nachher bei den umfangreicheren Aufgaben 4-6 Zeit fehlen muss. Halten Sie sich nicht zu lange bei
@@ -283,33 +283,33 @@ function startTest() {
       </div>
     </div>
     <div v-else-if="page === 1" class="flex h-full flex-col">
-      <div class="flex-1 overflow-hidden px-6 pt-3 font-serif text-base">
+      <div class="flex-[0.6] overflow-hidden px-6 pt-3 font-serif text-base">
         <div class="flex h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
             <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 1</h1>
           </div>
           <div class="flex flex-1 gap-4">
             <div class="flex-1 border border-black/20 px-6 py-4">
-              <div class="space-y-4 text-center text-base leading-relaxed">
+              <div class="space-y-4 text-center text-xl leading-relaxed">
                 <p>
                   Unser Betrieb beschäftigt 25 Lehrlinge. Von diesen sollen jeweils zwei Lehrlinge für den
                   Post-Frühdienst und drei Lehrlinge für den Post-Spätdienst eingeteilt werden, so dass jeder
                   Woche jeder Lehrling einmal Postdienst hat. Aus verkehrstechnischen Gründen können acht
                   Lehrlinge keinen Frühdienst und neun Lehrlinge keinen Spätdienst machen.
                 </p>
-                <p class="text-base">(Siehe Vermerke in der Liste)</p>
+                <p class="text-lg">(Siehe Vermerke in der Liste)</p>
                 <p>
                   Stellen Sie bitte einen Wochenplan auf (Montag bis Freitag), in dem Sie alle Namen der Lehrlinge
                   für den Postdienst (Früh oder Spät) auf das Lösungsblatt übertragen.
                 </p>
               </div>
-              <div class="mt-4 text-center text-base">_____</div>
+              <!-- <div class="mt-4 text-center text-base">_____</div> -->
             </div>
 
             <div class="flex-1 border border-black/20 px-4 py-2">
               <div class="flex h-full items-start justify-center gap-8 overflow-hidden">
                 <div
-                  class="border-2 border-black px-4 py-2 text-base leading-tight w-[420px] flex-none"
+                  class="border-2 border-black px-4 py-2 text-xl leading-tight w-[420px] flex-none"
                   @dragover="allowDrop"
                   @drop="handleDropOnPool"
                 >
@@ -322,7 +322,7 @@ function startTest() {
                       >
                         <span class="w-6 text-right flex-none">{{ apprentice.id }}</span>
                         <span
-                          class="flex-1 text-left"
+                          class="flex-1 text-left text-xl"
                           :class="{ 'line-through text-gray-500': isAssigned(apprentice.name) }"
                           :draggable="!isAssigned(apprentice.name)"
                           @dragstart="(event) => handleDragStart(event, { name: apprentice.name, from: 'pool' })"
@@ -353,7 +353,7 @@ function startTest() {
                   </div>
                 </div>
 
-                <div class="space-y-6 text-base text-left leading-tight min-w-[200px]">
+                <div class="space-y-6 text-xl text-left leading-tight min-w-[200px]">
                   <div class="text-center">
                     <p class="text-xl mb-1" style="letter-spacing: 0.4em;">L i s t e</p>
                     <p>der Namen</p>
@@ -375,7 +375,7 @@ function startTest() {
         </div>
       </div>
 
-      <div class="flex-1 overflow-hidden px-6 pb-4 pt-2 font-serif">
+      <div class="flex-[0.4] overflow-hidden px-6 pb-4 pt-2 font-serif">
         <div class="flex h-full flex-col">
           <div class="border-t border-black" />
           <div class="flex-1">
@@ -583,7 +583,7 @@ function startTest() {
       </div>
     </div>
     <div v-else-if="page === 3" class="flex h-full flex-col">
-      <div class="flex-1 overflow-hidden px-6 pt-3 font-serif text-base">
+      <div class="flex-[0.6] overflow-hidden px-6 pt-3 font-serif text-base">
         <div class="flex h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
             <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 3</h1>
@@ -591,25 +591,25 @@ function startTest() {
           <div class="flex flex-1 gap-4">
             <div class="flex-1 border border-black/20 px-6 py-4">
               <div class="space-y-4 text-center text-base leading-relaxed">
-                <p>
+                <p class="text-lg">
                   Sie sollen jeden der acht Beträge auf nebenstehender Liste gegen Quittung in bar auszahlen.
                 </p>
-                <p>
+                <p class="text-lg">
                   Rechnen Sie bitte aus, welche Geldsorten Sie benötigen. Sie sollen in keinem Falle wechseln
                   und möglichst wenig Geldstücke bzw. Scheine brauchen.
                 </p>
-                <p>
+                <p class="text-lg">
                   Schreiben Sie bitte auf das Lösungsblatt, welche Anzahl Sie hierzu von jeder Geldsorte
                   benötigen!
                 </p>
               </div>
-              <div class="mt-4 text-center text-base">_____</div>
-              <p class="mt-6 text-center text-base">In diesem Heft bitte keine Notizen machen!</p>
+              <!-- <div class="mt-4 text-center text-base">_____</div>
+              <p class="mt-6 text-center text-base">In diesem Heft bitte keine Notizen machen!</p> -->
             </div>
 
             <div class="flex-1 border border-black/20 px-4 py-2">
               <div class="flex h-full items-stretch justify-center">
-                <div class="h-full w-[240px] border-2 border-black px-10 py-6 text-base">
+                <div class="h-full w-[240px] border-2 border-black px-10 py-6 text-xl">
                   <table class="h-full w-full border-collapse">
                     <tbody>
                       <tr>
@@ -657,7 +657,7 @@ function startTest() {
         </div>
       </div>
 
-      <div class="flex-1 overflow-hidden px-6 pb-4 pt-2 font-serif">
+      <div class="flex-[0.4] overflow-hidden px-6 pb-4 pt-2 font-serif">
         <div class="flex h-full flex-col">
           <div class="border-t border-black" />
           <div class="flex-1">
@@ -701,7 +701,7 @@ function startTest() {
       </div>
     </div>
     <div v-else-if="page === 4" class="flex h-full flex-col">
-      <div class="flex-[0.6] overflow-hidden px-6 pt-3 font-serif text-base">
+      <div class="flex-[0.7] overflow-hidden px-6 pt-3 font-serif text-base">
         <div class="flex h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
             <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 4</h1>
@@ -709,29 +709,29 @@ function startTest() {
           <div class="flex flex-1 gap-4">
             <div class="flex-1 border border-black/20 px-6 py-4">
               <div class="space-y-4 text-center text-base leading-relaxed">
-                <p>
+                <p class="text-lg">
                   Sie erhalten 10 Ordner und eine Menge Briefe. Diese sollen nach den Anfangsbuchstaben der
                   Absender geordnet in den Ordnern abgelegt werden. Beim Sortieren der Briefe haben Sie
                   festgestellt, dass die einzelnen Buchstaben des Alphabets prozentual unterschiedlich oft
                   vorkommen (vgl. nebenstehende Zusammenstellung). Zum Schluss soll jeder Ordner die gleiche
                   Menge Briefe enthalten.
                 </p>
-                <div class="text-center">Wie müssen die 25 Buchstaben des Alphabets</div>
-                <div class="mx-auto w-fit border border-black px-4 py-1 text-base tracking-[0.35em]">
+                <div class="text-center text-lg">Wie müssen die 25 Buchstaben des Alphabets</div>
+                <div class="mx-auto w-fit border border-black px-4 py-1 text-lg tracking-[0.35em]">
                   A B C D E F G H J K L M N O P Q R S T U V W X Y Z
                 </div>
-                <div class="text-center">auf die 10 Ordner aufgeteilt werden?</div>
-                <p>
+                <div class="text-center text-lg">auf die 10 Ordner aufgeteilt werden?</div>
+                <p class="text-xl">
                   Schreiben Sie bitte die betreffenden Buchstaben unter die jeweilige Ordner-Nr. auf das
                   Lösungsblatt!
                 </p>
-                <p>In dieses Heft bitte keine Notizen machen!</p>
+                <p class="text-lg">In dieses Heft bitte keine Notizen machen!</p>
               </div>
-              <div class="mt-4 text-center text-base">_____</div>
+              <!-- <div class="mt-4 text-center text-base">_____</div> -->
             </div>
             <div class="flex-1 border border-black/20">
               <div class="flex h-full w-full items-center justify-center border-2 border-black p-8">
-                <table class="w-full border-collapse text-base leading-tight">
+                <table class="w-full border-collapse text-lg leading-tight">
                   <tbody>
                     <tr>
                       <td colspan="7" class="pb-8 text-center text-xl">Von allen Absendern beginnen</td>
@@ -851,7 +851,7 @@ function startTest() {
           </div>
         </div>
       </div>
-      <div class="flex-[0.4] overflow-hidden px-6 pb-4 pt-2 font-serif">
+      <div class="flex-[0.3] overflow-hidden px-6 pb-4 pt-2 font-serif">
         <div class="flex min-h-full flex-col">
           <div class="border-t border-black" />
           <div class="flex-1">
@@ -889,15 +889,15 @@ function startTest() {
       </div>
     </div>
     <div v-else-if="page === 5" class="flex h-full flex-col overflow-hidden">
-      <div class="flex-[0.6] overflow-hidden px-6 pt-3 font-serif text-base">
+      <div class="flex-[0.7] overflow-hidden px-6 pt-3 font-serif text-base">
         <div class="flex h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
             <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 5</h1>
           </div>
           <div class="flex flex-1 gap-4">
             <div class="flex-1 border border-black/20 px-6 py-4">
-              <div class="space-y-4 text-center text-base leading-relaxed">
-                <p>
+              <div class="space-y-4 text-center text-xl leading-relaxed">
+                <p> 
                   Am Beginn des 1. Arbeitstages im Monat enthielt Ihre Portokasse Briefmarken für € 50,00.
                 </p>
                 <p class="font-semibold">Die Anweisung lautet:</p>
@@ -913,14 +913,14 @@ function startTest() {
                   Bitte auf der Rückseite Nebenrechnungen vornehmen und dann die betreffenden Tage auf dem
                   Lösungsblatt deutlich ankreuzen.
                 </p>
-                <p>In dieses Heft bitte keine Notizen machen!</p>
+                <!-- <p>In dieses Heft bitte keine Notizen machen!</p> -->
               </div>
-              <div class="mt-4 text-center text-base">_____</div>
+              <!-- <div class="mt-4 text-center text-base">_____</div> -->
             </div>
             <div class="flex-1 border border-black/20">
               <div class="flex h-full w-full flex-col items-center justify-center gap-3 border-2 border-black p-6">
-                <div class="text-center text-base">Aufstellung der gebrachten Briefmarken</div>
-                <table class="w-full border-collapse text-base leading-tight">
+                <div class="text-center text-xl">Aufstellung der gebrachten Briefmarken</div>
+                <table class="w-full border-collapse text-xl leading-tight">
                   <thead>
                     <tr>
                       <th class="w-24 border border-black p-1 text-left" rowspan="2">Arbeitstag (abends)</th>
@@ -1018,8 +1018,8 @@ function startTest() {
                   Für Benachrichtigung sind jeweils (persönlich oder per Telefon) 3 Minuten zu
                   berechnen und auf dem Lösungsblatt unter „Nachricht“ einzutragen.
                 </p>
-                <p class="font-semibold">In dieses Heft bitte keine Notizen machen!</p>
-                <div class="text-center text-lg">_____</div>
+                <!-- <p class="font-semibold">In dieses Heft bitte keine Notizen machen!</p> -->
+                <!-- <div class="text-center text-lg">_____</div> -->
               </div>
             </div>
             <div class="flex-[0.55] border-2 border-black p-4 flex flex-col overflow-hidden">
@@ -1045,11 +1045,11 @@ function startTest() {
                   <text x="240" y="280" font-size="14" class="font-serif">20</text> <!-- M-Fu -->
                   <text x="540" y="60" font-size="14" class="font-serif">5</text> <!-- Fr-B -->
                   <text x="540" y="115" font-size="14" class="font-serif">5</text> <!-- Fr-H -->
-                  <text x="550" y="210" font-size="14" class="font-serif">12</text> <!-- Fr-S -->
+                  <text x="580" y="250" font-size="14" class="font-serif">12</text> <!-- Fr-S -->
                   <text x="410" y="150" font-size="14" class="font-serif">5</text> <!-- Fr-Ho -->
                   <text x="690" y="110" font-size="14" class="font-serif">5</text> <!-- B-H -->
                   <text x="690" y="240" font-size="14" class="font-serif">5</text> <!-- H-S -->
-                  <text x="540" y="185" font-size="14" class="font-serif">8</text> <!-- H-Ho -->
+                  <text x="580" y="175" font-size="14" class="font-serif">8</text> <!-- H-Ho -->
                   <text x="540" y="275" font-size="14" class="font-serif">5</text> <!-- S-Ho -->
                   <text x="540" y="340" font-size="14" class="font-serif">15</text> <!-- S-Fu -->
                   <text x="410" y="290" font-size="14" class="font-serif">15</text> <!-- Fu-Ho -->
