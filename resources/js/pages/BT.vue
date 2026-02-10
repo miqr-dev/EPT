@@ -95,15 +95,6 @@ const stampAnswerDays = ref<Record<number, boolean>>(
   Object.fromEntries(Array.from({ length: 10 }, (_, index) => [index + 1, false])),
 );
 const routeRows = Array.from({ length: 6 }, (_, index) => index + 1);
-const routeNames = [
-  'Müller (Tel.)',
-  'Frey',
-  'Bär (Tel.)',
-  'Hermann (Tel.)',
-  'Schneider (Tel.)',
-  'Fuchs',
-  'Eigene Wohnung',
-];
 const routeAssignments = ref<Record<string, string | null>>(
   Object.fromEntries(
     routeRows.flatMap((row) => [
@@ -121,7 +112,6 @@ const routeTimes = ref<Record<string, string>>(
   ),
 );
 const routeTotals = ref({ totalWay: '', totalMsg: '', returnWay: '' });
-const routeAssignedNames = computed(() => new Set(Object.values(routeAssignments.value).filter(Boolean)));
 
 function buildCellKey(shift: 'early' | 'late', slot: number, day: string) {
   return `${shift}-${slot}-${day}`;
@@ -197,15 +187,9 @@ function toggleStampAnswer(day: number) {
   stampAnswerDays.value[day] = !stampAnswerDays.value[day];
 }
 
-function clearNameFromRouteAssignments(name: string) {
-  Object.keys(routeAssignments.value).forEach((key) => {
-    if (routeAssignments.value[key] === name) {
-      routeAssignments.value[key] = null;
-    }
-  });
-}
-
 function handleRouteDropOnCell(event: DragEvent, key: string) {
+  if (key === 'route-from-1' && routeAssignments.value[key] === 'Eigene Wohnung') return;
+
   event.preventDefault();
   const payloadText = event.dataTransfer?.getData('text/plain');
   if (!payloadText) return;
@@ -217,23 +201,7 @@ function handleRouteDropOnCell(event: DragEvent, key: string) {
     routeAssignments.value[payload.key] = null;
   }
 
-  clearNameFromRouteAssignments(payload.name);
   routeAssignments.value[key] = payload.name;
-}
-
-function handleRouteDropOnPool(event: DragEvent) {
-  event.preventDefault();
-  const payloadText = event.dataTransfer?.getData('text/plain');
-  if (!payloadText) return;
-
-  const payload = JSON.parse(payloadText) as DragPayload;
-  if (!payload?.name) return;
-
-  clearNameFromRouteAssignments(payload.name);
-}
-
-function isRouteAssigned(name: string) {
-  return routeAssignedNames.value.has(name);
 }
 
 function handleRouteTimeInput(key: string, event: Event) {
@@ -689,7 +657,7 @@ function prevPage() {
       </div>
     </div>
     <div v-else-if="page === 4" class="flex h-full flex-col">
-      <div class="flex-[0.6 overflow-hidden px-6 pt-3 font-serif text-base">
+      <div class="flex-[0.6] overflow-hidden px-6 pt-3 font-serif text-base">
         <div class="flex h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
             <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 4</h1>
@@ -840,7 +808,7 @@ function prevPage() {
         </div>
       </div>
       <div class="flex-[0.4] overflow-hidden px-6 pb-4 pt-2 font-serif">
-        <div class="flex h-full flex-col">
+        <div class="flex min-h-full flex-col">
           <div class="border-t border-black" />
           <div class="flex-1">
             <div class="mt-3 text-left text-base font-semibold">Aufgabe 4</div>
@@ -876,7 +844,7 @@ function prevPage() {
         </div>
       </div>
     </div>
-    <div v-else-if="page === 5" class="flex h-full flex-col">
+    <div v-else-if="page === 5" class="flex h-full flex-col overflow-hidden">
       <div class="flex-[0.6] overflow-hidden px-6 pt-3 font-serif text-base">
         <div class="flex h-full flex-col gap-4">
           <div class="px-4 py-2 text-center">
@@ -937,7 +905,7 @@ function prevPage() {
         </div>
       </div>
       <div class="flex-[0.4] overflow-hidden px-6 pb-4 pt-2 font-serif">
-        <div class="flex h-full flex-col">
+        <div class="flex min-h-full flex-col">
           <div class="border-t border-black" />
           <div class="flex-1">
             <table class="mt-3 w-full table-fixed border border-black text-base">
@@ -980,15 +948,15 @@ function prevPage() {
         </div>
       </div>
     </div>
-    <div v-else-if="page === 6" class="flex h-full flex-col">
-      <div class="flex-[0.6] overflow-hidden px-6 pt-3 font-serif text-base">
-        <div class="flex h-full flex-col gap-4">
-          <div class="px-4 py-2 text-center">
+    <div v-else-if="page === 6" class="flex h-full flex-col overflow-hidden">
+      <div class="flex-[0.6] px-6 pt-3 font-serif text-base overflow-hidden">
+        <div class="flex h-full flex-col gap-2">
+          <div class="px-4 py-1 text-center">
             <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 6</h1>
           </div>
-          <div class="flex flex-1 gap-4">
-            <div class="flex-1 border border-black/20 px-6 py-4">
-              <div class="space-y-4 text-center text-base leading-relaxed">
+          <div class="flex flex-1 gap-4 items-stretch overflow-hidden">
+            <div class="flex-[0.45] border border-black/20 px-6 py-4 overflow-hidden">
+              <div class="space-y-2 text-center text-sm leading-relaxed">
                 <p>
                   Sie sollen Ihre Bekannten möglichst rasch benachrichtigen, dass die Feier zu Ihrem
                   Geburtstag aus dienstlichen Gründen um einen Tag verlegt werden muss. Sie wissen, dass Sie
@@ -999,122 +967,171 @@ function prevPage() {
                 </p>
                 <p>
                   Geben Sie bitte auf dem Lösungsblatt an, in welcher Reihenfolge Sie Ihre Bekannten
-                  benachrichtigen (Namen eintragen) und wie viel Zeit Sie dafür jeweils im einzelnen und
-                  insgesamt (Zeiten eintragen) brauchen (Zeiten eintragen).
+                  <span style="letter-spacing: 0.25em;">b e n a c h r i c h t i g e n</span> (Namen eintragen) und wie viel Zeit Sie dafür jeweils im
+                  Einzelnen und insgesamt (ohne Rückweg) brauchen (Zeiten eintragen).
                 </p>
                 <p>
-                  Für Benachrichtigung sind jeweils (persönlich oder per Telefon) 3 Minuten zu berechnen und
-                  auf dem Lösungsblatt unter „Nachricht“ einzutragen.
+                  Für Benachrichtigung sind jeweils (persönlich oder per Telefon) 3 Minuten zu
+                  berechnen und auf dem Lösungsblatt unter „Nachricht“ einzutragen.
                 </p>
-                <p>In dieses Heft bitte keine Notizen machen!</p>
+                <p class="font-semibold">In dieses Heft bitte keine Notizen machen!</p>
               </div>
               <div class="mt-4 text-center text-base">_____</div>
             </div>
-            <div class="flex-1 border border-black/20 px-4 py-4">
-              <div class="flex h-full flex-col items-center gap-6">
-                <div class="w-full border-2 border-black p-4">
-                  <div class="text-center text-base font-semibold">Plan</div>
-                  <div class="relative mt-4 h-[260px] w-full">
-                    <svg class="absolute inset-0 h-full w-full" viewBox="0 0 420 260">
-                      <line x1="90" y1="80" x2="170" y2="70" stroke="black" stroke-width="2" />
-                      <line x1="170" y1="70" x2="330" y2="40" stroke="black" stroke-width="2" />
-                      <line x1="170" y1="70" x2="330" y2="120" stroke="black" stroke-width="2" />
-                      <line x1="170" y1="70" x2="210" y2="140" stroke="black" stroke-width="2" />
-                      <line x1="210" y1="140" x2="330" y2="200" stroke="black" stroke-width="2" />
-                      <line x1="210" y1="140" x2="120" y2="210" stroke="black" stroke-width="2" />
-                      <line x1="90" y1="80" x2="120" y2="210" stroke="black" stroke-width="2" />
-                      <line x1="120" y1="210" x2="330" y2="200" stroke="black" stroke-width="2" />
-                      <text x="125" y="60" font-size="12">5</text>
-                      <text x="260" y="30" font-size="12">5</text>
-                      <text x="260" y="105" font-size="12">5</text>
-                      <text x="200" y="115" font-size="12">5</text>
-                      <text x="250" y="170" font-size="12">12</text>
-                      <text x="150" y="190" font-size="12">15</text>
-                      <text x="80" y="160" font-size="12">20</text>
-                      <text x="230" y="220" font-size="12">15</text>
-                      <rect x="40" y="60" width="100" height="30" fill="white" stroke="black" />
-                      <text x="52" y="80" font-size="12">Müller (Tel.)</text>
-                      <rect x="150" y="50" width="60" height="30" fill="white" stroke="black" />
-                      <text x="165" y="70" font-size="12">Frey</text>
-                      <rect x="300" y="20" width="90" height="30" fill="white" stroke="black" />
-                      <text x="310" y="40" font-size="12">Bär (Tel.)</text>
-                      <rect x="300" y="105" width="110" height="30" fill="white" stroke="black" />
-                      <text x="312" y="125" font-size="12">Hermann (Tel.)</text>
-                      <rect x="290" y="185" width="120" height="30" fill="white" stroke="black" />
-                      <text x="300" y="205" font-size="12">Schneider (Tel.)</text>
-                      <rect x="90" y="200" width="70" height="30" fill="white" stroke="black" />
-                      <text x="105" y="220" font-size="12">Fuchs</text>
-                      <rect x="170" y="125" width="120" height="35" fill="white" stroke="black" />
-                      <text x="178" y="145" font-size="12">EIGENE WOHNUNG</text>
-                    </svg>
-                  </div>
-                  <div class="mt-3 text-xs">
-                    <div>(Tel.) = hat Telefonanschluss</div>
-                    <div>Zahlen = Wegminuten mit Fahrrad</div>
-                  </div>
+            <div class="flex-[0.55] border-2 border-black p-4 flex flex-col items-center overflow-hidden">
+              <div class="mb-2 text-center text-sm font-bold underline underline-offset-4" style="letter-spacing: 0.4em;">P l a n</div>
+              <div class="relative w-full aspect-[2/1] select-none">
+                <svg class="absolute inset-0 h-full w-full" viewBox="0 0 800 400">
+                  <!-- Lines -->
+                  <line x1="120" y1="180" x2="400" y2="80" stroke="black" stroke-width="1" /> <!-- M-Fr -->
+                  <line x1="120" y1="180" x2="400" y2="350" stroke="black" stroke-width="1" /> <!-- M-Fu -->
+                  <line x1="400" y1="80" x2="680" y2="50" stroke="black" stroke-width="1" /> <!-- Fr-B -->
+                  <line x1="400" y1="80" x2="680" y2="160" stroke="black" stroke-width="1" /> <!-- Fr-H -->
+                  <line x1="400" y1="80" x2="680" y2="300" stroke="black" stroke-width="1" /> <!-- Fr-S -->
+                  <line x1="400" y1="80" x2="400" y2="220" stroke="black" stroke-width="1" /> <!-- Fr-Ho -->
+                  <line x1="680" y1="50" x2="680" y2="160" stroke="black" stroke-width="1" /> <!-- B-H -->
+                  <line x1="680" y1="160" x2="680" y2="300" stroke="black" stroke-width="1" /> <!-- H-S -->
+                  <line x1="680" y1="160" x2="400" y2="220" stroke="black" stroke-width="1" /> <!-- H-Ho -->
+                  <line x1="680" y1="300" x2="400" y2="220" stroke="black" stroke-width="1" /> <!-- S-Ho -->
+                  <line x1="680" y1="300" x2="400" y2="350" stroke="black" stroke-width="1" /> <!-- S-Fu -->
+                  <line x1="400" y1="350" x2="400" y2="220" stroke="black" stroke-width="1" /> <!-- Fu-Ho -->
+
+                  <!-- Numbers -->
+                  <text x="240" y="125" font-size="14" class="font-serif">5</text> <!-- M-Fr -->
+                  <text x="240" y="280" font-size="14" class="font-serif">20</text> <!-- M-Fu -->
+                  <text x="540" y="60" font-size="14" class="font-serif">5</text> <!-- Fr-B -->
+                  <text x="540" y="115" font-size="14" class="font-serif">5</text> <!-- Fr-H -->
+                  <text x="550" y="210" font-size="14" class="font-serif">12</text> <!-- Fr-S -->
+                  <text x="410" y="150" font-size="14" class="font-serif">5</text> <!-- Fr-Ho -->
+                  <text x="690" y="110" font-size="14" class="font-serif">5</text> <!-- B-H -->
+                  <text x="690" y="240" font-size="14" class="font-serif">5</text> <!-- H-S -->
+                  <text x="540" y="185" font-size="14" class="font-serif">8</text> <!-- H-Ho -->
+                  <text x="540" y="275" font-size="14" class="font-serif">5</text> <!-- S-Ho -->
+                  <text x="540" y="340" font-size="14" class="font-serif">15</text> <!-- S-Fu -->
+                  <text x="410" y="290" font-size="14" class="font-serif">15</text> <!-- Fu-Ho -->
+                </svg>
+
+                <!-- Draggable Names -->
+                <div
+                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif whitespace-nowrap"
+                  style="left: calc(120/800 * 100%); top: calc(180/400 * 100%); transform: translate(-50%, -50%);"
+                  draggable="true"
+                  @dragstart="(event) => handleDragStart(event, { name: 'Müller', from: 'pool' })"
+                >
+                  Müller (Tel.)
                 </div>
                 <div
-                  class="w-full border-2 border-black px-4 py-3 text-base leading-tight"
-                  @dragover="allowDrop"
-                  @drop="handleRouteDropOnPool"
+                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif"
+                  style="left: calc(400/800 * 100%); top: calc(80/400 * 100%); transform: translate(-50%, -50%);"
+                  draggable="true"
+                  @dragstart="(event) => handleDragStart(event, { name: 'Frey', from: 'pool' })"
                 >
-                  <div class="text-center font-semibold">Namen</div>
-                  <div class="mt-2 grid grid-cols-2 gap-x-6 gap-y-1">
-                    <div
-                      v-for="name in routeNames"
-                      :key="`route-name-${name}`"
-                      class="flex items-center gap-2"
-                    >
-                      <span
-                        class="flex-1 text-left"
-                        :class="{ 'line-through text-gray-500': isRouteAssigned(name) }"
-                        :draggable="!isRouteAssigned(name)"
-                        @dragstart="(event) => handleDragStart(event, { name, from: 'pool' })"
-                      >
-                        {{ name }}
-                      </span>
-                    </div>
-                  </div>
+                  Frey
+                </div>
+                <div
+                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif whitespace-nowrap"
+                  style="left: calc(680/800 * 100%); top: calc(50/400 * 100%); transform: translate(-50%, -50%);"
+                  draggable="true"
+                  @dragstart="(event) => handleDragStart(event, { name: 'Bär', from: 'pool' })"
+                >
+                  Bär (Tel.)
+                </div>
+                <div
+                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif whitespace-nowrap"
+                  style="left: calc(680/800 * 100%); top: calc(160/400 * 100%); transform: translate(-50%, -50%);"
+                  draggable="true"
+                  @dragstart="(event) => handleDragStart(event, { name: 'Hermann', from: 'pool' })"
+                >
+                  Hermann (Tel.)
+                </div>
+                <div
+                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif whitespace-nowrap"
+                  style="left: calc(680/800 * 100%); top: calc(300/400 * 100%); transform: translate(-50%, -50%);"
+                  draggable="true"
+                  @dragstart="(event) => handleDragStart(event, { name: 'Schneider', from: 'pool' })"
+                >
+                  Schneider (Tel.)
+                </div>
+                <div
+                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif"
+                  style="left: calc(400/800 * 100%); top: calc(350/400 * 100%); transform: translate(-50%, -50%);"
+                  draggable="true"
+                  @dragstart="(event) => handleDragStart(event, { name: 'Fuchs', from: 'pool' })"
+                >
+                  Fuchs
+                </div>
+
+                <!-- EIGENE WOHNUNG -->
+                <div
+                  class="absolute cursor-move border-[3px] border-double border-black bg-white px-3 py-0.5 text-xs font-bold font-serif whitespace-nowrap"
+                  style="left: calc(400/800 * 100%); top: calc(220/400 * 100%); transform: translate(-50%, -50%);"
+                  draggable="true"
+                  @dragstart="(event) => handleDragStart(event, { name: 'Eigene Wohnung', from: 'pool' })"
+                >
+                  EIGENE WOHNUNG
+                </div>
+              </div>
+
+              <div class="w-full mt-2 space-y-0.5 text-[10px]">
+                <div class="flex gap-4">
+                  <span class="w-12">(Tel.)</span>
+                  <span>= hat Telefonanschluss</span>
+                </div>
+                <div class="flex gap-4">
+                  <span class="w-12">Zahlen</span>
+                  <span>= Wegminuten mit Fahrrad</span>
+                  <span class="flex-1 text-right">Danach bitte umblättern!</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="flex-[0.4] overflow-hidden px-6 pb-4 pt-2 font-serif">
+
+      <div class="flex-[0.4] px-6 pb-4 pt-1 font-serif overflow-hidden">
         <div class="flex h-full flex-col">
           <div class="border-t border-black" />
-          <div class="flex-1">
-            <table class="mt-3 w-full table-fixed border border-black text-base">
+          <div class="flex-1 overflow-hidden">
+            <div class="mt-0.5 text-left text-sm font-bold">Aufgabe 6</div>
+            <table class="mt-0.5 w-full table-fixed border-2 border-black text-sm">
               <thead>
-                <tr>
-                  <th class="w-56 border border-black p-2 text-center">von</th>
-                  <th class="w-56 border border-black p-2 text-center">nach</th>
-                  <th class="border border-black p-2 text-center">Zeit (Weg)</th>
-                  <th class="border border-black p-2 text-center">Zeit (Nachr.)</th>
+                <tr class="border-b border-black">
+                  <th class="border-r border-black p-1 text-center font-normal">von</th>
+                  <th class="border-r border-black p-1 text-center font-normal">nach</th>
+                  <th class="border-r border-black p-1 text-center font-normal">Zeit (Weg)</th>
+                  <th class="p-1 text-center font-normal">Zeit (Nachr.)</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="row in routeRows" :key="`route-row-${row}`">
+                <tr v-for="row in routeRows" :key="`route-row-${row}`" class="border-b border-black h-9">
                   <td
-                    class="border border-black p-2"
+                    class="border-r border-black px-2"
                     @dragover="allowDrop"
                     @drop="(event) => handleRouteDropOnCell(event, `route-from-${row}`)"
                   >
                     <div class="flex items-center gap-2">
                       <span
                         v-if="routeAssignments[`route-from-${row}`]"
-                        class="flex-1 min-w-0 cursor-move"
-                        draggable="true"
+                        class="flex-1 min-w-0"
+                        :class="{ 'cursor-move': row !== 1 || routeAssignments[`route-from-${row}`] !== 'Eigene Wohnung' }"
+                        :draggable="row !== 1 || routeAssignments[`route-from-${row}`] !== 'Eigene Wohnung'"
                         @dragstart="(event) => handleDragStart(event, { name: routeAssignments[`route-from-${row}`] ?? '', from: 'cell', key: `route-from-${row}` })"
                       >
                         {{ routeAssignments[`route-from-${row}`] }}
                       </span>
                       <span v-else class="flex-1">&nbsp;</span>
+                      <button
+                        v-if="routeAssignments[`route-from-${row}`] && (row !== 1 || routeAssignments[`route-from-${row}`] !== 'Eigene Wohnung')"
+                        type="button"
+                        class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
+                        @click="routeAssignments[`route-from-${row}`] = null"
+                      >
+                        ×
+                      </button>
                     </div>
                   </td>
                   <td
-                    class="border border-black p-2"
+                    class="border-r border-black px-2"
                     @dragover="allowDrop"
                     @drop="(event) => handleRouteDropOnCell(event, `route-to-${row}`)"
                   >
@@ -1128,10 +1145,18 @@ function prevPage() {
                         {{ routeAssignments[`route-to-${row}`] }}
                       </span>
                       <span v-else class="flex-1">&nbsp;</span>
+                      <button
+                        v-if="routeAssignments[`route-to-${row}`]"
+                        type="button"
+                        class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
+                        @click="routeAssignments[`route-to-${row}`] = null"
+                      >
+                        ×
+                      </button>
                     </div>
                   </td>
-                  <td class="border border-black p-2">
-                    <div class="flex items-center justify-end gap-2">
+                  <td class="border-r border-black px-2">
+                    <div class="flex items-center justify-end gap-2 pr-8">
                       <input
                         :value="routeTimes[`route-time-${row}`]"
                         type="text"
@@ -1140,11 +1165,11 @@ function prevPage() {
                         class="h-6 w-16 border border-black text-center text-base"
                         @input="(event) => handleRouteTimeInput(`route-time-${row}`, event)"
                       />
-                      <span>Min.</span>
+                      <span class="w-8">Min.</span>
                     </div>
                   </td>
-                  <td class="border border-black p-2">
-                    <div class="flex items-center justify-end gap-2">
+                  <td class="px-2">
+                    <div class="flex items-center justify-end gap-2 pr-8">
                       <input
                         :value="routeTimes[`route-msg-${row}`]"
                         type="text"
@@ -1153,14 +1178,14 @@ function prevPage() {
                         class="h-6 w-16 border border-black text-center text-base"
                         @input="(event) => handleRouteTimeInput(`route-msg-${row}`, event)"
                       />
-                      <span>Min.</span>
+                      <span class="w-8">Min.</span>
                     </div>
                   </td>
                 </tr>
-                <tr>
-                  <td class="border border-black p-2 text-center font-semibold" colspan="2">Gesamtzeit:</td>
-                  <td class="border border-black p-2">
-                    <div class="flex items-center justify-end gap-2">
+                <tr class="border-b border-black h-9">
+                  <td class="border-r border-black px-2 text-right pr-4" colspan="2">Gesamtzeit:</td>
+                  <td class="border-r border-black px-2">
+                    <div class="flex items-center justify-end gap-2 pr-8">
                       <input
                         :value="routeTotals.totalWay"
                         type="text"
@@ -1169,11 +1194,11 @@ function prevPage() {
                         class="h-6 w-16 border border-black text-center text-base"
                         @input="(event) => handleRouteTotalInput('totalWay', event)"
                       />
-                      <span>Min.</span>
+                      <span class="w-8">Min.</span>
                     </div>
                   </td>
-                  <td class="border border-black p-2">
-                    <div class="flex items-center justify-end gap-2">
+                  <td class="px-2">
+                    <div class="flex items-center justify-end gap-2 pr-8">
                       <input
                         :value="routeTotals.totalMsg"
                         type="text"
@@ -1182,16 +1207,16 @@ function prevPage() {
                         class="h-6 w-16 border border-black text-center text-base"
                         @input="(event) => handleRouteTotalInput('totalMsg', event)"
                       />
-                      <span>Min.</span>
+                      <span class="w-8">Min.</span>
                     </div>
                   </td>
                 </tr>
-                <tr>
-                  <td class="border border-black p-2 text-center font-semibold" colspan="2">
+                <tr class="h-9">
+                  <td class="border-r border-black px-2 text-right pr-4" colspan="2">
                     anschließend zurück zur eigenen Wohnung:
                   </td>
-                  <td class="border border-black p-2">
-                    <div class="flex items-center justify-end gap-2">
+                  <td class="border-r border-black px-2">
+                    <div class="flex items-center justify-end gap-2 pr-8">
                       <input
                         :value="routeTotals.returnWay"
                         type="text"
@@ -1200,10 +1225,10 @@ function prevPage() {
                         class="h-6 w-16 border border-black text-center text-base"
                         @input="(event) => handleRouteTotalInput('returnWay', event)"
                       />
-                      <span>Min.</span>
+                      <span class="w-8">Min.</span>
                     </div>
                   </td>
-                  <td class="border border-black p-2" />
+                  <td class="px-2" />
                 </tr>
               </tbody>
             </table>
