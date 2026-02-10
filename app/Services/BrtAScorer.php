@@ -131,19 +131,41 @@ class BrtAScorer
       return false;
     }
     $normalizedUser = self::normalize($userAnswer);
+    $userCandidates = self::extractNumericCandidates($normalizedUser);
     $userNumber = self::parseNumber($normalizedUser);
+    if ($userNumber !== null) {
+      $userCandidates[] = $userNumber;
+    }
 
     foreach ($validAnswers as $valid) {
       $normalizedValid = self::normalize($valid);
       $validNumber = self::parseNumber($normalizedValid);
-      if ($userNumber !== null && $validNumber !== null) {
-        if (abs($userNumber - $validNumber) < 0.001) {
-          return true;
+      if ($validNumber !== null && count($userCandidates) > 0) {
+        foreach ($userCandidates as $candidate) {
+          if (abs($candidate - $validNumber) < 0.001) {
+            return true;
+          }
         }
       } elseif ($normalizedUser === $normalizedValid) {
         return true;
       }
     }
     return false;
+  }
+
+  /**
+   * @return float[]
+   */
+  protected static function extractNumericCandidates(string $answer): array
+  {
+    preg_match_all('/-?\d+(?:[.,]\d+)?(?:\/-?\d+(?:[.,]\d+)?)?/', $answer, $matches);
+    $numbers = [];
+    foreach ($matches[0] ?? [] as $token) {
+      $value = self::parseNumber($token);
+      if ($value !== null) {
+        $numbers[] = $value;
+      }
+    }
+    return $numbers;
   }
 }

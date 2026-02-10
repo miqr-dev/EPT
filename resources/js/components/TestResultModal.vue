@@ -46,7 +46,7 @@ watch(
 
 function submit() {
   if (props.assignment && props.assignment.results.length > 0 && editable.value) {
-    if (['MRT-A', 'MRT-B'].includes(props.assignment.test.name)) {
+    if (['MRT-A', 'MRT-B', 'BRT-A', 'BRT-B'].includes(props.assignment.test.name)) {
       form.answers = editable.value.answers;
       form.put(route('test-results.update', { testResult: props.assignment.results[0].id }), {
         onSuccess: () => {
