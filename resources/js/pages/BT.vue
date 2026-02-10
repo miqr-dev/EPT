@@ -956,7 +956,7 @@ function prevPage() {
           </div>
           <div class="flex flex-1 gap-4 items-stretch overflow-hidden">
             <div class="flex-[0.45] border border-black/20 px-6 py-4 overflow-hidden">
-              <div class="flex h-full flex-col justify-between space-y-4 text-center text-base leading-relaxed">
+              <div class="flex h-full flex-col justify-between space-y-4 text-center text-xl leading-relaxed">
                 <p>
                   Sie sollen Ihre Bekannten möglichst rasch benachrichtigen, dass die Feier zu Ihrem
                   Geburtstag aus dienstlichen Gründen um einen Tag verlegt werden muss. Sie wissen, dass Sie
@@ -979,7 +979,7 @@ function prevPage() {
               </div>
             </div>
             <div class="flex-[0.55] border-2 border-black p-4 flex flex-col overflow-hidden">
-              <div class="mb-2 text-center text-sm font-bold underline underline-offset-4" style="letter-spacing: 0.4em;">P l a n</div>
+              <div class="mb-2 text-center text-xl font-bold underline underline-offset-4" style="letter-spacing: 0.4em;">P l a n</div>
               <div class="relative h-full w-full min-h-0 flex-1 select-none">
                 <svg class="absolute inset-0 h-full w-full" viewBox="0 0 800 400">
                   <!-- Lines -->
@@ -1013,7 +1013,7 @@ function prevPage() {
 
                 <!-- Draggable Names -->
                 <div
-                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-sm font-serif whitespace-nowrap"
+                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-xl font-serif whitespace-nowrap"
                   style="left: calc(120/800 * 100%); top: calc(180/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Müller', from: 'pool' })"
@@ -1021,7 +1021,7 @@ function prevPage() {
                   Müller (Tel.)
                 </div>
                 <div
-                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-sm font-serif"
+                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-xl font-serif"
                   style="left: calc(400/800 * 100%); top: calc(80/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Frey', from: 'pool' })"
@@ -1029,7 +1029,7 @@ function prevPage() {
                   Frey
                 </div>
                 <div
-                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-sm font-serif whitespace-nowrap"
+                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-xl font-serif whitespace-nowrap"
                   style="left: calc(680/800 * 100%); top: calc(50/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Bär', from: 'pool' })"
@@ -1037,7 +1037,7 @@ function prevPage() {
                   Bär (Tel.)
                 </div>
                 <div
-                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-sm font-serif whitespace-nowrap"
+                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-xl font-serif whitespace-nowrap"
                   style="left: calc(680/800 * 100%); top: calc(160/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Hermann', from: 'pool' })"
@@ -1045,7 +1045,7 @@ function prevPage() {
                   Hermann (Tel.)
                 </div>
                 <div
-                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-sm font-serif whitespace-nowrap"
+                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-xl font-serif whitespace-nowrap"
                   style="left: calc(680/800 * 100%); top: calc(300/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Schneider', from: 'pool' })"
@@ -1053,7 +1053,7 @@ function prevPage() {
                   Schneider (Tel.)
                 </div>
                 <div
-                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-sm font-serif"
+                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-xl font-serif"
                   style="left: calc(400/800 * 100%); top: calc(350/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Fuchs', from: 'pool' })"
@@ -1063,12 +1063,12 @@ function prevPage() {
 
                 <!-- EIGENE WOHNUNG -->
                 <div
-                  class="absolute border-[3px] border-double border-black bg-white px-6 py-1 text-base font-bold font-serif whitespace-nowrap"
+                  class="absolute border-[3px] border-double border-black bg-white px-6 py-1 text-xl font-bold font-serif whitespace-nowrap"
                   style="left: calc(400/800 * 100%); top: calc(220/400 * 100%); transform: translate(-50%, -50%);"
                 >
                   EIGENE WOHNUNG
                 </div>
-                <div class="absolute bottom-0 left-0 w-fit max-w-[80%] border border-black bg-white/95 px-3 py-2 text-[11px] leading-tight">
+                <div class="absolute bottom-0 left-0 w-fit max-w-[80%] border border-black bg-white/95 px-3 py-2 text-[20px] leading-tight">
                   <div class="flex gap-3">
                     <span class="w-12">(Tel.)</span>
                     <span>= hat Telefonanschluss</span>
