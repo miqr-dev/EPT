@@ -52,6 +52,10 @@ const questionStartTimestamps = ref<(number | null)[]>(Array(questions.value.len
 const startTime = ref<number | null>(null);
 const endConfirmOpen = ref(false);
 
+const MAX_ANSWER_LENGTH = 9;
+const MAX_DIGITS = 6;
+const MAX_NON_DIGITS = 3;
+
 const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
   isActive: () => showTest.value && !isTestComplete.value,
   onStart: () => {
@@ -157,6 +161,43 @@ const handlePrevClick = () => {
 const finishTest = () => {
   window.dispatchEvent(new Event('start-finish'));
   endConfirmOpen.value = true;
+};
+
+const sanitizeAnswer = (value: string): string => {
+  let digits = 0;
+  let nonDigits = 0;
+  let sanitized = '';
+
+  for (const char of value) {
+    if (sanitized.length >= MAX_ANSWER_LENGTH) {
+      break;
+    }
+
+    if (/\d/.test(char)) {
+      if (digits >= MAX_DIGITS) {
+        continue;
+      }
+      digits++;
+      sanitized += char;
+      continue;
+    }
+
+    if (nonDigits >= MAX_NON_DIGITS) {
+      continue;
+    }
+
+    nonDigits++;
+    sanitized += char;
+  }
+
+  return sanitized;
+};
+
+const handleAnswerInput = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const sanitized = sanitizeAnswer(input.value);
+  userAnswers.value[currentQuestionIndex.value] = sanitized;
+  input.value = sanitized;
 };
 
 function confirmEnd() {
@@ -297,6 +338,8 @@ const startTest = () => {
           </div>
           <div class="w-full md:w-1/2">
             <Input ref="answerInput" type="text" v-model="userAnswers[currentQuestionIndex]" placeholder="Ihre Antwort"
+              maxlength="9"
+              @input="handleAnswerInput"
               class="mb-2 w-full" />
 
             <div class="flex flex-row justify-between mt-2">
