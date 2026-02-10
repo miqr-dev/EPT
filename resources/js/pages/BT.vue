@@ -1013,7 +1013,7 @@ function prevPage() {
 
                 <!-- Draggable Names -->
                 <div
-                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif whitespace-nowrap"
+                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-sm font-serif whitespace-nowrap"
                   style="left: calc(120/800 * 100%); top: calc(180/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Müller', from: 'pool' })"
@@ -1021,7 +1021,7 @@ function prevPage() {
                   Müller (Tel.)
                 </div>
                 <div
-                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif"
+                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-sm font-serif"
                   style="left: calc(400/800 * 100%); top: calc(80/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Frey', from: 'pool' })"
@@ -1029,7 +1029,7 @@ function prevPage() {
                   Frey
                 </div>
                 <div
-                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif whitespace-nowrap"
+                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-sm font-serif whitespace-nowrap"
                   style="left: calc(680/800 * 100%); top: calc(50/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Bär', from: 'pool' })"
@@ -1037,7 +1037,7 @@ function prevPage() {
                   Bär (Tel.)
                 </div>
                 <div
-                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif whitespace-nowrap"
+                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-sm font-serif whitespace-nowrap"
                   style="left: calc(680/800 * 100%); top: calc(160/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Hermann', from: 'pool' })"
@@ -1045,7 +1045,7 @@ function prevPage() {
                   Hermann (Tel.)
                 </div>
                 <div
-                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif whitespace-nowrap"
+                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-sm font-serif whitespace-nowrap"
                   style="left: calc(680/800 * 100%); top: calc(300/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Schneider', from: 'pool' })"
@@ -1053,7 +1053,7 @@ function prevPage() {
                   Schneider (Tel.)
                 </div>
                 <div
-                  class="absolute cursor-move border border-black bg-white px-2 py-0.5 text-xs font-serif"
+                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-sm font-serif"
                   style="left: calc(400/800 * 100%); top: calc(350/400 * 100%); transform: translate(-50%, -50%);"
                   draggable="true"
                   @dragstart="(event) => handleDragStart(event, { name: 'Fuchs', from: 'pool' })"
@@ -1063,12 +1063,12 @@ function prevPage() {
 
                 <!-- EIGENE WOHNUNG -->
                 <div
-                  class="absolute border-[3px] border-double border-black bg-white px-3 py-0.5 text-xs font-bold font-serif whitespace-nowrap"
+                  class="absolute border-[3px] border-double border-black bg-white px-6 py-1 text-base font-bold font-serif whitespace-nowrap"
                   style="left: calc(400/800 * 100%); top: calc(220/400 * 100%); transform: translate(-50%, -50%);"
                 >
                   EIGENE WOHNUNG
                 </div>
-                <div class="absolute bottom-0 left-0 right-0 border border-black bg-white/95 px-3 py-2 text-[11px] leading-tight">
+                <div class="absolute bottom-0 left-0 w-fit max-w-[80%] border border-black bg-white/95 px-3 py-2 text-[11px] leading-tight">
                   <div class="flex gap-3">
                     <span class="w-12">(Tel.)</span>
                     <span>= hat Telefonanschluss</span>
@@ -1078,9 +1078,7 @@ function prevPage() {
                     <span>= Wegminuten mit Fahrrad</span>
                   </div>
                 </div>
-                <div class="absolute bottom-0 right-0 translate-y-full pt-1 text-right text-[10px]">
-                  Danach bitte umblättern!
-                </div>
+                
               </div>
             </div>
           </div>
