@@ -956,7 +956,7 @@ function prevPage() {
           </div>
           <div class="flex flex-1 gap-4 items-stretch overflow-hidden">
             <div class="flex-[0.45] border border-black/20 px-6 py-4 overflow-hidden">
-              <div class="space-y-2 text-center text-sm leading-relaxed">
+              <div class="flex h-full flex-col justify-between space-y-4 text-center text-base leading-relaxed">
                 <p>
                   Sie sollen Ihre Bekannten möglichst rasch benachrichtigen, dass die Feier zu Ihrem
                   Geburtstag aus dienstlichen Gründen um einen Tag verlegt werden muss. Sie wissen, dass Sie
@@ -975,12 +975,12 @@ function prevPage() {
                   berechnen und auf dem Lösungsblatt unter „Nachricht“ einzutragen.
                 </p>
                 <p class="font-semibold">In dieses Heft bitte keine Notizen machen!</p>
+                <div class="text-center text-lg">_____</div>
               </div>
-              <div class="mt-4 text-center text-base">_____</div>
             </div>
-            <div class="flex-[0.55] border-2 border-black p-4 flex flex-col items-center overflow-hidden">
+            <div class="flex-[0.55] border-2 border-black p-4 flex flex-col overflow-hidden">
               <div class="mb-2 text-center text-sm font-bold underline underline-offset-4" style="letter-spacing: 0.4em;">P l a n</div>
-              <div class="relative w-full aspect-[2/1] select-none">
+              <div class="relative h-full w-full min-h-0 flex-1 select-none">
                 <svg class="absolute inset-0 h-full w-full" viewBox="0 0 800 400">
                   <!-- Lines -->
                   <line x1="120" y1="180" x2="400" y2="80" stroke="black" stroke-width="1" /> <!-- M-Fr -->
@@ -1063,24 +1063,23 @@ function prevPage() {
 
                 <!-- EIGENE WOHNUNG -->
                 <div
-                  class="absolute cursor-move border-[3px] border-double border-black bg-white px-3 py-0.5 text-xs font-bold font-serif whitespace-nowrap"
+                  class="absolute border-[3px] border-double border-black bg-white px-3 py-0.5 text-xs font-bold font-serif whitespace-nowrap"
                   style="left: calc(400/800 * 100%); top: calc(220/400 * 100%); transform: translate(-50%, -50%);"
-                  draggable="true"
-                  @dragstart="(event) => handleDragStart(event, { name: 'Eigene Wohnung', from: 'pool' })"
                 >
                   EIGENE WOHNUNG
                 </div>
-              </div>
-
-              <div class="w-full mt-2 space-y-0.5 text-[10px]">
-                <div class="flex gap-4">
-                  <span class="w-12">(Tel.)</span>
-                  <span>= hat Telefonanschluss</span>
+                <div class="absolute bottom-0 left-0 right-0 border border-black bg-white/95 px-3 py-2 text-[11px] leading-tight">
+                  <div class="flex gap-3">
+                    <span class="w-12">(Tel.)</span>
+                    <span>= hat Telefonanschluss</span>
+                  </div>
+                  <div class="flex gap-3">
+                    <span class="w-12">Zahlen</span>
+                    <span>= Wegminuten mit Fahrrad</span>
+                  </div>
                 </div>
-                <div class="flex gap-4">
-                  <span class="w-12">Zahlen</span>
-                  <span>= Wegminuten mit Fahrrad</span>
-                  <span class="flex-1 text-right">Danach bitte umblättern!</span>
+                <div class="absolute bottom-0 right-0 translate-y-full pt-1 text-right text-[10px]">
+                  Danach bitte umblättern!
                 </div>
               </div>
             </div>
