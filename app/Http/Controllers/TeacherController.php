@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Models\TestAssignment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class TeacherController extends Controller
 {
@@ -42,6 +43,16 @@ class TeacherController extends Controller
         ->whereColumn('user_id', 'users.id')])
       ->orderByDesc('last_seen_at')
       ->get();
+
+    $changeableTeachers = collect();
+    if ($teacher->can_change) {
+      $changeableTeachers = User::where('city_id', $cityId)
+        ->where('role', 'admin')
+        ->where('can_change', false)
+        ->orderBy('name')
+        ->orderBy('firstname')
+        ->get();
+    }
 
     // New: Fetch exams from the teacher's city created within the last 30 days
     $exams = Exam::with(['city', 'teacher', 'participants.user', 'steps.test', 'participants.stepStatuses', 'currentStep.test'])
@@ -89,9 +100,45 @@ class TeacherController extends Controller
     return inertia('Dashboard', [
       'participants' => $participants,
       'recentUsers' => $recentUsers,
+      'changeableTeachers' => $changeableTeachers,
       'exams' => $exams,
       'tests' => $tests,
     ]);
+  }
+
+
+  public function downgradeTeacherToParticipant(Request $request, User $teacher)
+  {
+    $user = Auth::user();
+
+    if (!$user->can_change) {
+      abort(403, 'Keine Berechtigung für diese Aktion.');
+    }
+
+    if ($user->city_id !== $teacher->city_id) {
+      abort(403, 'Nur Lehrkräfte aus derselben Stadt können geändert werden.');
+    }
+
+    if ($teacher->can_change) {
+      return back()->withErrors([
+        'teacher' => 'Diese Lehrkraft besitzt die can_change-Berechtigung und kann nicht geändert werden.',
+      ]);
+    }
+
+    $validated = $request->validate([
+      'role' => ['required', Rule::in(['participant'])],
+    ]);
+
+    if ($teacher->role !== 'admin') {
+      return back()->withErrors([
+        'teacher' => 'Nur Lehrkräfte mit der Rolle admin können zu Teilnehmern geändert werden.',
+      ]);
+    }
+
+    $teacher->role = $validated['role'];
+    $teacher->save();
+
+    return back()->with('success', 'Die Rolle wurde auf participant gesetzt.');
   }
 
   // 2. Assign Tests

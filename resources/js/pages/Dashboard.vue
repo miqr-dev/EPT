@@ -9,6 +9,7 @@ import axios from 'axios';
 const props = defineProps<{
   participants: any[];
   recentUsers: any[];
+  changeableTeachers: any[];
   exams: any[];
   tests: any[];
 }>();
@@ -123,6 +124,14 @@ function toggleUserContractVisibility(participantId: number, enabled: boolean) {
   router.post(
     route('participants.set-contract-visibility', { participant: participantId }),
     { enabled },
+    { preserveScroll: true },
+  );
+}
+
+function downgradeTeacherToParticipant(teacherId: number) {
+  router.patch(
+    route('teachers.update-role', { teacher: teacherId }),
+    { role: 'participant' },
     { preserveScroll: true },
   );
 }
@@ -285,9 +294,9 @@ function addTests() {
         <!-- Main 3-column layout -->
         <section class="grid gap-4 lg:grid-cols-3">
           <!-- Box 1: Recent Users -->
-          <div class="flex flex-col">
+          <div class="flex flex-col gap-4">
             <div
-              class="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              class="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
               <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
                 <div>
                   <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -347,6 +356,31 @@ function addTests() {
               <div
                 class="border-t border-slate-200 px-4 py-2 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
                 Tipp: Mehrere Personen markieren, um sie gemeinsam zur Prüfung hinzuzufügen.
+              </div>
+            </div>
+
+            <div v-if="props.changeableTeachers?.length"
+              class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+                <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  Lehrer:innen ohne can_change
+                </h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                  Nur Lehrkräfte aus derselben Stadt ohne Berechtigung zum Rollenwechsel.
+                </p>
+              </div>
+              <div class="divide-y divide-slate-100 dark:divide-slate-700">
+                <div v-for="teacher in props.changeableTeachers" :key="teacher.id"
+                  class="flex items-center justify-between gap-2 px-4 py-2">
+                  <span class="text-sm text-slate-800 dark:text-slate-100">
+                    {{ teacher.name }} {{ teacher.firstname }}
+                  </span>
+                  <button type="button"
+                    class="inline-flex items-center rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-100"
+                    @click="downgradeTeacherToParticipant(teacher.id)">
+                    Als participant setzen
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -464,9 +498,9 @@ function addTests() {
           </div>
 
           <!-- Box 3: All Exams -->
-          <div class="flex flex-col">
+          <div class="flex flex-col gap-4">
             <div
-              class="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              class="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
               <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
                 <div>
                   <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
