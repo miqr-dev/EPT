@@ -45,7 +45,8 @@ class TeacherController extends Controller
       ->get();
 
     $changeableTeachers = collect();
-    if ($teacher->can_change) {
+    $canManageRoles = $teacher->role === 'admin' || $teacher->can_change;
+    if ($canManageRoles) {
       $changeableTeachers = User::where('city_id', $cityId)
         ->where('role', 'admin')
         ->where('can_change', false)
@@ -111,7 +112,9 @@ class TeacherController extends Controller
   {
     $user = Auth::user();
 
-    if (!$user->can_change) {
+    $canManageRoles = $user->role === 'admin' || $user->can_change;
+
+    if (!$canManageRoles) {
       abort(403, 'Keine Berechtigung für diese Aktion.');
     }
 
