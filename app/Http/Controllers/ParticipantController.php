@@ -437,7 +437,7 @@ class ParticipantController extends Controller
     $data = $request->validate([
       'username' => ['required', 'string', 'max:255'],
       'role' => ['required', 'in:participant,teacher'],
-      'can_login' => ['nullable', 'boolean'],
+      'can_login' => ['sometimes', 'boolean'],
     ]);
 
     $username = mb_strtolower(trim($data['username']));
@@ -453,7 +453,7 @@ class ParticipantController extends Controller
         'password' => bcrypt(str()->random(32)),
         'role' => $data['role'],
         'city_id' => $user->city_id,
-        'can_login' => (bool) ($data['can_login'] ?? false),
+        'can_login' => (bool) ($data['can_login'] ?? true),
       ]
     );
 
@@ -464,7 +464,7 @@ class ParticipantController extends Controller
 
       $participant->forceFill([
         'role' => $data['role'],
-        'can_login' => (bool) ($data['can_login'] ?? false),
+        'can_login' => (bool) ($data['can_login'] ?? $participant->can_login),
       ])->save();
     }
 

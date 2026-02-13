@@ -3,7 +3,6 @@ import { ref } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const props = defineProps<{
@@ -19,7 +18,7 @@ const props = defineProps<{
 const searchQuery = ref(props.filters.search ?? '');
 const importingUser = ref(false);
 const savingIds = ref<number[]>([]);
-const importForm = ref({ username: '', role: 'participant', can_login: false });
+const importForm = ref({ username: '', role: 'participant', can_login: true });
 
 const isSaving = (id: number) => savingIds.value.includes(id);
 
@@ -41,7 +40,7 @@ function submitImport() {
         importingUser.value = false;
       },
       onSuccess: () => {
-        importForm.value = { username: '', role: 'participant', can_login: false };
+        importForm.value = { username: '', role: 'participant', can_login: true };
       },
     },
   );
@@ -112,10 +111,22 @@ function updateSearch() {
                 <option value="teacher">teacher</option>
               </select>
             </div>
-            <label class="mb-2 flex items-center gap-2 text-sm text-gray-700">
-              <Checkbox :checked="importForm.can_login" @update:checked="(value) => (importForm.can_login = Boolean(value))" />
+            <div class="mb-2 flex items-center gap-3 text-sm text-gray-700">
+              <button
+                type="button"
+                role="switch"
+                :aria-checked="importForm.can_login"
+                class="relative inline-flex h-6 w-11 items-center rounded-full transition"
+                :class="importForm.can_login ? 'bg-green-600' : 'bg-gray-300'"
+                @click="importForm.can_login = !importForm.can_login"
+              >
+                <span
+                  class="inline-block h-5 w-5 transform rounded-full bg-white transition"
+                  :class="importForm.can_login ? 'translate-x-5' : 'translate-x-1'"
+                />
+              </button>
               Login erlauben
-            </label>
+            </div>
             <button
               type="button"
               class="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
@@ -184,7 +195,19 @@ function updateSearch() {
                   </select>
                 </TableCell>
                 <TableCell>
-                  <Checkbox :checked="Boolean(user.can_login)" @update:checked="(value) => (user.can_login = Boolean(value))" />
+                  <button
+                    type="button"
+                    role="switch"
+                    :aria-checked="Boolean(user.can_login)"
+                    class="relative inline-flex h-6 w-11 items-center rounded-full transition"
+                    :class="Boolean(user.can_login) ? 'bg-green-600' : 'bg-gray-300'"
+                    @click="user.can_login = !Boolean(user.can_login)"
+                  >
+                    <span
+                      class="inline-block h-5 w-5 transform rounded-full bg-white transition"
+                      :class="Boolean(user.can_login) ? 'translate-x-5' : 'translate-x-1'"
+                    />
+                  </button>
                 </TableCell>
                 <TableCell class="text-right">
                   <button
