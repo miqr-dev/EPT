@@ -21,7 +21,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Benutzer importieren',
-        href: '/participants',
+        href: '/participants/import',
         icon: Users,
     },
     {

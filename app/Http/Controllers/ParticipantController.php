@@ -390,6 +390,40 @@ class ParticipantController extends Controller
   }
 
 
+
+  public function importPage(Request $request)
+  {
+    $user = Auth::user();
+
+    if (!in_array($user->role, ['admin', 'teacher'], true)) {
+      abort(403);
+    }
+
+    $search = trim((string) $request->input('search', ''));
+
+    $users = User::query()
+      ->where('city_id', $user->city_id)
+      ->whereIn('role', ['participant', 'teacher'])
+      ->when($search !== '', function ($query) use ($search) {
+        $query->where(function ($subQuery) use ($search) {
+          $subQuery->where('username', 'like', "%{$search}%")
+            ->orWhere('name', 'like', "%{$search}%")
+            ->orWhere('firstname', 'like', "%{$search}%");
+        });
+      })
+      ->orderBy('role')
+      ->orderBy('username')
+      ->paginate(20)
+      ->withQueryString();
+
+    return Inertia::render('Participants/Import', [
+      'users' => $users,
+      'filters' => [
+        'search' => $search,
+      ],
+    ]);
+  }
+
   public function import(Request $request)
   {
     $user = Auth::user();
@@ -430,6 +464,40 @@ class ParticipantController extends Controller
     }
 
     return back()->with('success', __('Benutzer wurde importiert und kann jetzt verwaltet werden.'));
+  }
+
+
+  public function updateImportedUser(Request $request, User $importedUser)
+  {
+    $user = Auth::user();
+
+    if (!in_array($user->role, ['admin', 'teacher'], true)) {
+      abort(403);
+    }
+
+    if ($user->role === 'teacher' && $importedUser->city_id !== $user->city_id) {
+      abort(403);
+    }
+
+    if (!in_array($importedUser->role, ['participant', 'teacher'], true)) {
+      abort(404);
+    }
+
+    $data = $request->validate([
+      'role' => ['required', 'in:participant,teacher'],
+      'can_login' => ['required', 'boolean'],
+      'name' => ['nullable', 'string', 'max:255'],
+      'firstname' => ['nullable', 'string', 'max:255'],
+    ]);
+
+    $importedUser->forceFill([
+      'role' => $data['role'],
+      'can_login' => $data['can_login'],
+      'name' => $data['name'] ?: $importedUser->username,
+      'firstname' => $data['firstname'] ?: $importedUser->username,
+    ])->save();
+
+    return back()->with('success', __('Benutzerdaten aktualisiert.'));
   }
 
   public function updateLoginPermission(Request $request, User $participant)

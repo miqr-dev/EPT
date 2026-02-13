@@ -85,6 +85,8 @@ class RedirectBasedOnRole
         'exams.updateSteps',
         'participants.list',
         'participants.import',
+        'participants.import.page',
+        'participants.import.update',
         'participants.login-permission',
         'participants.set-contract-visibility',
         'teachers.update-role',

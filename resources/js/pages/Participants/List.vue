@@ -22,8 +22,6 @@ const selectedAssignment = ref(null);
 const selectedParticipant = ref(null);
 const togglingIds = ref<number[]>([]);
 const searchQuery = ref(props.filters.search ?? '');
-const importForm = ref({ username: '', role: 'participant', can_login: false });
-const importingUser = ref(false);
 
 const dateFormatter = computed(() =>
   new Intl.DateTimeFormat('de-DE', {
@@ -68,30 +66,6 @@ function toggleLoginPermission(participant: any, value: boolean | string | undef
 }
 
 
-function submitImport() {
-  if (!importForm.value.username.trim()) return;
-
-  importingUser.value = true;
-
-  router.post(
-    route('participants.import'),
-    {
-      username: importForm.value.username,
-      role: importForm.value.role,
-      can_login: importForm.value.can_login,
-    },
-    {
-      preserveScroll: true,
-      onFinish: () => {
-        importingUser.value = false;
-      },
-      onSuccess: () => {
-        importForm.value = { username: '', role: 'participant', can_login: false };
-      },
-    },
-  );
-}
-
 function updateSearch() {
   router.get(
     route('participants.list'),
@@ -112,41 +86,6 @@ function updateSearch() {
         <CardHeader>
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>Teilnehmer</CardTitle>
-            <div class="grid w-full gap-2 sm:w-auto sm:grid-cols-[minmax(220px,1fr)_140px_auto_auto] sm:items-end">
-              <div>
-                <label class="mb-1 block text-xs text-gray-600" for="import-username">Benutzername importieren</label>
-                <input
-                  id="import-username"
-                  v-model="importForm.username"
-                  type="text"
-                  placeholder="z. B. max.mustermann"
-                  class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label class="mb-1 block text-xs text-gray-600" for="import-role">Rolle</label>
-                <select
-                  id="import-role"
-                  v-model="importForm.role"
-                  class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="participant">participant</option>
-                  <option value="teacher">teacher</option>
-                </select>
-              </div>
-              <label class="mb-2 flex items-center gap-2 text-sm text-gray-700">
-                <Checkbox :checked="importForm.can_login" @update:checked="(value) => (importForm.can_login = Boolean(value))" />
-                Login erlauben
-              </label>
-              <button
-                type="button"
-                class="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                :disabled="importingUser"
-                @click="submitImport"
-              >
-                {{ importingUser ? 'Importiere…' : 'Importieren' }}
-              </button>
-            </div>
             <div class="w-full sm:w-72">
               <label class="sr-only" for="participant-search">Teilnehmer suchen</label>
               <input
