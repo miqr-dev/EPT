@@ -15,6 +15,8 @@ use App\Models\TestResult;
 use App\Models\User;
 use Carbon\Carbon;
 use Inertia\Inertia;
+use LdapRecord\Models\ActiveDirectory\User as LdapUser;
+use Throwable;
 
 class ParticipantController extends Controller
 {
@@ -440,11 +442,14 @@ class ParticipantController extends Controller
 
     $username = mb_strtolower(trim($data['username']));
 
+    $ldapProfile = $this->findLdapProfile($username);
+
     $participant = User::firstOrCreate(
       ['username' => $username],
       [
-        'name' => $username,
-        'firstname' => $username,
+        'name' => $ldapProfile['name'] ?? '',
+        'firstname' => $ldapProfile['firstname'] ?? '',
+        'email' => $ldapProfile['email'] ?? null,
         'password' => bcrypt(str()->random(32)),
         'role' => $data['role'],
         'city_id' => $user->city_id,
@@ -493,11 +498,32 @@ class ParticipantController extends Controller
     $importedUser->forceFill([
       'role' => $data['role'],
       'can_login' => $data['can_login'],
-      'name' => $data['name'] ?: $importedUser->username,
-      'firstname' => $data['firstname'] ?: $importedUser->username,
+      'name' => $data['name'] ?? $importedUser->name,
+      'firstname' => $data['firstname'] ?? $importedUser->firstname,
     ])->save();
 
     return back()->with('success', __('Benutzerdaten aktualisiert.'));
+  }
+
+  protected function findLdapProfile(string $username): array
+  {
+    try {
+      $ldapUser = LdapUser::query()
+        ->whereEquals('samaccountname', $username)
+        ->first();
+
+      if (!$ldapUser) {
+        return [];
+      }
+
+      return [
+        'name' => (string) ($ldapUser->getFirstAttribute('cn') ?? ''),
+        'firstname' => (string) ($ldapUser->getFirstAttribute('givenName') ?? ''),
+        'email' => $ldapUser->getFirstAttribute('mail'),
+      ];
+    } catch (Throwable) {
+      return [];
+    }
   }
 
   public function updateLoginPermission(Request $request, User $participant)
