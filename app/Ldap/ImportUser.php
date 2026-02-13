@@ -13,8 +13,6 @@ class ImportUser
   public function __invoke(LdapUser $ldapUser, User $eloquentUser)
   {
     $isNewUser = !$eloquentUser->exists;
-    $isRoleLocked = (bool) ($eloquentUser->getAttribute('role_locked') ?? false);
-
     $dn = $ldapUser->getDn();
 
     preg_match_all('/OU=([^,]+)/i', $dn, $ouMatches);
@@ -68,9 +66,8 @@ class ImportUser
     $eloquentUser->email     = $ldapUser->getFirstAttribute('mail');
     $eloquentUser->firstname = $ldapUser->getFirstAttribute('givenName');
 
-    // Local permissions should stay untouched after manual changes.
-    // Only sync role / city for new users or when role is not locked.
-    if ($isNewUser || !$isRoleLocked) {
+    // Keep role / city managed manually once the local user exists.
+    if ($isNewUser) {
       $eloquentUser->role = $role;
       $eloquentUser->city_id = $cityId;
     }

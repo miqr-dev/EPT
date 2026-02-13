@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Auth\Events\Lockout;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -35,8 +36,20 @@ class LoginRequest extends FormRequest
   {
     $this->ensureIsNotRateLimited();
 
+    $username = trim((string) $this->input('username'));
+    $localUser = User::whereRaw('LOWER(username) = ?', [mb_strtolower($username)])->first();
+
+    // Only manually imported users are allowed to authenticate via LDAP.
+    if (!$localUser) {
+      RateLimiter::hit($this->throttleKey());
+
+      throw ValidationException::withMessages([
+        'username' => __('Dieses Konto ist nicht freigeschaltet. Bitte wende dich an deine Lehrkraft.'),
+      ]);
+    }
+
     $credentials = [
-      'samaccountname' => $this->input('username'),
+      'samaccountname' => $username,
       'password' => $this->input('password'),
     ];
 

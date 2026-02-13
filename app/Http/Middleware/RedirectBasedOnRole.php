@@ -84,6 +84,7 @@ class RedirectBasedOnRole
         'api.active-exams',
         'exams.updateSteps',
         'participants.list',
+        'participants.import',
         'participants.login-permission',
         'participants.set-contract-visibility',
         'teachers.update-role',

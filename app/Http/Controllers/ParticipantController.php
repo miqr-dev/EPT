@@ -340,7 +340,8 @@ class ParticipantController extends Controller
       ->when($search !== '', function ($query) use ($search) {
         $query->where(function ($subQuery) use ($search) {
           $subQuery->where('name', 'like', "%{$search}%")
-            ->orWhere('firstname', 'like', "%{$search}%");
+            ->orWhere('firstname', 'like', "%{$search}%")
+            ->orWhere('username', 'like', "%{$search}%");
         });
       })
       ->with([
@@ -386,6 +387,49 @@ class ParticipantController extends Controller
         'search' => $search,
       ],
     ]);
+  }
+
+
+  public function import(Request $request)
+  {
+    $user = Auth::user();
+
+    if (!in_array($user->role, ['admin', 'teacher'])) {
+      abort(403);
+    }
+
+    $data = $request->validate([
+      'username' => ['required', 'string', 'max:255'],
+      'role' => ['required', 'in:participant,teacher'],
+      'can_login' => ['nullable', 'boolean'],
+    ]);
+
+    $username = mb_strtolower(trim($data['username']));
+
+    $participant = User::firstOrCreate(
+      ['username' => $username],
+      [
+        'name' => $username,
+        'firstname' => $username,
+        'password' => bcrypt(str()->random(32)),
+        'role' => $data['role'],
+        'city_id' => $user->city_id,
+        'can_login' => (bool) ($data['can_login'] ?? false),
+      ]
+    );
+
+    if (!$participant->wasRecentlyCreated) {
+      if ($user->role === 'teacher' && $participant->city_id !== $user->city_id) {
+        abort(403);
+      }
+
+      $participant->forceFill([
+        'role' => $data['role'],
+        'can_login' => (bool) ($data['can_login'] ?? false),
+      ])->save();
+    }
+
+    return back()->with('success', __('Benutzer wurde importiert und kann jetzt verwaltet werden.'));
   }
 
   public function updateLoginPermission(Request $request, User $participant)

@@ -63,6 +63,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('/api/active-exams', [ExamController::class, 'getActiveExams'])->name('api.active-exams');
     Route::get('/api/my-contract-status', [ParticipantController::class, 'contractStatus'])->name('api.my-contract-status');
     Route::get('/participants', [ParticipantController::class, 'list'])->name('participants.list');
+    Route::post('/participants/import', [ParticipantController::class, 'import'])->name('participants.import');
     Route::patch('/participants/{participant}/login-permission', [ParticipantController::class, 'updateLoginPermission'])
       ->name('participants.login-permission');
     Route::post('/participants/{participant}/set-contract-visibility', [ParticipantController::class, 'setContractVisibility'])
