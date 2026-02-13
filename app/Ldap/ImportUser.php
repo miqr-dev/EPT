@@ -30,7 +30,12 @@ class ImportUser
         }
 
         $existingByUsername->save();
-        return;
+
+        // Rebind the sync target to the existing local user to avoid a duplicate INSERT.
+        $eloquentUser->setRawAttributes($existingByUsername->getAttributes(), true);
+        $eloquentUser->exists = true;
+        $eloquentUser->wasRecentlyCreated = false;
+        $isNewUser = false;
       }
     }
 
