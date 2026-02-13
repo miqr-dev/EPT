@@ -13,6 +13,13 @@ class ImportUser
   public function __invoke(LdapUser $ldapUser, User $eloquentUser)
   {
     $isNewUser = !$eloquentUser->exists;
+
+    // Participants are managed locally after manual import.
+    // During login we only verify LDAP credentials, without syncing participant profile data.
+    if (!$isNewUser && $eloquentUser->role === 'participant') {
+      return;
+    }
+
     $dn = $ldapUser->getDn();
 
     preg_match_all('/OU=([^,]+)/i', $dn, $ouMatches);
