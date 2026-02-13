@@ -65,6 +65,7 @@ function toggleLoginPermission(participant: any, value: boolean | string | undef
   );
 }
 
+
 function updateSearch() {
   router.get(
     route('participants.list'),

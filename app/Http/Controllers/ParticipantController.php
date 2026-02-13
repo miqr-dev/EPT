@@ -15,6 +15,8 @@ use App\Models\TestResult;
 use App\Models\User;
 use Carbon\Carbon;
 use Inertia\Inertia;
+use LdapRecord\Models\ActiveDirectory\User as LdapUser;
+use Throwable;
 
 class ParticipantController extends Controller
 {
@@ -340,7 +342,8 @@ class ParticipantController extends Controller
       ->when($search !== '', function ($query) use ($search) {
         $query->where(function ($subQuery) use ($search) {
           $subQuery->where('name', 'like', "%{$search}%")
-            ->orWhere('firstname', 'like', "%{$search}%");
+            ->orWhere('firstname', 'like', "%{$search}%")
+            ->orWhere('username', 'like', "%{$search}%");
         });
       })
       ->with([
@@ -386,6 +389,141 @@ class ParticipantController extends Controller
         'search' => $search,
       ],
     ]);
+  }
+
+
+
+  public function importPage(Request $request)
+  {
+    $user = Auth::user();
+
+    if (!in_array($user->role, ['admin', 'teacher'], true)) {
+      abort(403);
+    }
+
+    $search = trim((string) $request->input('search', ''));
+
+    $users = User::query()
+      ->where('city_id', $user->city_id)
+      ->whereIn('role', ['participant', 'teacher'])
+      ->when($search !== '', function ($query) use ($search) {
+        $query->where(function ($subQuery) use ($search) {
+          $subQuery->where('username', 'like', "%{$search}%")
+            ->orWhere('name', 'like', "%{$search}%")
+            ->orWhere('firstname', 'like', "%{$search}%");
+        });
+      })
+      ->orderBy('role')
+      ->orderBy('username')
+      ->paginate(20)
+      ->withQueryString();
+
+    return Inertia::render('Participants/Import', [
+      'users' => $users,
+      'filters' => [
+        'search' => $search,
+      ],
+    ]);
+  }
+
+  public function import(Request $request)
+  {
+    $user = Auth::user();
+
+    if (!in_array($user->role, ['admin', 'teacher'])) {
+      abort(403);
+    }
+
+    $data = $request->validate([
+      'username' => ['required', 'string', 'max:255'],
+      'role' => ['required', 'in:participant,teacher'],
+      'can_login' => ['sometimes', 'boolean'],
+    ]);
+
+    $username = mb_strtolower(trim($data['username']));
+
+    $ldapProfile = $this->findLdapProfile($username);
+
+    $participant = User::firstOrCreate(
+      ['username' => $username],
+      [
+        'name' => $ldapProfile['name'] ?? '',
+        'firstname' => $ldapProfile['firstname'] ?? '',
+        'email' => $ldapProfile['email'] ?? null,
+        'password' => bcrypt(str()->random(32)),
+        'role' => $data['role'],
+        'city_id' => $user->city_id,
+        'can_login' => (bool) ($data['can_login'] ?? true),
+      ]
+    );
+
+    if (!$participant->wasRecentlyCreated) {
+      if ($user->role === 'teacher' && $participant->city_id !== $user->city_id) {
+        abort(403);
+      }
+
+      $participant->forceFill([
+        'role' => $data['role'],
+        'can_login' => (bool) ($data['can_login'] ?? $participant->can_login),
+      ])->save();
+    }
+
+    return back()->with('success', __('Benutzer wurde importiert und kann jetzt verwaltet werden.'));
+  }
+
+
+  public function updateImportedUser(Request $request, User $importedUser)
+  {
+    $user = Auth::user();
+
+    if (!in_array($user->role, ['admin', 'teacher'], true)) {
+      abort(403);
+    }
+
+    if ($user->role === 'teacher' && $importedUser->city_id !== $user->city_id) {
+      abort(403);
+    }
+
+    if (!in_array($importedUser->role, ['participant', 'teacher'], true)) {
+      abort(404);
+    }
+
+    $data = $request->validate([
+      'role' => ['required', 'in:participant,teacher'],
+      'can_login' => ['required', 'boolean'],
+      'name' => ['nullable', 'string', 'max:255'],
+      'firstname' => ['nullable', 'string', 'max:255'],
+    ]);
+
+    $importedUser->forceFill([
+      'role' => $data['role'],
+      'can_login' => $data['can_login'],
+      'name' => $data['name'] ?? $importedUser->name,
+      'firstname' => $data['firstname'] ?? $importedUser->firstname,
+    ])->save();
+
+    return back()->with('success', __('Benutzerdaten aktualisiert.'));
+  }
+
+  protected function findLdapProfile(string $username): array
+  {
+    try {
+      $ldapUser = LdapUser::query()
+        ->whereEquals('samaccountname', $username)
+        ->first();
+
+      if (!$ldapUser) {
+        return [];
+      }
+
+      return [
+        'name' => (string) ($ldapUser->getFirstAttribute('cn') ?? ''),
+        'firstname' => (string) ($ldapUser->getFirstAttribute('givenName') ?? ''),
+        'email' => $ldapUser->getFirstAttribute('mail'),
+      ];
+    } catch (Throwable) {
+      return [];
+    }
   }
 
   public function updateLoginPermission(Request $request, User $participant)

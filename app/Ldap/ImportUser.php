@@ -13,7 +13,37 @@ class ImportUser
   public function __invoke(LdapUser $ldapUser, User $eloquentUser)
   {
     $isNewUser = !$eloquentUser->exists;
-    $isRoleLocked = (bool) ($eloquentUser->getAttribute('role_locked') ?? false);
+    $ldapUsername = mb_strtolower((string) ($ldapUser->getFirstAttribute('samaccountname') ?? ''));
+
+    // If LDAP sync didn't resolve by GUID/domain but a local imported user exists by username,
+    // update linkage fields and skip creating a duplicate local row.
+    if ($isNewUser && $ldapUsername !== '') {
+      $existingByUsername = User::whereRaw('LOWER(username) = ?', [$ldapUsername])->first();
+
+      if ($existingByUsername) {
+        if (method_exists($ldapUser, 'getConvertedGuid')) {
+          $existingByUsername->guid = $existingByUsername->guid ?: $ldapUser->getConvertedGuid();
+        }
+
+        if (method_exists($ldapUser, 'getDomain')) {
+          $existingByUsername->domain = $existingByUsername->domain ?: $ldapUser->getDomain();
+        }
+
+        $existingByUsername->save();
+
+        // Rebind the sync target to the existing local user to avoid a duplicate INSERT.
+        $eloquentUser->setRawAttributes($existingByUsername->getAttributes(), true);
+        $eloquentUser->exists = true;
+        $eloquentUser->wasRecentlyCreated = false;
+        $isNewUser = false;
+      }
+    }
+
+    // Participants are managed locally after manual import.
+    // During login we only verify LDAP credentials, without syncing participant profile data.
+    if (!$isNewUser && $eloquentUser->role === 'participant') {
+      return;
+    }
 
     $dn = $ldapUser->getDn();
 
@@ -64,15 +94,22 @@ class ImportUser
 
     // Assign your other fields
     $eloquentUser->name      = $ldapUser->getFirstAttribute('cn');
-    $eloquentUser->username  = $ldapUser->getFirstAttribute('samaccountname');
+    $eloquentUser->username  = $ldapUsername;
     $eloquentUser->email     = $ldapUser->getFirstAttribute('mail');
     $eloquentUser->firstname = $ldapUser->getFirstAttribute('givenName');
 
-    // Local permissions should stay untouched after manual changes.
-    // Only sync role / city for new users or when role is not locked.
-    if ($isNewUser || !$isRoleLocked) {
+    // Keep role / city managed manually once the local user exists.
+    if ($isNewUser) {
       $eloquentUser->role = $role;
       $eloquentUser->city_id = $cityId;
+    }
+
+    if (method_exists($ldapUser, 'getConvertedGuid')) {
+      $eloquentUser->guid = $ldapUser->getConvertedGuid();
+    }
+
+    if (method_exists($ldapUser, 'getDomain')) {
+      $eloquentUser->domain = $ldapUser->getDomain();
     }
 
     $eloquentUser->save();

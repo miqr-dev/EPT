@@ -20,6 +20,11 @@ const mainNavItems: NavItem[] = [
         icon: Users,
     },
     {
+        title: 'Benutzer importieren',
+        href: '/participants/import',
+        icon: Users,
+    },
+    {
         title: 'BRT-A',
         href: '/brt-a', // The new route for the Tests page
         icon: LayoutGrid, // Placeholder icon, can be changed later
