@@ -48,7 +48,7 @@ class TeacherController extends Controller
     $canManageRoles = $teacher->role === 'admin' || $teacher->can_change;
     if ($canManageRoles) {
       $changeableTeachers = User::where('city_id', $cityId)
-        ->where('role', 'admin')
+        ->whereIn('role', ['teacher', 'admin'])
         ->where('can_change', false)
         ->orderBy('name')
         ->orderBy('firstname')
@@ -132,9 +132,9 @@ class TeacherController extends Controller
       'role' => ['required', Rule::in(['participant'])],
     ]);
 
-    if ($teacher->role !== 'admin') {
+    if (!in_array($teacher->role, ['teacher', 'admin'], true)) {
       return back()->withErrors([
-        'teacher' => 'Nur Lehrkräfte mit der Rolle admin können zu Teilnehmern geändert werden.',
+        'teacher' => 'Nur Lehrkräfte mit der Rolle teacher oder admin können zu Teilnehmern geändert werden.',
       ]);
     }
 
