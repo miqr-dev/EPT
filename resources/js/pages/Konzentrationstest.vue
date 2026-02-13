@@ -196,8 +196,16 @@ const copyRows: Array<{ letter: string; parts: RowParts }> = [
 const copyMarks = ref(copyRows.map(r => r.parts.map(p => Array.from(p).map(() => false))))
 const copyCounts = ref<string[]>(Array(copyRows.length).fill(''))
 
+// NEW: data for missing letter marks (now tracks marks *after* a character)
+const missingLetterMarks = ref(copyRows.map(r => r.parts.map(p => Array.from(p).map(() => false))))
+
 const toggleCopyChar = (r: number, p: number, c: number) => {
   copyMarks.value[r][p][c] = !copyMarks.value[r][p][c]
+}
+
+// NEW: toggle function for missing letters (right-click)
+const toggleMissingLetterAfter = (r: number, p: number, c: number) => {
+  missingLetterMarks.value[r][p][c] = !missingLetterMarks.value[r][p][c]
 }
 const getChars = (r: number, p: number) => Array.from(copyRows[r].parts[p])
 
@@ -765,6 +773,9 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
         Links: Original – Rechts: Abschrift. Jede Position steht in <b>zwei Zeilen</b>; markieren Sie Fehler in der
         Abschrift und tragen Sie die Anzahl rechts ein.
       </p>
+      <p class="text-[18px] leading-snug mt-2">
+        <b>Linksklick</b>: Falschen Buchstaben markieren. <b>Rechtsklick</b>: Fehlenden Buchstaben danach markieren.
+      </p>
 
       <div class="mt-4 border-b border-black/50 pb-4">
         <div class="text-[18px] font-semibold mb-2">Beispiel:</div>
@@ -877,13 +888,17 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
                 <!-- Row 1 -->
                 <div>
                   <span v-for="(ch, cIdx) in getChars(rIdx, 0)" :key="'r' + rIdx + 'p0c' + cIdx"
-                    @click="toggleCopyChar(rIdx, 0, cIdx)" :class="['letter', { marked: copyMarks[rIdx][0][cIdx] }]">
+                    @click="toggleCopyChar(rIdx, 0, cIdx)"
+                    @contextmenu.prevent="toggleMissingLetterAfter(rIdx, 0, cIdx)"
+                    :class="['letter', { marked: copyMarks[rIdx][0][cIdx], 'missing-after': missingLetterMarks[rIdx][0][cIdx] }]">
                     {{ ch }}
                   </span>
                 </div>
                 <div>
                   <span v-for="(ch, cIdx) in getChars(rIdx, 1)" :key="'r' + rIdx + 'p1c' + cIdx"
-                    @click="toggleCopyChar(rIdx, 1, cIdx)" :class="['letter', { marked: copyMarks[rIdx][1][cIdx] }]">
+                    @click="toggleCopyChar(rIdx, 1, cIdx)"
+                    @contextmenu.prevent="toggleMissingLetterAfter(rIdx, 1, cIdx)"
+                    :class="['letter', { marked: copyMarks[rIdx][1][cIdx], 'missing-after': missingLetterMarks[rIdx][1][cIdx] }]">
                     {{ ch }}
                   </span>
                 </div>
@@ -896,13 +911,17 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
                 <!-- Row 2 -->
                 <div class="col-start-2 mt-1">
                   <span v-for="(ch, cIdx) in getChars(rIdx, 2)" :key="'r' + rIdx + 'p2c' + cIdx"
-                    @click="toggleCopyChar(rIdx, 2, cIdx)" :class="['letter', { marked: copyMarks[rIdx][2][cIdx] }]">
+                    @click="toggleCopyChar(rIdx, 2, cIdx)"
+                    @contextmenu.prevent="toggleMissingLetterAfter(rIdx, 2, cIdx)"
+                    :class="['letter', { marked: copyMarks[rIdx][2][cIdx], 'missing-after': missingLetterMarks[rIdx][2][cIdx] }]">
                     {{ ch }}
                   </span>
                 </div>
                 <div class="col-start-3 mt-1">
                   <span v-for="(ch, cIdx) in getChars(rIdx, 3)" :key="'r' + rIdx + 'p3c' + cIdx"
-                    @click="toggleCopyChar(rIdx, 3, cIdx)" :class="['letter', { marked: copyMarks[rIdx][3][cIdx] }]">
+                    @click="toggleCopyChar(rIdx, 3, cIdx)"
+                    @contextmenu.prevent="toggleMissingLetterAfter(rIdx, 3, cIdx)"
+                    :class="['letter', { marked: copyMarks[rIdx][3][cIdx], 'missing-after': missingLetterMarks[rIdx][3][cIdx] }]">
                     {{ ch }}
                   </span>
                 </div>
@@ -1185,5 +1204,19 @@ ul .answer-box {
 
 .tk.gap {
   margin-right: var(--word-gap);
+}
+
+.letter {
+  position: relative;
+}
+
+.letter.missing-after::after {
+  content: '';
+  position: absolute;
+  top: 0.1em;
+  right: -3px; /* Position the line to the right of the character */
+  width: 2px;
+  height: 1em;
+  background-color: #dc2626;
 }
 </style>
