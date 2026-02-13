@@ -86,6 +86,7 @@ class RedirectBasedOnRole
         'participants.list',
         'participants.login-permission',
         'participants.set-contract-visibility',
+        'teachers.update-role',
         'test-results.update',
         'test-results.manual-scores.update',
         'test-results.download',

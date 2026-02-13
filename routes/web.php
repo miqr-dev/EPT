@@ -67,6 +67,8 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
       ->name('participants.login-permission');
     Route::post('/participants/{participant}/set-contract-visibility', [ParticipantController::class, 'setContractVisibility'])
       ->name('participants.set-contract-visibility');
+    Route::patch('/teachers/{teacher}/role', [TeacherController::class, 'downgradeTeacherToParticipant'])
+      ->name('teachers.update-role');
     Route::put('/test-results/{testResult}', [TestResultController::class, 'update'])->name('test-results.update');
     Route::put('/test-results/{testResult}/manual-scores', [TestResultController::class, 'updateManualScore'])
         ->name('test-results.manual-scores.update');
