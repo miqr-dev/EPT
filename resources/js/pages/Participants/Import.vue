@@ -165,12 +165,11 @@ function updateSearch() {
                 <TableHead>Vorname</TableHead>
                 <TableHead>Rolle</TableHead>
                 <TableHead>Login</TableHead>
-                <TableHead class="text-right">Aktion</TableHead>
-              </TableRow>
+                              </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow v-if="users.data.length === 0">
-                <TableCell colspan="6" class="py-4 text-center text-gray-500">Keine Benutzer gefunden.</TableCell>
+                <TableCell colspan="5" class="py-4 text-center text-gray-500">Keine Benutzer gefunden.</TableCell>
               </TableRow>
               <TableRow v-for="user in users.data" :key="user.id">
                 <TableCell>{{ user.username }}</TableCell>
@@ -178,6 +177,7 @@ function updateSearch() {
                   <input
                     v-model="user.name"
                     type="text"
+                    @blur="saveUser(user)"
                     class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
                   />
                 </TableCell>
@@ -185,39 +185,33 @@ function updateSearch() {
                   <input
                     v-model="user.firstname"
                     type="text"
+                    @blur="saveUser(user)"
                     class="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
                   />
                 </TableCell>
                 <TableCell>
-                  <select v-model="user.role" class="rounded-md border border-gray-300 px-2 py-1 text-sm">
+                  <select v-model="user.role" class="rounded-md border border-gray-300 px-2 py-1 text-sm" @change="saveUser(user)">
                     <option value="participant">participant</option>
                     <option value="teacher">teacher</option>
                   </select>
                 </TableCell>
                 <TableCell>
-                  <button
-                    type="button"
-                    role="switch"
-                    :aria-checked="Boolean(user.can_login)"
-                    class="relative inline-flex h-6 w-11 items-center rounded-full transition"
-                    :class="Boolean(user.can_login) ? 'bg-green-600' : 'bg-gray-300'"
-                    @click="user.can_login = !Boolean(user.can_login)"
-                  >
-                    <span
-                      class="inline-block h-5 w-5 transform rounded-full bg-white transition"
-                      :class="Boolean(user.can_login) ? 'translate-x-5' : 'translate-x-1'"
-                    />
-                  </button>
-                </TableCell>
-                <TableCell class="text-right">
-                  <button
-                    type="button"
-                    class="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm font-medium hover:bg-gray-50 disabled:opacity-60"
-                    :disabled="isSaving(user.id)"
-                    @click="saveUser(user)"
-                  >
-                    {{ isSaving(user.id) ? 'Speichert…' : 'Speichern' }}
-                  </button>
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      role="switch"
+                      :aria-checked="Boolean(user.can_login)"
+                      class="relative inline-flex h-6 w-11 items-center rounded-full transition"
+                      :class="Boolean(user.can_login) ? 'bg-green-600' : 'bg-gray-300'"
+                      @click="user.can_login = !Boolean(user.can_login); saveUser(user)"
+                    >
+                      <span
+                        class="inline-block h-5 w-5 transform rounded-full bg-white transition"
+                        :class="Boolean(user.can_login) ? 'translate-x-5' : 'translate-x-1'"
+                      />
+                    </button>
+                    <span v-if="isSaving(user.id)" class="text-xs text-gray-500">Speichert…</span>
+                  </div>
                 </TableCell>
               </TableRow>
             </TableBody>
