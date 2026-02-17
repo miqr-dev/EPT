@@ -9,6 +9,7 @@ import axios from 'axios';
 const props = defineProps<{
   participants: any[];
   recentUsers: any[];
+  importedUsers: any[];
   changeableTeachers: any[];
   exams: any[];
   tests: any[];
@@ -40,6 +41,7 @@ onUnmounted(() => {
 const selectedIdx = ref(0);
 const selectedIds = ref<number[]>([]);
 const selectedRecentUserIds = ref<number[]>([]);
+const selectedImportedUserIds = ref<number[]>([]);
 
 const showCreateExamForm = ref(false);
 const newExamTitle = ref('');
@@ -106,6 +108,18 @@ function toggleRow(id: number, idx: number) {
   }
 }
 const availableRecentUsers = computed(() => props.recentUsers.filter((u) => !stagedUserIds.value.includes(u.id)));
+const availableImportedUsers = computed(() => {
+  const recentIds = new Set(props.recentUsers.map((u) => u.id));
+  return props.importedUsers.filter((u) => !stagedUserIds.value.includes(u.id) && !recentIds.has(u.id));
+});
+
+const stagedUserMap = computed(() => {
+  const all = [...props.recentUsers, ...props.importedUsers];
+  return all.reduce((acc: Record<number, any>, user: any) => {
+    acc[user.id] = user;
+    return acc;
+  }, {});
+});
 
 function singleRowSelect(idx: number, id: number) {
   selectedIdx.value = idx;
@@ -117,6 +131,14 @@ function toggleRecentUser(id: number) {
     selectedRecentUserIds.value = selectedRecentUserIds.value.filter((x) => x !== id);
   } else {
     selectedRecentUserIds.value.push(id);
+  }
+}
+
+function toggleImportedUser(id: number) {
+  if (selectedImportedUserIds.value.includes(id)) {
+    selectedImportedUserIds.value = selectedImportedUserIds.value.filter((x) => x !== id);
+  } else {
+    selectedImportedUserIds.value.push(id);
   }
 }
 
@@ -145,9 +167,19 @@ function toggleSelectAllRecent(event: Event) {
   }
 }
 
+function toggleSelectAllImported(event: Event) {
+  const target = event.target as HTMLInputElement;
+  if (target.checked) {
+    selectedImportedUserIds.value = availableImportedUsers.value.map((u) => u.id);
+  } else {
+    selectedImportedUserIds.value = [];
+  }
+}
+
 function addSelectedUsersToStage() {
-  stagedUserIds.value = [...new Set([...stagedUserIds.value, ...selectedRecentUserIds.value])];
+  stagedUserIds.value = [...new Set([...stagedUserIds.value, ...selectedRecentUserIds.value, ...selectedImportedUserIds.value])];
   selectedRecentUserIds.value = [];
+  selectedImportedUserIds.value = [];
 }
 
 function removeStagedUser(userId: number) {
@@ -359,6 +391,66 @@ function addTests() {
               </div>
             </div>
 
+            <div
+              class="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+                <div>
+                  <h2 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Importierte Benutzer
+                  </h2>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">
+                    Alle importierten Teilnehmenden dieser Stadt (auch ohne Login).
+                  </p>
+                </div>
+                <span
+                  class="inline-flex items-center justify-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100">
+                  {{ availableImportedUsers.length }}
+                </span>
+              </div>
+              <div class="flex-1 overflow-auto">
+                <table class="w-full text-xs md:text-sm">
+                  <thead class="sticky top-0 z-10 bg-slate-50 text-slate-600 dark:bg-slate-700 dark:text-slate-200">
+                    <tr>
+                      <th class="w-10 px-3 py-2 text-center">
+                        <input type="checkbox" @change="toggleSelectAllImported"
+                          class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                      </th>
+                      <th class="px-3 py-2 text-left font-medium">Name</th>
+                      <th class="px-3 py-2 text-left font-medium">Vertrag</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="user in availableImportedUsers" :key="`imported-${user.id}`"
+                      class="cursor-pointer border-b border-slate-50 text-slate-800 hover:bg-slate-50/80 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-700"
+                      @click="toggleImportedUser(user.id)">
+                      <td class="px-3 py-1.5 text-center">
+                        <input type="checkbox" :checked="selectedImportedUserIds.includes(user.id)"
+                          class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                      </td>
+                      <td class="px-3 py-1.5">
+                        {{ user.name }}
+                      </td>
+                      <td class="px-3 py-1.5">
+                        <button type="button"
+                          class="inline-flex items-center gap-1 rounded border px-2 py-1 text-xs font-semibold transition dark:border-slate-600"
+                          :class="user.contract_view_enabled
+                            ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-100'
+                            : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-100'"
+                          @click.stop="toggleUserContractVisibility(user.id, !user.contract_view_enabled)">
+                          {{ user.contract_view_enabled ? 'Vertragsansicht sperren' : 'Vertrag freigeben' }}
+                        </button>
+                      </td>
+                    </tr>
+                    <tr v-if="!availableImportedUsers.length">
+                      <td colspan="3" class="py-6 text-center text-xs text-slate-400 dark:text-slate-500">
+                        Keine weiteren importierten Benutzer gefunden.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             <div v-if="props.changeableTeachers?.length"
               class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
               <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
@@ -429,7 +521,7 @@ function addTests() {
 
                   <!-- Participants staging -->
                   <div class="flex items-start gap-3">
-                    <button @click="addSelectedUsersToStage" :disabled="!selectedRecentUserIds.length"
+                    <button @click="addSelectedUsersToStage" :disabled="!(selectedRecentUserIds.length || selectedImportedUserIds.length)"
                       class="mt-5 inline-flex h-9 w-10 items-center justify-center rounded-xl border border-slate-300 bg-slate-50 text-lg font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">
                       →
                     </button>
@@ -448,8 +540,8 @@ function addTests() {
                         <li v-for="userId in stagedUserIds" :key="userId"
                           class="flex items-center justify-between rounded-lg bg-white px-2 py-1.5 text-xs text-slate-800 shadow-sm ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600">
                           <span>
-                            {{props.recentUsers.find((u) => u.id === userId)?.name}},
-                            {{props.recentUsers.find((u) => u.id === userId)?.firstname}}
+                            {{ stagedUserMap[userId]?.name }},
+                            {{ stagedUserMap[userId]?.firstname }}
                           </span>
                           <button @click="removeStagedUser(userId)"
                             class="text-xs font-bold text-red-500 hover:text-red-600">

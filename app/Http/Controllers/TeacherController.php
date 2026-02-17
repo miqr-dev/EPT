@@ -109,11 +109,19 @@ class TeacherController extends Controller
       }
     }
 
+
+    $importedUsers = User::where('role', 'participant')
+      ->where('city_id', $cityId)
+      ->orderBy('name')
+      ->orderBy('firstname')
+      ->get();
+
     $tests = Test::all();
 
     return inertia('Dashboard', [
       'participants' => $participants,
       'recentUsers' => $recentUsers,
+      'importedUsers' => $importedUsers,
       'changeableTeachers' => $changeableTeachers,
       'exams' => $exams,
       'tests' => $tests,
