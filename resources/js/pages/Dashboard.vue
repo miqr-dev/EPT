@@ -43,6 +43,18 @@ const selectedRecentUserIds = ref<number[]>([]);
 const selectedImportedUserIds = ref<number[]>([]);
 const importedUserSearch = ref('');
 
+const signedInUserIds = computed(() => new Set(props.recentUsers.map((u) => u.id)));
+
+function getUserColorClass(user: any) {
+  const isSignedIn = signedInUserIds.value.has(user.id);
+  const isImported = !!user.id; // All users in our props are from the database (imported)
+
+  if (isSignedIn && isImported) return 'text-green-600 dark:text-green-400 font-bold';
+  if (isSignedIn && !isImported) return 'text-blue-600 dark:text-blue-400 font-bold';
+  if (isImported && !isSignedIn) return 'text-red-600 dark:text-red-400 font-bold';
+  return '';
+}
+
 const showCreateExamForm = ref(false);
 const newExamTitle = ref('');
 const stagedUserIds = ref<number[]>([]);
@@ -71,12 +83,13 @@ function openExamDetailsModal(exam: any) {
   showExamDetailsModal.value = true;
 }
 
-function saveExamSteps(steps: any[]) {
+function saveExamDetails(data: { steps: any[]; participants: any[] }) {
   if (!selectedExam.value) return;
   router.put(
-    route('exams.updateSteps', selectedExam.value.id),
+    route('exams.updateDetails', selectedExam.value.id),
     {
-      steps: steps.map((s) => ({ id: s.id })),
+      steps: data.steps.map((s) => ({ id: s.id })),
+      participant_ids: data.participants.map((p) => p.id),
     },
     {
       onSuccess: () => {
@@ -371,7 +384,7 @@ function addTests() {
                         <input type="checkbox" :checked="selectedRecentUserIds.includes(user.id)"
                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
                       </td>
-                      <td class="px-3 py-1.5">
+                      <td class="px-3 py-1.5" :class="getUserColorClass(user)">
                         {{ user.name }}
                       </td>
                       <td class="px-3 py-1.5">
@@ -440,7 +453,7 @@ function addTests() {
                         <input type="checkbox" :checked="selectedImportedUserIds.includes(user.id)"
                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
                       </td>
-                      <td class="px-3 py-1.5">
+                      <td class="px-3 py-1.5" :class="getUserColorClass(user)">
                         {{ user.name }}
                       </td>
                       <td class="px-3 py-1.5">
@@ -671,8 +684,9 @@ function addTests() {
         </section>
       </div>
 
-      <ExamDetailsModal :exam="selectedExam" :show="showExamDetailsModal" @close="showExamDetailsModal = false"
-        @save="saveExamSteps" />
+      <ExamDetailsModal :exam="selectedExam" :show="showExamDetailsModal" :participants="props.participants"
+        :tests="props.tests" :recentUsers="props.recentUsers" @close="showExamDetailsModal = false"
+        @save="saveExamDetails" />
     </div>
   </AppLayout>
 </template>

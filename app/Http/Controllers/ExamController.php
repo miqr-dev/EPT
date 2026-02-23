@@ -483,4 +483,44 @@ class ExamController extends Controller
     }
     return redirect()->route('dashboard')->with('success', 'Exam steps updated successfully!');
   }
+
+  public function updateDetails(Request $request, Exam $exam): RedirectResponse
+  {
+    $data = $request->validate([
+      'steps' => 'required|array',
+      'steps.*.id' => 'required|exists:tests,id',
+      'participant_ids' => 'required|array',
+      'participant_ids.*' => 'exists:users,id',
+    ]);
+
+    // Only allow editing if not started
+    if (!in_array($exam->status, ['not_started', 'geplant'])) {
+      return back()->with('error', 'Laufende Prüfungen können nicht bearbeitet werden.');
+    }
+
+    // Update Steps
+    $exam->steps()->delete();
+    foreach ($data['steps'] as $index => $stepData) {
+      $test = Test::find($stepData['id']);
+      if ($test) {
+        ExamStep::create([
+          'exam_id' => $exam->id,
+          'test_id' => $test->id,
+          'step_order' => $index + 1,
+          'duration' => $test->duration ?? 60,
+        ]);
+      }
+    }
+
+    // Update Participants
+    $exam->participants()->delete();
+    foreach ($data['participant_ids'] as $participantId) {
+      ExamParticipant::create([
+        'exam_id' => $exam->id,
+        'participant_id' => $participantId,
+      ]);
+    }
+
+    return redirect()->route('dashboard')->with('success', 'Prüfungsdetails aktualisiert!');
+  }
 }
