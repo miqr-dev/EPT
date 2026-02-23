@@ -459,6 +459,56 @@ class ExamController extends Controller
     return back(303);
   }
 
+
+  public function updateConfiguration(Request $request, Exam $exam): RedirectResponse
+  {
+    if ($exam->status !== 'not_started') {
+      return back(303)->with('error', 'Teilnehmer:innen und Testschritte können nur vor Prüfungsstart geändert werden.');
+    }
+
+    $data = $request->validate([
+      'participant_ids' => 'required|array|min:1',
+      'participant_ids.*' => 'required|exists:users,id',
+      'steps' => 'required|array|min:1',
+      'steps.*.id' => 'required|exists:tests,id',
+    ]);
+
+    $participantIds = User::whereIn('id', $data['participant_ids'])
+      ->where('role', 'participant')
+      ->where('city_id', $exam->city_id)
+      ->pluck('id')
+      ->all();
+
+    if (count($participantIds) !== count(array_unique($data['participant_ids']))) {
+      return back(303)->with('error', 'Ungültige Teilnehmerauswahl für diese Stadt.');
+    }
+
+    ExamParticipant::where('exam_id', $exam->id)->delete();
+
+    foreach ($participantIds as $participantId) {
+      ExamParticipant::create([
+        'exam_id' => $exam->id,
+        'participant_id' => $participantId,
+      ]);
+    }
+
+    $exam->steps()->delete();
+
+    foreach ($data['steps'] as $index => $stepData) {
+      $test = Test::find($stepData['id']);
+      if ($test) {
+        ExamStep::create([
+          'exam_id' => $exam->id,
+          'test_id' => $test->id,
+          'step_order' => $index + 1,
+          'duration' => $test->duration ?? 60,
+        ]);
+      }
+    }
+
+    return back(303)->with('success', 'Prüfungskonfiguration aktualisiert.');
+  }
+
   public function updateSteps(Request $request, Exam $exam): RedirectResponse
   {
     $data = $request->validate([

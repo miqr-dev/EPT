@@ -60,6 +60,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::post('/exams', [ExamController::class, 'store'])->name('exams.store');
     Route::post('/exams/store-with-participants', [ExamController::class, 'storeWithParticipants'])->name('exams.storeWithParticipants');
     Route::put('/exams/{exam}/steps', [ExamController::class, 'updateSteps'])->name('exams.updateSteps');
+    Route::put('/exams/{exam}/configuration', [ExamController::class, 'updateConfiguration'])->name('exams.updateConfiguration');
     Route::get('/api/active-exams', [ExamController::class, 'getActiveExams'])->name('api.active-exams');
     Route::get('/api/my-contract-status', [ParticipantController::class, 'contractStatus'])->name('api.my-contract-status');
     Route::get('/participants', [ParticipantController::class, 'list'])->name('participants.list');

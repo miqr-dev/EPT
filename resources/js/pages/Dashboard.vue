@@ -71,12 +71,13 @@ function openExamDetailsModal(exam: any) {
   showExamDetailsModal.value = true;
 }
 
-function saveExamSteps(steps: any[]) {
+function saveExamSteps(payload: { steps: any[]; participantIds: number[] }) {
   if (!selectedExam.value) return;
   router.put(
-    route('exams.updateSteps', selectedExam.value.id),
+    route('exams.updateConfiguration', selectedExam.value.id),
     {
-      steps: steps.map((s) => ({ id: s.id })),
+      participant_ids: payload.participantIds,
+      steps: payload.steps.map((s) => ({ id: s.test_id ?? s.id })),
     },
     {
       onSuccess: () => {
@@ -120,6 +121,20 @@ const stagedUserMap = computed(() => {
     return acc;
   }, {});
 });
+
+const importedUserIdSet = computed(() => new Set(props.importedUsers.map((u) => u.id)))
+const signedInUserIdSet = computed(() => new Set(props.recentUsers.map((u) => u.id)))
+
+function getUserStatusColorClass(userId: number) {
+  const imported = importedUserIdSet.value.has(userId)
+  const signed = signedInUserIdSet.value.has(userId)
+
+  if (signed && imported) return 'text-emerald-600 dark:text-emerald-300'
+  if (signed && !imported) return 'text-blue-600 dark:text-blue-300'
+  if (imported && !signed) return 'text-red-600 dark:text-red-300'
+  return 'text-slate-800 dark:text-slate-100'
+}
+
 
 function singleRowSelect(idx: number, id: number) {
   selectedIdx.value = idx;
@@ -364,7 +379,7 @@ function addTests() {
                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
                       </td>
                       <td class="px-3 py-1.5">
-                        {{ user.name }}
+                        <span :class="getUserStatusColorClass(user.id)">{{ user.name }}</span>
                       </td>
                       <td class="px-3 py-1.5">
                         <button type="button"
@@ -428,7 +443,7 @@ function addTests() {
                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
                       </td>
                       <td class="px-3 py-1.5">
-                        {{ user.name }}
+                        <span :class="getUserStatusColorClass(user.id)">{{ user.name }}</span>
                       </td>
                       <td class="px-3 py-1.5">
                         <button type="button"
@@ -658,7 +673,7 @@ function addTests() {
         </section>
       </div>
 
-      <ExamDetailsModal :exam="selectedExam" :show="showExamDetailsModal" @close="showExamDetailsModal = false"
+      <ExamDetailsModal :exam="selectedExam" :show="showExamDetailsModal" :tests="props.tests" :imported-users="props.importedUsers" :recent-users="props.recentUsers" @close="showExamDetailsModal = false"
         @save="saveExamSteps" />
     </div>
   </AppLayout>
