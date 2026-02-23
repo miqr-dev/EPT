@@ -231,6 +231,7 @@ const pageSections = computed(() => {
   ];
 });
 const pageCount = computed(() => pageSections.value.length);
+const showFinishButton = computed(() => !isLpsB.value || pageIndex.value === pageCount.value - 1);
 const currentSection = computed(() => pageSections.value[pageIndex.value] ?? pageSections.value[0]);
 const visibleColumnIndices = computed(() => currentSection.value.columnIndices);
 const visibleColumnStates = computed(() =>
@@ -1209,7 +1210,7 @@ const page10MaxScore = computed(
             </div>
 
             <div class="flex items-center gap-2">
-              <Button variant="destructive" size="sm" @click="finishTest">Test beenden</Button>
+              <Button v-if="showFinishButton" variant="destructive" size="sm" @click="finishTest">Test beenden</Button>
             </div>
           </div>
 
