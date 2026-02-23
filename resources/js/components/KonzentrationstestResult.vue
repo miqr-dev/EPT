@@ -5,6 +5,13 @@ const props = defineProps<{
   results: any;
 }>();
 
+const formatTime = (seconds?: number | null) => {
+  if (seconds == null) return '–'
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
+
 const page1Correct = ['13', '26', '133', '39', '125', '50', '480', '210', '11,25', '242']
 const page2Correct = ['3', '1', '3', '2', '2', '1', '2', '4', '1', '3']
 const page3Correct = ['1', '4', '3', '1', '3', '3', '0', '2', '2', '5', '2', '3', '2', '2', '4', '3', '3', '1', '3', '3', '0', '2']
@@ -53,6 +60,10 @@ const getAnswerClass = (pageIndex: number, questionIndex: number, answer: string
           <tr>
             <td class="font-semibold px-3 py-2">Leistungskategorie</td>
             <td class="px-3 py-2">{{ results.performance_category.category }} ({{ results.performance_category.range }})</td>
+          </tr>
+          <tr class="bg-muted/40">
+            <td class="font-semibold px-3 py-2">Benötigte Zeit</td>
+            <td class="px-3 py-2">{{ formatTime(results.total_time_seconds) }}</td>
           </tr>
         </tbody>
       </table>

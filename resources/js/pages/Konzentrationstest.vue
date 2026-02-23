@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue'
 
 const props = defineProps<{ timeRemainingSeconds?: number | null }>()
+const startedAtMs = Date.now()
 
 /* =========================================================
    NAV
@@ -32,7 +33,8 @@ const buildResults = () => ({
   page4: page4Answers.value,
   page5: page5TickSums.value,
   wrong_count: wrongCount.value,
-  performance_category: performanceCategory.value
+  performance_category: performanceCategory.value,
+  total_time_seconds: Math.max(0, Math.round((Date.now() - startedAtMs) / 1000)),
 })
 
 const countEmpty = (answers: string[]) => answers.filter(a => a.trim() === '').length
