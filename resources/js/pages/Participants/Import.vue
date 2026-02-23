@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Link, router } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -19,6 +19,7 @@ const searchQuery = ref(props.filters.search ?? '');
 const importingUser = ref(false);
 const savingIds = ref<number[]>([]);
 const importForm = ref({ username: '', role: 'participant', can_login: true });
+const page = usePage<{ errors?: Record<string, string> }>();
 
 const isSaving = (id: number) => savingIds.value.includes(id);
 
@@ -99,6 +100,9 @@ function updateSearch() {
                 placeholder="z. B. max.mustermann"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
+              <p v-if="page.props.errors?.username" class="mt-1 text-xs text-red-600">
+                {{ page.props.errors.username }}
+              </p>
             </div>
             <div>
               <label class="mb-1 block text-xs text-gray-600" for="import-role">Rolle</label>

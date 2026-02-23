@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use Inertia\Inertia;
 use LdapRecord\Models\ActiveDirectory\User as LdapUser;
 use Throwable;
+use Illuminate\Validation\ValidationException;
 
 class ParticipantController extends Controller
 {
@@ -443,6 +444,12 @@ class ParticipantController extends Controller
     $username = mb_strtolower(trim($data['username']));
 
     $ldapProfile = $this->findLdapProfile($username);
+
+    if (empty($ldapProfile)) {
+      throw ValidationException::withMessages([
+        'username' => __('Der Benutzername ist falsch oder existiert nicht im Active Directory.'),
+      ]);
+    }
 
     $participant = User::firstOrCreate(
       ['username' => $username],
