@@ -82,6 +82,9 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('/my-pdf', [UserPdfController::class, 'show'])
     ->middleware('auth')
     ->name('my.pdf');
+    Route::get('/participants/{participant}/pdf', [UserPdfController::class, 'showParticipantPdf'])
+    ->middleware('auth')
+    ->name('participants.pdf');
 });
 
 Route::get('/login', function () {

@@ -165,6 +165,11 @@ function toggleUserContractVisibility(participantId: number, enabled: boolean) {
   );
 }
 
+function previewParticipantPdf(participantId: number) {
+  const pdfUrl = route('participants.pdf', { participant: participantId });
+  window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+}
+
 function downgradeTeacherToParticipant(teacherId: number) {
   router.patch(
     route('teachers.update-role', { teacher: teacherId }),
@@ -382,14 +387,26 @@ function addTests() {
                         <span :class="getUserStatusColorClass(user.id)">{{ user.name }}</span>
                       </td>
                       <td class="px-3 py-1.5">
-                        <button type="button"
-                          class="inline-flex items-center gap-1 rounded border px-2 py-1 text-xs font-semibold transition dark:border-slate-600"
-                          :class="user.contract_view_enabled
-                            ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-100'
-                            : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-100'"
-                          @click.stop="toggleUserContractVisibility(user.id, !user.contract_view_enabled)">
-                          {{ user.contract_view_enabled ? 'Vertragsansicht sperren' : 'Vertrag freigeben' }}
-                        </button>
+                        <div class="flex items-center gap-2">
+                          <button type="button"
+                            class="inline-flex items-center gap-1 rounded border px-2 py-1 text-xs font-semibold transition dark:border-slate-600"
+                            :class="user.contract_view_enabled
+                              ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-100'
+                              : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-100'"
+                            @click.stop="toggleUserContractVisibility(user.id, !user.contract_view_enabled)">
+                            {{ user.contract_view_enabled ? 'Vertragsansicht sperren' : 'Vertrag freigeben' }}
+                          </button>
+                          <button type="button"
+                            class="inline-flex items-center justify-center rounded border border-slate-300 bg-white p-1 text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                            title="PDF-Vorschau öffnen"
+                            @click.stop="previewParticipantPdf(user.id)">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="h-4 w-4"
+                              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                     <tr v-if="!availableRecentUsers.length">
@@ -446,14 +463,26 @@ function addTests() {
                         <span :class="getUserStatusColorClass(user.id)">{{ user.name }}</span>
                       </td>
                       <td class="px-3 py-1.5">
-                        <button type="button"
-                          class="inline-flex items-center gap-1 rounded border px-2 py-1 text-xs font-semibold transition dark:border-slate-600"
-                          :class="user.contract_view_enabled
-                            ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-100'
-                            : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-100'"
-                          @click.stop="toggleUserContractVisibility(user.id, !user.contract_view_enabled)">
-                          {{ user.contract_view_enabled ? 'Vertragsansicht sperren' : 'Vertrag freigeben' }}
-                        </button>
+                        <div class="flex items-center gap-2">
+                          <button type="button"
+                            class="inline-flex items-center gap-1 rounded border px-2 py-1 text-xs font-semibold transition dark:border-slate-600"
+                            :class="user.contract_view_enabled
+                              ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-100'
+                              : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-100'"
+                            @click.stop="toggleUserContractVisibility(user.id, !user.contract_view_enabled)">
+                            {{ user.contract_view_enabled ? 'Vertragsansicht sperren' : 'Vertrag freigeben' }}
+                          </button>
+                          <button type="button"
+                            class="inline-flex items-center justify-center rounded border border-slate-300 bg-white p-1 text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                            title="PDF-Vorschau öffnen"
+                            @click.stop="previewParticipantPdf(user.id)">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="h-4 w-4"
+                              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                     <tr v-if="!availableImportedUsers.length">
