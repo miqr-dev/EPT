@@ -13,7 +13,6 @@ import {
 import MrtAResult from '@/components/MrtAResult.vue';
 import { useMrtA } from '@/composables/useMrtA';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
-import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 
 const { mrtQuestions, calculateScores } = useMrtA();
 
@@ -55,7 +54,7 @@ const props = defineProps<{
     timeRemainingSeconds?: number | null;
 }>();
 
-const emit = defineEmits(['complete', 'update:answers']);
+const emit = defineEmits(['complete', 'update:answers', 'started']);
 const endConfirmOpen = ref(false);
 
 const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
@@ -279,6 +278,7 @@ watch(currentQuestionIndex, async (newIndex, oldIndex) => {
 }, { immediate: true });
 
 const startTest = () => {
+  emit('started');
   showTest.value = true;
   currentQuestionIndex.value = 0;
   userAnswers.value = Array(mrtQuestions.length).fill(null);
@@ -299,7 +299,6 @@ const startTest = () => {
       <h1 class="text-2xl font-bold">MRT-A</h1>
     </div>
     <div class="mb-4">
-      <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
     </div>
     <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
       <div class="flex-1 flex flex-col gap-4">

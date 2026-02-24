@@ -12,10 +12,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
-import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 
-const emit = defineEmits(['complete']);
-const props = defineProps<{ timeRemainingSeconds?: number | null }>();
+const emit = defineEmits(['complete', 'started']);
 
 interface Question {
   text: string;
@@ -261,6 +259,7 @@ watch(currentQuestionIndex, async (newIndex, oldIndex) => {
 }, { immediate: true });
 
 const startTest = () => {
+  emit('started');
   showTest.value = true;
   currentQuestionIndex.value = 0;
   nextButtonClickCount.value = 0;
@@ -280,7 +279,6 @@ const startTest = () => {
       <h1 class="text-2xl font-bold">BRT-A</h1>
     </div>
     <div class="mb-4">
-      <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
     </div>
     <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20">
       <!-- Sidebar Navigation: Only visible during the test -->

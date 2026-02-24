@@ -3,11 +3,10 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { Head } from '@inertiajs/vue3'
 import { ref, computed, watch, nextTick } from 'vue'
 import { Button } from '@/components/ui/button'
-import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue'
 
 import { LMT_QUESTIONS, LMTQuestion } from '@/pages/Questions/LMTQuestions'
 
-const props = defineProps<{ timeRemainingSeconds?: number | null }>()
+const emit = defineEmits(['started'])
 
 const breadcrumbs = [
   { title: 'Tests', href: '/tests' },
@@ -33,6 +32,7 @@ const currentQuestion = computed(() =>
 )
 
 function startTest() {
+  emit('started')
   showTest.value = true
   currentQuestionIndex.value = 0
   userAnswers.value = Array(questions.value.length).fill(null)
@@ -122,8 +122,7 @@ function formatTime(sec: number | null): string {
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="max-w-3xl mx-auto p-6 bg-white border rounded-lg shadow space-y-8">
       <div>
-        <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
-      </div>
+        </div>
 
       <!-- Start Screen -->
       <div v-if="!showTest && !isTestComplete" class="text-center space-y-6">

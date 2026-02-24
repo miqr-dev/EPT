@@ -5,9 +5,7 @@ import { ref, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue'
 
-const props = defineProps<{ timeRemainingSeconds?: number | null }>()
 const startedAtMs = Date.now()
 
 /* =========================================================
@@ -79,7 +77,7 @@ const confirmFinishDespiteUnanswered = () => {
   showUnansweredDialog.value = false
   submitResults()
 }
-const emit = defineEmits(['complete'])
+const emit = defineEmits(['complete', 'started'])
 const toggleMark = (marks: boolean[], i: number) => (marks[i] = !marks[i])
 
 /* =========================================================
@@ -667,7 +665,6 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
   <Head title="628 Test" />
 
   <div class="mb-4">
-    <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
   </div>
 
   <!-- FULL WIDTH PAGE WRAPPER -->

@@ -12,7 +12,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
-import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 
 import { watch } from 'vue';
 
@@ -24,7 +23,7 @@ const props = defineProps<{
     timeRemainingSeconds?: number | null;
 }>();
 
-const emit = defineEmits(['complete', 'update:answers']);
+const emit = defineEmits(['complete', 'update:answers', 'started']);
 // Settings
 const QUESTIONS_PER_BLOCK = 24;
 
@@ -140,6 +139,7 @@ function jumpToQuestion(num: number) {
   if (idx !== -1) blockIndex.value = Math.floor(idx / QUESTIONS_PER_BLOCK);
 }
 function startTest() {
+  emit('started');
   startTime.value = Date.now();
   showTest.value = true;
 }
@@ -213,7 +213,6 @@ function finishTest() {
       <h1 class="text-2xl font-bold">FPI-R</h1>
     </div>
     <div class="mb-4">
-      <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
     </div>
     <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
 

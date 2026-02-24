@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BIT2_QUESTIONS } from '@/pages/Questions/BIT2Questions';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
-import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 import { Head } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
@@ -15,7 +14,7 @@ const props = defineProps<{
   timeRemainingSeconds?: number | null;
 }>();
 
-const emit = defineEmits(['complete', 'update:answers']);
+const emit = defineEmits(['complete', 'update:answers', 'started']);
 
 const showTest = ref(false);
 const pageIndex = ref(0); // 0 first 27, 1 remaining
@@ -73,6 +72,7 @@ const secondPageLeft = computed(() => BIT2_QUESTIONS.slice(27, 54));
 const secondPageRight = computed(() => BIT2_QUESTIONS.slice(54));
 
 function startTest() {
+  emit('started');
   showTest.value = true;
   pageIndex.value = 0;
 }
@@ -112,7 +112,6 @@ function confirmEnd() {
       <h1 class="text-2xl font-bold">BIT-2</h1>
     </div>
     <div class="mb-4">
-      <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
     </div>
     <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4">
       <div class="flex flex-1 flex-col gap-4">

@@ -3,7 +3,6 @@ import { Head } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { getLpsDataset, type LpsColumn3Option, type LpsPage1Solution } from '@/pages/Questions/LPSPage1';
 import { getLpsPage5Dataset, type LpsPage5Solution } from '@/pages/Questions/LPSPage5';
@@ -95,7 +94,7 @@ const props = defineProps<{
   testName?: string;
 }>();
 
-const emit = defineEmits(['complete', 'update:answers']);
+const emit = defineEmits(['complete', 'update:answers', 'started']);
 
 const { rows: lpsRows, solutions: lpsSolutions } = getLpsDataset(props.testName);
 const { rows: lpsPage5Rows, solutions: lpsPage5Solutions } = getLpsPage5Dataset(props.testName);
@@ -573,6 +572,7 @@ watch(
 );
 
 function startTest() {
+  emit('started');
   showTest.value = true;
   pageIndex.value = 0;
   elapsedSecondsBeforeResume.value = 0;
@@ -1174,8 +1174,7 @@ const page10MaxScore = computed(
 
           <div class="flex flex-col items-end gap-2">
             <div class="w-[520px]">
-              <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
-            </div>
+                    </div>
             <div v-if="showTest && isForcedFinish" class="text-xs font-semibold text-destructive">
               Test wird beendet in {{ forcedFinishCountdown }}s
             </div>

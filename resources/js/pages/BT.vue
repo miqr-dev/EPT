@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
+const emit = defineEmits(['started']);
+
 type Restriction = 'F' | 'S' | null;
 
 type Apprentice = {
@@ -232,6 +234,7 @@ function prevPage() {
 }
 
 function startTest() {
+  emit('started');
   showTest.value = true;
   page.value = 1;
 }

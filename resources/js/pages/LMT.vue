@@ -11,11 +11,9 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish'
-import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue'
 
 import { LMT_QUESTIONS, LMTQuestion } from '@/pages/Questions/LMTQuestions'
 
-const props = defineProps<{ timeRemainingSeconds?: number | null }>()
 
 const normTable = {
   L1: [22, 29, 34, 37, 41, 45, 47.5, 50, 54, 58, 62, 66, 70, 76, 81, 81, 81, 81, 81],
@@ -109,7 +107,7 @@ const totalPages = computed(() =>
 
 const isTestComplete = ref(false)
 
-const emit = defineEmits(['complete'])
+const emit = defineEmits(['complete', 'started'])
 
 const endConfirmOpen = ref(false)
 
@@ -137,6 +135,7 @@ const questionsOnPage = computed(() => {
 })
 
 function startTest() {
+  emit('started')
   showTest.value = true
   currentPage.value = 1
   isTestComplete.value = false
@@ -271,7 +270,6 @@ const totalTimeTaken = computed(() => {
       <h1 class="text-2xl font-bold">L-M-T</h1>
     </div>
     <div class="mb-4">
-      <TimeRemainingAlerts :time-remaining-seconds="props.timeRemainingSeconds" />
     </div>
     <div class="max-w-5xl mx-auto p-6 bg-background border border-border rounded shadow space-y-8 text-foreground">
 

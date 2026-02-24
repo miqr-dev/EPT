@@ -127,6 +127,7 @@ const previousStatusByStep = ref<Record<number, StepStatus | undefined>>({});
 const previousForceFinishByStep = ref<Record<number, string | null>>({});
 const remotelyPausedStepIds = new Set<number>();
 const pendingForceFinishRequests = new Map<number, ForceFinishDetail>();
+const hasRequestedAutoForceFinish = ref(false);
 
 const hasPausedStep = computed(() =>
   Object.values(stepStatuses.value || {}).some((status) => status?.status === 'paused'),
@@ -162,18 +163,14 @@ function displayTestName(name: string) {
   return name === 'Konzentrationstest' ? '628 Test' : name;
 }
 
-interface StartTestOptions {
-  skipServerStart?: boolean;
-}
-
-function startTest(step: ExamStepInfo, options: StartTestOptions = {}) {
-  openTestInterface(step, options);
+function startTest(step: ExamStepInfo) {
+  openTestInterface(step);
 }
 
 function handleStepActionClick(step: ExamStepInfo) {
   const status = stepStatuses.value[step.id]?.status;
   if (status === 'in_progress') {
-    startTest(step, { skipServerStart: true });
+    startTest(step);
     return;
   }
 
@@ -281,7 +278,7 @@ function isStepActionDisabled(step: ExamStepInfo) {
   return status === 'completed' || status === 'broken' || status === 'paused';
 }
 
-function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
+function openTestInterface(step: ExamStepInfo) {
   const component = testComponents[step.test.name];
 
   if (!component) {
@@ -311,17 +308,29 @@ function openTestInterface(step: ExamStepInfo, options: StartTestOptions = {}) {
     });
   };
 
-  if (options.skipServerStart) {
-    showDialog();
+  showDialog();
+}
+
+function handleTestStarted() {
+  if (typeof activeStepId.value !== 'number') return;
+
+  const stepId = activeStepId.value;
+  if (stepStatuses.value[stepId]?.status === 'in_progress') {
     return;
   }
 
   router.post(
     '/my-exam/start-step',
-    { exam_step_id: step.id },
+    { exam_step_id: stepId },
     {
       preserveScroll: true,
-      onSuccess: showDialog,
+      onSuccess: () => {
+        const status = stepStatuses.value[stepId];
+        if (status) {
+          status.status = 'in_progress';
+        }
+        startCountdownIfNeeded();
+      },
     },
   );
 }
@@ -407,6 +416,7 @@ function syncActiveTimeRemaining(stepId: number | null) {
 watch(
   () => activeStepId.value,
   (stepId) => {
+    hasRequestedAutoForceFinish.value = false;
     syncActiveTimeRemaining(typeof stepId === 'number' ? stepId : null);
   },
   { immediate: true },
@@ -414,7 +424,38 @@ watch(
 
 watch(
   () => isTestDialogOpen.value,
-  () => startCountdownIfNeeded(),
+  (isOpen) => {
+    if (!isOpen) {
+      hasRequestedAutoForceFinish.value = false;
+    }
+    startCountdownIfNeeded();
+  },
+);
+
+watch(
+  () => activeTimeRemainingSeconds.value,
+  (seconds) => {
+    if (!isTestDialogOpen.value || typeof activeStepId.value !== 'number') {
+      return;
+    }
+
+    const stepId = activeStepId.value;
+    if (stepStatuses.value[stepId]?.status !== 'in_progress') {
+      return;
+    }
+
+    if (typeof seconds === 'number' && seconds <= 0 && !hasRequestedAutoForceFinish.value) {
+      hasRequestedAutoForceFinish.value = true;
+      const now = Date.now();
+      const detail: ForceFinishDetail = {
+        stepId,
+        requestedAt: new Date(now).toISOString(),
+        deadline: new Date(now + 10_000).toISOString(),
+      };
+      pendingForceFinishRequests.set(stepId, detail);
+      dispatchForceFinish(detail);
+    }
+  },
 );
 
 function completeTest(results: any) {
@@ -534,7 +575,7 @@ function handleRemoteResume(stepId: number, status: StepStatus) {
     return;
   }
 
-  startTest(step, { skipServerStart: true });
+  startTest(step);
 }
 
 function buildForceFinishDetail(stepId: number, status: StepStatusEntry): ForceFinishDetail {
@@ -848,7 +889,7 @@ watch(
           <div class="flex-1">
             <KeepAlive>
               <component v-if="activeTestComponent" :is="activeTestComponent" :key="activeStepId ?? 'inactive'"
-                v-bind="activeComponentProps" @complete="completeTest" @update:answers="activeTestAnswers = $event" />
+                v-bind="activeComponentProps" @started="handleTestStarted" @complete="completeTest" @update:answers="activeTestAnswers = $event" />
             </KeepAlive>
           </div>
         </div>
