@@ -82,6 +82,14 @@ const getParticipantStatusFromExam = (exam: any, participant: any) => {
 const getParticipantStatus = (participant: any) =>
   getParticipantStatusFromExam(localExam.value, participant)
 
+const PAUSE_SUPPORTED_TEST_CODES = new Set(['FPI-R', 'MRT-A', 'MRT-B', 'LPS', 'LPS-A', 'LPS-B', 'BIT-2'])
+
+const isCurrentStepPauseSupported = () => {
+  const test = localExam.value?.current_step?.test
+  const testCode = (test?.code || test?.name || '').toString().trim().toUpperCase()
+  return PAUSE_SUPPORTED_TEST_CODES.has(testCode)
+}
+
 const toggleContractVisibility = (enabled: boolean) => {
   router.post(
     route('exams.set-contract-visibility', { exam: props.exam.id }),
@@ -293,6 +301,7 @@ const canPauseParticipant = (participant: any) => {
   const status = getParticipantStatus(participant)
   if (!status) return false
   if (localExam.value?.status !== 'in_progress') return false
+  if (!isCurrentStepPauseSupported()) return false
   return status.status === 'in_progress'
 }
 
