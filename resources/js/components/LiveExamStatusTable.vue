@@ -32,6 +32,42 @@ const stepRows = computed(() => {
 const firstStepRow = computed(() => stepRows.value[0] ?? [])
 const additionalStepRows = computed(() => stepRows.value.slice(1))
 
+const getStepProgressState = (stepId: number): 'not_started' | 'in_progress' | 'completed' => {
+  const participants = Array.isArray(localExam.value?.participants) ? localExam.value.participants : []
+  const stepStatuses = participants
+    .map((participant: any) => {
+      const statuses = participant.stepStatuses || participant.step_statuses || []
+      return statuses.find((status: any) => status.exam_step_id === stepId)?.status
+    })
+    .filter(Boolean)
+
+  const allCompleted = stepStatuses.length > 0 && stepStatuses.every((status: string) => ['completed', 'broken'].includes(status))
+  if (allCompleted) {
+    return 'completed'
+  }
+
+  const hasInProgress = stepStatuses.some((status: string) => ['in_progress', 'paused'].includes(status))
+  if (hasInProgress || localExam.value?.current_exam_step_id === stepId) {
+    return 'in_progress'
+  }
+
+  return 'not_started'
+}
+
+const getStepButtonClass = (stepId: number) => {
+  const state = getStepProgressState(stepId)
+
+  if (state === 'in_progress') {
+    return 'bg-green-600 hover:bg-green-700 text-white disabled:bg-green-600/70'
+  }
+
+  if (state === 'completed') {
+    return 'bg-black hover:bg-gray-900 text-white disabled:bg-black/80'
+  }
+
+  return 'bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-600/70'
+}
+
 const getParticipantStatusFromExam = (exam: any, participant: any) => {
   if (!exam.current_step) {
     return null
@@ -257,7 +293,7 @@ const canPauseParticipant = (participant: any) => {
   const status = getParticipantStatus(participant)
   if (!status) return false
   if (localExam.value?.status !== 'in_progress') return false
-  return !['paused', 'completed', 'broken'].includes(status.status)
+  return status.status === 'in_progress'
 }
 
 const canResumeParticipant = (participant: any) => {
@@ -318,14 +354,14 @@ const canForceFinishParticipant = (participant: any) => {
         <template v-if="exam.status === 'in_progress'">
           <div class="flex flex-wrap items-center gap-2">
             <Button v-for="step in firstStepRow" :key="step.id" @click="setStep(step.id)"
-              :disabled="exam.current_exam_step_id === step.id">
+              :disabled="exam.current_exam_step_id === step.id" :class="getStepButtonClass(step.id)">
               {{ step.test.name }} starten
             </Button>
           </div>
           <div v-for="(row, rowIndex) in additionalStepRows" :key="`step-row-${rowIndex}`"
             class="flex flex-wrap items-center gap-2">
             <Button v-for="step in row" :key="step.id" @click="setStep(step.id)"
-              :disabled="exam.current_exam_step_id === step.id">
+              :disabled="exam.current_exam_step_id === step.id" :class="getStepButtonClass(step.id)">
               {{ step.test.name }} starten
             </Button>
           </div>
@@ -359,8 +395,8 @@ const canForceFinishParticipant = (participant: any) => {
         </tr>
       </thead>
       <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-        <tr v-if="localExam && localExam.participants" v-for="participant in localExam.participants"
-          :key="participant.id">
+        <template v-if="localExam && localExam.participants">
+          <tr v-for="participant in localExam.participants" :key="participant.id">
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
               {{ participant.user.name }}
             </td>
@@ -387,8 +423,8 @@ const canForceFinishParticipant = (participant: any) => {
               {{ formatTime(getParticipantStatus(participant)?.time_remaining) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-              <div class="flex flex-col items-end gap-2">
-                <div class="flex justify-end gap-2">
+              <div class="flex flex-col items-end gap-1">
+                <div class="flex items-center justify-end gap-2 whitespace-nowrap">
                   <Button v-if="canPauseParticipant(participant)"
                     variant="secondary" size="sm" @click="setParticipantAction(participant, 'pause')">
                     Pausieren
@@ -401,9 +437,7 @@ const canForceFinishParticipant = (participant: any) => {
                     variant="destructive" size="sm" @click="setParticipantAction(participant, 'finish')">
                     Test beenden
                   </Button>
-                </div>
-                <div v-if="canAddExtraTime(participant)" class="flex flex-col items-end gap-1">
-                  <div class="flex items-center gap-2">
+                  <template v-if="canAddExtraTime(participant)">
                     <Button variant="outline" size="sm" @click="toggleExtraTime(participant)">
                       + Zeit
                     </Button>
@@ -419,15 +453,16 @@ const canForceFinishParticipant = (participant: any) => {
                         Hinzufügen
                       </Button>
                     </div>
-                  </div>
-                  <p v-if="getExtraTimeState(getParticipantUserId(participant))?.error"
-                    class="text-xs text-red-600 dark:text-red-400">
-                    {{ getExtraTimeState(getParticipantUserId(participant))?.error }}
-                  </p>
+                  </template>
                 </div>
+                <p v-if="getExtraTimeState(getParticipantUserId(participant))?.error"
+                  class="text-xs text-red-600 dark:text-red-400">
+                  {{ getExtraTimeState(getParticipantUserId(participant))?.error }}
+                </p>
               </div>
             </td>
           </tr>
+        </template>
         </tbody>
       </table>
     </div>
