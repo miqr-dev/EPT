@@ -18,7 +18,8 @@ const localParticipantIds = ref<number[]>([])
 const participantSearch = ref('')
 const testSearch = ref('')
 
-const isLocked = computed(() => props.exam && props.exam.status !== 'not_started')
+const participantsLocked = computed(() => !props.exam || props.exam.status === 'completed')
+const stepsLocked = computed(() => !props.exam || props.exam.status !== 'not_started')
 
 watch(() => props.exam, (newExam) => {
   if (newExam && newExam.steps) {
@@ -84,12 +85,12 @@ function closeModal() {
 }
 
 function removeStep(stepId: number) {
-  if (isLocked.value) return
+  if (stepsLocked.value) return
   localSteps.value = localSteps.value.filter((step) => step.id !== stepId)
 }
 
 function addTest(test: any) {
-  if (isLocked.value) return
+  if (stepsLocked.value) return
   localSteps.value.push({
     id: `new-${test.id}-${Date.now()}`,
     test_id: test.id,
@@ -99,14 +100,14 @@ function addTest(test: any) {
 }
 
 function addParticipant(userId: number) {
-  if (isLocked.value) return
+  if (participantsLocked.value) return
   if (!localParticipantIds.value.includes(userId)) {
     localParticipantIds.value.push(userId)
   }
 }
 
 function removeParticipant(userId: number) {
-  if (isLocked.value) return
+  if (participantsLocked.value) return
   localParticipantIds.value = localParticipantIds.value.filter((id) => id !== userId)
 }
 
@@ -135,8 +136,12 @@ function startExam() {
         <button @click="closeModal" class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">&times;</button>
       </div>
 
-      <p v-if="isLocked" class="mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-        Teilnehmer:innen und Testschritte können nur vor Prüfungsstart geändert werden.
+      <p v-if="participantsLocked" class="mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        Teilnehmer:innen können bei abgeschlossenen Prüfungen nicht mehr geändert werden.
+      </p>
+
+      <p v-else-if="stepsLocked" class="mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        Bei laufenden Prüfungen können Teilnehmer:innen geändert werden, Testschritte jedoch nicht.
       </p>
 
       <div class="grid gap-4 md:grid-cols-2">
@@ -145,12 +150,12 @@ function startExam() {
           <ul class="space-y-1 text-sm">
             <li v-for="u in selectedParticipants" :key="u.id" class="flex items-center justify-between rounded border border-gray-200 px-2 py-1">
               <span :class="participantColorClass(u.id)">{{ u.name }}, {{ u.firstname }}</span>
-              <button v-if="!isLocked" @click="removeParticipant(u.id)" class="text-red-600 font-bold">&times;</button>
+              <button v-if="!participantsLocked" @click="removeParticipant(u.id)" class="text-red-600 font-bold">&times;</button>
             </li>
             <li v-if="!selectedParticipants.length" class="text-gray-400">Keine Teilnehmer:innen zugewiesen.</li>
           </ul>
 
-          <div v-if="!isLocked" class="mt-3">
+          <div v-if="!participantsLocked" class="mt-3">
             <input v-model="participantSearch" type="search" placeholder="Teilnehmer suchen..." class="w-full rounded border border-gray-300 px-2 py-1 text-sm" />
             <ul class="mt-2 max-h-40 overflow-y-auto space-y-1">
               <li v-for="u in availableParticipants" :key="`avail-${u.id}`" class="flex items-center justify-between rounded border border-gray-200 px-2 py-1 text-sm">
@@ -164,16 +169,16 @@ function startExam() {
 
         <div>
           <h3 class="font-semibold mb-2 text-gray-800 dark:text-gray-200">Schritte (zum Neuordnen ziehen)</h3>
-          <draggable v-model="localSteps" item-key="id" class="space-y-2" :disabled="isLocked">
+          <draggable v-model="localSteps" item-key="id" class="space-y-2" :disabled="stepsLocked">
             <template #item="{ element }">
               <div class="flex items-center justify-between p-2 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 cursor-move text-gray-800 dark:text-gray-200">
                 <span>{{ element.test.name }}</span>
-                <button v-if="!isLocked" @click="removeStep(element.id)" class="text-red-500 hover:text-red-700 font-bold">&times;</button>
+                <button v-if="!stepsLocked" @click="removeStep(element.id)" class="text-red-500 hover:text-red-700 font-bold">&times;</button>
               </div>
             </template>
           </draggable>
 
-          <div v-if="!isLocked" class="mt-3">
+          <div v-if="!stepsLocked" class="mt-3">
             <input v-model="testSearch" type="search" placeholder="Tests suchen..." class="w-full rounded border border-gray-300 px-2 py-1 text-sm" />
             <ul class="mt-2 max-h-40 overflow-y-auto space-y-1">
               <li v-for="test in availableTests" :key="`test-${test.id}`" class="flex items-center justify-between rounded border border-gray-200 px-2 py-1 text-sm">
@@ -188,7 +193,7 @@ function startExam() {
 
       <div class="mt-6 flex justify-end gap-2">
         <button @click="closeModal" class="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-500">Schließen</button>
-        <button v-if="!isLocked" @click="saveChanges" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Änderungen speichern</button>
+        <button v-if="!participantsLocked" @click="saveChanges" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Änderungen speichern</button>
         <button v-if="exam && exam.status === 'not_started'" @click="startExam" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
           Prüfung starten
         </button>

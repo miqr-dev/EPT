@@ -73,12 +73,17 @@ function openExamDetailsModal(exam: any) {
 
 function saveExamSteps(payload: { steps: any[]; participantIds: number[] }) {
   if (!selectedExam.value) return;
+  const requestPayload: Record<string, any> = {
+    participant_ids: payload.participantIds,
+  };
+
+  if (selectedExam.value.status === 'not_started') {
+    requestPayload.steps = payload.steps.map((s) => ({ id: s.test_id ?? s.id }));
+  }
+
   router.put(
     route('exams.updateConfiguration', selectedExam.value.id),
-    {
-      participant_ids: payload.participantIds,
-      steps: payload.steps.map((s) => ({ id: s.test_id ?? s.id })),
-    },
+    requestPayload,
     {
       onSuccess: () => {
         showExamDetailsModal.value = false;

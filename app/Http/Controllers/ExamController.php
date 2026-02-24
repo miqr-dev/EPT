@@ -462,16 +462,20 @@ class ExamController extends Controller
 
   public function updateConfiguration(Request $request, Exam $exam): RedirectResponse
   {
-    if ($exam->status !== 'not_started') {
-      return back(303)->with('error', 'Teilnehmer:innen und Testschritte können nur vor Prüfungsstart geändert werden.');
+    $data = $request->validate([
+      'participant_ids' => 'required|array',
+      'participant_ids.*' => 'required|exists:users,id',
+      'steps' => 'sometimes|array|min:1',
+      'steps.*.id' => 'required_with:steps|exists:tests,id',
+    ]);
+
+    if (!in_array($exam->status, ['not_started', 'in_progress', 'paused'], true)) {
+      return back(303)->with('error', 'Teilnehmer:innen können bei abgeschlossenen Prüfungen nicht mehr geändert werden.');
     }
 
-    $data = $request->validate([
-      'participant_ids' => 'required|array|min:1',
-      'participant_ids.*' => 'required|exists:users,id',
-      'steps' => 'required|array|min:1',
-      'steps.*.id' => 'required|exists:tests,id',
-    ]);
+    if ($exam->status !== 'not_started' && array_key_exists('steps', $data)) {
+      return back(303)->with('error', 'Testschritte können nur vor Prüfungsstart geändert werden.');
+    }
 
     $participantIds = User::whereIn('id', $data['participant_ids'])
       ->where('role', 'participant')
@@ -483,6 +487,8 @@ class ExamController extends Controller
       return back(303)->with('error', 'Ungültige Teilnehmerauswahl für diese Stadt.');
     }
 
+    $previousParticipantIds = $exam->participants()->pluck('participant_id')->all();
+
     ExamParticipant::where('exam_id', $exam->id)->delete();
 
     foreach ($participantIds as $participantId) {
@@ -490,6 +496,48 @@ class ExamController extends Controller
         'exam_id' => $exam->id,
         'participant_id' => $participantId,
       ]);
+    }
+
+    if ($exam->status !== 'not_started') {
+      $removedParticipantIds = array_values(array_diff($previousParticipantIds, $participantIds));
+      if (!empty($removedParticipantIds)) {
+        ExamStepStatus::where('exam_id', $exam->id)
+          ->whereIn('participant_id', $removedParticipantIds)
+          ->delete();
+      }
+
+      $addedParticipantIds = array_values(array_diff($participantIds, $previousParticipantIds));
+      if (!empty($addedParticipantIds) && $exam->currentStep) {
+        $completedAssignments = collect();
+        if ($exam->currentStep->test_id) {
+          $completedAssignments = TestAssignment::where('test_id', $exam->currentStep->test_id)
+            ->whereIn('participant_id', $addedParticipantIds)
+            ->where('status', 'completed')
+            ->whereHas('results')
+            ->get(['participant_id', 'completed_at'])
+            ->keyBy('participant_id');
+        }
+
+        foreach ($addedParticipantIds as $participantId) {
+          $completedAssignment = $completedAssignments->get($participantId);
+          $isCompleted = $completedAssignment !== null;
+
+          ExamStepStatus::firstOrCreate([
+            'exam_id' => $exam->id,
+            'exam_step_id' => $exam->current_exam_step_id,
+            'participant_id' => $participantId,
+          ], [
+            'status' => $isCompleted ? 'completed' : 'not_started',
+            'completed_at' => $isCompleted ? ($completedAssignment->completed_at ?? now()) : null,
+          ]);
+        }
+      }
+
+      return back(303)->with('success', 'Teilnehmer:innen aktualisiert.');
+    }
+
+    if (!array_key_exists('steps', $data)) {
+      return back(303)->with('error', 'Mindestens ein Testschritt ist erforderlich.');
     }
 
     $exam->steps()->delete();
