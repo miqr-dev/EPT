@@ -1,50 +1,43 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
-import { ref, computed, watch } from 'vue';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import MrtAResult from '@/components/MrtAResult.vue';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useMrtA } from '@/composables/useMrtA';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
+import { Head, usePage } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
 
 const { mrtQuestions, calculateScores } = useMrtA();
 
 const page = usePage<{
-  auth: {
-    user: {
-      name: string;
-      participant_profile?: {
-        age?: number;
-      };
+    auth: {
+        user: {
+            name: string;
+            participant_profile?: {
+                age?: number;
+            };
+        };
     };
-  };
 }>();
 const profile = computed(() => page.props.auth?.user?.participant_profile);
 const userAge = computed<number | null>(() => {
     // Case 1: User has a participant profile with an age.
-  if (profile.value && typeof profile.value.age === 'number') {
-    return profile.value.age;
-  }
-  if (profile.value && profile.value.age) {
-      return Number(profile.value.age)
-  }
+    if (profile.value && typeof profile.value.age === 'number') {
+        return profile.value.age;
+    }
+    if (profile.value && profile.value.age) {
+        return Number(profile.value.age);
+    }
 
-  // Case 2: User does NOT have a participant profile (is an admin/tester).
-  if (!profile.value) {
-    // Generate a random age for non-participants.
-    return Math.floor(Math.random() * (50 - 20 + 1)) + 20;
-  }
+    // Case 2: User does NOT have a participant profile (is an admin/tester).
+    if (!profile.value) {
+        // Generate a random age for non-participants.
+        return Math.floor(Math.random() * (50 - 20 + 1)) + 20;
+    }
 
-  // Case 3: User has a participant profile but no age.
-  // In this case, we do not generate a random age, preserving the original behavior for participants.
-  return null;
+    // Case 3: User has a participant profile but no age.
+    // In this case, we do not generate a random age, preserving the original behavior for participants.
+    return null;
 });
 const props = defineProps<{
     pausedTestResult?: {
@@ -58,20 +51,19 @@ const emit = defineEmits(['complete', 'update:answers', 'started']);
 const endConfirmOpen = ref(false);
 
 const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
-  isActive: () => showTest.value && !isTestComplete.value,
-  onStart: () => {
-    endConfirmOpen.value = true;
-    window.dispatchEvent(new Event('start-finish'));
-  },
-  onCountdownFinished: () => {
-    confirmEnd();
-  },
-  onCancel: () => {
-    if (endConfirmOpen.value) {
-      window.dispatchEvent(new Event('cancel-finish'));
-      endConfirmOpen.value = false;
-    }
-  },
+    isActive: () => showTest.value && !isTestComplete.value,
+    onStart: () => {
+        window.dispatchEvent(new Event('start-finish'));
+    },
+    onCountdownFinished: () => {
+        confirmEnd();
+    },
+    onCancel: () => {
+        if (endConfirmOpen.value) {
+            window.dispatchEvent(new Event('cancel-finish'));
+            endConfirmOpen.value = false;
+        }
+    },
 });
 
 const showResults = ref(false);
@@ -116,281 +108,244 @@ watch(
 
 const isTestComplete = computed(() => currentQuestionIndex.value >= mrtQuestions.length);
 
-
-const totalTimeTaken = computed(() =>
-  isTestComplete.value
-    ? questionTimes.value.reduce((a, b) => a + b, 0)
-    : null
-);
-const currentQuestion = computed(() =>
-  currentQuestionIndex.value < mrtQuestions.length
-    ? mrtQuestions[currentQuestionIndex.value]
-    : null
-);
+const totalTimeTaken = computed(() => (isTestComplete.value ? questionTimes.value.reduce((a, b) => a + b, 0) : null));
+const currentQuestion = computed(() => (currentQuestionIndex.value < mrtQuestions.length ? mrtQuestions[currentQuestionIndex.value] : null));
 
 // --- Option selection state per question ---
 const tempSelected = ref<(string | null)[]>(Array(mrtQuestions.length).fill(null));
-const tempClickState = ref<(boolean)[]>(Array(mrtQuestions.length).fill(false)); // false = first click, true = need confirm
+const tempClickState = ref<boolean[]>(Array(mrtQuestions.length).fill(false)); // false = first click, true = need confirm
 
 // -------------- LOGIC ---------------
 const handleOptionClick = (optIdx: number) => {
-  const qidx = currentQuestionIndex.value;
-  const letter = String.fromCharCode(65 + optIdx);
+    const qidx = currentQuestionIndex.value;
+    const letter = String.fromCharCode(65 + optIdx);
 
-  if (!tempClickState.value[qidx]) {
-    // First click: mark as temp, wait for confirm
-    tempSelected.value[qidx] = letter;
-    tempClickState.value[qidx] = true;
-  } else if (tempSelected.value[qidx] === letter) {
-    // Confirm: set as answer and auto-next!
-    userAnswers.value[qidx] = letter;
-    tempClickState.value[qidx] = false;
-    tempSelected.value[qidx] = null;
+    if (!tempClickState.value[qidx]) {
+        // First click: mark as temp, wait for confirm
+        tempSelected.value[qidx] = letter;
+        tempClickState.value[qidx] = true;
+    } else if (tempSelected.value[qidx] === letter) {
+        // Confirm: set as answer and auto-next!
+        userAnswers.value[qidx] = letter;
+        tempClickState.value[qidx] = false;
+        tempSelected.value[qidx] = null;
 
-    // --- After confirming, record time and auto-jump ---
-    const now = Date.now();
-    if (
-      qidx >= 0 &&
-      qidx < mrtQuestions.length &&
-      questionStartTimestamps.value[qidx]
-    ) {
-      questionTimes.value[qidx] += Math.round(
-        (now - (questionStartTimestamps.value[qidx] as number)) / 1000
-      );
-      questionStartTimestamps.value[qidx] = null;
+        // --- After confirming, record time and auto-jump ---
+        const now = Date.now();
+        if (qidx >= 0 && qidx < mrtQuestions.length && questionStartTimestamps.value[qidx]) {
+            questionTimes.value[qidx] += Math.round((now - (questionStartTimestamps.value[qidx] as number)) / 1000);
+            questionStartTimestamps.value[qidx] = null;
+        }
+        if (currentQuestionIndex.value < mrtQuestions.length - 1) {
+            currentQuestionIndex.value++;
+        }
+    } else {
+        // Clicked a different option, reset temp selection
+        tempSelected.value[qidx] = letter;
+        tempClickState.value[qidx] = true;
     }
-    if (currentQuestionIndex.value < mrtQuestions.length - 1) {
-      currentQuestionIndex.value++;
-    }
-  } else {
-    // Clicked a different option, reset temp selection
-    tempSelected.value[qidx] = letter;
-    tempClickState.value[qidx] = true;
-  }
 };
 
-
 const handleNextClick = () => {
-  const now = Date.now();
-  const qidx = currentQuestionIndex.value;
-  if (
-    qidx >= 0 &&
-    qidx < mrtQuestions.length &&
-    questionStartTimestamps.value[qidx]
-  ) {
-    questionTimes.value[qidx] += Math.round(
-      (now - (questionStartTimestamps.value[qidx] as number)) / 1000
-    );
-    questionStartTimestamps.value[qidx] = null;
-  }
-  if (currentQuestionIndex.value < mrtQuestions.length - 1) {
-    currentQuestionIndex.value++;
-  }
+    const now = Date.now();
+    const qidx = currentQuestionIndex.value;
+    if (qidx >= 0 && qidx < mrtQuestions.length && questionStartTimestamps.value[qidx]) {
+        questionTimes.value[qidx] += Math.round((now - (questionStartTimestamps.value[qidx] as number)) / 1000);
+        questionStartTimestamps.value[qidx] = null;
+    }
+    if (currentQuestionIndex.value < mrtQuestions.length - 1) {
+        currentQuestionIndex.value++;
+    }
 };
 
 const handlePrevClick = () => {
-  const now = Date.now();
-  const qidx = currentQuestionIndex.value;
-  if (
-    qidx >= 0 &&
-    qidx < mrtQuestions.length &&
-    questionStartTimestamps.value[qidx]
-  ) {
-    questionTimes.value[qidx] += Math.round(
-      (now - (questionStartTimestamps.value[qidx] as number)) / 1000
-    );
-    questionStartTimestamps.value[qidx] = null;
-  }
-  if (currentQuestionIndex.value > 0) {
-    currentQuestionIndex.value--;
-  }
+    const now = Date.now();
+    const qidx = currentQuestionIndex.value;
+    if (qidx >= 0 && qidx < mrtQuestions.length && questionStartTimestamps.value[qidx]) {
+        questionTimes.value[qidx] += Math.round((now - (questionStartTimestamps.value[qidx] as number)) / 1000);
+        questionStartTimestamps.value[qidx] = null;
+    }
+    if (currentQuestionIndex.value > 0) {
+        currentQuestionIndex.value--;
+    }
 };
 
 const finishTest = () => {
-  window.dispatchEvent(new Event('start-finish'));
-  endConfirmOpen.value = true;
+    window.dispatchEvent(new Event('start-finish'));
+    endConfirmOpen.value = true;
 };
 
 const cancelEnd = () => {
-  if (isForcedFinish.value) {
-    return;
-  }
-  window.dispatchEvent(new Event('cancel-finish'));
-  endConfirmOpen.value = false;
-  clearForcedFinish(false);
+    window.dispatchEvent(new Event('cancel-finish'));
+    endConfirmOpen.value = false;
+    clearForcedFinish(false);
 };
 
 function confirmEnd() {
-  clearForcedFinish(false);
-  const now = Date.now();
-  const qidx = currentQuestionIndex.value;
-  if (
-    qidx >= 0 &&
-    qidx < mrtQuestions.length &&
-    questionStartTimestamps.value[qidx]
-  ) {
-    questionTimes.value[qidx] += Math.round(
-      (now - (questionStartTimestamps.value[qidx] as number)) / 1000
-    );
-    questionStartTimestamps.value[qidx] = null;
-  }
-  currentQuestionIndex.value = mrtQuestions.length;
-  endConfirmOpen.value = false;
-  showResults.value = true;
-  emit('complete', calculatedResults.value);
+    clearForcedFinish(false);
+    const now = Date.now();
+    const qidx = currentQuestionIndex.value;
+    if (qidx >= 0 && qidx < mrtQuestions.length && questionStartTimestamps.value[qidx]) {
+        questionTimes.value[qidx] += Math.round((now - (questionStartTimestamps.value[qidx] as number)) / 1000);
+        questionStartTimestamps.value[qidx] = null;
+    }
+    currentQuestionIndex.value = mrtQuestions.length;
+    endConfirmOpen.value = false;
+    showResults.value = true;
+    emit('complete', calculatedResults.value);
 }
 
 const calculatedResults = computed(() => {
-  if (!isTestComplete.value) return null;
+    if (!isTestComplete.value) return null;
 
-  const scoreData = calculateScores(
-    userAnswers.value.map(ans => ({ user_answer: ans })),
-    userAge.value
-  );
+    const scoreData = calculateScores(
+        userAnswers.value.map((ans) => ({ user_answer: ans })),
+        userAge.value,
+    );
 
-  return {
-    ...scoreData,
-    total_time_seconds: totalTimeTaken.value,
-    answers: scoreData.answers.map((ans, i) => ({
-      ...ans,
-      time_seconds: questionTimes.value[i],
-    })),
-  };
+    return {
+        ...scoreData,
+        total_time_seconds: totalTimeTaken.value,
+        answers: scoreData.answers.map((ans, i) => ({
+            ...ans,
+            time_seconds: questionTimes.value[i],
+        })),
+    };
 });
 
-watch(currentQuestionIndex, async (newIndex, oldIndex) => {
-  const now = Date.now();
-  if (
-    typeof newIndex === 'number' &&
-    newIndex >= 0 &&
-    newIndex < mrtQuestions.length
-  ) {
-    if (!questionStartTimestamps.value[newIndex]) {
-      questionStartTimestamps.value[newIndex] = now;
-    }
-  }
-  if (newIndex === 0 && startTime.value === null) {
-    startTime.value = now;
-  }
-  // Reset temp selection for new question
-  tempSelected.value[newIndex] = null;
-  tempClickState.value[newIndex] = false;
-}, { immediate: true });
+watch(
+    currentQuestionIndex,
+    async (newIndex, oldIndex) => {
+        const now = Date.now();
+        if (typeof newIndex === 'number' && newIndex >= 0 && newIndex < mrtQuestions.length) {
+            if (!questionStartTimestamps.value[newIndex]) {
+                questionStartTimestamps.value[newIndex] = now;
+            }
+        }
+        if (newIndex === 0 && startTime.value === null) {
+            startTime.value = now;
+        }
+        // Reset temp selection for new question
+        tempSelected.value[newIndex] = null;
+        tempClickState.value[newIndex] = false;
+    },
+    { immediate: true },
+);
 
 const startTest = () => {
-  emit('started');
-  showTest.value = true;
-  currentQuestionIndex.value = 0;
-  userAnswers.value = Array(mrtQuestions.length).fill(null);
-  tempSelected.value = Array(mrtQuestions.length).fill(null);
-  tempClickState.value = Array(mrtQuestions.length).fill(false);
-  questionTimes.value = Array(mrtQuestions.length).fill(0);
-  questionStartTimestamps.value = Array(mrtQuestions.length).fill(null);
-  startTime.value = null;
+    emit('started');
+    showTest.value = true;
+    currentQuestionIndex.value = 0;
+    userAnswers.value = Array(mrtQuestions.length).fill(null);
+    tempSelected.value = Array(mrtQuestions.length).fill(null);
+    tempClickState.value = Array(mrtQuestions.length).fill(false);
+    questionTimes.value = Array(mrtQuestions.length).fill(0);
+    questionStartTimestamps.value = Array(mrtQuestions.length).fill(null);
+    startTime.value = null;
 };
-
 </script>
 
 <template>
-
-  <Head title="Tests" />
-  <div class="p-4">
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold">MRT-A</h1>
-    </div>
-    <div class="mb-4">
-    </div>
-    <div class="flex flex-1 min-h-[600px] gap-4 rounded-xl p-4 bg-muted/20 text-foreground">
-      <div class="flex-1 flex flex-col gap-4">
-        <!-- Start Test Screen -->
-        <div v-if="!showTest" class="flex flex-col items-center justify-center h-full">
-          <h2 class="text-2xl font-bold mb-4">Willkommen zum Mannheimer Rechtschreibtest</h2>
-          <p class="mb-6 text-base text-center max-w-xl">
-            Mit diesem Verfahren wollen wir wissen, wie Ihre Rechtschreibkenntnisse sind. Jede Aufgabe enthält vier Wörter.
-            Wählen Sie das richtig geschriebene Wort aus.
-          </p>
-          <p class="font-semibold">Beispielaufgabe:</p>
-          <!-- Images column -->
-          <div class="flex flex-col items-center gap-6 my-6">
-            <img src="/images/MRT/woerter_empty.PNG" alt="Beispiel falsch"
-              class="w-[600px] h-[150px] object-contain rounded shadow" />
-            <img src="/images/MRT/woerter_selectedPNG.PNG" alt="Beispiel richtig"
-              class="w-[600px] h-[150px] object-contain rounded shadow" />
-          </div>
-          <p>Dieses klicken Sie an und bestätigen es mit einem weiteren Klick. Es gilt die alte und neue Rechtschreibung.
-          </p>
-          <Button @click="startTest" class="px-8 py-3 mt-6 text-lg font-semibold rounded-xl shadow"
-            :disabled="!userAge">
-            Test starten
-          </Button>
+    <Head title="Tests" />
+    <div class="p-4">
+        <div class="mb-4 flex items-center justify-between">
+            <h1 class="text-2xl font-bold">MRT-A</h1>
         </div>
+        <div class="mb-4"></div>
+        <div
+            v-if="showTest && isForcedFinish"
+            class="mb-4 rounded-lg border border-red-300 bg-red-600 px-6 py-4 text-center text-lg font-bold text-white shadow"
+        >
+            Zeit abgelaufen! Der Test wird automatisch in {{ forcedFinishCountdown }} Sekunden beendet.
+        </div>
+        <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4 text-foreground">
+            <div class="flex flex-1 flex-col gap-4">
+                <!-- Start Test Screen -->
+                <div v-if="!showTest" class="flex h-full flex-col items-center justify-center">
+                    <h2 class="mb-4 text-2xl font-bold">Willkommen zum Mannheimer Rechtschreibtest</h2>
+                    <p class="mb-6 max-w-xl text-center text-base">
+                        Mit diesem Verfahren wollen wir wissen, wie Ihre Rechtschreibkenntnisse sind. Jede Aufgabe enthält vier Wörter. Wählen Sie das
+                        richtig geschriebene Wort aus.
+                    </p>
+                    <p class="font-semibold">Beispielaufgabe:</p>
+                    <!-- Images column -->
+                    <div class="my-6 flex flex-col items-center gap-6">
+                        <img src="/images/MRT/woerter_empty.PNG" alt="Beispiel falsch" class="h-[150px] w-[600px] rounded object-contain shadow" />
+                        <img
+                            src="/images/MRT/woerter_selectedPNG.PNG"
+                            alt="Beispiel richtig"
+                            class="h-[150px] w-[600px] rounded object-contain shadow"
+                        />
+                    </div>
+                    <p>Dieses klicken Sie an und bestätigen es mit einem weiteren Klick. Es gilt die alte und neue Rechtschreibung.</p>
+                    <Button @click="startTest" class="mt-6 rounded-xl px-8 py-3 text-lg font-semibold shadow" :disabled="!userAge">
+                        Test starten
+                    </Button>
+                </div>
 
-        <!-- Test Content -->
-        <div v-else-if="!isTestComplete && currentQuestion" class="p-6 bg-background border rounded-lg">
-          <h2 class="text-xl font-semibold mb-4">Frage {{ currentQuestionIndex + 1 }}:</h2>
-          <div class="flex flex-row gap-4 mb-6">
-            <div v-for="(option, oidx) in currentQuestion.options" :key="oidx" class="flex flex-col items-center">
-              <button class="px-4 py-3 rounded-xl border transition text-base font-sans font-semibold min-w-[120px]"
-                :class="[
-                  userAnswers[currentQuestionIndex] === String.fromCharCode(65 + oidx)
-                    ? 'bg-blue-300 border-blue-700 text-blue-900 dark:bg-blue-900 dark:text-blue-100'
-                    : tempSelected[currentQuestionIndex] === String.fromCharCode(65 + oidx)
-                      ? 'bg-blue-100 border-blue-500 text-blue-900 dark:bg-blue-800 dark:border-blue-600 dark:text-blue-100'
-                      : 'bg-white border-gray-300 hover:bg-blue-50 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-blue-900',
-                  'focus:outline-none',
-                  userAnswers[currentQuestionIndex] ? 'cursor-default opacity-60' : 'cursor-pointer'
-                ]" @click="handleOptionClick(oidx)" :disabled="false">
-                <!-- *** NO LETTERS, JUST OPTION *** -->
-                <span class="font-sans select-none">{{ option }}</span>
-              </button>
-              <span
-                v-if="tempSelected[currentQuestionIndex] === String.fromCharCode(65 + oidx) && tempClickState[currentQuestionIndex] && !userAnswers[currentQuestionIndex]"
-                class="mt-2 text-xs text-blue-700 font-semibold">
-                Klicken Sie erneut zum Bestätigen
-              </span>
+                <!-- Test Content -->
+                <div v-else-if="!isTestComplete && currentQuestion" class="rounded-lg border bg-background p-6">
+                    <h2 class="mb-4 text-xl font-semibold">Frage {{ currentQuestionIndex + 1 }}:</h2>
+                    <div class="mb-6 flex flex-row gap-4">
+                        <div v-for="(option, oidx) in currentQuestion.options" :key="oidx" class="flex flex-col items-center">
+                            <button
+                                class="min-w-[120px] rounded-xl border px-4 py-3 font-sans text-base font-semibold transition"
+                                :class="[
+                                    userAnswers[currentQuestionIndex] === String.fromCharCode(65 + oidx)
+                                        ? 'border-blue-700 bg-blue-300 text-blue-900 dark:bg-blue-900 dark:text-blue-100'
+                                        : tempSelected[currentQuestionIndex] === String.fromCharCode(65 + oidx)
+                                          ? 'border-blue-500 bg-blue-100 text-blue-900 dark:border-blue-600 dark:bg-blue-800 dark:text-blue-100'
+                                          : 'border-gray-300 bg-white hover:bg-blue-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-blue-900',
+                                    'focus:outline-none',
+                                    userAnswers[currentQuestionIndex] ? 'cursor-default opacity-60' : 'cursor-pointer',
+                                ]"
+                                @click="handleOptionClick(oidx)"
+                                :disabled="false"
+                            >
+                                <!-- *** NO LETTERS, JUST OPTION *** -->
+                                <span class="font-sans select-none">{{ option }}</span>
+                            </button>
+                            <span
+                                v-if="
+                                    tempSelected[currentQuestionIndex] === String.fromCharCode(65 + oidx) &&
+                                    tempClickState[currentQuestionIndex] &&
+                                    !userAnswers[currentQuestionIndex]
+                                "
+                                class="mt-2 text-xs font-semibold text-blue-700"
+                            >
+                                Klicken Sie erneut zum Bestätigen
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex flex-row justify-between">
+                        <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline"> Zurück </Button>
+                        <Button v-if="isLastQuestion" @click="finishTest" :disabled="!userAnswers[currentQuestionIndex]" variant="destructive">
+                            Test beenden
+                        </Button>
+                        <Button v-else @click="handleNextClick" :disabled="!userAnswers[currentQuestionIndex]"> Weiter </Button>
+                    </div>
+                </div>
+
+                <!-- Test Results -->
+                <div v-else-if="isTestComplete && showResults">
+                    <MrtAResult class="invisible" :results="calculatedResults" />
+                </div>
+
+                <div v-else></div>
             </div>
-          </div>
-
-          <div class="flex flex-row justify-between mt-4">
-            <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline">
-              Zurück
-            </Button>
-            <Button v-if="isLastQuestion" @click="finishTest" :disabled="!userAnswers[currentQuestionIndex]"
-              variant="destructive">
-              Test beenden
-            </Button>
-            <Button v-else @click="handleNextClick" :disabled="!userAnswers[currentQuestionIndex]">
-              Weiter
-            </Button>
-          </div>
         </div>
-
-        <!-- Test Results -->
-        <div v-else-if="isTestComplete && showResults">
-          <MrtAResult class="invisible" :results="calculatedResults" />
-        </div>
-
-        <div v-else></div>
-      </div>
+        <Dialog v-model:open="endConfirmOpen">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Test beenden</DialogTitle>
+                    <DialogDescription> Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück. </DialogDescription>
+                </DialogHeader>
+                <DialogFooter class="gap-2">
+                    <Button variant="secondary" @click="cancelEnd">Abbrechen</Button>
+                    <Button variant="destructive" @click="confirmEnd">Ja</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </div>
-    <Dialog v-model:open="endConfirmOpen">
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Test beenden</DialogTitle>
-          <DialogDescription v-if="!isForcedFinish">
-            Sind Sie sicher, dass Sie den Test beenden möchten? Es gibt kein Zurück.
-          </DialogDescription>
-          <DialogDescription v-else>
-            Der Test wird automatisch in {{ forcedFinishCountdown }} Sekunden beendet.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter class="gap-2">
-          <Button v-if="!isForcedFinish" variant="secondary" @click="cancelEnd">Abbrechen</Button>
-          <Button variant="destructive" @click="confirmEnd">
-            {{ isForcedFinish ? 'Jetzt beenden' : 'Ja' }}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  </div>
 </template>
