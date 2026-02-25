@@ -5,6 +5,7 @@ import { ref, computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish'
 
 const startedAtMs = Date.now()
 
@@ -23,6 +24,23 @@ const prevPage = () => {
 
 const showUnansweredDialog = ref(false)
 const unansweredNotes = ref<string[]>([])
+const hasCompleted = ref(false)
+
+const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
+  isActive: () => !hasCompleted.value,
+  onStart: () => {
+    window.dispatchEvent(new Event('start-finish'))
+  },
+  onCountdownFinished: () => {
+    forceFinish()
+  },
+  onCancel: () => {
+    if (showUnansweredDialog.value) {
+      showUnansweredDialog.value = false
+    }
+    window.dispatchEvent(new Event('cancel-finish'))
+  },
+})
 
 const buildResults = () => ({
   page1: page1Inputs.value,
@@ -59,7 +77,14 @@ const getUnansweredNotes = () => {
 }
 
 const submitResults = () => {
+  clearForcedFinish(false)
+  hasCompleted.value = true
   emit('complete', buildResults())
+}
+
+const forceFinish = () => {
+  showUnansweredDialog.value = false
+  submitResults()
 }
 
 const finishTest = () => {
@@ -665,6 +690,13 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
   <Head title="628 Test" />
 
   <div class="mb-4">
+  </div>
+
+  <div
+    v-if="isForcedFinish"
+    class="mb-4 rounded-lg border border-blue-300 bg-blue-600 px-6 py-4 text-center text-lg font-bold text-white shadow"
+  >
+    Zeit abgelaufen! Der Test wird automatisch in {{ forcedFinishCountdown }} Sekunden beendet.
   </div>
 
   <!-- FULL WIDTH PAGE WRAPPER -->

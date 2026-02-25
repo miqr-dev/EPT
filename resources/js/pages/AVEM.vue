@@ -94,7 +94,7 @@ const borderClass = (qnum: number) => (isAnswered(qnum) ? 'border-slate-100 dark
         <div class="mb-4"></div>
         <div
             v-if="showTest && isForcedFinish"
-            class="mb-4 rounded-lg border border-red-300 bg-red-600 px-6 py-4 text-center text-lg font-bold text-white shadow"
+            class="mb-4 rounded-lg border border-blue-300 bg-blue-600 px-6 py-4 text-center text-lg font-bold text-white shadow"
         >
             Zeit abgelaufen! Der Test wird automatisch in {{ forcedFinishCountdown }} Sekunden beendet.
         </div>
