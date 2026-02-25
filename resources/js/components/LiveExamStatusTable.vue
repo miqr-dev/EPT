@@ -144,22 +144,14 @@ watch(
           const updatedStatus = getParticipantStatusFromExam(updatedExam, participant)
           const existingStatus = getParticipantStatusFromExam(localExam.value!, existing)
           if (updatedStatus && existingStatus) {
-            if (typeof existingStatus.time_remaining === 'number') {
-              const newTime =
-                typeof updatedStatus.time_remaining === 'number'
-                  ? Math.floor(updatedStatus.time_remaining)
-                  : existingStatus.time_remaining
-              updatedStatus.time_remaining =
-                existingStatus.time_remaining > 0
-                  ? Math.max(newTime, existingStatus.time_remaining)
-                  : newTime
+            // Favor server time to ensure local lag (e.g. background tab throttling) is corrected
+            if (typeof updatedStatus.time_remaining === 'number') {
+              updatedStatus.time_remaining = Math.max(0, Math.floor(updatedStatus.time_remaining))
+            } else if (typeof existingStatus.time_remaining === 'number') {
+              updatedStatus.time_remaining = existingStatus.time_remaining
             }
-            if (updatedStatus.status === 'paused') {
-              updatedStatus.time_remaining =
-                typeof updatedStatus.time_remaining === 'number'
-                  ? Math.max(0, Math.floor(updatedStatus.time_remaining))
-                  : existingStatus.time_remaining
-            } else if (updatedStatus.status !== 'in_progress') {
+
+            if (updatedStatus.status !== 'in_progress' && updatedStatus.status !== 'paused') {
               updatedStatus.time_remaining = 0
             }
           }
