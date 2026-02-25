@@ -102,26 +102,70 @@ const extraTimeState = ref<Record<number, { expanded: boolean; minutes: string; 
 
 let timerInterval: any = null
 
-onMounted(() => {
-  timerInterval = setInterval(() => {
-    if (localExam.value && localExam.value.participants) {
-      localExam.value.participants.forEach((participant: any) => {
-        const status = getParticipantStatus(participant)
-        if (status) {
-          if (status.status === 'in_progress' && status.time_remaining > 0) {
-            status.time_remaining = Math.max(0, Math.floor(status.time_remaining) - 1)
-          } else if (status.status === 'paused') {
-            status.time_remaining = Math.max(0, Math.floor(status.time_remaining ?? 0))
-          } else if (status.status !== 'in_progress') {
-            status.time_remaining = 0
-          }
-        }
-      })
+const syncStatusTiming = (status: any) => {
+  if (!status || typeof status.time_remaining !== 'number') return
+  status._base_time_remaining = Math.max(0, Math.floor(status.time_remaining))
+  status._synced_at_ms = Date.now()
+}
+
+const syncExamTiming = (exam: any) => {
+  const participants = Array.isArray(exam?.participants) ? exam.participants : []
+  participants.forEach((participant: any) => {
+    const status = getParticipantStatusFromExam(exam, participant)
+    if (status) {
+      syncStatusTiming(status)
     }
+  })
+}
+
+const updateLocalCountdowns = () => {
+  const participants = Array.isArray(localExam.value?.participants) ? localExam.value.participants : []
+  const now = Date.now()
+
+  participants.forEach((participant: any) => {
+    const status = getParticipantStatus(participant)
+    if (!status) return
+
+    if (status.status === 'in_progress') {
+      const base = typeof status._base_time_remaining === 'number' ? status._base_time_remaining : status.time_remaining
+      const syncedAt = typeof status._synced_at_ms === 'number' ? status._synced_at_ms : now
+      const elapsedSeconds = Math.max(0, Math.floor((now - syncedAt) / 1000))
+      status.time_remaining = Math.max(0, Math.floor(base ?? 0) - elapsedSeconds)
+      return
+    }
+
+    if (status.status === 'paused') {
+      const pausedTime = typeof status._base_time_remaining === 'number'
+        ? status._base_time_remaining
+        : status.time_remaining
+      status.time_remaining = Math.max(0, Math.floor(pausedTime ?? 0))
+      return
+    }
+
+    if (status.status !== 'in_progress') {
+      status.time_remaining = 0
+    }
+  })
+}
+
+const onVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    updateLocalCountdowns()
+  }
+}
+
+onMounted(() => {
+  syncExamTiming(localExam.value)
+  document.addEventListener('visibilitychange', onVisibilityChange)
+
+  timerInterval = setInterval(() => {
+    updateLocalCountdowns()
   }, 1000)
 })
 
 onUnmounted(() => {
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+
   if (timerInterval) {
     clearInterval(timerInterval)
   }
@@ -131,43 +175,9 @@ watch(
   () => props.exam,
   (newExam) => {
     const updatedExam = JSON.parse(JSON.stringify(newExam))
-    if (
-      localExam.value &&
-      updatedExam.current_exam_step_id === localExam.value.current_exam_step_id &&
-      localExam.value.participants
-    ) {
-      updatedExam.participants = updatedExam.participants.map((participant: any) => {
-        const existing = localExam.value!.participants.find(
-          (p: any) => p.id === participant.id,
-        )
-        if (existing) {
-          const updatedStatus = getParticipantStatusFromExam(updatedExam, participant)
-          const existingStatus = getParticipantStatusFromExam(localExam.value!, existing)
-          if (updatedStatus && existingStatus) {
-            if (typeof existingStatus.time_remaining === 'number') {
-              const newTime =
-                typeof updatedStatus.time_remaining === 'number'
-                  ? Math.floor(updatedStatus.time_remaining)
-                  : existingStatus.time_remaining
-              updatedStatus.time_remaining =
-                existingStatus.time_remaining > 0
-                  ? Math.max(newTime, existingStatus.time_remaining)
-                  : newTime
-            }
-            if (updatedStatus.status === 'paused') {
-              updatedStatus.time_remaining =
-                typeof updatedStatus.time_remaining === 'number'
-                  ? Math.max(0, Math.floor(updatedStatus.time_remaining))
-                  : existingStatus.time_remaining
-            } else if (updatedStatus.status !== 'in_progress') {
-              updatedStatus.time_remaining = 0
-            }
-          }
-        }
-        return participant
-      })
-    }
+    syncExamTiming(updatedExam)
     localExam.value = updatedExam
+    updateLocalCountdowns()
   },
   { deep: true },
 )
@@ -275,6 +285,7 @@ const submitExtraTime = (participant: any) => {
         const updatedStatus = getParticipantStatus(participant)
         if (updatedStatus && typeof updatedStatus.time_remaining === 'number') {
           updatedStatus.time_remaining += minutes * 60
+          syncStatusTiming(updatedStatus)
         }
 
         extraTimeState.value[participantId] = { expanded: false, minutes: '', error: null, loading: false }
