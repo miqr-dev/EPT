@@ -305,11 +305,11 @@ const wrongCount = computed(() => {
 const performanceCategory = computed(() => {
   const wrong = wrongCount.value
   if (wrong <= 5) return { range: '100-92%', category: 'Oberer Leistungsbereich' }
-  if (wrong <= 13) return { range: '91-81%', category: 'Leistungsbereich' }
+  if (wrong <= 13) return { range: '91-81%', category: 'Oberer Leistungsbereich' }
   if (wrong <= 22) return { range: '80-67%', category: 'Mittlerer Leistungsbereich' }
-  if (wrong <= 33) return { range: '66-50%', category: 'Leistungsbereich' }
-  if (wrong <= 46) return { range: '49-30%', category: 'unterer Leistungsbereich' }
-  return { range: '29-0%', category: 'Leistungsbereich' }
+  if (wrong <= 33) return { range: '66-50%', category: 'Mittlerer Leistungsbereich' }
+  if (wrong <= 46) return { range: '49-30%', category: 'Unterer Leistungsbereich' }
+  return { range: '29-0%', category: 'Unterer Leistungsbereich' }
 })
 
 /* ======================== PAGE 5 — precise ticks via CSS ======================== */
