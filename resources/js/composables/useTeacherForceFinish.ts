@@ -21,6 +21,15 @@ export function useTeacherForceFinish(options: UseTeacherForceFinishOptions) {
   let deadlineMs: number | null = null;
   let timer: ReturnType<typeof setInterval> | null = null;
 
+  const emitCountdownEvent = () => {
+    window.dispatchEvent(new CustomEvent('forced-finish-countdown', {
+      detail: {
+        active: isForcedFinish.value,
+        countdown: isForcedFinish.value ? forcedFinishCountdown.value : null,
+      },
+    }));
+  };
+
   const clearTimer = () => {
     if (timer) {
       clearInterval(timer);
@@ -47,6 +56,7 @@ export function useTeacherForceFinish(options: UseTeacherForceFinishOptions) {
     }
     const diffSeconds = Math.ceil((deadlineMs - Date.now()) / 1000);
     forcedFinishCountdown.value = Math.max(0, diffSeconds);
+    emitCountdownEvent();
     if (diffSeconds <= 0) {
       clearTimer();
       deadlineMs = null;
@@ -62,6 +72,7 @@ export function useTeacherForceFinish(options: UseTeacherForceFinishOptions) {
     deadlineMs = explicitDeadline ?? (requestedAt !== null ? requestedAt + defaultSeconds * 1000 : fallbackDeadline);
     forcedFinishCountdown.value = Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000));
     isForcedFinish.value = true;
+    emitCountdownEvent();
     options.onStart(detail);
 
     clearTimer();
@@ -74,6 +85,7 @@ export function useTeacherForceFinish(options: UseTeacherForceFinishOptions) {
     deadlineMs = null;
     isForcedFinish.value = false;
     forcedFinishCountdown.value = defaultSeconds;
+    emitCountdownEvent();
     if (notifyCancel) {
       options.onCancel?.();
     }

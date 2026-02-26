@@ -50,7 +50,7 @@ const props = defineProps<{
 const emit = defineEmits(['complete', 'update:answers', 'started']);
 const endConfirmOpen = ref(false);
 
-const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
+const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
     isActive: () => showTest.value && !isTestComplete.value,
     onStart: () => {
         window.dispatchEvent(new Event('start-finish'));
@@ -252,13 +252,7 @@ const startTest = () => {
             <h1 class="text-2xl font-bold">MRT-A</h1>
         </div>
         <div class="mb-4"></div>
-        <div
-            v-if="showTest && isForcedFinish"
-            class="mb-4 rounded-lg border border-blue-300 bg-blue-600 px-6 py-4 text-center text-lg font-bold text-white shadow"
-        >
-            Zeit abgelaufen! Der Test wird automatisch in {{ forcedFinishCountdown }} Sekunden beendet.
-        </div>
-        <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4 text-foreground">
+                <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4 text-foreground">
             <div class="flex flex-1 flex-col gap-4">
                 <!-- Start Test Screen -->
                 <div v-if="!showTest" class="flex h-full flex-col items-center justify-center">

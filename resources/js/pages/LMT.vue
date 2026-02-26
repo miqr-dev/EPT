@@ -101,7 +101,7 @@ const emit = defineEmits(['complete', 'started']);
 
 const endConfirmOpen = ref(false);
 
-const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
+const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
     isActive: () => showTest.value && !isTestComplete.value,
     onStart: () => {
         window.dispatchEvent(new Event('start-finish'));
@@ -253,13 +253,7 @@ const totalTimeTaken = computed(() => {
             <h1 class="text-2xl font-bold">L-M-T</h1>
         </div>
         <div class="mb-4"></div>
-        <div
-            v-if="showTest && isForcedFinish"
-            class="mb-4 rounded-lg border border-blue-300 bg-blue-600 px-6 py-4 text-center text-lg font-bold text-white shadow"
-        >
-            Zeit abgelaufen! Der Test wird automatisch in {{ forcedFinishCountdown }} Sekunden beendet.
-        </div>
-        <div class="mx-auto max-w-5xl space-y-8 rounded border border-border bg-background p-6 text-foreground shadow">
+                <div class="mx-auto max-w-5xl space-y-8 rounded border border-border bg-background p-6 text-foreground shadow">
             <!-- Start Screen -->
             <div v-if="!showTest && !isTestComplete" class="space-y-6 text-center">
                 <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Willkommen zum L-M-T</h2>

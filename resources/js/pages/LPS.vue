@@ -489,7 +489,7 @@ const totalElapsed = computed(() => elapsedSecondsBeforeResume.value + runningEl
 
 const endConfirmOpen = ref(false);
 const testLabel = computed(() => props.testName ?? 'LPS');
-const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
+const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
   isActive: () => showTest.value,
   onStart: () => {
     endConfirmOpen.value = true;
@@ -1175,9 +1175,6 @@ const page10MaxScore = computed(
           <div class="flex flex-col items-end gap-2">
             <div class="w-[520px]">
                     </div>
-            <div v-if="showTest && isForcedFinish" class="text-xs font-semibold text-destructive">
-              Test wird beendet in {{ forcedFinishCountdown }}s
-            </div>
           </div>
         </div>
 

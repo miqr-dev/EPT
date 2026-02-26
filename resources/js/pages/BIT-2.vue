@@ -21,7 +21,7 @@ const pageIndex = ref(0); // 0 first 27, 1 remaining
 const answers = ref<Record<number, number | null>>({});
 const endConfirmOpen = ref(false);
 
-const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
+const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
     isActive: () => showTest.value && pageIndex.value >= 0,
     onStart: () => {
         window.dispatchEvent(new Event('start-finish'));
@@ -107,13 +107,7 @@ function confirmEnd() {
             <h1 class="text-2xl font-bold">BIT-2</h1>
         </div>
         <div class="mb-4"></div>
-        <div
-            v-if="showTest && isForcedFinish"
-            class="mb-4 rounded-lg border border-blue-300 bg-blue-600 px-6 py-4 text-center text-lg font-bold text-white shadow"
-        >
-            Zeit abgelaufen! Der Test wird automatisch in {{ forcedFinishCountdown }} Sekunden beendet.
-        </div>
-        <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4">
+                <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4">
             <div class="flex flex-1 flex-col gap-4">
                 <div v-if="!showTest" class="flex h-full flex-col items-center justify-center">
                     <h2 class="mb-4 text-2xl font-bold">B – I – T. II</h2>

@@ -14,7 +14,7 @@ const showTest = ref(false);
 const answers = ref<Record<number, number | null>>({});
 const endConfirmOpen = ref(false);
 
-const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
+const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
     isActive: () => showTest.value,
     onStart: () => {
         window.dispatchEvent(new Event('start-finish'));
@@ -92,13 +92,7 @@ const borderClass = (qnum: number) => (isAnswered(qnum) ? 'border-slate-100 dark
             <h1 class="text-2xl font-bold">AVEM</h1>
         </div>
         <div class="mb-4"></div>
-        <div
-            v-if="showTest && isForcedFinish"
-            class="mb-4 rounded-lg border border-blue-300 bg-blue-600 px-6 py-4 text-center text-lg font-bold text-white shadow"
-        >
-            Zeit abgelaufen! Der Test wird automatisch in {{ forcedFinishCountdown }} Sekunden beendet.
-        </div>
-
+        
         <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4">
             <div class="flex flex-1 flex-col gap-4">
                 <!-- Intro + legend -->

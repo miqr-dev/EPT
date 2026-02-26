@@ -63,7 +63,7 @@ const MAX_ANSWER_LENGTH = 9;
 const MAX_DIGITS = 6;
 const MAX_NON_DIGITS = 3;
 
-const { isForcedFinish, forcedFinishCountdown, clearForcedFinish } = useTeacherForceFinish({
+const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
     isActive: () => showTest.value && !isTestComplete.value,
     onStart: () => {
         window.dispatchEvent(new Event('start-finish'));
@@ -270,13 +270,7 @@ const startTest = () => {
             <h1 class="text-2xl font-bold">BRT-B</h1>
         </div>
         <div class="mb-4"></div>
-        <div
-            v-if="showTest && isForcedFinish"
-            class="mb-4 rounded-lg border border-blue-300 bg-blue-600 px-6 py-4 text-center text-lg font-bold text-white shadow"
-        >
-            Zeit abgelaufen! Der Test wird automatisch in {{ forcedFinishCountdown }} Sekunden beendet.
-        </div>
-        <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4">
+                <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4">
             <!-- Sidebar Navigation: Only visible during the test -->
             <aside v-if="showTest" class="sticky top-8 flex h-fit w-64 flex-shrink-0 flex-col items-start space-y-2 py-4">
                 <h3 class="mb-2 pl-4 text-sm font-bold text-muted-foreground">Fragen</h3>
