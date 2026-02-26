@@ -16,7 +16,8 @@ const props = defineProps<{
 }>();
 
 const activeExams = ref<any[]>([]);
-let polling: any = null;
+let activeExamsPolling: ReturnType<typeof setInterval> | null = null;
+let participantStatusPolling: ReturnType<typeof setInterval> | null = null;
 
 const fetchActiveExams = async () => {
   try {
@@ -27,14 +28,27 @@ const fetchActiveExams = async () => {
   }
 };
 
+const refreshParticipantStatus = () => {
+  router.reload({
+    only: ['recentUsers', 'importedUsers'],
+    preserveState: true,
+    preserveScroll: true,
+  });
+};
+
 onMounted(() => {
   fetchActiveExams();
-  polling = setInterval(fetchActiveExams, 5000);
+  activeExamsPolling = setInterval(fetchActiveExams, 5000);
+  participantStatusPolling = setInterval(refreshParticipantStatus, 5000);
 });
 
 onUnmounted(() => {
-  if (polling) {
-    clearInterval(polling);
+  if (activeExamsPolling) {
+    clearInterval(activeExamsPolling);
+  }
+
+  if (participantStatusPolling) {
+    clearInterval(participantStatusPolling);
   }
 });
 
