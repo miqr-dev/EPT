@@ -122,6 +122,7 @@ class TeacherController extends Controller
       'participants' => $participants,
       'recentUsers' => $recentUsers,
       'importedUsers' => $importedUsers,
+      'cityName' => optional($teacher->city)->name,
       'changeableTeachers' => $changeableTeachers,
       'exams' => $exams,
       'tests' => $tests,
