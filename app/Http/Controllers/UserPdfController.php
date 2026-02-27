@@ -25,7 +25,7 @@ class UserPdfController extends Controller
 
     $fileName = $this->resolvePdfPath($user->username);
 
-    return Storage::disk('windows_pdfs')->response($fileName, basename($fileName), ['Content-Type' => 'application/pdf']);
+    return Storage::disk('pdfs')->response($fileName, basename($fileName), ['Content-Type' => 'application/pdf']);
   }
 
   public function showParticipantPdf(Request $request, User $participant)
@@ -34,13 +34,13 @@ class UserPdfController extends Controller
 
     $fileName = $this->resolvePdfPath($participant->username);
 
-    return Storage::disk('windows_pdfs')->response($fileName, basename($fileName), ['Content-Type' => 'application/pdf']);
+    return Storage::disk('pdfs')->response($fileName, basename($fileName), ['Content-Type' => 'application/pdf']);
   }
 
   private function resolvePdfPath(string $username): string
   {
     $base = Str::of($username)->trim();
-    $disk = Storage::disk('windows_pdfs');
+    $disk = Storage::disk('pdfs');
 
     $fileName = collect([$base . '.pdf', $base . '.PDF'])->first(fn($path) => $disk->exists($path));
 
