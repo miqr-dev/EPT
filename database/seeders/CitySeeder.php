@@ -16,8 +16,8 @@ class CitySeeder extends Seeder
         City::create(['name' => 'Chemnitz']);
         City::create(['name' => 'Döbeln']);
         City::create(['name' => 'Riesa']);
-        City::create(['name' => 'Berlin TBR']);
-        City::create(['name' => 'Berlin PP']);
+        City::create(['name' => 'Berlin_TBR']);
+        City::create(['name' => 'Berlin_PP']);
         // Add more as needed
     }
 }
