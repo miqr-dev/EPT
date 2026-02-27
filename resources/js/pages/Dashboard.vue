@@ -10,6 +10,7 @@ const props = defineProps<{
   participants: any[];
   recentUsers: any[];
   importedUsers: any[];
+  cityName?: string | null;
   changeableTeachers: any[];
   exams: any[];
   tests: any[];
@@ -140,7 +141,13 @@ const availableImportedUsers = computed(() => {
     }
 
     if (normalizedSearch) {
+<<<<<<< HEAD
       return String(u.username || '').toLowerCase().includes(normalizedSearch);
+=======
+      return [u.username, u.name]
+        .map((value) => String(value || '').toLowerCase())
+        .some((value) => value.includes(normalizedSearch));
+>>>>>>> codex/update-dashboard-to-filter-and-search-users-q6py4q
     }
 
     const createdAt = new Date(u.created_at).getTime();
@@ -465,7 +472,7 @@ function addTests() {
                     Importierte Benutzer
                   </h2>
                   <p class="text-xs text-slate-500 dark:text-slate-400">
-                    Alle importierten Teilnehmenden dieser Stadt (auch ohne Login).
+                    Alle importierten Teilnehmenden der letzten 7 Tage in {{ props.cityName || 'dieser Stadt' }}.
                   </p>
                 </div>
                 <span
@@ -477,7 +484,11 @@ function addTests() {
                 <input
                   v-model="importedUserSearch"
                   type="text"
+<<<<<<< HEAD
                   placeholder="Suche nach Benutzername"
+=======
+                  placeholder="Suchen nach Benutzername oder Nachname"
+>>>>>>> codex/update-dashboard-to-filter-and-search-users-q6py4q
                   class="block w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-xs text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 md:text-sm"
                 />
               </div>
