@@ -56,6 +56,7 @@ const selectedIdx = ref(0);
 const selectedIds = ref<number[]>([]);
 const selectedRecentUserIds = ref<number[]>([]);
 const selectedImportedUserIds = ref<number[]>([]);
+const importedUserSearch = ref('');
 
 const showCreateExamForm = ref(false);
 const newExamTitle = ref('');
@@ -130,7 +131,21 @@ function toggleRow(id: number, idx: number) {
 const availableRecentUsers = computed(() => props.recentUsers.filter((u) => !stagedUserIds.value.includes(u.id)));
 const availableImportedUsers = computed(() => {
   const recentIds = new Set(props.recentUsers.map((u) => u.id));
-  return props.importedUsers.filter((u) => !stagedUserIds.value.includes(u.id) && !recentIds.has(u.id));
+  const normalizedSearch = importedUserSearch.value.trim().toLowerCase();
+  const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+
+  return props.importedUsers.filter((u) => {
+    if (stagedUserIds.value.includes(u.id) || recentIds.has(u.id)) {
+      return false;
+    }
+
+    if (normalizedSearch) {
+      return String(u.username || '').toLowerCase().includes(normalizedSearch);
+    }
+
+    const createdAt = new Date(u.created_at).getTime();
+    return Number.isFinite(createdAt) && createdAt >= sevenDaysAgo;
+  });
 });
 
 const stagedUserMap = computed(() => {
@@ -457,6 +472,14 @@ function addTests() {
                   class="inline-flex items-center justify-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-100">
                   {{ availableImportedUsers.length }}
                 </span>
+              </div>
+              <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+                <input
+                  v-model="importedUserSearch"
+                  type="text"
+                  placeholder="Suche nach Benutzername"
+                  class="block w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-xs text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 md:text-sm"
+                />
               </div>
               <div class="flex-1 overflow-auto">
                 <table class="w-full text-xs md:text-sm">
