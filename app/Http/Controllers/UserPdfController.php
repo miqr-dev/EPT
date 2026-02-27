@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Exam;
-use App\Models\ExamParticipant;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -23,7 +22,7 @@ class UserPdfController extends Controller
 
     abort_unless($canViewContract, 403);
 
-    $fileName = $this->resolvePdfPath($user->username);
+    $fileName = $this->resolvePdfPath($user);
 
     return Storage::disk('pdfs')->response($fileName, basename($fileName), ['Content-Type' => 'application/pdf']);
   }
@@ -32,17 +31,28 @@ class UserPdfController extends Controller
   {
     abort_unless(in_array($request->user()?->role, ['admin', 'teacher'], true), 403);
 
-    $fileName = $this->resolvePdfPath($participant->username);
+    $fileName = $this->resolvePdfPath($participant);
 
     return Storage::disk('pdfs')->response($fileName, basename($fileName), ['Content-Type' => 'application/pdf']);
   }
 
-  private function resolvePdfPath(string $username): string
+  private function resolvePdfPath(User $user): string
   {
-    $base = Str::of($username)->trim();
+    abort_unless($user->city_id, 404, 'Stadt ist dem Benutzer nicht zugewiesen.');
+
+    $cityName = Str::of((string) optional($user->city)->name)
+      ->trim()
+      ->replace(' ', '_');
+
+    abort_if($cityName->isEmpty(), 404, 'Stadt ist dem Benutzer nicht zugewiesen.');
+
+    $base = Str::of($user->username)->trim();
     $disk = Storage::disk('pdfs');
 
-    $fileName = collect([$base . '.pdf', $base . '.PDF'])->first(fn($path) => $disk->exists($path));
+    $fileName = collect([
+      $cityName . '/' . $base . '.pdf',
+      $cityName . '/' . $base . '.PDF',
+    ])->first(fn($path) => $disk->exists($path));
 
     abort_unless($fileName, 404);
 
