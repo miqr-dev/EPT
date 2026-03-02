@@ -225,7 +225,9 @@ const pageSections = computed(() => {
   return [
     ...BASE_PAGE_SECTIONS.slice(0, 4),
     { title: 'Spalte 6', columnIndices: [] },
-    ...BASE_PAGE_SECTIONS.slice(4),
+    ...BASE_PAGE_SECTIONS.slice(4, 7),
+    { title: 'Pause', columnIndices: [] },
+    ...BASE_PAGE_SECTIONS.slice(7),
     { title: 'Spalten 13 + 14', columnIndices: [11, 12] },
   ];
 });
@@ -242,16 +244,16 @@ const visibleColumnStates = computed(() =>
   visibleColumnIndices.value.map((idx) => ({ idx, state: columnStates.value[idx] })),
 );
 const pageIndexByColumn = computed(() => {
-  const offset = isLpsB.value ? 1 : 0;
   return {
     col6: isLpsB.value ? 4 : -1,
-    col7: 4 + offset,
-    col8: 5 + offset,
-    col9: 6 + offset,
-    col10: 7 + offset,
-    col11: 8 + offset,
-    col12: 9 + offset,
-    col14: 10 + offset,
+    pause: isLpsB.value ? 8 : -1,
+    col7: isLpsB.value ? 5 : 4,
+    col8: isLpsB.value ? 6 : 5,
+    col9: isLpsB.value ? 7 : 6,
+    col10: isLpsB.value ? 9 : 7,
+    col11: isLpsB.value ? 10 : 8,
+    col12: isLpsB.value ? 11 : 9,
+    col14: isLpsB.value ? 12 : 10,
   } as const;
 });
 const alphabetLetters = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -1722,6 +1724,14 @@ const page10MaxScore = computed(
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+
+          <!-- Pause page (LPS-B): between Spalte 9 and Spalte 10 -->
+          <div v-else-if="pageIndex === pageIndexByColumn.pause" class="space-y-3">
+            <div class="rounded-2xl border bg-background p-6 shadow-sm min-h-[60vh] flex items-center justify-center">
+              <div class="text-center text-7xl font-extrabold tracking-wide text-foreground">Pause</div>
             </div>
           </div>
 
