@@ -231,6 +231,11 @@ const pageSections = computed(() => {
 });
 const pageCount = computed(() => pageSections.value.length);
 const showFinishButton = computed(() => !isLpsB.value || pageIndex.value === pageCount.value - 1);
+const isLpsBColumn13Finished = computed(() => {
+  if (!isLpsB.value) return true;
+  return columnStates.value[12]?.status === 'finished';
+});
+const canFinishTest = computed(() => !showFinishButton.value || isLpsBColumn13Finished.value);
 const currentSection = computed(() => pageSections.value[pageIndex.value] ?? pageSections.value[0]);
 const visibleColumnIndices = computed(() => currentSection.value.columnIndices);
 const visibleColumnStates = computed(() =>
@@ -590,6 +595,7 @@ function prevPage() {
 }
 
 function finishTest() {
+  if (!canFinishTest.value) return;
   window.dispatchEvent(new Event('start-finish'));
   endConfirmOpen.value = true;
 }
@@ -1206,7 +1212,7 @@ const page10MaxScore = computed(
             </div>
 
             <div class="flex items-center gap-2">
-              <Button v-if="showFinishButton" variant="destructive" size="sm" @click="finishTest">Test beenden</Button>
+              <Button v-if="showFinishButton" variant="destructive" size="sm" :disabled="!canFinishTest" @click="finishTest">Test beenden</Button>
             </div>
           </div>
 
