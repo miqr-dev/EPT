@@ -69,6 +69,13 @@ function saveUser(user: any) {
   );
 }
 
+function formatUsername(username: string) {
+  return username
+    .split('.')
+    .map((segment) => (segment ? `${segment.charAt(0).toUpperCase()}${segment.slice(1)}` : segment))
+    .join('.');
+}
+
 function updateSearch() {
   router.get(
     route('participants.import.page'),
@@ -176,7 +183,7 @@ function updateSearch() {
                 <TableCell colspan="5" class="py-4 text-center text-gray-500">Keine Benutzer gefunden.</TableCell>
               </TableRow>
               <TableRow v-for="user in users.data" :key="user.id">
-                <TableCell>{{ user.username }}</TableCell>
+                <TableCell>{{ formatUsername(user.username) }}</TableCell>
                 <TableCell>
                   <input
                     v-model="user.name"
