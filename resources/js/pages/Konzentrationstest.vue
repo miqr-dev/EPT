@@ -1,7 +1,7 @@
 <!-- resources/js/Pages/Konzentrationstest.vue -->
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -103,6 +103,11 @@ const confirmFinishDespiteUnanswered = () => {
   submitResults()
 }
 const emit = defineEmits(['complete', 'started'])
+
+onMounted(() => {
+  emit('started')
+})
+
 const toggleMark = (marks: boolean[], i: number) => (marks[i] = !marks[i])
 
 /* =========================================================
