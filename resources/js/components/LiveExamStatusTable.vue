@@ -9,6 +9,21 @@ const props = defineProps<{
 
 const MAX_EXTRA_MINUTES = 30
 
+
+const PARTICIPANT_STATUS_LABELS: Record<string, string> = {
+  not_started: 'Nicht gestartet',
+  in_progress: 'In Bearbeitung',
+  waiting: 'Wartend',
+  paused: 'Pausiert',
+  completed: 'Abgeschlossen',
+  broken: 'Abgebrochen',
+}
+
+const formatParticipantStatus = (status?: string) => {
+  if (!status) return '–'
+  return PARTICIPANT_STATUS_LABELS[status] ?? status.replace('_', ' ')
+}
+
 const formatTime = (seconds?: number) => {
   if (typeof seconds !== 'number' || seconds < 0) return '00:00'
   const whole = Math.floor(seconds)
@@ -432,7 +447,7 @@ const canForceFinishParticipant = (participant: any) => {
                   'bg-purple-100 text-purple-800': getParticipantStatus(participant)?.status === 'paused',
                   'bg-red-100 text-red-800': getParticipantStatus(participant)?.status === 'broken',
                 }">
-                {{ getParticipantStatus(participant)?.status?.replace('_', ' ') }}
+                {{ formatParticipantStatus(getParticipantStatus(participant)?.status) }}
               </span>
               <span v-else
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">

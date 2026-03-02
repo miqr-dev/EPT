@@ -21,6 +21,11 @@ const savingIds = ref<number[]>([]);
 const importForm = ref({ username: '', role: 'participant', can_login: true });
 const page = usePage<{ errors?: Record<string, string> }>();
 
+const roleOptions = [
+  { value: 'participant', label: 'Teil.' },
+  { value: 'teacher', label: 'Doz.' },
+];
+
 const isSaving = (id: number) => savingIds.value.includes(id);
 
 function submitImport() {
@@ -118,8 +123,9 @@ function updateSearch() {
                 v-model="importForm.role"
                 class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
-                <option value="participant">participant</option>
-                <option value="teacher">teacher</option>
+                <option v-for="option in roleOptions" :key="`import-role-${option.value}`" :value="option.value">
+                  {{ option.label }}
+                </option>
               </select>
             </div>
             <div class="mb-2 flex items-center gap-3 text-sm text-gray-700">
@@ -202,8 +208,9 @@ function updateSearch() {
                 </TableCell>
                 <TableCell>
                   <select v-model="user.role" class="rounded-md border border-gray-300 px-2 py-1 text-sm" @change="saveUser(user)">
-                    <option value="participant">participant</option>
-                    <option value="teacher">teacher</option>
+                    <option v-for="option in roleOptions" :key="`user-role-${user.id}-${option.value}`" :value="option.value">
+                      {{ option.label }}
+                    </option>
                   </select>
                 </TableCell>
                 <TableCell>
