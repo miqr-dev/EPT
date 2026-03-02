@@ -414,8 +414,8 @@ class ParticipantController extends Controller
             ->orWhere('firstname', 'like', "%{$search}%");
         });
       })
-      ->orderBy('role')
-      ->orderBy('username')
+      ->orderByDesc('updated_at')
+      ->orderByDesc('id')
       ->paginate(20)
       ->withQueryString();
 
