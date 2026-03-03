@@ -1731,7 +1731,7 @@ const page10MaxScore = computed(
 
           <div v-else-if="pageIndex === pageIndexByColumn.pause" class="space-y-3">
             <div class="rounded-2xl border bg-background p-6 shadow-sm">
-              <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground">Pause</div>
+              <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground"></div>
               <div class="my-10 text-center text-7xl font-black tracking-wide text-foreground md:text-8xl">Pause</div>
               <p class="text-center text-sm text-muted-foreground">
                 Machen Sie eine Pause und folgen Sie bitte den Anweisungen der Lehrkraft.
