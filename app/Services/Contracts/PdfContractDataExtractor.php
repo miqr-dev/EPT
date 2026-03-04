@@ -14,25 +14,25 @@ class PdfContractDataExtractor
         $text = $this->extractText($pdfBinary);
 
         $data = [
-            'full_name' => $this->firstMatch('/und\s+Frau\/Herrn\s+(.+?)\s+als\s+Teilnehmer/ui', $text),
-            'course' => $this->firstMatch('/Lehrgang\s+(.+?)(?:\n|$)/ui', $text),
-            'location' => $this->firstMatch('/Ort\s+(.+?)(?:\n|$)/ui', $text),
-            'measure_time' => $this->firstMatch('/Maßnahmezeit\s+(.+?)(?:\n|$)/ui', $text),
-            'street' => $this->firstMatch('/Straße,\s*Hausnummer:\s*(.+?)(?:\n|$)/ui', $text),
-            'telephone' => $this->firstMatch('/Tel\.:\s*(.+?)(?:\n|$)/ui', $text),
-            'cost_bearer' => $this->firstMatch('/Leistungsträger\s+(.+?)(?:\n|$)/ui', $text),
+            'full_name' => $this->firstMatch('/(?:und\s+)?Frau\/Herrn?\s+(.+?)(?:\s+als\s+Teilnehmer|\n|$)/ui', $text),
+            'course' => $this->firstMatch('/Lehrgang\s*:?[ \t]*(.+?)(?:\n|$)/ui', $text),
+            'location' => $this->firstMatch('/Ort\s*:?[ \t]*(.+?)(?:\n|$)/ui', $text),
+            'measure_time' => $this->firstMatch('/Ma(?:ß|ss)nahmezeit\s*:?[ \t]*(.+?)(?:\n|$)/ui', $text),
+            'street' => $this->firstMatch('/Stra(?:ß|ss)e,\s*Hausnummer\s*:?[ \t]*(.+?)(?:\n|$)/ui', $text),
+            'telephone' => $this->firstMatch('/Tel\.?\s*:?[ \t]*(.+?)(?:\n|$)/ui', $text),
+            'cost_bearer' => $this->firstMatch('/Leistungstr(?:ä|ae)ger\s*:?[ \t]*(.+?)(?:\n|$)/ui', $text),
         ];
 
-        if (preg_match('/Beginn:\s*(\d{2}\.\d{2}\.\d{4})\s+Ende:\s*(\d{2}\.\d{2}\.\d{4})/u', $text, $matches) === 1) {
+        if (preg_match('/Beginn\s*:?[ \t]*(\d{2}\.\d{2}\.\d{4})\s+Ende\s*:?[ \t]*(\d{2}\.\d{2}\.\d{4})/u', $text, $matches) === 1) {
             $data['measure_start'] = $this->parseGermanDate($matches[1]);
             $data['measure_end'] = $this->parseGermanDate($matches[2]);
         }
 
-        if (preg_match('/Geburtsdatum:\s*(\d{2}\.\d{2}\.\d{4})/u', $text, $matches) === 1) {
+        if (preg_match('/Geburtsdatum\s*:?[ \t]*(\d{2}\.\d{2}\.\d{4})/u', $text, $matches) === 1) {
             $data['birthday'] = $this->parseGermanDate($matches[1]);
         }
 
-        if (preg_match('/PLZ\s*,\s*Ort:\s*(\d{4,5})\s+(.+?)(?:\n|$)/ui', $text, $matches) === 1) {
+        if (preg_match('/PLZ\s*,\s*Ort\s*:?[ \t]*(\d{4,5})\s+(.+?)(?:\n|$)/ui', $text, $matches) === 1) {
             $data['zip'] = trim($matches[1]);
             $data['city_name'] = trim($matches[2]);
         }
@@ -72,41 +72,105 @@ class PdfContractDataExtractor
         $stream = ltrim($rawStream, "\r\n");
         $stream = rtrim($stream, "\r\n");
 
-        $inflated = @gzuncompress($stream);
-        if ($inflated !== false) {
-            return $inflated;
+        foreach (['gzuncompress', 'gzdecode', 'gzinflate'] as $decoder) {
+            $inflated = @$decoder($stream);
+            if ($inflated !== false) {
+                return $inflated;
+            }
         }
 
-        $inflated = @gzdecode($stream);
-        if ($inflated !== false) {
-            return $inflated;
-        }
-
-        $inflated = @gzinflate($stream);
-        if ($inflated !== false) {
-            return $inflated;
+        $ascii85 = $this->decodeAscii85($stream);
+        if ($ascii85 !== null) {
+            foreach (['gzuncompress', 'gzdecode', 'gzinflate'] as $decoder) {
+                $inflated = @$decoder($ascii85);
+                if ($inflated !== false) {
+                    return $inflated;
+                }
+            }
+            return $ascii85;
         }
 
         if (preg_match('//u', $stream) === 1) {
             return $stream;
         }
 
-        return null;
+        return @mb_convert_encoding($stream, 'UTF-8', 'Windows-1252');
+    }
+
+    private function decodeAscii85(string $stream): ?string
+    {
+        $trimmed = trim($stream);
+        if (!str_contains($trimmed, '~>')) {
+            return null;
+        }
+
+        $trimmed = preg_replace('/^<~/', '', $trimmed) ?? $trimmed;
+        $trimmed = preg_replace('/~>$/', '', $trimmed) ?? $trimmed;
+        $trimmed = preg_replace('/\s+/', '', $trimmed) ?? $trimmed;
+
+        if ($trimmed === '') {
+            return null;
+        }
+
+        $out = '';
+        $group = '';
+
+        foreach (str_split($trimmed) as $char) {
+            if ($char === 'z' && $group === '') {
+                $out .= "\x00\x00\x00\x00";
+                continue;
+            }
+
+            $group .= $char;
+            if (strlen($group) < 5) {
+                continue;
+            }
+
+            $value = 0;
+            foreach (str_split($group) as $c) {
+                $ord = ord($c);
+                if ($ord < 33 || $ord > 117) {
+                    return null;
+                }
+                $value = $value * 85 + ($ord - 33);
+            }
+
+            $out .= pack('N', $value);
+            $group = '';
+        }
+
+        if ($group !== '') {
+            $padding = 5 - strlen($group);
+            $group = str_pad($group, 5, 'u');
+            $value = 0;
+
+            foreach (str_split($group) as $c) {
+                $ord = ord($c);
+                if ($ord < 33 || $ord > 117) {
+                    return null;
+                }
+                $value = $value * 85 + ($ord - 33);
+            }
+
+            $out .= substr(pack('N', $value), 0, 4 - $padding);
+        }
+
+        return $out;
     }
 
     private function extractTextOperators(string $content): string
     {
         $parts = [];
 
-        if (preg_match_all('/\((?:\\\\.|[^\\\\)])*\)\s*Tj/s', $content, $tjMatches) === 1 || count($tjMatches[0]) > 0) {
+        if (preg_match_all('/\((?:\\\\.|[^\\\\)])*\)\s*Tj/s', $content, $tjMatches) > 0) {
             foreach ($tjMatches[0] as $token) {
                 $parts[] = $this->decodeLiteralToken($token);
             }
         }
 
-        if (preg_match_all('/\[(.*?)\]\s*TJ/s', $content, $tjArrayMatches) === 1 || count($tjArrayMatches[1]) > 0) {
+        if (preg_match_all('/\[(.*?)\]\s*TJ/s', $content, $tjArrayMatches) > 0) {
             foreach ($tjArrayMatches[1] as $arrayContent) {
-                if (preg_match_all('/\((?:\\\\.|[^\\\\)])*\)|<([0-9A-Fa-f]+)>/s', $arrayContent, $stringTokens, PREG_SET_ORDER) === 1 || count($stringTokens) > 0) {
+                if (preg_match_all('/\((?:\\\\.|[^\\\\)])*\)|<([0-9A-Fa-f]+)>/s', $arrayContent, $stringTokens, PREG_SET_ORDER) > 0) {
                     foreach ($stringTokens as $token) {
                         if (!empty($token[1])) {
                             $parts[] = $this->decodeHexString($token[1]);
@@ -120,9 +184,16 @@ class PdfContractDataExtractor
             }
         }
 
-        if (preg_match_all('/<([0-9A-Fa-f]+)>\s*Tj/s', $content, $hexMatches) === 1 || count($hexMatches[1]) > 0) {
+        if (preg_match_all('/<([0-9A-Fa-f]+)>\s*Tj/s', $content, $hexMatches) > 0) {
             foreach ($hexMatches[1] as $hex) {
                 $parts[] = $this->decodeHexString($hex);
+            }
+        }
+
+        if ($parts === [] && preg_match_all('/\((?:\\\\.|[^\\\\)])*\)/s', $content, $allLiterals) > 0) {
+            foreach ($allLiterals[0] as $literal) {
+                $parts[] = $this->decodeLiteralToken($literal);
+                $parts[] = "\n";
             }
         }
 
@@ -132,20 +203,23 @@ class PdfContractDataExtractor
     private function decodeLiteralToken(string $token): string
     {
         $trimmed = trim($token);
+        $trimmed = preg_replace('/\)\s*Tj$/', ')', $trimmed) ?? $trimmed;
+
         if (str_starts_with($trimmed, '(')) {
             $trimmed = substr($trimmed, 1);
-        }
-        if (str_ends_with($trimmed, ') Tj')) {
-            $trimmed = substr($trimmed, 0, -4);
         }
         if (str_ends_with($trimmed, ')')) {
             $trimmed = substr($trimmed, 0, -1);
         }
 
+        $decoded = preg_replace_callback('/\\([0-7]{1,3})/', function (array $m): string {
+            return chr(octdec($m[1]));
+        }, $trimmed) ?? $trimmed;
+
         $decoded = str_replace(
-            ['\\(', '\\)', '\\\\', '\\n', '\\r', '\\t'],
-            ['(', ')', '\\', "\n", "\n", "\t"],
-            $trimmed
+            ['\\(', '\\)', '\\\\', '\\n', '\\r', '\\t', '\\f'],
+            ['(', ')', '\\', "\n", "\n", "\t", ''],
+            $decoded
         );
 
         return $decoded;
@@ -167,12 +241,17 @@ class PdfContractDataExtractor
             return $converted === false ? '' : $converted;
         }
 
-        return $binary;
+        if (preg_match('//u', $binary) === 1) {
+            return $binary;
+        }
+
+        return @mb_convert_encoding($binary, 'UTF-8', 'Windows-1252') ?: '';
     }
 
     private function normalizeText(string $text): string
     {
-        $text = preg_replace('/[ \t]+/u', ' ', $text) ?? $text;
+        $text = str_replace(["\r\n", "\r"], "\n", $text);
+        $text = preg_replace('/[ \t\x{00A0}]+/u', ' ', $text) ?? $text;
         $text = preg_replace('/\s*\n\s*/u', "\n", $text) ?? $text;
         $text = preg_replace('/\n{2,}/u', "\n", $text) ?? $text;
 

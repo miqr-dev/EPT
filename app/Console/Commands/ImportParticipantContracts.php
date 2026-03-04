@@ -81,6 +81,10 @@ class ImportParticipantContracts extends Command
                     $parsed = $extractor->extract($disk->get($pdfPath));
                     if ($parsed === []) {
                         $report['skipped_unparseable']++;
+                        Log::warning('Participant contract import could not parse pdf', [
+                            'participant_id' => $user->id,
+                            'pdf_path' => $pdfPath,
+                        ]);
                         continue;
                     }
 
@@ -115,7 +119,7 @@ class ImportParticipantContracts extends Command
         $this->info('Contract import done: ' . json_encode($report));
         $this->info('Trigger: ' . $trigger . ', timezone: ' . config('app.timezone') . ', dry-run: ' . ($isDryRun ? 'yes' : 'no'));
         $this->info('Report written to storage/app/private/' . $reportPath);
-        $this->info('Log written to storage/logs/laravel.log (and storage/logs/contracts-import.log when scheduled).');
+        $this->info('Log written to storage/logs/laravel.log.');
 
         return self::SUCCESS;
     }
