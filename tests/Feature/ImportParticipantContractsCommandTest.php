@@ -123,3 +123,37 @@ test('it supports dry run without persisting imported values', function () {
         ->and($profile->cost_bearer)->toBeNull()
         ->and($profile->contract_imported_at)->toBeNull();
 });
+
+
+test('it imports only selected participant when participant_id is provided', function () {
+    Storage::fake('pdfs');
+
+    $city = City::create(['name' => 'Erfurt']);
+    $target = participantForContract($city, ['username' => 'target']);
+    $other = participantForContract($city, ['username' => 'other']);
+
+    ParticipantProfile::create([
+        'user_id' => $target->id,
+        'birthday' => '1970-03-14',
+        'age' => 54,
+        'sex' => 'w',
+    ]);
+
+    ParticipantProfile::create([
+        'user_id' => $other->id,
+        'birthday' => '1970-03-14',
+        'age' => 54,
+        'sex' => 'w',
+    ]);
+
+    Storage::disk('pdfs')->put('Erfurt/target.pdf', contractPdfText('Target User'));
+    Storage::disk('pdfs')->put('Erfurt/other.pdf', contractPdfText('Other User'));
+
+    $this->artisan('participants:import-contracts', ['--participant_id' => $target->id])->assertSuccessful();
+
+    $target->refresh();
+    $other->refresh();
+
+    expect($target->firstname)->toBe('Target')
+        ->and($other->firstname)->toBe('');
+});

@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\ParticipantProfile;
 use App\Models\User;
 use App\Services\Contracts\PdfContractDataExtractor;
 use Illuminate\Console\Command;
@@ -15,7 +14,9 @@ class ImportParticipantContracts extends Command
     protected $signature = 'participants:import-contracts
         {--report= : Optional storage-relative report path}
         {--dry-run : Parse and report only, do not persist data}
-        {--scheduled : Internal flag used by scheduler for log context}';
+        {--scheduled : Internal flag used by scheduler for log context}
+        {--participant_id= : Import only one participant by user id}
+        {--trigger= : Optional trigger label for logs/reports}';
 
     protected $description = 'Import participant contract data from PDF files and fill missing profile fields.';
 
@@ -23,25 +24,37 @@ class ImportParticipantContracts extends Command
     {
         $disk = Storage::disk('pdfs');
         $isDryRun = (bool) $this->option('dry-run');
-        $trigger = $this->option('scheduled') ? 'scheduled' : 'manual';
+        $trigger = (string) ($this->option('trigger') ?: ($this->option('scheduled') ? 'scheduled' : 'manual'));
+        $participantId = $this->option('participant_id');
 
         $report = [
             'checked' => 0,
             'imported' => 0,
             'skipped_existing_import' => 0,
             'skipped_missing_pdf' => 0,
+            'skipped_missing_profile' => 0,
             'skipped_unparseable' => 0,
         ];
 
-        User::query()
+        $query = User::query()
             ->where('role', 'participant')
             ->whereNotNull('city_id')
-            ->with(['city', 'participantProfile'])
-            ->chunkById(100, function ($users) use ($disk, $extractor, &$report) {
+            ->with(['city', 'participantProfile']);
+
+        if ($participantId !== null && $participantId !== '') {
+            $query->whereKey((int) $participantId);
+        }
+
+        $query->chunkById(100, function ($users) use ($disk, $extractor, &$report) {
                 foreach ($users as $user) {
                     $report['checked']++;
 
-                    $profile = $user->participantProfile ?? new ParticipantProfile(['user_id' => $user->id]);
+                    $profile = $user->participantProfile;
+
+                    if (!$profile) {
+                        $report['skipped_missing_profile']++;
+                        continue;
+                    }
 
                     if ($profile->contract_imported_at !== null) {
                         $report['skipped_existing_import']++;
@@ -73,11 +86,6 @@ class ImportParticipantContracts extends Command
 
                     $this->fillIfMissing($user, $profile, $parsed);
 
-                    if (!$profile->exists && empty($profile->birthday)) {
-                        $report['skipped_unparseable']++;
-                        continue;
-                    }
-
                     if (!$isDryRun) {
                         $profile->contract_imported_at = now();
                         $profile->save();
@@ -93,6 +101,7 @@ class ImportParticipantContracts extends Command
             'timezone' => config('app.timezone'),
             'trigger' => $trigger,
             'dry_run' => $isDryRun,
+            'participant_id' => $participantId !== null && $participantId !== '' ? (int) $participantId : null,
             'summary' => $report,
         ];
 

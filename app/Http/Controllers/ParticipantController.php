@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Artisan;
 use App\Models\ParticipantProfile;
 use App\Models\ProfessionGroup;
 use App\Models\Employed;
@@ -586,7 +587,24 @@ class ParticipantController extends Controller
     ])->save();
     $participant->timestamps = true;
 
-    return back()->with('success', __('Vertragsansicht aktualisiert.'));
+    $message = __('Vertragsansicht aktualisiert.');
+
+    if ((bool) $data['enabled']) {
+      try {
+        $exitCode = Artisan::call('participants:import-contracts', [
+          '--participant_id' => $participant->id,
+          '--trigger' => 'teacher_release_button',
+        ]);
+
+        if ($exitCode !== 0) {
+          return back()->with('warning', __('Vertragsansicht freigegeben, aber Vertragsdaten konnten nicht importiert werden.'));
+        }
+      } catch (Throwable) {
+        return back()->with('warning', __('Vertragsansicht freigegeben, aber Vertragsdaten konnten nicht importiert werden.'));
+      }
+    }
+
+    return back()->with('success', $message);
   }
 
   public function contractStatus(Request $request)
