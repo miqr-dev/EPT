@@ -97,3 +97,29 @@ test('it ignores already imported contracts', function () {
     $participant->refresh();
     expect($participant->firstname)->toBe('');
 });
+
+
+test('it supports dry run without persisting imported values', function () {
+    Storage::fake('pdfs');
+
+    $city = City::create(['name' => 'Erfurt']);
+    $participant = participantForContract($city, ['username' => 'dryrun']);
+
+    ParticipantProfile::create([
+        'user_id' => $participant->id,
+        'birthday' => '1970-03-14',
+        'age' => 54,
+        'sex' => 'w',
+    ]);
+
+    Storage::disk('pdfs')->put('Erfurt/dryrun.pdf', contractPdfText());
+
+    $this->artisan('participants:import-contracts', ['--dry-run' => true])->assertSuccessful();
+
+    $participant->refresh();
+    $profile = $participant->participantProfile()->firstOrFail();
+
+    expect($participant->firstname)->toBe('')
+        ->and($profile->cost_bearer)->toBeNull()
+        ->and($profile->contract_imported_at)->toBeNull();
+});
