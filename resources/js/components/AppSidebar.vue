@@ -15,7 +15,7 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Teilnehmer',
+        title: 'Prüfungsergebnisse',
         href: '/participants',
         icon: Users,
     },
