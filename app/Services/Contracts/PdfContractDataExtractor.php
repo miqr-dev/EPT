@@ -15,6 +15,7 @@ class PdfContractDataExtractor
 
         $data = [
             'full_name' => $this->firstMatch('/(?:und\s+)?Frau\/Herrn?\s+(.+?)(?:\s+als\s+Teilnehmer|\n|$)/ui', $text),
+            'sex' => $this->determineSex($text),
             'course' => $this->firstMatch('/Lehrgang\s*:?[ \t]*(.+?)(?:\n|$)/ui', $text),
             'location' => $this->firstMatch('/Ort\s*:?[ \t]*(.+?)(?:\n|$)/ui', $text),
             'measure_time' => $this->firstMatch('/Ma(?:ß|ss)nahmezeit\s*:?[ \t]*(.+?)(?:\n|$)/ui', $text),
@@ -246,6 +247,20 @@ class PdfContractDataExtractor
         }
 
         return @mb_convert_encoding($binary, 'UTF-8', 'Windows-1252') ?: '';
+    }
+
+
+    private function determineSex(string $text): ?string
+    {
+        if (preg_match('/\bund\s+Frau\b/ui', $text) === 1 || preg_match('/\bTeilnehmerin\b/ui', $text) === 1) {
+            return 'w';
+        }
+
+        if (preg_match('/\bund\s+Herrn?\b/ui', $text) === 1 || preg_match('/\bTeilnehmer\b/ui', $text) === 1) {
+            return 'm';
+        }
+
+        return null;
     }
 
     private function normalizeText(string $text): string

@@ -157,3 +157,24 @@ test('it imports only selected participant when participant_id is provided', fun
     expect($target->firstname)->toBe('Target')
         ->and($other->firstname)->toBe('');
 });
+
+
+test('it creates profile from pdf when participant has no profile yet', function () {
+    Storage::fake('pdfs');
+
+    $city = City::create(['name' => 'Erfurt']);
+    $participant = participantForContract($city, ['username' => 'newprofile']);
+
+    Storage::disk('pdfs')->put('Erfurt/newprofile.pdf', contractPdfText('Nina Neu'));
+
+    $this->artisan('participants:import-contracts', ['--participant_id' => $participant->id])->assertSuccessful();
+
+    $participant->refresh();
+    $profile = $participant->participantProfile()->first();
+
+    expect($profile)->not->toBeNull()
+        ->and($participant->firstname)->toBe('Nina')
+        ->and($participant->name)->toBe('Neu')
+        ->and($profile?->cost_bearer)->toBe('Jobcenter Erfurt')
+        ->and($profile?->contract_imported_at)->not->toBeNull();
+});

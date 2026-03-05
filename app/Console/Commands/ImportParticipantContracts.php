@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\ParticipantProfile;
 use App\Models\User;
 use App\Services\Contracts\PdfContractDataExtractor;
 use Illuminate\Console\Command;
@@ -45,59 +46,81 @@ class ImportParticipantContracts extends Command
             $query->whereKey((int) $participantId);
         }
 
-        $query->chunkById(100, function ($users) use ($disk, $extractor, &$report) {
-                foreach ($users as $user) {
-                    $report['checked']++;
+        $query->chunkById(100, function ($users) use ($disk, $extractor, $isDryRun, &$report) {
+            foreach ($users as $user) {
+                $report['checked']++;
 
-                    $profile = $user->participantProfile;
-
-                    if (!$profile) {
-                        $report['skipped_missing_profile']++;
-                        continue;
-                    }
-
-                    if ($profile->contract_imported_at !== null) {
-                        $report['skipped_existing_import']++;
-                        continue;
-                    }
-
-                    $cityName = Str::of((string) optional($user->city)->name)->trim()->replace(' ', '_');
-                    if ($cityName->isEmpty()) {
-                        $report['skipped_missing_pdf']++;
-                        continue;
-                    }
-
-                    $username = Str::of((string) $user->username)->trim();
-                    $pdfPath = collect([
-                        $cityName . '/' . $username . '.pdf',
-                        $cityName . '/' . $username . '.PDF',
-                    ])->first(fn ($path) => $disk->exists($path));
-
-                    if (!$pdfPath) {
-                        $report['skipped_missing_pdf']++;
-                        continue;
-                    }
-
-                    $parsed = $extractor->extract($disk->get($pdfPath));
-                    if ($parsed === []) {
-                        $report['skipped_unparseable']++;
-                        Log::warning('Participant contract import could not parse pdf', [
-                            'participant_id' => $user->id,
-                            'pdf_path' => $pdfPath,
-                        ]);
-                        continue;
-                    }
-
-                    $this->fillIfMissing($user, $profile, $parsed);
-
-                    if (!$isDryRun) {
-                        $profile->contract_imported_at = now();
-                        $profile->save();
-                    }
-
-                    $report['imported']++;
+                $cityName = Str::of((string) optional($user->city)->name)->trim()->replace(' ', '_');
+                if ($cityName->isEmpty()) {
+                    $report['skipped_missing_pdf']++;
+                    continue;
                 }
-            });
+
+                $username = Str::of((string) $user->username)->trim();
+                $pdfPath = collect([
+                    $cityName . '/' . $username . '.pdf',
+                    $cityName . '/' . $username . '.PDF',
+                ])->first(fn ($path) => $disk->exists($path));
+
+                if (!$pdfPath) {
+                    $report['skipped_missing_pdf']++;
+                    continue;
+                }
+
+                $parsed = $extractor->extract($disk->get($pdfPath));
+                if ($parsed === []) {
+                    $report['skipped_unparseable']++;
+                    Log::warning('Participant contract import could not parse pdf', [
+                        'participant_id' => $user->id,
+                        'pdf_path' => $pdfPath,
+                    ]);
+                    $this->appendImportLog('unparseable', [
+                        'participant_id' => $user->id,
+                        'pdf_path' => $pdfPath,
+                    ]);
+                    continue;
+                }
+
+                $profile = $user->participantProfile;
+
+                if ($profile && $profile->contract_imported_at !== null) {
+                    $report['skipped_existing_import']++;
+                    continue;
+                }
+
+                if (!$profile) {
+                    $profile = new ParticipantProfile([
+                        'user_id' => $user->id,
+                    ]);
+                }
+
+                $this->fillIfMissing($user, $profile, $parsed);
+
+                if (empty($profile->sex)) {
+                    $profile->sex = (string) ($parsed['sex'] ?? 'unbekannt');
+                }
+
+                if (empty($profile->birthday)) {
+                    $report['skipped_missing_profile']++;
+                    $this->appendImportLog('missing_required_birthday', [
+                        'participant_id' => $user->id,
+                        'pdf_path' => $pdfPath,
+                    ]);
+                    continue;
+                }
+
+                if (empty($profile->age) && !empty($profile->birthday)) {
+                    $profile->age = now()->diffInYears($profile->birthday);
+                }
+
+                if (!$isDryRun) {
+                    $profile->contract_imported_at = now();
+                    $profile->save();
+                }
+
+                $report['imported']++;
+            }
+        });
 
         $reportPath = $this->option('report') ?: 'reports/contracts-import-' . now()->format('Ymd_His') . '.json';
         $payload = [
@@ -116,10 +139,15 @@ class ImportParticipantContracts extends Command
             ...$payload,
         ]);
 
+        $this->appendImportLog('finished', [
+            'report_path' => $reportPath,
+            ...$payload,
+        ]);
+
         $this->info('Contract import done: ' . json_encode($report));
         $this->info('Trigger: ' . $trigger . ', timezone: ' . config('app.timezone') . ', dry-run: ' . ($isDryRun ? 'yes' : 'no'));
         $this->info('Report written to storage/app/private/' . $reportPath);
-        $this->info('Log written to storage/logs/laravel.log.');
+        $this->info('Log written to storage/logs/contracts-import.log (always) and default app log channel.');
 
         return self::SUCCESS;
     }
@@ -163,5 +191,14 @@ class ImportParticipantContracts extends Command
                 $profile->{$to} = $parsed[$from];
             }
         }
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function appendImportLog(string $event, array $context): void
+    {
+        $line = '[' . now()->toDateTimeString() . '] ' . $event . ' ' . json_encode($context, JSON_UNESCAPED_UNICODE) . PHP_EOL;
+        @file_put_contents(storage_path('logs/contracts-import.log'), $line, FILE_APPEND);
     }
 }
