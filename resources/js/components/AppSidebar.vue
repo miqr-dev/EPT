@@ -59,11 +59,11 @@ const mainNavItems: NavItem[] = [
     //     href: '/lps-a',
     //     icon: LayoutGrid,
     // },
-    // {
-    //     title: 'LPS-B',
-    //     href: '/lps-b',
-    //     icon: LayoutGrid,
-    // },
+     {
+        title: 'LPS-B',
+        href: '/lps-b',
+        icon: LayoutGrid,
+    },
     // {
     //     title: 'BIT-2',
     //     href: '/bit-2', // The new route for the Tests page

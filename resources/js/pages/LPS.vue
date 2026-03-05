@@ -47,7 +47,7 @@ type LpsColumnState = { status: ColumnStatus; remaining: number };
 
 
 const BASE_COLUMN_DURATION_SECONDS = [120, 180, 300, 480, 180, 120, 240, 180, 180, 60, 120];
-// const BASE_COLUMN_DURATION_SECONDS = [1, 1, 1, 1, 1, 31, 1, 1, 1, 1, 1];
+// const BASE_COLUMN_DURATION_SECONDS = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
 const BASE_COLUMN_LABELS = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12];
 const BASE_PAGE_SECTIONS = [
   { title: 'Spalten 1 + 2', columnIndices: [0, 1] },
@@ -340,7 +340,7 @@ const page1Responses = ref<LpsPage1ResponseRow[]>(
 );
 
 const columnDurations = computed(() =>
-  props.testName === 'LPS-B' ? [...BASE_COLUMN_DURATION_SECONDS, 180, 480] : BASE_COLUMN_DURATION_SECONDS,
+  props.testName === 'LPS-B' ? [...BASE_COLUMN_DURATION_SECONDS, 120, 480] : BASE_COLUMN_DURATION_SECONDS,
 );
 const columnLabels = computed(() =>
   props.testName === 'LPS-B' ? [...BASE_COLUMN_LABELS, 14, 13] : BASE_COLUMN_LABELS,
