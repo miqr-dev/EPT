@@ -133,11 +133,67 @@ const page1Correct = ['13', '26', '133', '39', '125', '50', '480', '210', '11,25
 ========================================================= */
 const page2Answers = ref<string[]>(Array(10).fill(''));
 
-const page2BaseRows = [
-    {
-        question: { variant: 'circle-horizontal', accent: '#d1d5db' },
-        answers: ['half-fill', 'circle-vertical-small', 'circle-vertical-large', 'circle-horizontal-large'],
-    },
+const page2Row1QuestionSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 190" preserveAspectRatio="xMidYMid meet">
+    <rect width="980" height="190" fill="white"/>
+    <g transform="translate(4 10)">
+        <rect x="0" y="0" width="178" height="170" fill="white" stroke="#111827" stroke-width="4"/>
+        <ellipse cx="88" cy="85" rx="74" ry="72" fill="white" stroke="#111827" stroke-width="1.5"/>
+        <line x1="12" y1="85" x2="164" y2="85" stroke="#111827" stroke-width="2"/>
+    </g>
+    <g transform="translate(254 10)">
+        <rect x="0" y="0" width="178" height="170" fill="white" stroke="#111827" stroke-width="4"/>
+        <circle cx="89" cy="72" r="46" fill="white" stroke="#111827" stroke-width="1.5"/>
+        <line x1="43" y1="72" x2="135" y2="72" stroke="#111827" stroke-width="2"/>
+    </g>
+    <g transform="translate(512 10)">
+        <rect x="0" y="0" width="178" height="170" fill="white" stroke="#111827" stroke-width="4"/>
+        <circle cx="89" cy="70" r="50" fill="white" stroke="#111827" stroke-width="1.5"/>
+        <line x1="89" y1="20" x2="89" y2="120" stroke="#111827" stroke-width="2"/>
+    </g>
+    <g transform="translate(770 10)">
+        <rect x="0" y="0" width="178" height="170" fill="white" stroke="#111827" stroke-width="4"/>
+        <text x="89" y="88" text-anchor="middle" dominant-baseline="middle" font-size="62" font-family="Arial, sans-serif" fill="#111827">?</text>
+    </g>
+</svg>`;
+
+const page2Row1AnswerSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 190" preserveAspectRatio="xMidYMid meet">
+    <rect width="1240" height="190" fill="white"/>
+    <g>
+        <text x="44" y="50" text-anchor="end" font-size="46" font-family="Arial, sans-serif" fill="#111827">[1]</text>
+        <g transform="translate(54 16)">
+            <rect x="0" y="0" width="182" height="158" fill="white" stroke="#111827" stroke-width="4"/>
+            <path d="M18 79 A73 73 0 0 1 164 79 L164 79 L18 79 Z" fill="#8b8b8b"/>
+            <circle cx="91" cy="79" r="73" fill="none" stroke="#111827" stroke-width="1.5"/>
+            <line x1="18" y1="79" x2="164" y2="79" stroke="#111827" stroke-width="2"/>
+        </g>
+    </g>
+    <g>
+        <text x="390" y="50" text-anchor="end" font-size="46" font-family="Arial, sans-serif" fill="#111827">[2]</text>
+        <g transform="translate(404 16)">
+            <rect x="0" y="0" width="182" height="158" fill="white" stroke="#111827" stroke-width="4"/>
+            <circle cx="91" cy="79" r="46" fill="white" stroke="#111827" stroke-width="1.5"/>
+            <line x1="91" y1="33" x2="91" y2="125" stroke="#111827" stroke-width="2"/>
+        </g>
+    </g>
+    <g>
+        <text x="742" y="50" text-anchor="end" font-size="46" font-family="Arial, sans-serif" fill="#111827">[3]</text>
+        <g transform="translate(756 16)">
+            <rect x="0" y="0" width="182" height="158" fill="white" stroke="#111827" stroke-width="4"/>
+            <circle cx="91" cy="79" r="73" fill="white" stroke="#111827" stroke-width="1.5"/>
+            <line x1="91" y1="6" x2="91" y2="152" stroke="#111827" stroke-width="2"/>
+        </g>
+    </g>
+    <g>
+        <text x="1094" y="50" text-anchor="end" font-size="46" font-family="Arial, sans-serif" fill="#111827">[4]</text>
+        <g transform="translate(1108 16)">
+            <rect x="0" y="0" width="182" height="158" fill="white" stroke="#111827" stroke-width="4"/>
+            <circle cx="91" cy="79" r="72" fill="white" stroke="#111827" stroke-width="1.5"/>
+            <line x1="19" y1="79" x2="163" y2="79" stroke="#111827" stroke-width="2"/>
+        </g>
+    </g>
+</svg>`;
+
+const generatedPage2Rows = [
     {
         question: { variant: 'line-dot-bottom', accent: '#e5e7eb' },
         answers: ['line-dot-bottom-left', 'line-dot-bottom-right', 'line-dot-top-right', 'line-dot-top-double'],
@@ -155,13 +211,31 @@ const page2BaseRows = [
     { question: { variant: 'waves-stack', accent: '#e5e7eb' }, answers: ['waves-stack', 'waves-single', 'waves-grid', 'waves-dot'] },
 ] as const;
 
-type Page2QuestionVariant = (typeof page2BaseRows)[number]['question']['variant'];
-type Page2AnswerVariant = (typeof page2BaseRows)[number]['answers'][number];
+type Page2QuestionVariant = (typeof generatedPage2Rows)[number]['question']['variant'];
+type Page2AnswerVariant = (typeof generatedPage2Rows)[number]['answers'][number];
+
+type Page2Row =
+    | {
+          questionSvg: string;
+          answerSvg: string;
+      }
+    | {
+          question: { variant: Page2QuestionVariant; accent: string };
+          answers: readonly Page2AnswerVariant[];
+      };
+
+const page2BaseRows: readonly Page2Row[] = [
+    {
+        questionSvg: page2Row1QuestionSvg,
+        answerSvg: page2Row1AnswerSvg,
+    },
+    ...generatedPage2Rows,
+];
 
 const page2Rows = page2BaseRows.map((row, rowIndex) => ({
     id: rowIndex,
-    questionSvg: buildQuestionSvg(row.question.variant, row.question.accent),
-    answerSvg: buildAnswerSvgRow(row.answers, row.question.accent),
+    questionSvg: 'questionSvg' in row ? row.questionSvg : buildQuestionSvg(row.question.variant, row.question.accent),
+    answerSvg: 'answerSvg' in row ? row.answerSvg : buildAnswerSvgRow(row.answers, row.question.accent),
 }));
 
 function buildQuestionSvg(variant: Page2QuestionVariant, accent: string) {
