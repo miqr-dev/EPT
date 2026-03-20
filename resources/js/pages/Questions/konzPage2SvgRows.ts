@@ -63,8 +63,76 @@ const ROW_1_ANSWER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1
     </g>
 </svg>`;
 
-function buildRow(questionSvg: string, answerSvg: string): KonzPage2SvgRow {
-    return { questionSvg, answerSvg };
+const ROW_2_QUESTION_SVG = ``;
+const ROW_2_ANSWER_SVG = ``;
+
+const ROW_3_QUESTION_SVG = ``;
+const ROW_3_ANSWER_SVG = ``;
+
+const ROW_4_QUESTION_SVG = ``;
+const ROW_4_ANSWER_SVG = ``;
+
+const ROW_5_QUESTION_SVG = ``;
+const ROW_5_ANSWER_SVG = ``;
+
+const ROW_6_QUESTION_SVG = ``;
+const ROW_6_ANSWER_SVG = ``;
+
+const ROW_7_QUESTION_SVG = ``;
+const ROW_7_ANSWER_SVG = ``;
+
+const ROW_8_QUESTION_SVG = ``;
+const ROW_8_ANSWER_SVG = ``;
+
+const ROW_9_QUESTION_SVG = ``;
+const ROW_9_ANSWER_SVG = ``;
+
+const ROW_10_QUESTION_SVG = ``;
+const ROW_10_ANSWER_SVG = ``;
+
+function resolveSvg(svg: string, fallback: string) {
+    return svg.trim() ? svg : fallback;
 }
 
-export const KONZ_PAGE2_SVG_ROWS: KonzPage2SvgRow[] = Array.from({ length: 10 }, () => buildRow(ROW_1_QUESTION_SVG, ROW_1_ANSWER_SVG));
+export const KONZ_PAGE2_SVG_ROWS: KonzPage2SvgRow[] = [
+    {
+        questionSvg: ROW_1_QUESTION_SVG,
+        answerSvg: ROW_1_ANSWER_SVG,
+    },
+    {
+        questionSvg: resolveSvg(ROW_2_QUESTION_SVG, ROW_1_QUESTION_SVG),
+        answerSvg: resolveSvg(ROW_2_ANSWER_SVG, ROW_1_ANSWER_SVG),
+    },
+    {
+        questionSvg: resolveSvg(ROW_3_QUESTION_SVG, ROW_1_QUESTION_SVG),
+        answerSvg: resolveSvg(ROW_3_ANSWER_SVG, ROW_1_ANSWER_SVG),
+    },
+    {
+        questionSvg: resolveSvg(ROW_4_QUESTION_SVG, ROW_1_QUESTION_SVG),
+        answerSvg: resolveSvg(ROW_4_ANSWER_SVG, ROW_1_ANSWER_SVG),
+    },
+    {
+        questionSvg: resolveSvg(ROW_5_QUESTION_SVG, ROW_1_QUESTION_SVG),
+        answerSvg: resolveSvg(ROW_5_ANSWER_SVG, ROW_1_ANSWER_SVG),
+    },
+    {
+        questionSvg: resolveSvg(ROW_6_QUESTION_SVG, ROW_1_QUESTION_SVG),
+        answerSvg: resolveSvg(ROW_6_ANSWER_SVG, ROW_1_ANSWER_SVG),
+    },
+    {
+        questionSvg: resolveSvg(ROW_7_QUESTION_SVG, ROW_1_QUESTION_SVG),
+        answerSvg: resolveSvg(ROW_7_ANSWER_SVG, ROW_1_ANSWER_SVG),
+    },
+    {
+        questionSvg: resolveSvg(ROW_8_QUESTION_SVG, ROW_1_QUESTION_SVG),
+        answerSvg: resolveSvg(ROW_8_ANSWER_SVG, ROW_1_ANSWER_SVG),
+    },
+    {
+        questionSvg: resolveSvg(ROW_9_QUESTION_SVG, ROW_1_QUESTION_SVG),
+        answerSvg: resolveSvg(ROW_9_ANSWER_SVG, ROW_1_ANSWER_SVG),
+    },
+    {
+        questionSvg: resolveSvg(ROW_10_QUESTION_SVG, ROW_1_QUESTION_SVG),
+        answerSvg: resolveSvg(ROW_10_ANSWER_SVG, ROW_1_ANSWER_SVG),
+    },
+];
