@@ -1047,7 +1047,7 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
 }
 
 .page2-answer-svg {
-    margin-top: -0.625rem;
+    margin-top: -0.75rem;
 }
 
 .page2-answer-input {
