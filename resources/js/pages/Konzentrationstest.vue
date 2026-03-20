@@ -731,7 +731,7 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
                         </div>
                         <div class="hidden self-stretch bg-black/60 lg:block"></div>
                         <div class="page2-row">
-                            <div class="page2-svg page2-answer-svg" v-html="row.answerSvg"></div>
+                            <div :class="['page2-svg', 'page2-answer-svg', { 'page2-answer-svg-row-3': i === 2 }]" v-html="row.answerSvg"></div>
                         </div>
                     </template>
                 </div>
@@ -1048,6 +1048,10 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
 
 .page2-answer-svg {
     margin-top: -0.75rem;
+}
+
+.page2-answer-svg-row-3 {
+    margin-top: -0.625rem;
 }
 
 .page2-answer-input {
