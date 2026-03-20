@@ -1022,11 +1022,12 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
 .page2-row {
     min-height: 84px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .page2-left-row {
     gap: 1rem;
+    align-items: center;
 }
 
 .page2-svg {
