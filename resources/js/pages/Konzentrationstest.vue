@@ -726,12 +726,12 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
 
                     <template v-for="(row, i) in page2Rows" :key="`page2-row-${i}`">
                         <div class="page2-row page2-left-row">
-                            <div class="page2-svg" v-html="row.questionSvg"></div>
+                            <div class="page2-svg page2-question-svg" v-html="row.questionSvg"></div>
                             <input v-model="page2Answers[i]" class="answer-box page2-answer-input text-[18px]" inputmode="numeric" maxlength="1" />
                         </div>
                         <div class="hidden self-stretch bg-black/60 lg:block"></div>
                         <div class="page2-row">
-                            <div class="page2-svg page2-answer-svg" v-html="row.answerSvg"></div>
+                            <div class="page2-svg" v-html="row.answerSvg"></div>
                         </div>
                     </template>
                 </div>
@@ -1040,9 +1040,9 @@ const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedInde
     height: auto;
 }
 
-.page2-answer-svg :deep(svg) {
-    width: 118%;
-    max-width: none;
+.page2-question-svg :deep(svg) {
+    width: 85%;
+    margin: 0 auto;
 }
 
 .page2-answer-input {
