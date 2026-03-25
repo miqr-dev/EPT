@@ -112,7 +112,7 @@ const testComponents: Record<string, unknown> = {
 };
 
 const stepStatuses = ref<Record<number, StepStatusEntry>>(normalizeStepStatuses(props.stepStatuses));
-const testsWithPauseSupport = new Set(['BIT-2', 'FPI-R', 'MRT-A', 'MRT-B', 'LPS', 'LPS-A', 'LPS-B']);
+const testsWithPauseSupport = new Set(['BIT-2', 'FPI-R', 'MRT-A', 'MRT-B']);
 const visibleSteps = computed(() =>
   props.exam.steps.filter((step) => {
     if (props.exam.current_step?.id === step.id) {
@@ -492,12 +492,12 @@ function breakTest() {
   );
 }
 
-function closeTestDialog({ resetActive = false }: { resetActive?: boolean } = {}) {
+function closeTestDialog({ resetActive = false, keepFullscreen = false }: { resetActive?: boolean; keepFullscreen?: boolean } = {}) {
   if (isTestDialogOpen.value) {
     isTestDialogOpen.value = false;
   }
 
-  cleanupAfterTest();
+  cleanupAfterTest({ keepFullscreen });
 
   stopCountdown();
   activeTimeRemainingSeconds.value = null;
@@ -515,12 +515,12 @@ function closeTestDialog({ resetActive = false }: { resetActive?: boolean } = {}
   }
 }
 
-function cleanupAfterTest() {
+function cleanupAfterTest({ keepFullscreen = false }: { keepFullscreen?: boolean } = {}) {
   window.removeEventListener('beforeunload', handleBeforeUnload);
   document.removeEventListener('fullscreenchange', handleFullscreenChange);
   window.removeEventListener('start-finish', beginFinish as EventListener);
   window.removeEventListener('cancel-finish', cancelFinish as EventListener);
-  if (document.fullscreenElement && typeof document.exitFullscreen === 'function') {
+  if (!keepFullscreen && document.fullscreenElement && typeof document.exitFullscreen === 'function') {
     document.exitFullscreen().catch(() => undefined);
   }
   finishing.value = false;
@@ -551,7 +551,7 @@ function handleRemotePause(stepId: number) {
   remotelyPausedStepIds.add(stepId);
   if (activeStepId.value === stepId) {
     pauseTest(activeTestAnswers.value);
-    closeTestDialog();
+    closeTestDialog({ keepFullscreen: true });
   }
 }
 

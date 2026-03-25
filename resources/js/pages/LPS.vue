@@ -226,7 +226,6 @@ const pageSections = computed(() => {
     ...BASE_PAGE_SECTIONS.slice(0, 4),
     { title: 'Spalte 6', columnIndices: [] },
     ...BASE_PAGE_SECTIONS.slice(4, 8),
-    { title: 'Pause', columnIndices: [] },
     ...BASE_PAGE_SECTIONS.slice(8),
     { title: 'Spalten 13 + 14', columnIndices: [11, 12] },
   ];
@@ -245,17 +244,16 @@ const visibleColumnStates = computed(() =>
 );
 const pageIndexByColumn = computed(() => {
   const offset = isLpsB.value ? 1 : 0;
-  const pauseOffset = isLpsB.value ? 1 : 0;
   return {
     col6: isLpsB.value ? 4 : -1,
     col7: 4 + offset,
     col8: 5 + offset,
     col9: 6 + offset,
     col10: 7 + offset,
-    pause: isLpsB.value ? 8 + offset : -1,
-    col11: 8 + offset + pauseOffset,
-    col12: 9 + offset + pauseOffset,
-    col14: 10 + offset + pauseOffset,
+    pause: -1,
+    col11: 8 + offset,
+    col12: 9 + offset,
+    col14: 10 + offset,
   } as const;
 });
 const alphabetLetters = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -1726,16 +1724,6 @@ const page10MaxScore = computed(
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div v-else-if="pageIndex === pageIndexByColumn.pause" class="space-y-3">
-            <div class="rounded-2xl border bg-background p-6 shadow-sm">
-              <div class="mb-3 text-center text-[13px] font-extrabold tracking-wide text-foreground"></div>
-              <div class="my-10 text-center text-7xl font-black tracking-wide text-foreground md:text-8xl">Pause</div>
-              <p class="text-center text-sm text-muted-foreground">
-                Machen Sie eine Pause und folgen Sie bitte den Anweisungen der Lehrkraft.
-              </p>
             </div>
           </div>
 

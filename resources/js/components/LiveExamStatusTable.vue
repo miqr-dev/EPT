@@ -97,7 +97,7 @@ const getParticipantStatusFromExam = (exam: any, participant: any) => {
 const getParticipantStatus = (participant: any) =>
   getParticipantStatusFromExam(localExam.value, participant)
 
-const PAUSE_SUPPORTED_TEST_CODES = new Set(['FPI-R', 'MRT-A', 'MRT-B', 'LPS', 'LPS-A', 'LPS-B', 'BIT-2'])
+const PAUSE_SUPPORTED_TEST_CODES = new Set(['FPI-R', 'MRT-A', 'MRT-B', 'BIT-2'])
 
 const isCurrentStepPauseSupported = () => {
   const test = localExam.value?.current_step?.test
