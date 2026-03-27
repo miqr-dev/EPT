@@ -2,54 +2,54 @@ import html2canvas from 'html2canvas-pro';
 import jsPDF from 'jspdf';
 
 type GeneratePdfOptions = {
-  zoom?: number;
+    zoom?: number;
+    scale?: number;
 };
 
-export async function generatePdfFromElement(
-  element: HTMLElement,
-  filename: string,
-  options: GeneratePdfOptions = {},
-) {
-  if (!element) {
-    console.error("Element for PDF generation not found.");
-    return;
-  }
+export async function generatePdfFromElement(element: HTMLElement, filename: string, options: GeneratePdfOptions = {}) {
+    if (!element) {
+        console.error('Element for PDF generation not found.');
+        return;
+    }
 
-  const { zoom } = options;
-  const shouldZoom = typeof zoom === 'number' && zoom > 0 && zoom !== 1;
+    const { zoom, scale } = options;
+    const shouldZoom = typeof zoom === 'number' && zoom > 0 && zoom !== 1;
 
-  const originalTransform = element.style.transform;
-  const originalTransformOrigin = element.style.transformOrigin;
+    const originalTransform = element.style.transform;
+    const originalTransformOrigin = element.style.transformOrigin;
 
-  if (shouldZoom) {
-    element.style.transform = `scale(${zoom})`;
-    element.style.transformOrigin = 'top left';
-  }
+    if (shouldZoom) {
+        element.style.transform = `scale(${zoom})`;
+        element.style.transformOrigin = 'top left';
+    }
 
-  const canvas = await html2canvas(element, {
-    scale: 2, // Higher scale for better quality
-    useCORS: true,
-  });
+    const resolvedScale = Math.max(scale ?? 3, window.devicePixelRatio || 1);
 
-  if (shouldZoom) {
-    element.style.transform = originalTransform;
-    element.style.transformOrigin = originalTransformOrigin;
-  }
+    const canvas = await html2canvas(element, {
+        scale: resolvedScale,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+    });
 
-  const img = canvas.toDataURL('image/png');
+    if (shouldZoom) {
+        element.style.transform = originalTransform;
+        element.style.transformOrigin = originalTransformOrigin;
+    }
 
-  const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-  const pdfW = pdf.internal.pageSize.getWidth();
-  const pdfH = pdf.internal.pageSize.getHeight();
+    const img = canvas.toDataURL('image/png');
 
-  let imgW = pdfW;
-  let imgH = (canvas.height * imgW) / canvas.width;
-  if (imgH > pdfH) {
-    imgH = pdfH;
-    imgW = (canvas.width * imgH) / canvas.height;
-  }
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = pdf.internal.pageSize.getHeight();
 
-  const marginX = (pdfW - imgW) / 2;
-  pdf.addImage(img, 'PNG', marginX, 0, imgW, imgH);
-  pdf.save(filename);
+    let imgW = pdfW;
+    let imgH = (canvas.height * imgW) / canvas.width;
+    if (imgH > pdfH) {
+        imgH = pdfH;
+        imgW = (canvas.width * imgH) / canvas.height;
+    }
+
+    const marginX = (pdfW - imgW) / 2;
+    pdf.addImage(img, 'PNG', marginX, 0, imgW, imgH);
+    pdf.save(filename);
 }

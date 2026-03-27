@@ -34,9 +34,7 @@ const isAvemTest = computed(() => props.assignment?.test?.name === 'AVEM');
 
 const pdfContainerStyle = computed(() => ({
     zIndex: -1,
-    width: '1200px',
-    transform: isAvemTest.value ? 'scale(1.25)' : undefined,
-    transformOrigin: isAvemTest.value ? 'top left' : undefined,
+    width: isAvemTest.value ? '1500px' : '1200px',
 }));
 
 watch(
@@ -115,7 +113,7 @@ async function downloadUnifiedPdf() {
         const el = pdfTemplateRef.value?.$el as HTMLElement | undefined;
         if (el) {
             const filename = `${props.participant.name}_${props.assignment.test.name}_Ergebnis.pdf`;
-            await generatePdfFromElement(el, filename);
+            await generatePdfFromElement(el, filename, { scale: isAvemTest.value ? 4 : 3 });
         } else {
             console.error('PDF template element not found.');
         }
