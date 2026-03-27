@@ -34,7 +34,7 @@ const isAvemTest = computed(() => props.assignment?.test?.name === 'AVEM');
 
 const pdfContainerStyle = computed(() => ({
     zIndex: -1,
-    width: isAvemTest.value ? '1500px' : '1200px',
+    width: '1200px',
 }));
 
 watch(
