@@ -250,7 +250,7 @@ const frameBorder = {
   },
 }
 
-Chart.register(topBottomPlugin, intervalsAndPointLabels, frameBorder)
+const localPlugins = [topBottomPlugin, intervalsAndPointLabels, frameBorder]
 
 /* ---------- options ---------- */
 const chartOptions = computed(() => ({
@@ -310,7 +310,7 @@ const detailRows = computed(() => {
   <div class="p-6 bg-background rounded-lg">
     <div class="mb-6 rounded-md bg-white p-4">
       <div style="width: 920px; height: 560px">
-        <Line :data="chartData" :options="chartOptions" />
+        <Line :data="chartData" :options="chartOptions" :plugins="localPlugins" />
       </div>
     </div>
 
