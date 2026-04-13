@@ -341,28 +341,46 @@ const debugScores = computed(() => {
     </div>
     <div
       v-if="showTest"
-      class="absolute bottom-4 right-4 z-20 w-[360px] rounded-lg border border-black bg-white/95 p-3 font-sans text-xs shadow-lg"
+      class="absolute bottom-4 right-4 z-20 w-[900px] max-w-[calc(100%-2rem)] rounded-lg border border-black bg-white/95 p-3 font-sans text-xs shadow-lg"
     >
-      <div class="mb-2 font-semibold">DEV: Dynamische Punkte (temporär)</div>
-      <div class="space-y-1">
-        <div>Aufgabe 1: <span class="font-bold">{{ debugScores.q1.points }}/9</span></div>
-        <div class="pl-2 text-[11px] text-muted-foreground">
-          F-2silb: {{ debugScores.q1.earlyTwoSyllable }}/9, F-3silb: {{ debugScores.q1.earlyThreeSyllable }}/1,
-          S-1silb: {{ debugScores.q1.lateOneSyllable }}/8, S-3silb: {{ debugScores.q1.lateThreeSyllable }}/7
+      <div class="mb-2 font-semibold">DEV: Dynamische Punkte (temporär, horizontal)</div>
+      <div class="grid grid-cols-6 gap-2">
+        <div class="rounded border border-black/20 px-2 py-1">
+          <div class="font-semibold">A1</div>
+          <div class="font-bold">{{ debugScores.q1.points }}/9</div>
+          <div class="text-[10px] text-muted-foreground">
+            F2 {{ debugScores.q1.earlyTwoSyllable }}/9 · F3 {{ debugScores.q1.earlyThreeSyllable }}/1
+          </div>
+          <div class="text-[10px] text-muted-foreground">
+            S1 {{ debugScores.q1.lateOneSyllable }}/8 · S3 {{ debugScores.q1.lateThreeSyllable }}/7
+          </div>
         </div>
-        <div>Aufgabe 2: <span class="font-bold">—</span> <span class="text-muted-foreground">{{ debugScores.q2.note }}</span></div>
-        <div>Aufgabe 3: <span class="font-bold">{{ debugScores.q3.points }}/{{ debugScores.q3.max }}</span> (richtige Felder)</div>
-        <div>
-          Aufgabe 4: <span class="font-bold">{{ debugScores.q4.points }}/{{ debugScores.q4.max }}</span>
-          <span class="text-muted-foreground">{{ debugScores.q4.note }}</span>
+        <div class="rounded border border-black/20 px-2 py-1">
+          <div class="font-semibold">A2</div>
+          <div class="font-bold">—</div>
+          <div class="text-[10px] text-muted-foreground">{{ debugScores.q2.note }}</div>
         </div>
-        <div>
-          Aufgabe 5: <span class="font-bold">{{ debugScores.q5.points }}/{{ debugScores.q5.max }}</span>
-          <span class="text-muted-foreground">(korrekt: {{ debugScores.q5.correctDays }}, falsch: {{ debugScores.q5.wrongDays }})</span>
+        <div class="rounded border border-black/20 px-2 py-1">
+          <div class="font-semibold">A3</div>
+          <div class="font-bold">{{ debugScores.q3.points }}/{{ debugScores.q3.max }}</div>
+          <div class="text-[10px] text-muted-foreground">richtige Felder</div>
         </div>
-        <div>
-          Aufgabe 6: <span class="font-bold">{{ debugScores.q6.points }}/{{ debugScores.q6.max }}</span>
-          <span class="text-muted-foreground">{{ debugScores.q6.note }}</span>
+        <div class="rounded border border-black/20 px-2 py-1">
+          <div class="font-semibold">A4</div>
+          <div class="font-bold">{{ debugScores.q4.points }}/{{ debugScores.q4.max }}</div>
+          <div class="text-[10px] text-muted-foreground">Eingabe-Check</div>
+        </div>
+        <div class="rounded border border-black/20 px-2 py-1">
+          <div class="font-semibold">A5</div>
+          <div class="font-bold">{{ debugScores.q5.points }}/{{ debugScores.q5.max }}</div>
+          <div class="text-[10px] text-muted-foreground">
+            ✓ {{ debugScores.q5.correctDays }} · ✗ {{ debugScores.q5.wrongDays }}
+          </div>
+        </div>
+        <div class="rounded border border-black/20 px-2 py-1">
+          <div class="font-semibold">A6</div>
+          <div class="font-bold">{{ debugScores.q6.points }}/{{ debugScores.q6.max }}</div>
+          <div class="text-[10px] text-muted-foreground">Eingabe-Check</div>
         </div>
       </div>
     </div>
