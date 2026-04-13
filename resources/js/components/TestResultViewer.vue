@@ -20,6 +20,7 @@ import { norms_male_60up } from '@/pages/Scores/FPI/norms_male_60up';
 import { computed, ref, watch } from 'vue';
 import BIT2Result from '@/components/BIT2Result.vue';
 import LpsResult from '@/components/LpsResult.vue';
+import BtResult from '@/components/BtResult.vue';
 
 interface Answer {
   question: string;
@@ -207,6 +208,12 @@ const fpiRohwerte = computed(() => {
           :results="local"
           :test-name="test.name"
           :participant-profile="participantProfile"
+          :test-result-id="testResultId"
+          :manual-scores="manualScoreMap"
+          @manual-score-updated="handleManualScoreUpdated"
+        />
+        <BtResult
+          v-else-if="test.name === 'BT'"
           :test-result-id="testResultId"
           :manual-scores="manualScoreMap"
           @manual-score-updated="handleManualScoreUpdated"
