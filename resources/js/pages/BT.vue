@@ -126,10 +126,13 @@ const q3ExpectedCashCounts: Record<string, number> = {
   '0.5': 4,
 };
 const btAlphabet = 'ABCDEFGHJKLMNOPQRSTUVWXYZ';
-const q4ExpectedFolders = {
-  A: ['ABCD', 'E', 'FGHJ', 'KL', 'M', 'NO', 'PQR', 'ST', 'UV', 'WXYZ'],
-  B: ['AB', 'CD', 'E', 'FGHJ', 'KLMN', 'OPQR', 'S', 'TU', 'VW', 'XYZ'],
-} as const;
+const q4LetterWeights: Record<string, number> = {
+  A: 15, F: 15, W: 15, B: 15, G: 15, J: 15, X: 15, Y: 15, C: 15, H: 15, Z: 15, D: 15, // 2.5%
+  R: 20, P: 20, Q: 20, // 3.33%
+  N: 30, K: 30, S: 30, V: 30, T: 30, U: 30, O: 30, L: 30, // 5%
+  M: 60, E: 60, // 10%
+};
+const q4TargetFolderWeight = 60; // 10%
 const q5ExpectedBuyDays = new Set([5, 7, 10]);
 const oneSyllableNames = new Set(['Fuchs', 'Hans', 'Kurz', 'Mann', 'Pahl', 'Paul', 'Pees', 'Roth']);
 const twoSyllableNames = new Set([
@@ -289,24 +292,19 @@ function isAlphabetical(chars: string[]) {
   return chars.every((char, index) => index === 0 || btAlphabet.indexOf(chars[index - 1]) <= btAlphabet.indexOf(char));
 }
 
-function evaluateQ4ForForm(expectedFolders: readonly string[]) {
+function evaluateQ4() {
   const answers = Array.from({ length: 10 }, (_, index) => normalizeFolderLetters(folderAnswers.value[index + 1]));
-  const normalizedExpected = expectedFolders.map((folder) => folder.split(''));
-
-  const unusedExpected = normalizedExpected.map((chars) => chars.join(''));
-  let correctFolderCount = 0;
-
-  answers.forEach((chars) => {
-    const normalized = [...chars].sort((a, b) => btAlphabet.indexOf(a) - btAlphabet.indexOf(b)).join('');
-    const matchIndex = unusedExpected.indexOf(normalized);
-    if (matchIndex >= 0) {
-      correctFolderCount += 1;
-      unusedExpected.splice(matchIndex, 1);
-    }
-  });
+  const folderWeights = answers.map((chars) => chars.reduce((sum, char) => sum + (q4LetterWeights[char] ?? 0), 0));
+  const correctFolderCount = folderWeights.filter((weight) => weight === q4TargetFolderWeight).length;
 
   const alphabeticalOrderMet = answers.every((chars) => isAlphabetical(chars));
-  const folderOrderMet = answers.every((chars, index) => chars.join('') === normalizedExpected[index].join(''));
+  const folderOrderMet = answers.every((chars, index) => {
+    if (index === answers.length - 1) return true;
+    const currentIndices = chars.map((char) => btAlphabet.indexOf(char));
+    const nextIndices = answers[index + 1].map((char) => btAlphabet.indexOf(char));
+    if (!currentIndices.length || !nextIndices.length) return false;
+    return Math.max(...currentIndices) < Math.min(...nextIndices);
+  });
 
   let points = 0;
   if (correctFolderCount >= 1 && correctFolderCount <= 4) points = 2;
@@ -317,7 +315,7 @@ function evaluateQ4ForForm(expectedFolders: readonly string[]) {
     points = folderOrderMet ? 8 : 7;
   }
 
-  return { points, correctFolderCount, alphabeticalOrderMet, folderOrderMet };
+  return { points, correctFolderCount, alphabeticalOrderMet, folderOrderMet, folderWeights };
 }
 
 const debugScores = computed(() => {
@@ -350,9 +348,7 @@ const debugScores = computed(() => {
   const q5CorrectDays = selectedDays.filter((day) => q5ExpectedBuyDays.has(day)).length;
   const q5WrongDays = selectedDays.filter((day) => !q5ExpectedBuyDays.has(day)).length;
 
-  const q4FormA = evaluateQ4ForForm(q4ExpectedFolders.A);
-  const q4FormB = evaluateQ4ForForm(q4ExpectedFolders.B);
-  const q4Best = q4FormA.points >= q4FormB.points ? { form: 'A', ...q4FormA } : { form: 'B', ...q4FormB };
+  const q4 = evaluateQ4();
 
   return {
     q1: {
@@ -365,12 +361,12 @@ const debugScores = computed(() => {
     q2: { note: 'Keine Auto-Auswertung (Freitextaufgabe).' },
     q3: { points: q3CorrectFields, max: 8 },
     q4: {
-      points: q4Best.points,
+      points: q4.points,
       max: 8,
-      form: q4Best.form,
-      correctFolders: q4Best.correctFolderCount,
-      alphabeticalOrderMet: q4Best.alphabeticalOrderMet,
-      folderOrderMet: q4Best.folderOrderMet,
+      correctFolders: q4.correctFolderCount,
+      alphabeticalOrderMet: q4.alphabeticalOrderMet,
+      folderOrderMet: q4.folderOrderMet,
+      folderWeights: q4.folderWeights,
     },
     q5: {
       points: Math.max(0, q5CorrectDays - q5WrongDays),
@@ -424,10 +420,13 @@ const debugScores = computed(() => {
           <div class="font-semibold">A4</div>
           <div class="font-bold">{{ debugScores.q4.points }}/{{ debugScores.q4.max }}</div>
           <div class="text-[10px] text-muted-foreground">
-            Form {{ debugScores.q4.form }} · Ordner {{ debugScores.q4.correctFolders }}/10
+            Ordner mit 10%: {{ debugScores.q4.correctFolders }}/10
           </div>
           <div class="text-[10px] text-muted-foreground">
             Alpha {{ debugScores.q4.alphabeticalOrderMet ? '✓' : '✗' }} · Reihenfolge {{ debugScores.q4.folderOrderMet ? '✓' : '✗' }}
+          </div>
+          <div class="text-[10px] text-muted-foreground">
+            Gewichte: {{ debugScores.q4.folderWeights.join(' / ') }}
           </div>
         </div>
         <div class="rounded border border-black/20 px-2 py-1">
