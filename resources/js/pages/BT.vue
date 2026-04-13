@@ -125,6 +125,11 @@ const q3ExpectedCashCounts: Record<string, number> = {
   '1': 5,
   '0.5': 4,
 };
+const btAlphabet = 'ABCDEFGHJKLMNOPQRSTUVWXYZ';
+const q4ExpectedFolders = {
+  A: ['ABCD', 'E', 'FGHJ', 'KL', 'M', 'NO', 'PQR', 'ST', 'UV', 'WXYZ'],
+  B: ['AB', 'CD', 'E', 'FGHJ', 'KLMN', 'OPQR', 'S', 'TU', 'VW', 'XYZ'],
+} as const;
 const q5ExpectedBuyDays = new Set([5, 7, 10]);
 const oneSyllableNames = new Set(['Fuchs', 'Hans', 'Kurz', 'Mann', 'Pahl', 'Paul', 'Pees', 'Roth']);
 const twoSyllableNames = new Set([
@@ -272,6 +277,49 @@ function startTest() {
   page.value = 1;
 }
 
+function normalizeFolderLetters(value: string) {
+  return value
+    .toUpperCase()
+    .replace(/[^A-Z]/g, '')
+    .split('')
+    .filter((char, index, arr) => btAlphabet.includes(char) && arr.indexOf(char) === index);
+}
+
+function isAlphabetical(chars: string[]) {
+  return chars.every((char, index) => index === 0 || btAlphabet.indexOf(chars[index - 1]) <= btAlphabet.indexOf(char));
+}
+
+function evaluateQ4ForForm(expectedFolders: readonly string[]) {
+  const answers = Array.from({ length: 10 }, (_, index) => normalizeFolderLetters(folderAnswers.value[index + 1]));
+  const normalizedExpected = expectedFolders.map((folder) => folder.split(''));
+
+  const unusedExpected = normalizedExpected.map((chars) => chars.join(''));
+  let correctFolderCount = 0;
+
+  answers.forEach((chars) => {
+    const normalized = [...chars].sort((a, b) => btAlphabet.indexOf(a) - btAlphabet.indexOf(b)).join('');
+    const matchIndex = unusedExpected.indexOf(normalized);
+    if (matchIndex >= 0) {
+      correctFolderCount += 1;
+      unusedExpected.splice(matchIndex, 1);
+    }
+  });
+
+  const alphabeticalOrderMet = answers.every((chars) => isAlphabetical(chars));
+  const folderOrderMet = answers.every((chars, index) => chars.join('') === normalizedExpected[index].join(''));
+
+  let points = 0;
+  if (correctFolderCount >= 1 && correctFolderCount <= 4) points = 2;
+  else if (correctFolderCount >= 5 && correctFolderCount <= 9) points = 4;
+  else if (correctFolderCount === 10) points = 6;
+
+  if (correctFolderCount === 10 && alphabeticalOrderMet) {
+    points = folderOrderMet ? 8 : 7;
+  }
+
+  return { points, correctFolderCount, alphabeticalOrderMet, folderOrderMet };
+}
+
 const debugScores = computed(() => {
   const earlyAssigned = Object.entries(assignments.value)
     .filter(([key, value]) => key.startsWith('early-') && value)
@@ -302,6 +350,10 @@ const debugScores = computed(() => {
   const q5CorrectDays = selectedDays.filter((day) => q5ExpectedBuyDays.has(day)).length;
   const q5WrongDays = selectedDays.filter((day) => !q5ExpectedBuyDays.has(day)).length;
 
+  const q4FormA = evaluateQ4ForForm(q4ExpectedFolders.A);
+  const q4FormB = evaluateQ4ForForm(q4ExpectedFolders.B);
+  const q4Best = q4FormA.points >= q4FormB.points ? { form: 'A', ...q4FormA } : { form: 'B', ...q4FormB };
+
   return {
     q1: {
       points: q1Points,
@@ -313,9 +365,12 @@ const debugScores = computed(() => {
     q2: { note: 'Keine Auto-Auswertung (Freitextaufgabe).' },
     q3: { points: q3CorrectFields, max: 8 },
     q4: {
-      points: Object.values(folderAnswers.value).filter((value) => value.trim().length > 0).length,
-      max: 10,
-      note: 'Nur Eingabe-Check (keine eindeutige Musterlösung hinterlegt).',
+      points: q4Best.points,
+      max: 8,
+      form: q4Best.form,
+      correctFolders: q4Best.correctFolderCount,
+      alphabeticalOrderMet: q4Best.alphabeticalOrderMet,
+      folderOrderMet: q4Best.folderOrderMet,
     },
     q5: {
       points: Math.max(0, q5CorrectDays - q5WrongDays),
@@ -368,7 +423,12 @@ const debugScores = computed(() => {
         <div class="rounded border border-black/20 px-2 py-1">
           <div class="font-semibold">A4</div>
           <div class="font-bold">{{ debugScores.q4.points }}/{{ debugScores.q4.max }}</div>
-          <div class="text-[10px] text-muted-foreground">Eingabe-Check</div>
+          <div class="text-[10px] text-muted-foreground">
+            Form {{ debugScores.q4.form }} · Ordner {{ debugScores.q4.correctFolders }}/10
+          </div>
+          <div class="text-[10px] text-muted-foreground">
+            Alpha {{ debugScores.q4.alphabeticalOrderMet ? '✓' : '✗' }} · Reihenfolge {{ debugScores.q4.folderOrderMet ? '✓' : '✗' }}
+          </div>
         </div>
         <div class="rounded border border-black/20 px-2 py-1">
           <div class="font-semibold">A5</div>
