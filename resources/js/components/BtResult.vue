@@ -30,6 +30,9 @@ const scoreKeys = {
   q3Count2: 'bt_q3_count_2',
   q3Count1: 'bt_q3_count_1',
   q3Count050: 'bt_q3_count_050',
+  q4CorrectFolderCount: 'bt_q4_correct_folder_count',
+  q4AlphabeticalOrderMet: 'bt_q4_alphabetical_order_met',
+  q4FolderOrderMet: 'bt_q4_folder_order_met',
 } as const;
 
 const questionThreeCriteria = [
@@ -56,7 +59,10 @@ const values = ref<Record<string, string>>({
   [scoreKeys.q3Count2]: '',
   [scoreKeys.q3Count1]: '',
   [scoreKeys.q3Count050]: '',
+  [scoreKeys.q4CorrectFolderCount]: '',
 });
+const q4AlphabeticalOrderMet = ref(false);
+const q4FolderOrderMet = ref(false);
 
 watch(
   () => props.manualScores,
@@ -73,6 +79,9 @@ watch(
     values.value[scoreKeys.q3Count2] = toInput(next?.[scoreKeys.q3Count2]);
     values.value[scoreKeys.q3Count1] = toInput(next?.[scoreKeys.q3Count1]);
     values.value[scoreKeys.q3Count050] = toInput(next?.[scoreKeys.q3Count050]);
+    values.value[scoreKeys.q4CorrectFolderCount] = toInput(next?.[scoreKeys.q4CorrectFolderCount]);
+    q4AlphabeticalOrderMet.value = toNumber(toInput(next?.[scoreKeys.q4AlphabeticalOrderMet])) === 1;
+    q4FolderOrderMet.value = toNumber(toInput(next?.[scoreKeys.q4FolderOrderMet])) === 1;
   },
   { immediate: true, deep: true },
 );
@@ -96,6 +105,20 @@ const questionThreeTotal = computed(() =>
     return sum + (value === criterion.expected ? 1 : 0);
   }, 0),
 );
+const questionFourBasePoints = computed(() => {
+  const correctFolders = toNumber(values.value[scoreKeys.q4CorrectFolderCount]);
+  if (correctFolders == null || correctFolders < 1) return 0;
+  if (correctFolders <= 4) return 2;
+  if (correctFolders <= 9) return 4;
+  if (correctFolders >= 10) return 6;
+  return 0;
+});
+const questionFourTotal = computed(() => {
+  if (questionFourBasePoints.value < 6) return questionFourBasePoints.value;
+  if (!q4AlphabeticalOrderMet.value) return 6;
+  if (!q4FolderOrderMet.value) return 7;
+  return 8;
+});
 
 function toInput(value: number | string | null | undefined) {
   if (value == null || value === '') return '';
@@ -117,6 +140,18 @@ function sanitizeAndSet(key: string, event: Event) {
 
 async function persistValue(key: string) {
   const numericValue = toNumber(values.value[key]);
+  emit('manual-score-updated', { key, value: numericValue });
+
+  if (!props.testResultId) return;
+
+  await axios.put(route('test-results.manual-scores.update', { testResult: props.testResultId }), {
+    key,
+    value: numericValue,
+  });
+}
+
+async function persistBooleanValue(key: string, value: boolean) {
+  const numericValue = value ? 1 : 0;
   emit('manual-score-updated', { key, value: numericValue });
 
   if (!props.testResultId) return;
@@ -241,6 +276,68 @@ async function persistValue(key: string) {
           <tr class="bg-muted/30">
             <td class="px-3 py-2 font-semibold" colspan="3">Aufgabe 3 Gesamt</td>
             <td class="px-3 py-2 font-bold">{{ questionThreeTotal }} / 8</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <h3 class="text-lg font-semibold">BT – Aufgabe 4 (Scoring)</h3>
+    <p class="text-sm text-muted-foreground">
+      Punktvergabe: 1–4 richtige Ordner = 2 P., 5–9 = 4 P., 10 = 6 P.; bei 10 Ordnern zusätzlich
+      alphabetische Reihenfolge eingehalten = +1 P., Ordner-Reihenfolge eingehalten = +1 P.
+    </p>
+    <div class="overflow-x-auto">
+      <table class="min-w-full rounded-lg border text-sm shadow">
+        <thead class="bg-muted/40">
+          <tr>
+            <th class="px-3 py-2 text-left">Kriterium</th>
+            <th class="px-3 py-2 text-left">Eingabe</th>
+            <th class="px-3 py-2 text-left">Punkte</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="px-3 py-2">Richtig verteilte Ordner (0–10)</td>
+            <td class="px-3 py-2">
+              <Input
+                :model-value="values[scoreKeys.q4CorrectFolderCount]"
+                class="w-20"
+                inputmode="numeric"
+                @input="(event) => sanitizeAndSet(scoreKeys.q4CorrectFolderCount, event)"
+                @blur="persistValue(scoreKeys.q4CorrectFolderCount)"
+              />
+            </td>
+            <td class="px-3 py-2 font-semibold">{{ questionFourBasePoints }} / 6</td>
+          </tr>
+          <tr>
+            <td class="px-3 py-2">Alphabetische Reihenfolge eingehalten</td>
+            <td class="px-3 py-2">
+              <input
+                v-model="q4AlphabeticalOrderMet"
+                type="checkbox"
+                class="h-4 w-4 align-middle"
+                @change="persistBooleanValue(scoreKeys.q4AlphabeticalOrderMet, q4AlphabeticalOrderMet)"
+              />
+            </td>
+            <td class="px-3 py-2 font-semibold">{{ questionFourBasePoints < 6 ? 0 : q4AlphabeticalOrderMet ? 1 : 0 }} / 1</td>
+          </tr>
+          <tr>
+            <td class="px-3 py-2">Ordner-Reihenfolge eingehalten</td>
+            <td class="px-3 py-2">
+              <input
+                v-model="q4FolderOrderMet"
+                type="checkbox"
+                class="h-4 w-4 align-middle"
+                @change="persistBooleanValue(scoreKeys.q4FolderOrderMet, q4FolderOrderMet)"
+              />
+            </td>
+            <td class="px-3 py-2 font-semibold">{{ questionFourBasePoints < 6 || !q4AlphabeticalOrderMet ? 0 : q4FolderOrderMet ? 1 : 0 }} / 1</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="bg-muted/30">
+            <td class="px-3 py-2 font-semibold" colspan="2">Aufgabe 4 Gesamt</td>
+            <td class="px-3 py-2 font-bold">{{ questionFourTotal }} / 8</td>
           </tr>
         </tfoot>
       </table>
