@@ -115,6 +115,39 @@ const routeTimes = ref<Record<string, string>>(
   ),
 );
 const routeTotals = ref({ totalWay: '', totalMsg: '', returnWay: '' });
+const q3ExpectedCashCounts: Record<string, number> = {
+  '100': 64,
+  '50': 3,
+  '20': 6,
+  '10': 3,
+  '5': 3,
+  '2': 4,
+  '1': 5,
+  '0.5': 4,
+};
+const q5ExpectedBuyDays = new Set([5, 7, 10]);
+const oneSyllableNames = new Set(['Fuchs', 'Hans', 'Kurz', 'Mann', 'Pahl', 'Paul', 'Pees', 'Roth']);
+const twoSyllableNames = new Set([
+  'Basten',
+  'Bauer',
+  'Bertram',
+  'Bolte',
+  'Krämer',
+  'Kühne',
+  'Müller',
+  'Schneider',
+  'Schuster',
+]);
+const threeSyllableNames = new Set([
+  'Angermann',
+  'Berkelhahn',
+  'Diesterweg',
+  'Eschweiler',
+  'Hamburger',
+  'Hamelring',
+  'Kleininger',
+  'Petersen',
+]);
 
 function buildCellKey(shift: 'early' | 'late', slot: number, day: string) {
   return `${shift}-${slot}-${day}`;
@@ -238,6 +271,65 @@ function startTest() {
   showTest.value = true;
   page.value = 1;
 }
+
+const debugScores = computed(() => {
+  const earlyAssigned = Object.entries(assignments.value)
+    .filter(([key, value]) => key.startsWith('early-') && value)
+    .map(([, value]) => value as string);
+  const lateAssigned = Object.entries(assignments.value)
+    .filter(([key, value]) => key.startsWith('late-') && value)
+    .map(([, value]) => value as string);
+
+  const earlyTwoSyllable = earlyAssigned.filter((name) => twoSyllableNames.has(name)).length;
+  const earlyThreeSyllable = earlyAssigned.filter((name) => threeSyllableNames.has(name)).length;
+  const lateOneSyllable = lateAssigned.filter((name) => oneSyllableNames.has(name)).length;
+  const lateThreeSyllable = lateAssigned.filter((name) => threeSyllableNames.has(name)).length;
+
+  const q1Points =
+    (earlyTwoSyllable === 9 ? 3 : 0) +
+    (earlyThreeSyllable === 1 ? 1 : 0) +
+    (lateOneSyllable === 8 ? 3 : 0) +
+    (lateThreeSyllable === 7 ? 2 : 0);
+
+  const q3CorrectFields = Object.entries(q3ExpectedCashCounts).reduce((sum, [key, expected]) => {
+    const actual = Number(cashAnswers.value[key] || 0);
+    return sum + (actual === expected ? 1 : 0);
+  }, 0);
+
+  const selectedDays = Object.entries(stampAnswerDays.value)
+    .filter(([, checked]) => checked)
+    .map(([day]) => Number(day));
+  const q5CorrectDays = selectedDays.filter((day) => q5ExpectedBuyDays.has(day)).length;
+  const q5WrongDays = selectedDays.filter((day) => !q5ExpectedBuyDays.has(day)).length;
+
+  return {
+    q1: {
+      points: q1Points,
+      earlyTwoSyllable,
+      earlyThreeSyllable,
+      lateOneSyllable,
+      lateThreeSyllable,
+    },
+    q2: { note: 'Keine Auto-Auswertung (Freitextaufgabe).' },
+    q3: { points: q3CorrectFields, max: 8 },
+    q4: {
+      points: Object.values(folderAnswers.value).filter((value) => value.trim().length > 0).length,
+      max: 10,
+      note: 'Nur Eingabe-Check (keine eindeutige Musterlösung hinterlegt).',
+    },
+    q5: {
+      points: Math.max(0, q5CorrectDays - q5WrongDays),
+      max: 3,
+      correctDays: q5CorrectDays,
+      wrongDays: q5WrongDays,
+    },
+    q6: {
+      points: routeRows.filter((row) => routeAssignments.value[`route-to-${row}`]).length,
+      max: 6,
+      note: 'Nur Eingabe-Check für Reihenfolge (kein Optimalitäts-Check).',
+    },
+  };
+});
 </script>
 
 <template>
@@ -246,6 +338,33 @@ function startTest() {
     <div v-if="showTest" class="absolute right-6 top-4 flex items-center gap-2">
       <Button variant="outline" @click="prevPage" :disabled="page === 1">Zurück</Button>
       <Button @click="nextPage" :disabled="page === maxPage">Weiter</Button>
+    </div>
+    <div
+      v-if="showTest"
+      class="absolute bottom-4 right-4 z-20 w-[360px] rounded-lg border border-black bg-white/95 p-3 font-sans text-xs shadow-lg"
+    >
+      <div class="mb-2 font-semibold">DEV: Dynamische Punkte (temporär)</div>
+      <div class="space-y-1">
+        <div>Aufgabe 1: <span class="font-bold">{{ debugScores.q1.points }}/9</span></div>
+        <div class="pl-2 text-[11px] text-muted-foreground">
+          F-2silb: {{ debugScores.q1.earlyTwoSyllable }}/9, F-3silb: {{ debugScores.q1.earlyThreeSyllable }}/1,
+          S-1silb: {{ debugScores.q1.lateOneSyllable }}/8, S-3silb: {{ debugScores.q1.lateThreeSyllable }}/7
+        </div>
+        <div>Aufgabe 2: <span class="font-bold">—</span> <span class="text-muted-foreground">{{ debugScores.q2.note }}</span></div>
+        <div>Aufgabe 3: <span class="font-bold">{{ debugScores.q3.points }}/{{ debugScores.q3.max }}</span> (richtige Felder)</div>
+        <div>
+          Aufgabe 4: <span class="font-bold">{{ debugScores.q4.points }}/{{ debugScores.q4.max }}</span>
+          <span class="text-muted-foreground">{{ debugScores.q4.note }}</span>
+        </div>
+        <div>
+          Aufgabe 5: <span class="font-bold">{{ debugScores.q5.points }}/{{ debugScores.q5.max }}</span>
+          <span class="text-muted-foreground">(korrekt: {{ debugScores.q5.correctDays }}, falsch: {{ debugScores.q5.wrongDays }})</span>
+        </div>
+        <div>
+          Aufgabe 6: <span class="font-bold">{{ debugScores.q6.points }}/{{ debugScores.q6.max }}</span>
+          <span class="text-muted-foreground">{{ debugScores.q6.note }}</span>
+        </div>
+      </div>
     </div>
     <div v-if="!showTest" class="flex h-full items-center justify-center px-6">
       <div class="max-w-5xl space-y-6 rounded-2xl border border-black/20 bg-white p-8 font-serif text-base leading-relaxed shadow-sm">
