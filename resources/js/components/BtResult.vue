@@ -22,13 +22,40 @@ const scoreKeys = {
   earlyThreeSyllableCount: 'bt_q1_early_three_syllable_count',
   lateOneSyllableCount: 'bt_q1_late_one_syllable_count',
   lateThreeSyllableCount: 'bt_q1_late_three_syllable_count',
+  q3Count100: 'bt_q3_count_100',
+  q3Count50: 'bt_q3_count_50',
+  q3Count20: 'bt_q3_count_20',
+  q3Count10: 'bt_q3_count_10',
+  q3Count5: 'bt_q3_count_5',
+  q3Count2: 'bt_q3_count_2',
+  q3Count1: 'bt_q3_count_1',
+  q3Count050: 'bt_q3_count_050',
 } as const;
+
+const questionThreeCriteria = [
+  { label: '100,-', key: scoreKeys.q3Count100, expected: 64 },
+  { label: '50,-', key: scoreKeys.q3Count50, expected: 3 },
+  { label: '20,-', key: scoreKeys.q3Count20, expected: 6 },
+  { label: '10,-', key: scoreKeys.q3Count10, expected: 3 },
+  { label: '5,-', key: scoreKeys.q3Count5, expected: 3 },
+  { label: '2,-', key: scoreKeys.q3Count2, expected: 4 },
+  { label: '1,-', key: scoreKeys.q3Count1, expected: 5 },
+  { label: '0,50', key: scoreKeys.q3Count050, expected: 4 },
+] as const;
 
 const values = ref<Record<string, string>>({
   [scoreKeys.earlyTwoSyllableCount]: '',
   [scoreKeys.earlyThreeSyllableCount]: '',
   [scoreKeys.lateOneSyllableCount]: '',
   [scoreKeys.lateThreeSyllableCount]: '',
+  [scoreKeys.q3Count100]: '',
+  [scoreKeys.q3Count50]: '',
+  [scoreKeys.q3Count20]: '',
+  [scoreKeys.q3Count10]: '',
+  [scoreKeys.q3Count5]: '',
+  [scoreKeys.q3Count2]: '',
+  [scoreKeys.q3Count1]: '',
+  [scoreKeys.q3Count050]: '',
 });
 
 watch(
@@ -38,6 +65,14 @@ watch(
     values.value[scoreKeys.earlyThreeSyllableCount] = toInput(next?.[scoreKeys.earlyThreeSyllableCount]);
     values.value[scoreKeys.lateOneSyllableCount] = toInput(next?.[scoreKeys.lateOneSyllableCount]);
     values.value[scoreKeys.lateThreeSyllableCount] = toInput(next?.[scoreKeys.lateThreeSyllableCount]);
+    values.value[scoreKeys.q3Count100] = toInput(next?.[scoreKeys.q3Count100]);
+    values.value[scoreKeys.q3Count50] = toInput(next?.[scoreKeys.q3Count50]);
+    values.value[scoreKeys.q3Count20] = toInput(next?.[scoreKeys.q3Count20]);
+    values.value[scoreKeys.q3Count10] = toInput(next?.[scoreKeys.q3Count10]);
+    values.value[scoreKeys.q3Count5] = toInput(next?.[scoreKeys.q3Count5]);
+    values.value[scoreKeys.q3Count2] = toInput(next?.[scoreKeys.q3Count2]);
+    values.value[scoreKeys.q3Count1] = toInput(next?.[scoreKeys.q3Count1]);
+    values.value[scoreKeys.q3Count050] = toInput(next?.[scoreKeys.q3Count050]);
   },
   { immediate: true, deep: true },
 );
@@ -53,6 +88,13 @@ const questionOneTotal = computed(
     earlyThreeSyllablePoints.value +
     lateOneSyllablePoints.value +
     lateThreeSyllablePoints.value,
+);
+
+const questionThreeTotal = computed(() =>
+  questionThreeCriteria.reduce((sum, criterion) => {
+    const value = toNumber(values.value[criterion.key]);
+    return sum + (value === criterion.expected ? 1 : 0);
+  }, 0),
 );
 
 function toInput(value: number | string | null | undefined) {
@@ -161,6 +203,44 @@ async function persistValue(key: string) {
           <tr class="bg-muted/30">
             <td class="px-3 py-2 font-semibold" colspan="2">Aufgabe 1 Gesamt</td>
             <td class="px-3 py-2 font-bold">{{ questionOneTotal }} / 9</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <h3 class="text-lg font-semibold">BT – Aufgabe 3 (Scoring)</h3>
+    <p class="text-sm text-muted-foreground">Punktvergabe: Jede richtige Angabe = 1 Punkt.</p>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full rounded-lg border text-sm shadow">
+        <thead class="bg-muted/40">
+          <tr>
+            <th class="px-3 py-2 text-left">Geldsorte</th>
+            <th class="px-3 py-2 text-left">Soll</th>
+            <th class="px-3 py-2 text-left">Eingabe</th>
+            <th class="px-3 py-2 text-left">Punkte</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="criterion in questionThreeCriteria" :key="criterion.key">
+            <td class="px-3 py-2">{{ criterion.label }}</td>
+            <td class="px-3 py-2">{{ criterion.expected }}</td>
+            <td class="px-3 py-2">
+              <Input
+                :model-value="values[criterion.key]"
+                class="w-20"
+                inputmode="numeric"
+                @input="(event) => sanitizeAndSet(criterion.key, event)"
+                @blur="persistValue(criterion.key)"
+              />
+            </td>
+            <td class="px-3 py-2 font-semibold">{{ toNumber(values[criterion.key]) === criterion.expected ? 1 : 0 }} / 1</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="bg-muted/30">
+            <td class="px-3 py-2 font-semibold" colspan="3">Aufgabe 3 Gesamt</td>
+            <td class="px-3 py-2 font-bold">{{ questionThreeTotal }} / 8</td>
           </tr>
         </tfoot>
       </table>
