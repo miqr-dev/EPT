@@ -80,8 +80,8 @@ watch(
     values.value[scoreKeys.q3Count1] = toInput(next?.[scoreKeys.q3Count1]);
     values.value[scoreKeys.q3Count050] = toInput(next?.[scoreKeys.q3Count050]);
     values.value[scoreKeys.q4CorrectFolderCount] = toInput(next?.[scoreKeys.q4CorrectFolderCount]);
-    q4AlphabeticalOrderMet.value = toNumber(toInput(next?.[scoreKeys.q4AlphabeticalOrderMet])) === 1;
-    q4FolderOrderMet.value = toNumber(toInput(next?.[scoreKeys.q4FolderOrderMet])) === 1;
+    q4AlphabeticalOrderMet.value = toBoolean(next?.[scoreKeys.q4AlphabeticalOrderMet]);
+    q4FolderOrderMet.value = toBoolean(next?.[scoreKeys.q4FolderOrderMet]);
   },
   { immediate: true, deep: true },
 );
@@ -106,18 +106,19 @@ const questionThreeTotal = computed(() =>
   }, 0),
 );
 const questionFourBasePoints = computed(() => {
-  const correctFolders = toNumber(values.value[scoreKeys.q4CorrectFolderCount]);
+  const correctFolders = toClampedFolderCount(values.value[scoreKeys.q4CorrectFolderCount]);
   if (correctFolders == null || correctFolders < 1) return 0;
   if (correctFolders <= 4) return 2;
   if (correctFolders <= 9) return 4;
-  if (correctFolders >= 10) return 6;
+  if (correctFolders === 10) return 6;
   return 0;
 });
+const questionFourAlphabeticalPoints = computed(() => (questionFourBasePoints.value === 6 && q4AlphabeticalOrderMet.value ? 1 : 0));
+const questionFourFolderOrderPoints = computed(() =>
+  questionFourBasePoints.value === 6 && q4AlphabeticalOrderMet.value && q4FolderOrderMet.value ? 1 : 0,
+);
 const questionFourTotal = computed(() => {
-  if (questionFourBasePoints.value < 6) return questionFourBasePoints.value;
-  if (!q4AlphabeticalOrderMet.value) return 6;
-  if (!q4FolderOrderMet.value) return 7;
-  return 8;
+  return questionFourBasePoints.value + questionFourAlphabeticalPoints.value + questionFourFolderOrderPoints.value;
 });
 
 function toInput(value: number | string | null | undefined) {
@@ -131,9 +132,26 @@ function toNumber(value: string): number | null {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
+function toBoolean(value: unknown): boolean {
+  if (value === true || value === 1 || value === '1' || value === 'true') return true;
+  return false;
+}
+
+function toClampedFolderCount(value: string): number | null {
+  const parsed = toNumber(value);
+  if (parsed == null) return null;
+  return Math.max(0, Math.min(10, parsed));
+}
+
 function sanitizeAndSet(key: string, event: Event) {
   const target = event.target as HTMLInputElement;
   const sanitized = target.value.replace(/\D/g, '').slice(0, 2);
+  if (key === scoreKeys.q4CorrectFolderCount) {
+    const numeric = sanitized === '' ? '' : `${Math.min(10, Number(sanitized))}`;
+    values.value[key] = numeric;
+    target.value = numeric;
+    return;
+  }
   values.value[key] = sanitized;
   target.value = sanitized;
 }
@@ -319,7 +337,7 @@ async function persistBooleanValue(key: string, value: boolean) {
                 @change="persistBooleanValue(scoreKeys.q4AlphabeticalOrderMet, q4AlphabeticalOrderMet)"
               />
             </td>
-            <td class="px-3 py-2 font-semibold">{{ questionFourBasePoints < 6 ? 0 : q4AlphabeticalOrderMet ? 1 : 0 }} / 1</td>
+            <td class="px-3 py-2 font-semibold">{{ questionFourAlphabeticalPoints }} / 1</td>
           </tr>
           <tr>
             <td class="px-3 py-2">Ordner-Reihenfolge eingehalten</td>
@@ -331,7 +349,7 @@ async function persistBooleanValue(key: string, value: boolean) {
                 @change="persistBooleanValue(scoreKeys.q4FolderOrderMet, q4FolderOrderMet)"
               />
             </td>
-            <td class="px-3 py-2 font-semibold">{{ questionFourBasePoints < 6 || !q4AlphabeticalOrderMet ? 0 : q4FolderOrderMet ? 1 : 0 }} / 1</td>
+            <td class="px-3 py-2 font-semibold">{{ questionFourFolderOrderPoints }} / 1</td>
           </tr>
         </tbody>
         <tfoot>
