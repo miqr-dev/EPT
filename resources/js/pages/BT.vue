@@ -133,7 +133,7 @@ const q4LetterWeights: Record<string, number> = {
   M: 60, E: 60, // 10%
 };
 const q4TargetFolderWeight = 60; // 10%
-const q5ExpectedBuyDays = new Set([7, 10]);
+const q5ExpectedBuyDays = new Set([5, 7, 10]);
 const oneSyllableNames = new Set(['Fuchs', 'Hans', 'Kurz', 'Mann', 'Pahl', 'Paul', 'Pees', 'Roth']);
 const twoSyllableNames = new Set([
   'Basten',
@@ -353,7 +353,7 @@ const debugScores = computed(() => {
     .filter(([, checked]) => checked)
     .map(([day]) => Number(day));
   const q5CorrectDays = selectedDays.filter((day) => q5ExpectedBuyDays.has(day)).length;
-  const q5Points = q5CorrectDays * 2;
+  const q5Points = Math.min(4, q5CorrectDays * 2);
 
   const q4 = evaluateQ4();
 
@@ -438,7 +438,7 @@ const debugScores = computed(() => {
         <div class="rounded border border-black/20 px-2 py-1">
           <div class="font-semibold">A5</div>
           <div class="font-bold">{{ debugScores.q5.points }}/{{ debugScores.q5.max }}</div>
-          <div class="text-[10px] text-muted-foreground">✓ {{ debugScores.q5.correctDays }} (je 2 Punkte)</div>
+          <div class="text-[10px] text-muted-foreground">✓ {{ debugScores.q5.correctDays }} (je 2 Punkte, max. 4)</div>
         </div>
         <div class="rounded border border-black/20 px-2 py-1">
           <div class="font-semibold">A6</div>

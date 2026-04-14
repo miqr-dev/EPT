@@ -44,7 +44,7 @@ const scoreKeys = {
     q5Day9Selected: 'bt_q5_day_9_selected',
     q5Day10Selected: 'bt_q5_day_10_selected',
 } as const;
-const q5CorrectDays = new Set([7, 10]);
+const q5CorrectDays = new Set([5, 7, 10]);
 const q5DayEntries = [
     { day: 1, key: scoreKeys.q5Day1Selected },
     { day: 2, key: scoreKeys.q5Day2Selected },
@@ -146,7 +146,7 @@ const questionFourTotal = computed(() => {
 const questionFiveCorrectDayCount = computed(
     () => q5DayEntries.filter((entry) => q5SelectedDays.value[entry.day] && q5CorrectDays.has(entry.day)).length,
 );
-const questionFiveTotal = computed(() => questionFiveCorrectDayCount.value * 2);
+const questionFiveTotal = computed(() => Math.min(4, questionFiveCorrectDayCount.value * 2));
 
 function toInput(value: number | string | null | undefined) {
     if (value == null || value === '') return '';
@@ -399,7 +399,9 @@ async function persistQ5DayValue(day: number) {
         </div>
 
         <h3 class="text-lg font-semibold">BT – Aufgabe 5 (Scoring)</h3>
-        <p class="text-sm text-muted-foreground">Punktvergabe Form A: pro richtig markiertem Tag 2 Punkte (Tage 7 und 10).</p>
+        <p class="text-sm text-muted-foreground">
+            Punktvergabe Form A: pro richtig markiertem Tag 2 Punkte (mögliche Tage: 5, 7, 10), maximal 4 Punkte.
+        </p>
         <div class="overflow-x-auto">
             <table class="min-w-full rounded-lg border text-sm shadow">
                 <thead class="bg-muted/40">
