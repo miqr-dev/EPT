@@ -45,6 +45,11 @@ const scoreKeys = {
     q5Day10Selected: 'bt_q5_day_10_selected',
 } as const;
 const q5CorrectDays = new Set([5, 7, 10]);
+const q5DayPoints: Record<number, number> = {
+    5: 2,
+    7: 2,
+    10: 4,
+};
 const q5DayEntries = [
     { day: 1, key: scoreKeys.q5Day1Selected },
     { day: 2, key: scoreKeys.q5Day2Selected },
@@ -143,10 +148,12 @@ const questionFourFolderOrderPoints = computed(() =>
 const questionFourTotal = computed(() => {
     return questionFourBasePoints.value + questionFourAlphabeticalPoints.value + questionFourFolderOrderPoints.value;
 });
-const questionFiveCorrectDayCount = computed(
-    () => q5DayEntries.filter((entry) => q5SelectedDays.value[entry.day] && q5CorrectDays.has(entry.day)).length,
+const questionFiveTotal = computed(() =>
+    q5DayEntries.reduce((total, entry) => {
+        if (!q5SelectedDays.value[entry.day] || !q5CorrectDays.has(entry.day)) return total;
+        return total + (q5DayPoints[entry.day] ?? 0);
+    }, 0),
 );
-const questionFiveTotal = computed(() => Math.min(4, questionFiveCorrectDayCount.value * 2));
 
 function toInput(value: number | string | null | undefined) {
     if (value == null || value === '') return '';
@@ -400,7 +407,7 @@ async function persistQ5DayValue(day: number) {
 
         <h3 class="text-lg font-semibold">BT – Aufgabe 5 (Scoring)</h3>
         <p class="text-sm text-muted-foreground">
-            Punktvergabe Form A: pro richtig markiertem Tag 2 Punkte (mögliche Tage: 5, 7, 10), maximal 4 Punkte.
+            Punktvergabe Form A: 5. Tag = 2 P., 7. Tag = 2 P., 10. Tag = 4 P.
         </p>
         <div class="overflow-x-auto">
             <table class="min-w-full rounded-lg border text-sm shadow">
@@ -422,13 +429,16 @@ async function persistQ5DayValue(day: number) {
                                 @change="persistQ5DayValue(entry.day)"
                             />
                         </td>
-                        <td class="px-3 py-2 font-semibold">{{ q5SelectedDays[entry.day] && q5CorrectDays.has(entry.day) ? 2 : 0 }} / 2</td>
+                        <td class="px-3 py-2 font-semibold">
+                            {{ q5SelectedDays[entry.day] && q5CorrectDays.has(entry.day) ? q5DayPoints[entry.day] ?? 0 : 0 }}
+                            / {{ q5DayPoints[entry.day] ?? 0 }}
+                        </td>
                     </tr>
                 </tbody>
                 <tfoot>
                     <tr class="bg-muted/30">
                         <td class="px-3 py-2 font-semibold" colspan="2">Aufgabe 5 Gesamt</td>
-                        <td class="px-3 py-2 font-bold">{{ questionFiveTotal }} / 4</td>
+                        <td class="px-3 py-2 font-bold">{{ questionFiveTotal }} / 8</td>
                     </tr>
                 </tfoot>
             </table>
