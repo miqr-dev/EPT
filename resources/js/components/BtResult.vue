@@ -471,13 +471,12 @@ async function persistQ5DayValue(day: number) {
             <table class="min-w-full rounded-lg border text-sm shadow">
                 <thead class="bg-muted/40">
                     <tr>
-                        <th class="px-3 py-2 text-left">Bewertungsstufe</th>
                         <th class="px-3 py-2 text-left">Auswahl</th>
+                        <th class="px-3 py-2 text-left">Bewertungsstufe</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="option in q6PerformanceOptions" :key="`q6-${option.value}`">
-                        <td class="px-3 py-2">{{ option.label }}</td>
                         <td class="px-3 py-2">
                             <input
                                 v-model="values[scoreKeys.q6PerformanceLevel]"
@@ -488,12 +487,13 @@ async function persistQ5DayValue(day: number) {
                                 @change="persistValue(scoreKeys.q6PerformanceLevel)"
                             />
                         </td>
+                        <td class="px-3 py-2">{{ option.label }}</td>
                     </tr>
                 </tbody>
                 <tfoot>
                     <tr class="bg-muted/30">
-                        <td class="px-3 py-2 font-semibold" colspan="1">Aufgabe 6 Gesamt</td>
                         <td class="px-3 py-2 font-bold">{{ questionSixTotal }} / 8</td>
+                        <td class="px-3 py-2 font-semibold" colspan="1">Aufgabe 6 Gesamt</td>
                     </tr>
                 </tfoot>
             </table>
