@@ -43,6 +43,7 @@ const scoreKeys = {
     q5Day8Selected: 'bt_q5_day_8_selected',
     q5Day9Selected: 'bt_q5_day_9_selected',
     q5Day10Selected: 'bt_q5_day_10_selected',
+    q6Score: 'bt_q6_score',
 } as const;
 const q5CorrectDays = new Set([5, 7, 10]);
 const q5DayPoints: Record<number, number> = {
@@ -61,6 +62,38 @@ const q5DayEntries = [
     { day: 8, key: scoreKeys.q5Day8Selected },
     { day: 9, key: scoreKeys.q5Day9Selected },
     { day: 10, key: scoreKeys.q5Day10Selected },
+] as const;
+const q6OptionEntries = [
+    {
+        key: 'attempt_without_phone',
+        label: 'Nur Ansatz ohne Telefon',
+        description: 'Ansatz erkennbar (Name/Namenskürzel/Zahlenspuren oder Radierungen), aber kein Telefon genutzt.',
+        points: 2,
+    },
+    {
+        key: 'attempt_with_phone',
+        label: 'Ansatz mit Telefon',
+        description: 'Ansatz vorhanden und Telefon bereits genutzt.',
+        points: 4,
+    },
+    {
+        key: 'completed_cumbersome_without_phone',
+        label: 'Auftrag erledigt, umständlich ohne Telefon',
+        description: 'Auftrag vollständig erledigt, aber umständlich und ohne Telefonnutzung.',
+        points: 6,
+    },
+    {
+        key: 'completed_cumbersome_with_phone',
+        label: 'Auftrag erledigt, umständlich mit Telefon',
+        description: 'Auftrag vollständig erledigt, aber umständlich und mit Telefonnutzung.',
+        points: 7,
+    },
+    {
+        key: 'best_time',
+        label: 'Bestzeit / Musterlösung',
+        description: 'Benachrichtigung in Bestzeit (ohne Zeit für Rückweg zur Wohnung).',
+        points: 8,
+    },
 ] as const;
 
 const questionThreeCriteria = [
@@ -88,10 +121,12 @@ const values = ref<Record<string, string>>({
     [scoreKeys.q3Count1]: '',
     [scoreKeys.q3Count050]: '',
     [scoreKeys.q4CorrectFolderCount]: '',
+    [scoreKeys.q6Score]: '',
 });
 const q4AlphabeticalOrderMet = ref(false);
 const q4FolderOrderMet = ref(false);
 const q5SelectedDays = ref<Record<number, boolean>>(Object.fromEntries(q5DayEntries.map((entry) => [entry.day, false])));
+const q6SelectedOption = ref<(typeof q6OptionEntries)[number]['key'] | null>(null);
 
 watch(
     () => props.manualScores,
@@ -114,6 +149,9 @@ watch(
         q5DayEntries.forEach((entry) => {
             q5SelectedDays.value[entry.day] = toBoolean(next?.[entry.key]);
         });
+        values.value[scoreKeys.q6Score] = toInput(next?.[scoreKeys.q6Score]);
+        const persistedQ6Points = toNumber(values.value[scoreKeys.q6Score]);
+        q6SelectedOption.value = q6OptionEntries.find((entry) => entry.points === persistedQ6Points)?.key ?? null;
     },
     { immediate: true, deep: true },
 );
@@ -154,6 +192,7 @@ const questionFiveTotal = computed(() =>
         return total + (q5DayPoints[entry.day] ?? 0);
     }, 0),
 );
+const questionSixTotal = computed(() => q6OptionEntries.find((entry) => entry.key === q6SelectedOption.value)?.points ?? 0);
 
 function toInput(value: number | string | null | undefined) {
     if (value == null || value === '') return '';
@@ -222,6 +261,16 @@ async function persistQ5DayValue(day: number) {
     const key = q5StorageKeyForDay(day);
     if (!key) return;
     await persistBooleanValue(key, q5SelectedDays.value[day] === true);
+}
+
+async function persistQ6Value() {
+    await persistValue(scoreKeys.q6Score);
+}
+
+async function setQ6Option(key: (typeof q6OptionEntries)[number]['key']) {
+    q6SelectedOption.value = key;
+    values.value[scoreKeys.q6Score] = `${q6OptionEntries.find((entry) => entry.key === key)?.points ?? 0}`;
+    await persistQ6Value();
 }
 </script>
 
@@ -406,9 +455,7 @@ async function persistQ5DayValue(day: number) {
         </div>
 
         <h3 class="text-lg font-semibold">BT – Aufgabe 5 (Scoring)</h3>
-        <p class="text-sm text-muted-foreground">
-            Punktvergabe Form A: 5. Tag = 2 P., 7. Tag = 2 P., 10. Tag = 4 P.
-        </p>
+        <p class="text-sm text-muted-foreground">Punktvergabe Form A: 5. Tag = 2 P., 7. Tag = 2 P., 10. Tag = 4 P.</p>
         <div class="overflow-x-auto">
             <table class="min-w-full rounded-lg border text-sm shadow">
                 <thead class="bg-muted/40">
@@ -430,7 +477,7 @@ async function persistQ5DayValue(day: number) {
                             />
                         </td>
                         <td class="px-3 py-2 font-semibold">
-                            {{ q5SelectedDays[entry.day] && q5CorrectDays.has(entry.day) ? q5DayPoints[entry.day] ?? 0 : 0 }}
+                            {{ q5SelectedDays[entry.day] && q5CorrectDays.has(entry.day) ? (q5DayPoints[entry.day] ?? 0) : 0 }}
                             / {{ q5DayPoints[entry.day] ?? 0 }}
                         </td>
                     </tr>
@@ -439,6 +486,50 @@ async function persistQ5DayValue(day: number) {
                     <tr class="bg-muted/30">
                         <td class="px-3 py-2 font-semibold" colspan="2">Aufgabe 5 Gesamt</td>
                         <td class="px-3 py-2 font-bold">{{ questionFiveTotal }} / 8</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <h3 class="text-lg font-semibold">BT – Aufgabe 6 (Scoring)</h3>
+        <p class="text-sm text-muted-foreground">
+            Punktvergabe: Ansatz ohne Telefon = 2 P.; Ansatz mit Telefon = 4 P.; Auftrag erledigt umständlich ohne Telefon = 6 P.; umständlich mit
+            Telefon = 7 P.; Bestzeit (Benachrichtigung ohne Rückweg zur Wohnung) = 8 P.
+        </p>
+        <p class="text-sm text-muted-foreground">
+            Hinweis: Bei reiner Namenseintragung ohne Zahlenangaben mit Skizze vergleichen und die passende RW-Stufe vergeben.
+        </p>
+        <div class="overflow-x-auto">
+            <table class="min-w-full rounded-lg border text-sm shadow">
+                <thead class="bg-muted/40">
+                    <tr>
+                        <th class="px-3 py-2 text-left">Lösungsstufe</th>
+                        <th class="px-3 py-2 text-left">Bewertung</th>
+                        <th class="px-3 py-2 text-left">Punkte</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="option in q6OptionEntries" :key="option.key">
+                        <td class="px-3 py-2">
+                            <input
+                                :checked="q6SelectedOption === option.key"
+                                type="radio"
+                                name="bt-q6-score-option"
+                                class="h-4 w-4 align-middle"
+                                @change="setQ6Option(option.key)"
+                            />
+                        </td>
+                        <td class="px-3 py-2">
+                            <div class="font-medium">{{ option.label }}</div>
+                            <div class="text-xs text-muted-foreground">{{ option.description }}</div>
+                        </td>
+                        <td class="px-3 py-2 font-semibold">{{ option.points }} / {{ option.points }}</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="bg-muted/30">
+                        <td class="px-3 py-2 font-semibold" colspan="2">Aufgabe 6 Gesamt</td>
+                        <td class="px-3 py-2 font-bold">{{ questionSixTotal }} / 8</td>
                     </tr>
                 </tfoot>
             </table>
