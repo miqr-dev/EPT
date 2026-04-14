@@ -294,15 +294,11 @@ function isAlphabetical(chars: string[]) {
 
 function evaluateQ4() {
   const answers = Array.from({ length: 10 }, (_, index) => normalizeFolderLetters(folderAnswers.value[index + 1]));
-  const globalLetterCounts = answers
-    .flat()
-    .reduce<Record<string, number>>((counts, char) => {
-      counts[char] = (counts[char] ?? 0) + 1;
-      return counts;
-    }, {});
+  const seenLetters = new Set<string>();
   const folderWeights = answers.map((chars) =>
     chars.reduce((sum, char) => {
-      if (globalLetterCounts[char] !== 1) return sum;
+      if (seenLetters.has(char)) return sum;
+      seenLetters.add(char);
       return sum + (q4LetterWeights[char] ?? 0);
     }, 0),
   );
