@@ -294,7 +294,18 @@ function isAlphabetical(chars: string[]) {
 
 function evaluateQ4() {
   const answers = Array.from({ length: 10 }, (_, index) => normalizeFolderLetters(folderAnswers.value[index + 1]));
-  const folderWeights = answers.map((chars) => chars.reduce((sum, char) => sum + (q4LetterWeights[char] ?? 0), 0));
+  const globalLetterCounts = answers
+    .flat()
+    .reduce<Record<string, number>>((counts, char) => {
+      counts[char] = (counts[char] ?? 0) + 1;
+      return counts;
+    }, {});
+  const folderWeights = answers.map((chars) =>
+    chars.reduce((sum, char) => {
+      if (globalLetterCounts[char] !== 1) return sum;
+      return sum + (q4LetterWeights[char] ?? 0);
+    }, 0),
+  );
   const correctFolderCount = folderWeights.filter((weight) => weight === q4TargetFolderWeight).length;
 
   const alphabeticalOrderMet = answers.every((chars) => isAlphabetical(chars));
