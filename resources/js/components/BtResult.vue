@@ -43,6 +43,7 @@ const scoreKeys = {
     q5Day8Selected: 'bt_q5_day_8_selected',
     q5Day9Selected: 'bt_q5_day_9_selected',
     q5Day10Selected: 'bt_q5_day_10_selected',
+    q6PerformanceLevel: 'bt_q6_performance_level',
 } as const;
 const q5CorrectDays = new Set([5, 7, 10]);
 const q5DayPoints: Record<number, number> = {
@@ -61,6 +62,15 @@ const q5DayEntries = [
     { day: 8, key: scoreKeys.q5Day8Selected },
     { day: 9, key: scoreKeys.q5Day9Selected },
     { day: 10, key: scoreKeys.q5Day10Selected },
+] as const;
+
+const q6PerformanceOptions = [
+    { value: 0, label: 'Kein verwertbarer Lösungsansatz', points: 0 },
+    { value: 1, label: 'Nur Ansatz gefunden, ohne Telefonbenutzung', points: 2 },
+    { value: 2, label: 'Ansatz gefunden, aber mit Telefonnutzung', points: 4 },
+    { value: 3, label: 'Auftrag erledigt, umständlich, ohne Telefonbenutzung', points: 6 },
+    { value: 4, label: 'Auftrag erledigt, umständlich, mit Telefonbenutzung', points: 7 },
+    { value: 5, label: 'Auftrag in Bestzeit erledigt', points: 8 },
 ] as const;
 
 const questionThreeCriteria = [
@@ -88,6 +98,7 @@ const values = ref<Record<string, string>>({
     [scoreKeys.q3Count1]: '',
     [scoreKeys.q3Count050]: '',
     [scoreKeys.q4CorrectFolderCount]: '',
+    [scoreKeys.q6PerformanceLevel]: '',
 });
 const q4AlphabeticalOrderMet = ref(false);
 const q4FolderOrderMet = ref(false);
@@ -109,6 +120,7 @@ watch(
         values.value[scoreKeys.q3Count1] = toInput(next?.[scoreKeys.q3Count1]);
         values.value[scoreKeys.q3Count050] = toInput(next?.[scoreKeys.q3Count050]);
         values.value[scoreKeys.q4CorrectFolderCount] = toInput(next?.[scoreKeys.q4CorrectFolderCount]);
+        values.value[scoreKeys.q6PerformanceLevel] = toInput(next?.[scoreKeys.q6PerformanceLevel]);
         q4AlphabeticalOrderMet.value = toBoolean(next?.[scoreKeys.q4AlphabeticalOrderMet]);
         q4FolderOrderMet.value = toBoolean(next?.[scoreKeys.q4FolderOrderMet]);
         q5DayEntries.forEach((entry) => {
@@ -154,6 +166,14 @@ const questionFiveTotal = computed(() =>
         return total + (q5DayPoints[entry.day] ?? 0);
     }, 0),
 );
+
+const questionSixSelectedLevel = computed(() => {
+    const level = toNumber(values.value[scoreKeys.q6PerformanceLevel]);
+    if (level == null) return null;
+    const normalized = Math.max(0, Math.min(5, Math.trunc(level)));
+    return q6PerformanceOptions.find((option) => option.value === normalized) ?? null;
+});
+const questionSixTotal = computed(() => questionSixSelectedLevel.value?.points ?? 0);
 
 function toInput(value: number | string | null | undefined) {
     if (value == null || value === '') return '';
@@ -406,9 +426,7 @@ async function persistQ5DayValue(day: number) {
         </div>
 
         <h3 class="text-lg font-semibold">BT – Aufgabe 5 (Scoring)</h3>
-        <p class="text-sm text-muted-foreground">
-            Punktvergabe Form A: 5. Tag = 2 P., 7. Tag = 2 P., 10. Tag = 4 P.
-        </p>
+        <p class="text-sm text-muted-foreground">Punktvergabe Form A: 5. Tag = 2 P., 7. Tag = 2 P., 10. Tag = 4 P.</p>
         <div class="overflow-x-auto">
             <table class="min-w-full rounded-lg border text-sm shadow">
                 <thead class="bg-muted/40">
@@ -430,7 +448,7 @@ async function persistQ5DayValue(day: number) {
                             />
                         </td>
                         <td class="px-3 py-2 font-semibold">
-                            {{ q5SelectedDays[entry.day] && q5CorrectDays.has(entry.day) ? q5DayPoints[entry.day] ?? 0 : 0 }}
+                            {{ q5SelectedDays[entry.day] && q5CorrectDays.has(entry.day) ? (q5DayPoints[entry.day] ?? 0) : 0 }}
                             / {{ q5DayPoints[entry.day] ?? 0 }}
                         </td>
                     </tr>
@@ -439,6 +457,43 @@ async function persistQ5DayValue(day: number) {
                     <tr class="bg-muted/30">
                         <td class="px-3 py-2 font-semibold" colspan="2">Aufgabe 5 Gesamt</td>
                         <td class="px-3 py-2 font-bold">{{ questionFiveTotal }} / 8</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <h3 class="text-lg font-semibold">BT – Aufgabe 6 (Scoring)</h3>
+        <p class="text-sm text-muted-foreground">
+            Punktvergabe: Nur Ansatz ohne Telefon = 2 P.; Ansatz mit Telefon = 4 P.; Auftrag erledigt ohne Telefon = 6 P.; Auftrag erledigt mit
+            Telefon = 7 P.; Bestzeit (Benachrichtigung ohne Rückwegzeit) = 8 P.
+        </p>
+        <div class="overflow-x-auto">
+            <table class="min-w-full rounded-lg border text-sm shadow">
+                <thead class="bg-muted/40">
+                    <tr>
+                        <th class="px-3 py-2 text-left">Auswahl</th>
+                        <th class="px-3 py-2 text-left">Bewertungsstufe</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="option in q6PerformanceOptions" :key="`q6-${option.value}`">
+                        <td class="px-3 py-2">
+                            <input
+                                v-model="values[scoreKeys.q6PerformanceLevel]"
+                                :value="String(option.value)"
+                                type="radio"
+                                name="bt-q6-performance"
+                                class="h-4 w-4 align-middle"
+                                @change="persistValue(scoreKeys.q6PerformanceLevel)"
+                            />
+                        </td>
+                        <td class="px-3 py-2">{{ option.label }}</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="bg-muted/30">
+                        <td class="px-3 py-2 font-bold">{{ questionSixTotal }} / 8</td>
+                        <td class="px-3 py-2 font-semibold" colspan="1">Aufgabe 6 Gesamt</td>
                     </tr>
                 </tfoot>
             </table>
