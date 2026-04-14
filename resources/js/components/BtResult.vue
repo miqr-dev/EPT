@@ -200,12 +200,6 @@ function toClampedFolderCount(value: string): number | null {
 function sanitizeAndSet(key: string, event: Event) {
     const target = event.target as HTMLInputElement;
     const sanitized = target.value.replace(/\D/g, '').slice(0, 2);
-    if (key === scoreKeys.q6PerformanceLevel) {
-        const numeric = sanitized === '' ? '' : `${Math.min(5, Number(sanitized))}`;
-        values.value[key] = numeric;
-        target.value = numeric;
-        return;
-    }
     if (key === scoreKeys.q4CorrectFolderCount) {
         const numeric = sanitized === '' ? '' : `${Math.min(10, Number(sanitized))}`;
         values.value[key] = numeric;
@@ -479,7 +473,6 @@ async function persistQ5DayValue(day: number) {
                     <tr>
                         <th class="px-3 py-2 text-left">Bewertungsstufe</th>
                         <th class="px-3 py-2 text-left">Auswahl</th>
-                        <th class="px-3 py-2 text-left">Punkte</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -487,24 +480,19 @@ async function persistQ5DayValue(day: number) {
                         <td class="px-3 py-2">{{ option.label }}</td>
                         <td class="px-3 py-2">
                             <input
-                                :checked="toNumber(values[scoreKeys.q6PerformanceLevel]) === option.value"
+                                v-model="values[scoreKeys.q6PerformanceLevel]"
+                                :value="String(option.value)"
                                 type="radio"
                                 name="bt-q6-performance"
                                 class="h-4 w-4 align-middle"
-                                @change="
-                                    () => {
-                                        values[scoreKeys.q6PerformanceLevel] = String(option.value);
-                                        persistValue(scoreKeys.q6PerformanceLevel);
-                                    }
-                                "
+                                @change="persistValue(scoreKeys.q6PerformanceLevel)"
                             />
                         </td>
-                        <td class="px-3 py-2 font-semibold">{{ option.points }} / 8</td>
                     </tr>
                 </tbody>
                 <tfoot>
                     <tr class="bg-muted/30">
-                        <td class="px-3 py-2 font-semibold" colspan="2">Aufgabe 6 Gesamt</td>
+                        <td class="px-3 py-2 font-semibold" colspan="1">Aufgabe 6 Gesamt</td>
                         <td class="px-3 py-2 font-bold">{{ questionSixTotal }} / 8</td>
                     </tr>
                 </tfoot>
