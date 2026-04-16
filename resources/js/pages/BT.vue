@@ -114,6 +114,9 @@ const routeTimes = ref<Record<string, string>>(
     ]),
   ),
 );
+const routePhoneUsage = ref<Record<string, boolean>>(
+  Object.fromEntries(routeRows.map((row) => [`route-phone-${row}`, false])),
+);
 const routeTotals = ref({ totalWay: '', totalMsg: '', returnWay: '' });
 const q3ExpectedCashCounts: Record<string, number> = {
   '100': 64,
@@ -267,6 +270,10 @@ function handleRouteTotalInput(key: 'totalWay' | 'totalMsg' | 'returnWay', event
   target.value = cleaned;
 }
 
+function toggleRoutePhoneUsage(row: number) {
+  routePhoneUsage.value[`route-phone-${row}`] = !routePhoneUsage.value[`route-phone-${row}`];
+}
+
 function nextPage() {
   if (page.value < maxPage) {
     page.value += 1;
@@ -331,6 +338,96 @@ function evaluateQ4() {
 }
 
 const debugScores = computed(() => {
+  const q6TravelTimes: Record<string, number> = {
+    'Eigene Wohnung|Frey': 5,
+    'Frey|Eigene Wohnung': 5,
+    'Eigene Wohnung|Fuchs': 15,
+    'Fuchs|Eigene Wohnung': 15,
+    'Eigene Wohnung|Hermann': 8,
+    'Hermann|Eigene Wohnung': 8,
+    'Eigene Wohnung|Schneider': 5,
+    'Schneider|Eigene Wohnung': 5,
+    'Müller|Frey': 5,
+    'Frey|Müller': 5,
+    'Müller|Fuchs': 20,
+    'Fuchs|Müller': 20,
+    'Frey|Bär': 5,
+    'Bär|Frey': 5,
+    'Frey|Hermann': 5,
+    'Hermann|Frey': 5,
+    'Frey|Schneider': 12,
+    'Schneider|Frey': 12,
+    'Bär|Hermann': 5,
+    'Hermann|Bär': 5,
+    'Hermann|Schneider': 5,
+    'Schneider|Hermann': 5,
+    'Fuchs|Schneider': 15,
+    'Schneider|Fuchs': 15,
+  };
+  const q6PhoneLocations = new Set(['Müller', 'Bär', 'Hermann', 'Schneider']);
+  const q6ExpectedPeople = new Set(['Müller', 'Frey', 'Bär', 'Hermann', 'Schneider', 'Fuchs']);
+
+  let currentLocation = 'Eigene Wohnung';
+  let rowCorrectCount = 0;
+  let hasPhoneUsage = false;
+  let hasAnyCorrectRow = false;
+  const notifiedPeople = new Set<string>();
+
+  routeRows.forEach((row) => {
+    const fromRaw = (routeAssignments.value[`route-from-${row}`] ?? '').trim();
+    const toRaw = (routeAssignments.value[`route-to-${row}`] ?? '').trim();
+    const effectiveFrom = fromRaw || currentLocation;
+    const wayRaw = routeTimes.value[`route-time-${row}`];
+    const msgRaw = routeTimes.value[`route-msg-${row}`];
+    const isPhoneRow = routePhoneUsage.value[`route-phone-${row}`] === true;
+
+    if (!toRaw) return;
+
+    const msgOk = Number(msgRaw) === 3;
+    let rowOk = false;
+
+    if (isPhoneRow) {
+      hasPhoneUsage = true;
+      const wayOk = wayRaw === '' || Number(wayRaw) === 0;
+      const fromHasPhone = q6PhoneLocations.has(effectiveFrom);
+      const toHasPhone = q6PhoneLocations.has(toRaw);
+      const fromMatchesLocation = effectiveFrom === currentLocation;
+      rowOk = wayOk && msgOk && fromHasPhone && toHasPhone && fromMatchesLocation;
+      if (rowOk) {
+        notifiedPeople.add(toRaw);
+      }
+    } else {
+      const expectedTravelTime = q6TravelTimes[`${effectiveFrom}|${toRaw}`];
+      const wayOk = Number(wayRaw) === expectedTravelTime;
+      rowOk = Number.isFinite(expectedTravelTime) && wayOk && msgOk;
+      if (rowOk) {
+        notifiedPeople.add(toRaw);
+        currentLocation = toRaw;
+      }
+    }
+
+    if (rowOk) {
+      rowCorrectCount += 1;
+      hasAnyCorrectRow = true;
+    }
+  });
+
+  const allPeopleNotified = [...q6ExpectedPeople].every((name) => notifiedPeople.has(name));
+  const fullyCorrectCompletion = allPeopleNotified && rowCorrectCount >= 6;
+  const totalWay = Number(routeTotals.value.totalWay);
+  const totalMsg = Number(routeTotals.value.totalMsg);
+  const returnWay = Number(routeTotals.value.returnWay);
+  const isBestTime = fullyCorrectCompletion && hasPhoneUsage && totalWay === 30 && totalMsg === 18 && returnWay === 15;
+
+  let q6Points = 0;
+  if (isBestTime) {
+    q6Points = 8;
+  } else if (fullyCorrectCompletion) {
+    q6Points = hasPhoneUsage ? 7 : 6;
+  } else if (hasAnyCorrectRow) {
+    q6Points = hasPhoneUsage ? 4 : 2;
+  }
+
   const earlyAssigned = Object.entries(assignments.value)
     .filter(([key, value]) => key.startsWith('early-') && value)
     .map(([, value]) => value as string);
@@ -386,9 +483,14 @@ const debugScores = computed(() => {
       correctDays: q5CorrectDays,
     },
     q6: {
-      points: routeRows.filter((row) => routeAssignments.value[`route-to-${row}`]).length,
-      max: 6,
-      note: 'Nur Eingabe-Check für Reihenfolge (kein Optimalitäts-Check).',
+      points: q6Points,
+      max: 8,
+      hasPhoneUsage,
+      hasAnyCorrectRow,
+      rowCorrectCount,
+      allPeopleNotified,
+      fullyCorrectCompletion,
+      isBestTime,
     },
   };
 });
@@ -448,7 +550,12 @@ const debugScores = computed(() => {
         <div class="rounded border border-black/20 px-2 py-1">
           <div class="font-semibold">A6</div>
           <div class="font-bold">{{ debugScores.q6.points }}/{{ debugScores.q6.max }}</div>
-          <div class="text-[10px] text-muted-foreground">Eingabe-Check</div>
+          <div class="text-[10px] text-muted-foreground">
+            Reihen korrekt: {{ debugScores.q6.rowCorrectCount }} · Alle 6: {{ debugScores.q6.allPeopleNotified ? '✓' : '✗' }}
+          </div>
+          <div class="text-[10px] text-muted-foreground">
+            Tel: {{ debugScores.q6.hasPhoneUsage ? '✓' : '✗' }} · Bestzeit: {{ debugScores.q6.isBestTime ? '✓' : '✗' }}
+          </div>
         </div>
       </div>
     </div>
@@ -1405,7 +1512,7 @@ const debugScores = computed(() => {
                     </div>
                   </td>
                   <td class="border-r border-black px-2">
-                    <div class="flex items-center justify-end gap-2 pr-8">
+                    <div class="flex items-center justify-end gap-3 pr-4">
                       <input
                         :value="routeTimes[`route-time-${row}`]"
                         type="text"
@@ -1415,6 +1522,15 @@ const debugScores = computed(() => {
                         @input="(event) => handleRouteTimeInput(`route-time-${row}`, event)"
                       />
                       <span class="w-8">Min.</span>
+                      <label class="flex items-center gap-1 text-xs whitespace-nowrap">
+                        <input
+                          :checked="routePhoneUsage[`route-phone-${row}`]"
+                          type="checkbox"
+                          class="h-3.5 w-3.5"
+                          @change="() => toggleRoutePhoneUsage(row)"
+                        />
+                        Telefonisch
+                      </label>
                     </div>
                   </td>
                   <td class="px-2">
