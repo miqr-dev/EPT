@@ -363,6 +363,8 @@ const debugScores = computed(() => {
   let rowCorrectCount = 0;
   let hasPhoneUsage = false;
   let hasAnyCorrectRow = false;
+  let hasAnyInput = false;
+  let lastNotifiedPerson: string | null = null;
   const notifiedPeople = new Set<string>();
 
   routeRows.forEach((row) => {
@@ -371,6 +373,10 @@ const debugScores = computed(() => {
     const effectiveFrom = fromRaw;
     const wayRaw = routeTimes.value[`route-time-${row}`];
     const msgRaw = routeTimes.value[`route-msg-${row}`];
+    const hasRowInput = fromRaw !== '' || toRaw !== '' || wayRaw !== '' || msgRaw !== '';
+    if (hasRowInput) {
+      hasAnyInput = true;
+    }
 
     if (!fromRaw || !toRaw) return;
 
@@ -386,6 +392,7 @@ const debugScores = computed(() => {
       rowOk = msgOk;
       if (rowOk) {
         notifiedPeople.add(toRaw);
+        lastNotifiedPerson = toRaw;
       }
     } else {
       const expectedTravelTime = q6TravelTimes[`${effectiveFrom}|${toRaw}`];
@@ -394,6 +401,7 @@ const debugScores = computed(() => {
       rowOk = Number.isFinite(expectedTravelTime) && wayOk && msgOk;
       if (rowOk) {
         notifiedPeople.add(toRaw);
+        lastNotifiedPerson = toRaw;
       }
     }
 
@@ -408,14 +416,44 @@ const debugScores = computed(() => {
   const totalWay = Number(routeTotals.value.totalWay);
   const totalMsg = Number(routeTotals.value.totalMsg);
   const returnWay = Number(routeTotals.value.returnWay);
+  if (routeTotals.value.totalWay !== '' || routeTotals.value.totalMsg !== '' || routeTotals.value.returnWay !== '') {
+    hasAnyInput = true;
+  }
+
+  const getReturnOptions = (from: string | null) => {
+    if (!from) return new Set<number>();
+    const options = new Set<number>();
+    const direct = q6TravelTimes[`${from}|Eigene Wohnung`];
+    if (Number.isFinite(direct)) {
+      options.add(direct);
+    }
+
+    Object.entries(q6TravelTimes).forEach(([path, leg1]) => {
+      const [start, via] = path.split('|');
+      if (start !== from || via === 'Eigene Wohnung') return;
+      const leg2 = q6TravelTimes[`${via}|Eigene Wohnung`];
+      if (Number.isFinite(leg2)) {
+        options.add(leg1 + leg2);
+      }
+    });
+
+    return options;
+  };
+
+  const returnOptions = getReturnOptions(lastNotifiedPerson);
+  const returnWayCorrect = returnOptions.has(returnWay);
   const isBestTime = fullyCorrectCompletion && hasPhoneUsage && totalWay === 30 && totalMsg === 18 && returnWay === 15;
 
   let q6Points = 0;
   if (isBestTime) {
     q6Points = 8;
   } else if (fullyCorrectCompletion) {
-    q6Points = hasPhoneUsage ? 7 : 6;
-  } else if (hasAnyCorrectRow) {
+    if (hasPhoneUsage) {
+      q6Points = returnWayCorrect ? 7 : 4;
+    } else {
+      q6Points = 6;
+    }
+  } else if (hasAnyInput || hasAnyCorrectRow) {
     q6Points = hasPhoneUsage ? 4 : 2;
   }
 
@@ -477,10 +515,14 @@ const debugScores = computed(() => {
       points: q6Points,
       max: 8,
       hasPhoneUsage,
+      hasAnyInput,
       hasAnyCorrectRow,
       rowCorrectCount,
       allPeopleNotified,
       fullyCorrectCompletion,
+      lastNotifiedPerson,
+      returnWayCorrect,
+      returnOptions: Array.from(returnOptions).sort((a, b) => a - b),
       isBestTime,
     },
   };
