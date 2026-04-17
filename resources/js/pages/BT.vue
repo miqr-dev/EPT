@@ -114,9 +114,6 @@ const routeTimes = ref<Record<string, string>>(
     ]),
   ),
 );
-const routePhoneUsage = ref<Record<string, boolean>>(
-  Object.fromEntries(routeRows.map((row) => [`route-phone-${row}`, false])),
-);
 const routeTotals = ref({ totalWay: '', totalMsg: '', returnWay: '' });
 const q3ExpectedCashCounts: Record<string, number> = {
   '100': 64,
@@ -270,10 +267,6 @@ function handleRouteTotalInput(key: 'totalWay' | 'totalMsg' | 'returnWay', event
   target.value = cleaned;
 }
 
-function toggleRoutePhoneUsage(row: number) {
-  routePhoneUsage.value[`route-phone-${row}`] = !routePhoneUsage.value[`route-phone-${row}`];
-}
-
 function nextPage() {
   if (page.value < maxPage) {
     page.value += 1;
@@ -376,23 +369,23 @@ const debugScores = computed(() => {
   routeRows.forEach((row) => {
     const fromRaw = (routeAssignments.value[`route-from-${row}`] ?? '').trim();
     const toRaw = (routeAssignments.value[`route-to-${row}`] ?? '').trim();
-    const effectiveFrom = fromRaw || currentLocation;
+    const effectiveFrom = fromRaw;
     const wayRaw = routeTimes.value[`route-time-${row}`];
     const msgRaw = routeTimes.value[`route-msg-${row}`];
-    const isPhoneRow = routePhoneUsage.value[`route-phone-${row}`] === true;
 
-    if (!toRaw) return;
+    if (!fromRaw || !toRaw) return;
 
     const msgOk = Number(msgRaw) === 3;
+    const wayIsZeroOrEmpty = wayRaw === '' || Number(wayRaw) === 0;
+    const fromHasPhone = q6PhoneLocations.has(effectiveFrom);
+    const toHasPhone = q6PhoneLocations.has(toRaw);
+    const isPhoneRow = wayIsZeroOrEmpty && fromHasPhone && toHasPhone;
     let rowOk = false;
 
     if (isPhoneRow) {
       hasPhoneUsage = true;
-      const wayOk = wayRaw === '' || Number(wayRaw) === 0;
-      const fromHasPhone = q6PhoneLocations.has(effectiveFrom);
-      const toHasPhone = q6PhoneLocations.has(toRaw);
       const fromMatchesLocation = effectiveFrom === currentLocation;
-      rowOk = wayOk && msgOk && fromHasPhone && toHasPhone && fromMatchesLocation;
+      rowOk = msgOk && fromMatchesLocation;
       if (rowOk) {
         notifiedPeople.add(toRaw);
       }
@@ -1525,15 +1518,6 @@ if (import.meta.env.DEV) {
                         @input="(event) => handleRouteTimeInput(`route-time-${row}`, event)"
                       />
                       <span class="w-8">Min.</span>
-                      <label class="flex items-center gap-1 text-xs whitespace-nowrap">
-                        <input
-                          :checked="routePhoneUsage[`route-phone-${row}`]"
-                          type="checkbox"
-                          class="h-3.5 w-3.5"
-                          @change="() => toggleRoutePhoneUsage(row)"
-                        />
-                        Telefonisch
-                      </label>
                     </div>
                   </td>
                   <td class="px-2">
