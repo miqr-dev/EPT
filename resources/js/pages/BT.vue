@@ -360,7 +360,6 @@ const debugScores = computed(() => {
   const q6PhoneLocations = new Set(['Müller', 'Bär', 'Hermann', 'Schneider']);
   const q6ExpectedPeople = new Set(['Müller', 'Frey', 'Bär', 'Hermann', 'Schneider', 'Fuchs']);
 
-  let currentLocation = 'Eigene Wohnung';
   let rowCorrectCount = 0;
   let hasPhoneUsage = false;
   let hasAnyCorrectRow = false;
@@ -384,18 +383,17 @@ const debugScores = computed(() => {
 
     if (isPhoneRow) {
       hasPhoneUsage = true;
-      const fromMatchesLocation = effectiveFrom === currentLocation;
-      rowOk = msgOk && fromMatchesLocation;
+      rowOk = msgOk;
       if (rowOk) {
         notifiedPeople.add(toRaw);
       }
     } else {
       const expectedTravelTime = q6TravelTimes[`${effectiveFrom}|${toRaw}`];
-      const wayOk = Number(wayRaw) === expectedTravelTime;
+      const wayMinutes = Number(wayRaw);
+      const wayOk = Number.isFinite(wayMinutes) && wayMinutes > 0;
       rowOk = Number.isFinite(expectedTravelTime) && wayOk && msgOk;
       if (rowOk) {
         notifiedPeople.add(toRaw);
-        currentLocation = toRaw;
       }
     }
 
