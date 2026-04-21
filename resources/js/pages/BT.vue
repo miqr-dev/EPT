@@ -533,16 +533,15 @@ if (import.meta.env.DEV) {
 </script>
 
 <template>
+
   <Head title="BT" />
   <div class="relative h-screen overflow-hidden bg-background text-black">
     <div v-if="showTest" class="absolute right-6 top-4 flex items-center gap-2">
       <Button variant="outline" @click="prevPage" :disabled="page === 1">Zurück</Button>
       <Button @click="nextPage" :disabled="page === maxPage">Weiter</Button>
     </div>
-    <div
-      v-if="showTest"
-      class="absolute bottom-4 left-4 z-20 w-[900px] max-w-[calc(100%-2rem)] rounded-lg border border-black bg-white/95 p-3 font-sans text-xs shadow-lg"
-    >
+    <div v-if="showTest"
+      class="absolute bottom-4 left-4 z-20 w-[900px] max-w-[calc(100%-2rem)] rounded-lg border border-black bg-white/95 p-3 font-sans text-xs shadow-lg">
       <div class="mb-2 font-semibold">DEV: Dynamische Punkte (temporär, horizontal)</div>
       <div class="grid grid-cols-6 gap-2">
         <div class="rounded border border-black/20 px-2 py-1">
@@ -572,7 +571,8 @@ if (import.meta.env.DEV) {
             Ordner mit 10%: {{ debugScores.q4.correctFolders }}/10
           </div>
           <div class="text-[10px] text-muted-foreground">
-            Alpha {{ debugScores.q4.alphabeticalOrderMet ? '✓' : '✗' }} · Reihenfolge {{ debugScores.q4.folderOrderMet ? '✓' : '✗' }}
+            Alpha {{ debugScores.q4.alphabeticalOrderMet ? '✓' : '✗' }} · Reihenfolge {{ debugScores.q4.folderOrderMet ?
+            '✓' : '✗' }}
           </div>
           <div class="text-[10px] text-muted-foreground">
             Gewichte: {{ debugScores.q4.folderWeights.join(' / ') }}
@@ -587,7 +587,8 @@ if (import.meta.env.DEV) {
           <div class="font-semibold">A6</div>
           <div class="font-bold">{{ debugScores.q6.points }}/{{ debugScores.q6.max }}</div>
           <div class="text-[10px] text-muted-foreground">
-            Reihen korrekt: {{ debugScores.q6.rowCorrectCount }} · Alle 6: {{ debugScores.q6.allPeopleNotified ? '✓' : '✗' }}
+            Reihen korrekt: {{ debugScores.q6.rowCorrectCount }} · Alle 6: {{ debugScores.q6.allPeopleNotified ? '✓' :
+            '✗' }}
           </div>
           <div class="text-[10px] text-muted-foreground">
             Tel: {{ debugScores.q6.hasPhoneUsage ? '✓' : '✗' }} · Bestzeit: {{ debugScores.q6.isBestTime ? '✓' : '✗' }}
@@ -596,37 +597,30 @@ if (import.meta.env.DEV) {
       </div>
     </div>
     <div v-if="!showTest" class="flex h-full items-center justify-center px-6">
-      <div class="max-w-5xl space-y-6 rounded-2xl border border-black/20 bg-white p-8 font-serif text-base leading-relaxed shadow-sm">
+      <div
+        class="max-w-5xl space-y-6 rounded-2xl border border-black/20 bg-white p-8 font-serif text-base leading-relaxed shadow-sm">
         <h1 class="text-center text-2xl font-semibold tracking-[0.2em]">EINFÜHRUNG</h1>
         <p class="text-lg">
-          Die Aufgaben auf den folgenden Seiten geben Ihnen Gelegenheit, Ihr Verständnis für einfache
-          Zusammenhänge verwaltungs-büromäßiger Art zu zeigen. Sie brauchen dazu keine kaufmännischen
-          Fachkenntnisse, sondern müssen nur etwas geschickt und anstellig sein.
+          Die Aufgaben auf den folgenden Seiten geben Ihnen Gelegenheit, Ihr Verständnis für einfache Zusammenhänge
+          verwaltungs-büromäßiger Art zu zeigen. Sie brauchen dazu keine kaufmännischen Fachkenntnisse, sondern müssen
+          nur etwas geschickt und anstellig sein.
         </p>
         <p class="text-lg">
-          Die Lösungen tragen Sie auf Ihrem Lösungsblatt ein. Schauen wir uns dieses Blatt einmal an: Es ist
-          bereits für jedes Blatt ein kleines “Formular“ vorgedruckt, in welches jeweils nur einige Wörter oder
-          Zahlen eingesetzt werden sollen, wie das bei derartigen Vordrucken ─ etwa einer Postanweisung oder
-          einem behördlichen Fragebogen ─ üblich ist. Jede Aufgabe wird genau beschrieben. Lesen Sie sich bitte
-          diese Schilderungen Wort für Wort langsam durch und vergleichen Sie das Gelesene bitte mit dem
-          vorgegebenen Antwort-„Formular“. Dann stellen Sie sich in Gedanken vor, wie Sie diese Arbeit in der
-          Praxis durchführen würden und schreiben Sie erst dann die Lösungen hin.
-        </p>
-      <p class="text-lg">
-          Schreiben Sie bitte Ihre Lösungen n u r auf das Lösungsblatt!
-          In dieses Heft weder Notizen noch Bemerkungen oder Lösungen eintragen!
+          Jede Aufgabe wird genau beschrieben. Lesen Sie sich bitte diese Schilderungen Wort für Wort langsam durch und
+          vergleichen Sie das Gelesene bitte mit den vorgegebenen Antwort-„Feldern“. Dann stellen Sie sich in Gedanken
+          vor, wie Sie diese Arbeit in der Praxis durchführen würden und fügen Sie erst dann die Lösungen ein.
         </p>
         <p class="text-lg">
-          Nebenrechnungen und Notizen bitte nur auf der Rückseite des Lösungsblattes machen. Von der Aufgabe 3
-          ab wird keiner ohne derartige Nebenrechnungen auskommen. Jeder im Büro Beschäftigte macht sich
-          derartige Notizen. Es ist daher auch bei diesen Aufgaben ratsam, sich Notizen zu machen. Bei der
-          Aufgabe 5 müssen unbedingt die Nebenrechnungen angegeben werden.
+          Bitte schreiben Sie etwaige Nebenrechnungen auf ein extra Blatt und versehen dieses mit Ihrem Namen und dem
+          Datum. Von der Aufgabe 3 ab wird keiner ohne Nebenrechnungen auskommen. Jeder im Büro Beschäftigte macht sich
+          derartige Notizen. Es ist daher auch bei diesen Aufgaben ratsam, sich Notizen zu machen. Bei der Aufgabe 5
+          müssen unbedingt die Nebenrechnungen angegeben werden.
         </p>
         <p class="text-lg">
-          Sollten Sie einmal bei einer Aufgabe nicht zurechtkommen, so versuchen Sie wenigstens, einen Ansatz zu
-          finden und einzutragen. Versäumen Sie bei den leichten Aufgaben am Anfang nicht zu viel Zeit, da Ihnen
-          dann nachher bei den umfangreicheren Aufgaben 4-6 Zeit fehlen muss. Halten Sie sich nicht zu lange bei
-          einer Aufgabe auf. Sie haben 30 Minuten Zeit für sechs Aufgaben.
+          Sollten Sie einmal bei einer Aufgabe nicht zurechtkommen, so versuchen Sie wenigstens, einen Ansatz zu finden
+          und einzutragen. Versäumen Sie bei den leichten Aufgaben am Anfang nicht zu viel Zeit, da Ihnen dann nachher
+          bei den umfangreicheren Aufgaben 4-6 Zeit fehlen muss. Halten Sie sich nicht zu lange bei einer Aufgabe auf.
+          Sie haben 30 Minuten Zeit für sechs Aufgaben.
         </p>
         <div class="pt-2 text-center">
           <Button class="px-8" @click="startTest">Test starten</Button>
@@ -644,14 +638,15 @@ if (import.meta.env.DEV) {
               <div class="space-y-4 text-center text-xl leading-relaxed">
                 <p>
                   Unser Betrieb beschäftigt 25 Lehrlinge. Von diesen sollen jeweils zwei Lehrlinge für den
-                  Post-Frühdienst und drei Lehrlinge für den Post-Spätdienst eingeteilt werden, so dass jeder
-                  Woche jeder Lehrling einmal Postdienst hat. Aus verkehrstechnischen Gründen können acht
+                  Post-Frühdienst und drei Lehrlinge für den Post-Spätdienst eingeteilt werden, so dass in jeder Woche
+                  jeder Lehrling einmal Postdienst hat. Aus verkehrstechnischen Gründen können acht
                   Lehrlinge keinen Frühdienst und neun Lehrlinge keinen Spätdienst machen.
                 </p>
                 <p class="text-lg">(Siehe Vermerke in der Liste)</p>
                 <p>
-                  Stellen Sie bitte einen Wochenplan auf (Montag bis Freitag), in dem Sie alle Namen der Lehrlinge
-                  für den Postdienst (Früh oder Spät) auf das Lösungsblatt übertragen.
+                  Stellen Sie bitte einen Wochenplan auf (Montag bis Freitag), in dem Sie alle Namen der Lehrlinge für
+                  den Postdienst (Früh oder Spät) unten in die Tabelle eintragen. Gehen Sie hierfür mit der Maus auf den
+                  jeweiligen Namen und ziehen diesen an die passende Stelle.
                 </p>
               </div>
               <!-- <div class="mt-4 text-center text-base">_____</div> -->
@@ -659,43 +654,28 @@ if (import.meta.env.DEV) {
 
             <div class="flex-1 border border-black/20 px-4 py-2">
               <div class="flex h-full items-start justify-center gap-8 overflow-hidden">
-                <div
-                  class="border-2 border-black px-4 py-2 text-xl leading-tight w-[420px] flex-none"
-                  @dragover="allowDrop"
-                  @drop="handleDropOnPool"
-                >
+                <div class="border-2 border-black px-4 py-2 text-xl leading-tight w-[420px] flex-none"
+                  @dragover="allowDrop" @drop="handleDropOnPool">
                   <div class="grid grid-cols-2 gap-x-8">
                     <div class="space-y-0">
-                      <div
-                        v-for="apprentice in leftNames"
-                        :key="apprentice.id"
-                        class="flex items-center gap-2"
-                      >
+                      <div v-for="apprentice in leftNames" :key="apprentice.id" class="flex items-center gap-2">
                         <span class="w-6 text-right flex-none">{{ apprentice.id }}</span>
-                        <span
-                          class="flex-1 text-left text-xl"
+                        <span class="flex-1 text-left text-xl"
                           :class="{ 'line-through text-gray-500': isAssigned(apprentice.name) }"
                           :draggable="!isAssigned(apprentice.name)"
-                          @dragstart="(event) => handleDragStart(event, { name: apprentice.name, from: 'pool' })"
-                        >
+                          @dragstart="(event) => handleDragStart(event, { name: apprentice.name, from: 'pool' })">
                           {{ apprentice.name }}
                         </span>
                         <span class="w-4 text-center flex-none">{{ apprentice.restriction ?? '' }}</span>
                       </div>
                     </div>
                     <div class="space-y-0">
-                      <div
-                        v-for="apprentice in rightNames"
-                        :key="apprentice.id"
-                        class="flex items-center gap-2"
-                      >
+                      <div v-for="apprentice in rightNames" :key="apprentice.id" class="flex items-center gap-2">
                         <span class="w-6 text-right flex-none">{{ apprentice.id }}</span>
-                        <span
-                          class="flex-1 text-left"
+                        <span class="flex-1 text-left"
                           :class="{ 'line-through text-gray-500': isAssigned(apprentice.name) }"
                           :draggable="!isAssigned(apprentice.name)"
-                          @dragstart="(event) => handleDragStart(event, { name: apprentice.name, from: 'pool' })"
-                        >
+                          @dragstart="(event) => handleDragStart(event, { name: apprentice.name, from: 'pool' })">
                           {{ apprentice.name }}
                         </span>
                         <span class="w-4 text-center flex-none">{{ apprentice.restriction ?? '' }}</span>
@@ -710,12 +690,12 @@ if (import.meta.env.DEV) {
                     <p>der Namen</p>
                   </div>
                   <div class="space-y-0">
-                    <p>F = <span class="ml-1" style="letter-spacing: 0.2em;">k a n n   k e i n e n</span></p>
+                    <p>F = kann<span class="ml-1" style="letter-spacing: 0.2em;"> k e i n e n</span></p>
                     <p class="pl-8">Frühdienst</p>
                     <p class="pl-8">machen</p>
                   </div>
                   <div class="space-y-0">
-                    <p>S = <span class="ml-1" style="letter-spacing: 0.2em;">k a n n   k e i n e n</span></p>
+                    <p>S = kann <span class="ml-1" style="letter-spacing: 0.2em;"> k e i n e n</span></p>
                     <p class="pl-8">Spätdienst</p>
                     <p class="pl-8">machen</p>
                   </div>
@@ -731,173 +711,113 @@ if (import.meta.env.DEV) {
           <div class="border-t border-black" />
           <div class="flex-1">
             <table class="mt-3 w-full table-fixed border border-black text-base">
-            <thead>
-              <tr>
-                <th class="w-24 border border-black p-1 text-left">Aufgabe 1</th>
-                <th v-for="day in days" :key="day" class="border border-black p-1 text-center">
-                  {{ day }}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th class="border border-black p-1 text-left" rowspan="2">Frühdienst</th>
-                <td
-                  v-for="day in days"
-                  :key="`early-1-${day}`"
-                  class="border border-black p-1 align-middle"
-                  @dragover="allowDrop"
-                  @drop="(event) => handleDropOnCell(event, buildCellKey('early', 1, day))"
-                >
-                  <div class="flex items-center gap-2">
-                    <span class="w-4 text-right">1.</span>
-                    <span
-                      v-if="assignments[buildCellKey('early', 1, day)]"
-                      class="flex-1 min-w-0 cursor-move"
-                      draggable="true"
-                      @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('early', 1, day)] ?? '', from: 'cell', key: buildCellKey('early', 1, day) })"
-                    >
-                      {{ assignments[buildCellKey('early', 1, day)] }}
-                    </span>
-                    <button
-                      v-if="assignments[buildCellKey('early', 1, day)]"
-                      type="button"
-                      class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
-                      aria-label="Remove assignment"
-                      @click.stop="clearCell(buildCellKey('early', 1, day))"
-                    >
-                      ×
-                    </button>
-                    <span v-else class="flex-1">&nbsp;</span>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td
-                  v-for="day in days"
-                  :key="`early-2-${day}`"
-                  class="border border-black p-1 align-middle"
-                  @dragover="allowDrop"
-                  @drop="(event) => handleDropOnCell(event, buildCellKey('early', 2, day))"
-                >
-                  <div class="flex items-center gap-2">
-                    <span class="w-4 text-right">2.</span>
-                    <span
-                      v-if="assignments[buildCellKey('early', 2, day)]"
-                      class="flex-1 min-w-0 cursor-move"
-                      draggable="true"
-                      @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('early', 2, day)] ?? '', from: 'cell', key: buildCellKey('early', 2, day) })"
-                    >
-                      {{ assignments[buildCellKey('early', 2, day)] }}
-                    </span>
-                    <button
-                      v-if="assignments[buildCellKey('early', 2, day)]"
-                      type="button"
-                      class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
-                      aria-label="Remove assignment"
-                      @click.stop="clearCell(buildCellKey('early', 2, day))"
-                    >
-                      ×
-                    </button>
-                    <span v-else class="flex-1">&nbsp;</span>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <th class="border border-black p-1 text-left" rowspan="3">Spätdienst</th>
-                <td
-                  v-for="day in days"
-                  :key="`late-1-${day}`"
-                  class="border border-black p-1 align-middle"
-                  @dragover="allowDrop"
-                  @drop="(event) => handleDropOnCell(event, buildCellKey('late', 1, day))"
-                >
-                  <div class="flex items-center gap-2">
-                    <span class="w-4 text-right">1.</span>
-                    <span
-                      v-if="assignments[buildCellKey('late', 1, day)]"
-                      class="flex-1 min-w-0 cursor-move"
-                      draggable="true"
-                      @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 1, day)] ?? '', from: 'cell', key: buildCellKey('late', 1, day) })"
-                    >
-                      {{ assignments[buildCellKey('late', 1, day)] }}
-                    </span>
-                    <button
-                      v-if="assignments[buildCellKey('late', 1, day)]"
-                      type="button"
-                      class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
-                      aria-label="Remove assignment"
-                      @click.stop="clearCell(buildCellKey('late', 1, day))"
-                    >
-                      ×
-                    </button>
-                    <span v-else class="flex-1">&nbsp;</span>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td
-                  v-for="day in days"
-                  :key="`late-2-${day}`"
-                  class="border border-black p-1 align-middle"
-                  @dragover="allowDrop"
-                  @drop="(event) => handleDropOnCell(event, buildCellKey('late', 2, day))"
-                >
-                  <div class="flex items-center gap-2">
-                    <span class="w-4 text-right">2.</span>
-                    <span
-                      v-if="assignments[buildCellKey('late', 2, day)]"
-                      class="flex-1 min-w-0 cursor-move"
-                      draggable="true"
-                      @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 2, day)] ?? '', from: 'cell', key: buildCellKey('late', 2, day) })"
-                    >
-                      {{ assignments[buildCellKey('late', 2, day)] }}
-                    </span>
-                    <button
-                      v-if="assignments[buildCellKey('late', 2, day)]"
-                      type="button"
-                      class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
-                      aria-label="Remove assignment"
-                      @click.stop="clearCell(buildCellKey('late', 2, day))"
-                    >
-                      ×
-                    </button>
-                    <span v-else class="flex-1">&nbsp;</span>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td
-                  v-for="day in days"
-                  :key="`late-3-${day}`"
-                  class="border border-black p-1 align-middle"
-                  @dragover="allowDrop"
-                  @drop="(event) => handleDropOnCell(event, buildCellKey('late', 3, day))"
-                >
-                  <div class="flex items-center gap-2">
-                    <span class="w-4 text-right">3.</span>
-                    <span
-                      v-if="assignments[buildCellKey('late', 3, day)]"
-                      class="flex-1 min-w-0 cursor-move"
-                      draggable="true"
-                      @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 3, day)] ?? '', from: 'cell', key: buildCellKey('late', 3, day) })"
-                    >
-                      {{ assignments[buildCellKey('late', 3, day)] }}
-                    </span>
-                    <button
-                      v-if="assignments[buildCellKey('late', 3, day)]"
-                      type="button"
-                      class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
-                      aria-label="Remove assignment"
-                      @click.stop="clearCell(buildCellKey('late', 3, day))"
-                    >
-                      ×
-                    </button>
-                    <span v-else class="flex-1">&nbsp;</span>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
+              <thead>
+                <tr>
+                  <th class="w-24 border border-black p-1 text-left">Aufgabe 1</th>
+                  <th v-for="day in days" :key="day" class="border border-black p-1 text-center">
+                    {{ day }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th class="border border-black p-1 text-left" rowspan="2">Frühdienst</th>
+                  <td v-for="day in days" :key="`early-1-${day}`" class="border border-black p-1 align-middle"
+                    @dragover="allowDrop" @drop="(event) => handleDropOnCell(event, buildCellKey('early', 1, day))">
+                    <div class="flex items-center gap-2">
+                      <span class="w-4 text-right">1.</span>
+                      <span v-if="assignments[buildCellKey('early', 1, day)]" class="flex-1 min-w-0 cursor-move"
+                        draggable="true"
+                        @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('early', 1, day)] ?? '', from: 'cell', key: buildCellKey('early', 1, day) })">
+                        {{ assignments[buildCellKey('early', 1, day)] }}
+                      </span>
+                      <button v-if="assignments[buildCellKey('early', 1, day)]" type="button"
+                        class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
+                        aria-label="Remove assignment" @click.stop="clearCell(buildCellKey('early', 1, day))">
+                        ×
+                      </button>
+                      <span v-else class="flex-1">&nbsp;</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td v-for="day in days" :key="`early-2-${day}`" class="border border-black p-1 align-middle"
+                    @dragover="allowDrop" @drop="(event) => handleDropOnCell(event, buildCellKey('early', 2, day))">
+                    <div class="flex items-center gap-2">
+                      <span class="w-4 text-right">2.</span>
+                      <span v-if="assignments[buildCellKey('early', 2, day)]" class="flex-1 min-w-0 cursor-move"
+                        draggable="true"
+                        @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('early', 2, day)] ?? '', from: 'cell', key: buildCellKey('early', 2, day) })">
+                        {{ assignments[buildCellKey('early', 2, day)] }}
+                      </span>
+                      <button v-if="assignments[buildCellKey('early', 2, day)]" type="button"
+                        class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
+                        aria-label="Remove assignment" @click.stop="clearCell(buildCellKey('early', 2, day))">
+                        ×
+                      </button>
+                      <span v-else class="flex-1">&nbsp;</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <th class="border border-black p-1 text-left" rowspan="3">Spätdienst</th>
+                  <td v-for="day in days" :key="`late-1-${day}`" class="border border-black p-1 align-middle"
+                    @dragover="allowDrop" @drop="(event) => handleDropOnCell(event, buildCellKey('late', 1, day))">
+                    <div class="flex items-center gap-2">
+                      <span class="w-4 text-right">1.</span>
+                      <span v-if="assignments[buildCellKey('late', 1, day)]" class="flex-1 min-w-0 cursor-move"
+                        draggable="true"
+                        @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 1, day)] ?? '', from: 'cell', key: buildCellKey('late', 1, day) })">
+                        {{ assignments[buildCellKey('late', 1, day)] }}
+                      </span>
+                      <button v-if="assignments[buildCellKey('late', 1, day)]" type="button"
+                        class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
+                        aria-label="Remove assignment" @click.stop="clearCell(buildCellKey('late', 1, day))">
+                        ×
+                      </button>
+                      <span v-else class="flex-1">&nbsp;</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td v-for="day in days" :key="`late-2-${day}`" class="border border-black p-1 align-middle"
+                    @dragover="allowDrop" @drop="(event) => handleDropOnCell(event, buildCellKey('late', 2, day))">
+                    <div class="flex items-center gap-2">
+                      <span class="w-4 text-right">2.</span>
+                      <span v-if="assignments[buildCellKey('late', 2, day)]" class="flex-1 min-w-0 cursor-move"
+                        draggable="true"
+                        @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 2, day)] ?? '', from: 'cell', key: buildCellKey('late', 2, day) })">
+                        {{ assignments[buildCellKey('late', 2, day)] }}
+                      </span>
+                      <button v-if="assignments[buildCellKey('late', 2, day)]" type="button"
+                        class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
+                        aria-label="Remove assignment" @click.stop="clearCell(buildCellKey('late', 2, day))">
+                        ×
+                      </button>
+                      <span v-else class="flex-1">&nbsp;</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td v-for="day in days" :key="`late-3-${day}`" class="border border-black p-1 align-middle"
+                    @dragover="allowDrop" @drop="(event) => handleDropOnCell(event, buildCellKey('late', 3, day))">
+                    <div class="flex items-center gap-2">
+                      <span class="w-4 text-right">3.</span>
+                      <span v-if="assignments[buildCellKey('late', 3, day)]" class="flex-1 min-w-0 cursor-move"
+                        draggable="true"
+                        @dragstart="(event) => handleDragStart(event, { name: assignments[buildCellKey('late', 3, day)] ?? '', from: 'cell', key: buildCellKey('late', 3, day) })">
+                        {{ assignments[buildCellKey('late', 3, day)] }}
+                      </span>
+                      <button v-if="assignments[buildCellKey('late', 3, day)]" type="button"
+                        class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
+                        aria-label="Remove assignment" @click.stop="clearCell(buildCellKey('late', 3, day))">
+                        ×
+                      </button>
+                      <span v-else class="flex-1">&nbsp;</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
             </table>
           </div>
         </div>
@@ -909,13 +829,12 @@ if (import.meta.env.DEV) {
         <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 2</h1>
       </div>
       <div class="mt-10 flex flex-1 flex-col items-center">
-        <div class="max-w-2xl text-center space-y-6 leading-relaxed">
+        <div class="max-w-2xl text-center space-y-4 leading-relaxed">
           <p>
             Sie erhalten ungeordnet 220 Kopien von Rechnungen aus den Orten Essen, Düsseldorf und Köln.
           </p>
           <p>Sie sollen möglichst schnell feststellen:</p>
           <div class="text-center">_____</div>
-          <p class="text-base">In diesem Heft bitte keine Notizen machen!</p>
         </div>
         <div class="mt-10 w-full max-w-2xl space-y-4 text-left">
           <p>a) wie viele dieser Rechnungen aus jedem der drei Orte kommen</p>
@@ -950,8 +869,7 @@ if (import.meta.env.DEV) {
                   und möglichst wenig Geldstücke bzw. Scheine brauchen.
                 </p>
                 <p class="text-lg">
-                  Schreiben Sie bitte auf das Lösungsblatt, welche Anzahl Sie hierzu von jeder Geldsorte
-                  benötigen!
+                  Tragen Sie unten ein, welche Anzahl Sie hierzu von jeder Geldsorte benötigen!
                 </p>
               </div>
               <!-- <div class="mt-4 text-center text-base">_____</div>
@@ -1016,11 +934,8 @@ if (import.meta.env.DEV) {
               <thead>
                 <tr>
                   <th class="w-28 border border-black p-1 text-left">Geldsorten</th>
-                  <th
-                    v-for="denomination in cashDenominations"
-                    :key="denomination.key"
-                    class="border border-black p-1 text-center"
-                  >
+                  <th v-for="denomination in cashDenominations" :key="denomination.key"
+                    class="border border-black p-1 text-center">
                     {{ denomination.label }}
                   </th>
                   <th class="w-10 border border-black p-1" />
@@ -1029,19 +944,11 @@ if (import.meta.env.DEV) {
               <tbody>
                 <tr>
                   <th class="border border-black p-1 text-left">Anzahl</th>
-                  <td
-                    v-for="denomination in cashDenominations"
-                    :key="`input-${denomination.key}`"
-                    class="border border-black p-1 text-center"
-                  >
-                    <input
-                      :value="cashAnswers[denomination.key]"
-                      type="text"
-                      inputmode="numeric"
-                      maxlength="2"
+                  <td v-for="denomination in cashDenominations" :key="`input-${denomination.key}`"
+                    class="border border-black p-1 text-center">
+                    <input :value="cashAnswers[denomination.key]" type="text" inputmode="numeric" maxlength="2"
                       class="h-6 w-10 border border-black text-center text-base"
-                      @input="(event) => handleCashInput(denomination.key, event)"
-                    />
+                      @input="(event) => handleCashInput(denomination.key, event)" />
                   </td>
                   <td class="border border-black p-1" />
                 </tr>
@@ -1072,11 +979,9 @@ if (import.meta.env.DEV) {
                   A B C D E F G H J K L M N O P Q R S T U V W X Y Z
                 </div>
                 <div class="text-center text-lg">auf die 10 Ordner aufgeteilt werden?</div>
-                <p class="text-xl">
-                  Schreiben Sie bitte die betreffenden Buchstaben unter die jeweilige Ordner-Nr. auf das
-                  Lösungsblatt!
+                <p class="text-lg">
+                  Schreiben Sie bitte die betreffenden Buchstaben unter die jeweilige Ordner-Nr. unten in die Tabelle!
                 </p>
-                <p class="text-lg">In dieses Heft bitte keine Notizen machen!</p>
               </div>
               <!-- <div class="mt-4 text-center text-base">_____</div> -->
             </div>
@@ -1130,7 +1035,8 @@ if (import.meta.env.DEV) {
                       <td></td>
                       <td></td>
                       <td></td>
-                      <td class="py-1 pl-8 text-left"><span class="tracking-[0.35em]">R P</span> und <span class="tracking-[0.35em]">Q</span></td>
+                      <td class="py-1 pl-8 text-left"><span class="tracking-[0.35em]">R P</span> und <span
+                          class="tracking-[0.35em]">Q</span></td>
                       <td class="py-1 pl-4 text-left">zusammen</td>
                       <td class="py-1 text-center">=</td>
                       <td class="py-1 text-right">10 % aller Briefe</td>
@@ -1160,7 +1066,8 @@ if (import.meta.env.DEV) {
                       <td></td>
                       <td></td>
                       <td></td>
-                      <td class="py-1 pl-8 text-left"><span class="tracking-[0.35em]">O</span> und <span class="tracking-[0.35em]">L</span></td>
+                      <td class="py-1 pl-8 text-left"><span class="tracking-[0.35em]">O</span> und <span
+                          class="tracking-[0.35em]">L</span></td>
                       <td class="py-1 pl-4 text-left">zusammen</td>
                       <td class="py-1 text-center">=</td>
                       <td class="py-1 text-right">40 % aller Briefe</td>
@@ -1181,7 +1088,8 @@ if (import.meta.env.DEV) {
                       <td></td>
                       <td></td>
                       <td></td>
-                      <td class="border-b border-black py-1 pl-8 text-left"><span class="tracking-[0.35em]">M</span> und <span class="tracking-[0.35em]">E</span></td>
+                      <td class="border-b border-black py-1 pl-8 text-left"><span class="tracking-[0.35em]">M</span> und
+                        <span class="tracking-[0.35em]">E</span></td>
                       <td class="border-b border-black py-1 pl-4 text-left">zusammen</td>
                       <td class="border-b border-black py-1 text-center">=</td>
                       <td class="border-b border-black py-1 text-right">20 % aller Briefe</td>
@@ -1218,19 +1126,10 @@ if (import.meta.env.DEV) {
                 </tr>
                 <tr>
                   <th class="border border-black p-1 text-left">Buchstaben</th>
-                  <td
-                    v-for="index in 10"
-                    :key="`letters-${index}`"
-                    class="border border-black p-1 text-center"
-                  >
-                    <input
-                      :value="folderAnswers[index]"
-                      type="text"
-                      inputmode="text"
-                      maxlength="5"
+                  <td v-for="index in 10" :key="`letters-${index}`" class="border border-black p-1 text-center">
+                    <input :value="folderAnswers[index]" type="text" inputmode="text" maxlength="5"
                       class="h-6 w-16 border border-black text-center text-base uppercase"
-                      @input="(event) => handleFolderInput(index, event)"
-                    />
+                      @input="(event) => handleFolderInput(index, event)" />
                   </td>
                 </tr>
               </tbody>
@@ -1248,7 +1147,7 @@ if (import.meta.env.DEV) {
           <div class="flex flex-1 gap-4">
             <div class="flex-1 border border-black/20 px-6 py-4">
               <div class="space-y-4 text-center text-xl leading-relaxed">
-                <p> 
+                <p>
                   Am Beginn des 1. Arbeitstages im Monat enthielt Ihre Portokasse Briefmarken für € 50,00.
                 </p>
                 <p class="font-semibold">Die Anweisung lautet:</p>
@@ -1261,8 +1160,8 @@ if (import.meta.env.DEV) {
                   in der Aufstellung genannten Briefmarken gebraucht worden sind?
                 </p>
                 <p>
-                  Bitte auf der Rückseite Nebenrechnungen vornehmen und dann die betreffenden Tage auf dem
-                  Lösungsblatt deutlich ankreuzen.
+                  Bitte auf einem extra Blatt Nebenrechnungen vornehmen und dann die betreffenden Tage unten in der
+                  Tabelle anklicken (sodass ein „X“ erscheint).
                 </p>
                 <!-- <p>In dieses Heft bitte keine Notizen machen!</p> -->
               </div>
@@ -1270,7 +1169,7 @@ if (import.meta.env.DEV) {
             </div>
             <div class="flex-1 border border-black/20">
               <div class="flex h-full w-full flex-col items-center justify-center gap-3 border-2 border-black p-6">
-                <div class="text-center text-xl">Aufstellung der gebrachten Briefmarken</div>
+                <div class="text-center text-xl">Aufstellung der gebrauchten Briefmarken</div>
                 <table class="w-full border-collapse text-xl leading-tight">
                   <thead>
                     <tr>
@@ -1288,7 +1187,8 @@ if (import.meta.env.DEV) {
                   <tbody>
                     <tr v-for="row in stampUsage" :key="`day-${row.day}`">
                       <td class="border border-black p-1 text-center">{{ row.day }}</td>
-                      <td v-for="(value, index) in row.values" :key="`value-${row.day}-${index}`" class="border border-black p-1 text-center">
+                      <td v-for="(value, index) in row.values" :key="`value-${row.day}-${index}`"
+                        class="border border-black p-1 text-center">
                         {{ value }}
                       </td>
                     </tr>
@@ -1312,27 +1212,15 @@ if (import.meta.env.DEV) {
                       Neue Briefmarken gekauft am (AT = Arbeitstag)
                     </div>
                   </th>
-                  <th
-                    v-for="day in 10"
-                    :key="`stamp-day-${day}`"
-                    class="border border-black p-1 text-center"
-                  >
+                  <th v-for="day in 10" :key="`stamp-day-${day}`" class="border border-black p-1 text-center">
                     {{ day }}.AT
                   </th>
                   <th class="w-16 border border-black p-1" rowspan="2" />
                 </tr>
                 <tr>
-                  <td
-                    v-for="day in 10"
-                    :key="`stamp-answer-${day}`"
-                    class="border border-black p-1 text-center"
-                  >
-                    <button
-                      type="button"
-                      class="h-10 w-full border border-black text-base font-semibold"
-                      :aria-pressed="stampAnswerDays[day]"
-                      @click="() => toggleStampAnswer(day)"
-                    >
+                  <td v-for="day in 10" :key="`stamp-answer-${day}`" class="border border-black p-1 text-center">
+                    <button type="button" class="h-10 w-full border border-black text-base font-semibold"
+                      :aria-pressed="stampAnswerDays[day]" @click="() => toggleStampAnswer(day)">
                       {{ stampAnswerDays[day] ? 'X' : '' }}
                     </button>
                   </td>
@@ -1361,20 +1249,22 @@ if (import.meta.env.DEV) {
                   kein Telefon.
                 </p>
                 <p>
-                  Geben Sie bitte auf dem Lösungsblatt an, in welcher Reihenfolge Sie Ihre Bekannten
-                  <span style="letter-spacing: 0.25em;">b e n a c h r i c h t i g e n</span> (Namen eintragen) und wie viel Zeit Sie dafür jeweils im
-                  Einzelnen und insgesamt (ohne Rückweg) brauchen (Zeiten eintragen).
+                  Geben Sie bitte unten in der Tabelle an, in welcher Reihenfolge Sie Ihre Bekannten
+                  <span style="letter-spacing: 0.25em; white-space: pre;">b e n a c h r i c h t i g e n</span> (Namen mit der Maus in das
+                  jeweilige Feld hineinziehen) und wie viel Zeit Sie dafür jeweils im Einzelnen und insgesamt (ohne
+                  Rückweg) brauchen (Zeiten eintragen).
                 </p>
                 <p>
-                  Für Benachrichtigung sind jeweils (persönlich oder per Telefon) 3 Minuten zu
-                  berechnen und auf dem Lösungsblatt unter „Nachricht“ einzutragen.
+                  Für Benachrichtigung sind jeweils (persönlich oder per Telefon) 3 Minuten zu berechnen und in der
+                  Tabelle unter „Nachricht“ einzutragen.
                 </p>
                 <!-- <p class="font-semibold">In dieses Heft bitte keine Notizen machen!</p> -->
                 <!-- <div class="text-center text-lg">_____</div> -->
               </div>
             </div>
             <div class="flex-[0.55] border-2 border-black p-4 flex flex-col overflow-hidden">
-              <div class="mb-2 text-center text-xl font-bold underline underline-offset-4" style="letter-spacing: 0.4em;">P l a n</div>
+              <div class="mb-2 text-center text-xl font-bold underline underline-offset-4"
+                style="letter-spacing: 0.4em;">P l a n</div>
               <div class="relative h-full w-full min-h-0 flex-1 select-none">
                 <svg class="absolute inset-0 h-full w-full" viewBox="0 0 800 400">
                   <!-- Lines -->
@@ -1410,70 +1300,56 @@ if (import.meta.env.DEV) {
                 <div
                   class="absolute cursor-move border border-black bg-white px-4 py-1 text-xl font-serif whitespace-nowrap"
                   style="left: calc(120/800 * 100%); top: calc(180/400 * 100%); transform: translate(-50%, -50%);"
-                  draggable="true"
-                  @dragstart="(event) => handleDragStart(event, { name: 'Müller', from: 'pool' })"
-                >
+                  draggable="true" @dragstart="(event) => handleDragStart(event, { name: 'Müller', from: 'pool' })">
                   Müller (Tel.)
                 </div>
-                <div
-                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-xl font-serif"
+                <div class="absolute cursor-move border border-black bg-white px-4 py-1 text-xl font-serif"
                   style="left: calc(400/800 * 100%); top: calc(80/400 * 100%); transform: translate(-50%, -50%);"
-                  draggable="true"
-                  @dragstart="(event) => handleDragStart(event, { name: 'Frey', from: 'pool' })"
-                >
+                  draggable="true" @dragstart="(event) => handleDragStart(event, { name: 'Frey', from: 'pool' })">
                   Frey
                 </div>
                 <div
                   class="absolute cursor-move border border-black bg-white px-4 py-1 text-xl font-serif whitespace-nowrap"
                   style="left: calc(680/800 * 100%); top: calc(50/400 * 100%); transform: translate(-50%, -50%);"
-                  draggable="true"
-                  @dragstart="(event) => handleDragStart(event, { name: 'Bär', from: 'pool' })"
-                >
+                  draggable="true" @dragstart="(event) => handleDragStart(event, { name: 'Bär', from: 'pool' })">
                   Bär (Tel.)
                 </div>
                 <div
                   class="absolute cursor-move border border-black bg-white px-4 py-1 text-xl font-serif whitespace-nowrap"
                   style="left: calc(680/800 * 100%); top: calc(160/400 * 100%); transform: translate(-50%, -50%);"
-                  draggable="true"
-                  @dragstart="(event) => handleDragStart(event, { name: 'Hermann', from: 'pool' })"
-                >
+                  draggable="true" @dragstart="(event) => handleDragStart(event, { name: 'Hermann', from: 'pool' })">
                   Hermann (Tel.)
                 </div>
                 <div
                   class="absolute cursor-move border border-black bg-white px-4 py-1 text-xl font-serif whitespace-nowrap"
                   style="left: calc(680/800 * 100%); top: calc(300/400 * 100%); transform: translate(-50%, -50%);"
-                  draggable="true"
-                  @dragstart="(event) => handleDragStart(event, { name: 'Schneider', from: 'pool' })"
-                >
+                  draggable="true" @dragstart="(event) => handleDragStart(event, { name: 'Schneider', from: 'pool' })">
                   Schneider (Tel.)
                 </div>
-                <div
-                  class="absolute cursor-move border border-black bg-white px-4 py-1 text-xl font-serif"
+                <div class="absolute cursor-move border border-black bg-white px-4 py-1 text-xl font-serif"
                   style="left: calc(400/800 * 100%); top: calc(350/400 * 100%); transform: translate(-50%, -50%);"
-                  draggable="true"
-                  @dragstart="(event) => handleDragStart(event, { name: 'Fuchs', from: 'pool' })"
-                >
+                  draggable="true" @dragstart="(event) => handleDragStart(event, { name: 'Fuchs', from: 'pool' })">
                   Fuchs
                 </div>
 
                 <!-- EIGENE WOHNUNG -->
                 <div
                   class="absolute border-[3px] border-double border-black bg-white px-6 py-1 text-xl font-bold font-serif whitespace-nowrap"
-                  style="left: calc(400/800 * 100%); top: calc(220/400 * 100%); transform: translate(-50%, -50%);"
-                >
+                  style="left: calc(400/800 * 100%); top: calc(220/400 * 100%); transform: translate(-50%, -50%);">
                   EIGENE WOHNUNG
                 </div>
-                <div class="absolute bottom-0 left-0 w-fit max-w-[80%] border border-black bg-white/95 px-3 py-2 text-[20px] leading-tight">
+                <div
+                  class="absolute bottom-0 left-0 w-fit max-w-[80%] border border-black bg-white/95 px-3 py-2 text-[20px] leading-tight">
                   <div class="flex gap-3">
-                    <span class="w-12">(Tel.)</span>
+                    <span class="w-14">(Tel.)</span>
                     <span>= hat Telefonanschluss</span>
                   </div>
                   <div class="flex gap-3">
-                    <span class="w-12">Zahlen</span>
+                    <span class="w-14"> Zahlen </span>
                     <span>= Wegminuten mit Fahrrad</span>
                   </div>
                 </div>
-                
+
               </div>
             </div>
           </div>
@@ -1496,19 +1372,13 @@ if (import.meta.env.DEV) {
               </thead>
               <tbody>
                 <tr v-for="row in routeRows" :key="`route-row-${row}`" class="border-b border-black h-9">
-                  <td
-                    class="border-r border-black px-2"
-                    @dragover="allowDrop"
-                    @drop="(event) => handleRouteDropOnCell(event, `route-from-${row}`)"
-                  >
+                  <td class="border-r border-black px-2" @dragover="allowDrop"
+                    @drop="(event) => handleRouteDropOnCell(event, `route-from-${row}`)">
                     <div class="flex items-center gap-2">
-                      <span
-                        v-if="routeAssignments[`route-from-${row}`]"
-                        class="flex-1 min-w-0"
+                      <span v-if="routeAssignments[`route-from-${row}`]" class="flex-1 min-w-0"
                         :class="{ 'cursor-move': row !== 1 || routeAssignments[`route-from-${row}`] !== 'Eigene Wohnung' }"
                         :draggable="row !== 1 || routeAssignments[`route-from-${row}`] !== 'Eigene Wohnung'"
-                        @dragstart="(event) => handleDragStart(event, { name: routeAssignments[`route-from-${row}`] ?? '', from: 'cell', key: `route-from-${row}` })"
-                      >
+                        @dragstart="(event) => handleDragStart(event, { name: routeAssignments[`route-from-${row}`] ?? '', from: 'cell', key: `route-from-${row}` })">
                         {{ routeAssignments[`route-from-${row}`] }}
                       </span>
                       <span v-else class="flex-1">&nbsp;</span>
@@ -1516,60 +1386,40 @@ if (import.meta.env.DEV) {
                         v-if="routeAssignments[`route-from-${row}`] && (row !== 1 || routeAssignments[`route-from-${row}`] !== 'Eigene Wohnung')"
                         type="button"
                         class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
-                        @click="routeAssignments[`route-from-${row}`] = null"
-                      >
+                        @click="routeAssignments[`route-from-${row}`] = null">
                         ×
                       </button>
                     </div>
                   </td>
-                  <td
-                    class="border-r border-black px-2"
-                    @dragover="allowDrop"
-                    @drop="(event) => handleRouteDropOnCell(event, `route-to-${row}`)"
-                  >
+                  <td class="border-r border-black px-2" @dragover="allowDrop"
+                    @drop="(event) => handleRouteDropOnCell(event, `route-to-${row}`)">
                     <div class="flex items-center gap-2">
-                      <span
-                        v-if="routeAssignments[`route-to-${row}`]"
-                        class="flex-1 min-w-0 cursor-move"
+                      <span v-if="routeAssignments[`route-to-${row}`]" class="flex-1 min-w-0 cursor-move"
                         draggable="true"
-                        @dragstart="(event) => handleDragStart(event, { name: routeAssignments[`route-to-${row}`] ?? '', from: 'cell', key: `route-to-${row}` })"
-                      >
+                        @dragstart="(event) => handleDragStart(event, { name: routeAssignments[`route-to-${row}`] ?? '', from: 'cell', key: `route-to-${row}` })">
                         {{ routeAssignments[`route-to-${row}`] }}
                       </span>
                       <span v-else class="flex-1">&nbsp;</span>
-                      <button
-                        v-if="routeAssignments[`route-to-${row}`]"
-                        type="button"
+                      <button v-if="routeAssignments[`route-to-${row}`]" type="button"
                         class="flex h-4 w-4 items-center justify-center rounded-full border border-black text-[10px] leading-none"
-                        @click="routeAssignments[`route-to-${row}`] = null"
-                      >
+                        @click="routeAssignments[`route-to-${row}`] = null">
                         ×
                       </button>
                     </div>
                   </td>
                   <td class="border-r border-black px-2">
                     <div class="flex items-center justify-end gap-3 pr-4">
-                      <input
-                        :value="routeTimes[`route-time-${row}`]"
-                        type="text"
-                        inputmode="numeric"
-                        maxlength="3"
+                      <input :value="routeTimes[`route-time-${row}`]" type="text" inputmode="numeric" maxlength="3"
                         class="h-6 w-16 border border-black text-center text-base"
-                        @input="(event) => handleRouteTimeInput(`route-time-${row}`, event)"
-                      />
+                        @input="(event) => handleRouteTimeInput(`route-time-${row}`, event)" />
                       <span class="w-8">Min.</span>
                     </div>
                   </td>
                   <td class="px-2">
                     <div class="flex items-center justify-end gap-2 pr-8">
-                      <input
-                        :value="routeTimes[`route-msg-${row}`]"
-                        type="text"
-                        inputmode="numeric"
-                        maxlength="3"
+                      <input :value="routeTimes[`route-msg-${row}`]" type="text" inputmode="numeric" maxlength="3"
                         class="h-6 w-16 border border-black text-center text-base"
-                        @input="(event) => handleRouteTimeInput(`route-msg-${row}`, event)"
-                      />
+                        @input="(event) => handleRouteTimeInput(`route-msg-${row}`, event)" />
                       <span class="w-8">Min.</span>
                     </div>
                   </td>
@@ -1577,28 +1427,18 @@ if (import.meta.env.DEV) {
                 <tr class="border-b border-black h-9">
                   <td class="border-r border-black px-2 text-right pr-4" colspan="2">Gesamtzeit:</td>
                   <td class="border-r border-black px-2">
-                    <div class="flex items-center justify-end gap-2 pr-8">
-                      <input
-                        :value="routeTotals.totalWay"
-                        type="text"
-                        inputmode="numeric"
-                        maxlength="3"
+                    <div class="flex items-center justify-end gap-3 pr-4">
+                      <input :value="routeTotals.totalWay" type="text" inputmode="numeric" maxlength="3"
                         class="h-6 w-16 border border-black text-center text-base"
-                        @input="(event) => handleRouteTotalInput('totalWay', event)"
-                      />
+                        @input="(event) => handleRouteTotalInput('totalWay', event)" />
                       <span class="w-8">Min.</span>
                     </div>
                   </td>
                   <td class="px-2">
                     <div class="flex items-center justify-end gap-2 pr-8">
-                      <input
-                        :value="routeTotals.totalMsg"
-                        type="text"
-                        inputmode="numeric"
-                        maxlength="3"
+                      <input :value="routeTotals.totalMsg" type="text" inputmode="numeric" maxlength="3"
                         class="h-6 w-16 border border-black text-center text-base"
-                        @input="(event) => handleRouteTotalInput('totalMsg', event)"
-                      />
+                        @input="(event) => handleRouteTotalInput('totalMsg', event)" />
                       <span class="w-8">Min.</span>
                     </div>
                   </td>
@@ -1608,15 +1448,10 @@ if (import.meta.env.DEV) {
                     anschließend zurück zur eigenen Wohnung:
                   </td>
                   <td class="border-r border-black px-2">
-                    <div class="flex items-center justify-end gap-2 pr-8">
-                      <input
-                        :value="routeTotals.returnWay"
-                        type="text"
-                        inputmode="numeric"
-                        maxlength="3"
+                    <div class="flex items-center justify-end gap-3 pr-4">
+                      <input :value="routeTotals.returnWay" type="text" inputmode="numeric" maxlength="3"
                         class="h-6 w-16 border border-black text-center text-base"
-                        @input="(event) => handleRouteTotalInput('returnWay', event)"
-                      />
+                        @input="(event) => handleRouteTotalInput('returnWay', event)" />
                       <span class="w-8">Min.</span>
                     </div>
                   </td>
