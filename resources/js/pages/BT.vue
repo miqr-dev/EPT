@@ -453,16 +453,16 @@ const debugScores = computed(() => {
   let lateOneSyllable = 0;
   let lateThreeSyllable = 0;
 
-  days.forEach((day) => {
-    const orderedSlots: Array<{ shift: 'early' | 'late'; slot: number }> = [
-      { shift: 'early', slot: 1 },
-      { shift: 'early', slot: 2 },
-      { shift: 'late', slot: 1 },
-      { shift: 'late', slot: 2 },
-      { shift: 'late', slot: 3 },
-    ];
+  const orderedSlots: Array<{ shift: 'early' | 'late'; slot: number }> = [
+    { shift: 'early', slot: 1 },
+    { shift: 'early', slot: 2 },
+    { shift: 'late', slot: 1 },
+    { shift: 'late', slot: 2 },
+    { shift: 'late', slot: 3 },
+  ];
 
-    orderedSlots.forEach(({ shift, slot }) => {
+  orderedSlots.forEach(({ shift, slot }) => {
+    days.forEach((day) => {
       const key = buildCellKey(shift, slot, day);
       const name = assignments.value[key];
       if (!name || firstAppearanceNames.has(name)) return;
