@@ -282,7 +282,8 @@ const startTest = () => {
                     <div class="mb-6 flex flex-row gap-4">
                         <div v-for="(option, oidx) in currentQuestion.options" :key="oidx" class="flex flex-col items-center">
                             <button
-                                class="min-w-[120px] rounded-xl border px-4 py-3 font-sans text-base font-semibold transition"
+                                translate="no"
+                                class="notranslate min-w-[120px] rounded-xl border px-4 py-3 font-sans text-base font-semibold transition"
                                 :class="[
                                     userAnswers[currentQuestionIndex] === String.fromCharCode(65 + oidx)
                                         ? 'border-blue-700 bg-blue-300 text-blue-900 dark:bg-blue-900 dark:text-blue-100'
