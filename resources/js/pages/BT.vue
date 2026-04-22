@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Head } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
-const emit = defineEmits(['started']);
+const emit = defineEmits(['started', 'complete', 'update:answers']);
 
 type Restriction = 'F' | 'S' | null;
 
@@ -536,6 +536,30 @@ const debugScores = computed(() => {
     },
   };
 });
+
+
+const btResultPayload = computed(() => ({
+  assignments: { ...assignments.value },
+  cash_answers: { ...cashAnswers.value },
+  folder_answers: { ...folderAnswers.value },
+  stamp_answer_days: { ...stampAnswerDays.value },
+  route_assignments: { ...routeAssignments.value },
+  route_times: { ...routeTimes.value },
+  route_totals: { ...routeTotals.value },
+  scoring: debugScores.value,
+}));
+
+watch(
+  btResultPayload,
+  (payload) => {
+    emit('update:answers', payload);
+  },
+  { immediate: true, deep: true },
+);
+
+function completeBtTest() {
+  emit('complete', btResultPayload.value);
+}
 if (import.meta.env.DEV) {
   (globalThis as { __btDebugScores?: unknown }).__btDebugScores = debugScores;
 }
@@ -547,7 +571,8 @@ if (import.meta.env.DEV) {
   <div class="relative h-screen overflow-hidden bg-background text-black">
     <div v-if="showTest" class="absolute right-6 top-4 flex items-center gap-2">
       <Button variant="outline" @click="prevPage" :disabled="page === 1">Zurück</Button>
-      <Button @click="nextPage" :disabled="page === maxPage">Weiter</Button>
+      <Button v-if="page < maxPage" @click="nextPage">Weiter</Button>
+      <Button v-else @click="completeBtTest">Test beenden</Button>
     </div>
     <div v-if="showTest"
       class="absolute bottom-4 left-4 z-20 w-[900px] max-w-[calc(100%-2rem)] rounded-lg border border-black bg-white/95 p-3 font-sans text-xs shadow-lg">
@@ -629,7 +654,7 @@ if (import.meta.env.DEV) {
           Sollten Sie einmal bei einer Aufgabe nicht zurechtkommen, so versuchen Sie wenigstens, einen Ansatz zu finden
           und einzutragen. Versäumen Sie bei den leichten Aufgaben am Anfang nicht zu viel Zeit, da Ihnen dann nachher
           bei den umfangreicheren Aufgaben 4-6 Zeit fehlen muss. Halten Sie sich nicht zu lange bei einer Aufgabe auf.
-          Sie haben 30 Minuten Zeit für sechs Aufgaben.
+          Sie haben 60 Minuten Zeit für sechs Aufgaben.
         </p>
         <div class="pt-2 text-center">
           <Button class="px-8" @click="startTest">Test starten</Button>

@@ -22,6 +22,7 @@ class TestsTableSeeder extends Seeder
       ['name' => 'LPS-B', 'code' => 'LPS-B', 'duration' => 25],
       ['name' => 'LPS',   'code' => 'LPS', 'duration' => 25],
       ['name' => 'BIT-2', 'code' => 'BIT-2', 'duration' => 15],
+      ['name' => 'BT', 'code' => 'BT', 'duration' => 60],
       ['name' => 'AVEM', 'code' => 'AVEM', 'duration' => 20],
       ['name' => 'Konzentrationstest', 'code' => 'Konzentrationstest', 'duration' => 6],
       ['name' => 'LPS-B', 'code' => 'LPS-B', 'duration' => 60],
