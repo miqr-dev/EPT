@@ -217,6 +217,7 @@ const fpiRohwerte = computed(() => {
           :test-result-id="testResultId"
           :manual-scores="manualScoreMap"
           :results="local"
+          :show-answers="showAnswers"
           @manual-score-updated="handleManualScoreUpdated"
         />
         <AvemResult v-else-if="test.name === 'AVEM'" :results="local" />
