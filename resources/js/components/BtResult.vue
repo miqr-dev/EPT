@@ -240,142 +240,151 @@ async function persistQ2ManualPoints() {
 </script>
 
 <template>
-  <div class="space-y-4">
-    <table class="mb-4 w-full overflow-hidden rounded-lg border text-sm shadow">
-      <tbody>
-        <tr class="bg-muted/40">
-          <td class="w-1/2 px-3 py-2 font-semibold">Gesamtpunkte</td>
-          <td class="px-3 py-2">{{ totalPoints }}</td>
-        </tr>
-        <tr>
-          <td class="px-3 py-2 font-semibold">Benötigte Zeit</td>
-          <td class="px-3 py-2">{{ totalTime }}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <details v-if="showAnswers" class="mt-4 rounded-lg border bg-background p-3" :open="forceOpenAnswers">
-      <summary class="cursor-pointer font-medium">Antworten anzeigen</summary>
-
-      <div class="mt-4 space-y-8">
-        <section class="space-y-3">
-          <h3 class="text-lg font-semibold">BT – Aufgabe 1 ({{ q1Stats.points }}/{{ q1Stats.max }})</h3>
-          <div class="overflow-x-auto">
-            <table class="min-w-full table-fixed rounded-lg border text-sm shadow">
-              <thead>
-                <tr>
-                  <th class="w-24 border p-1 text-left">Aufgabe 1</th>
-                  <th v-for="day in days" :key="day" class="border p-1 text-center">{{ day }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th class="border p-1 text-left" rowspan="2">Frühdienst</th>
-                  <td v-for="day in days" :key="`e1-${day}`" class="border p-1">{{ q1Assignments[buildCellKey('early', 1, day)] ?? '—' }}</td>
-                </tr>
-                <tr>
-                  <td v-for="day in days" :key="`e2-${day}`" class="border p-1">{{ q1Assignments[buildCellKey('early', 2, day)] ?? '—' }}</td>
-                </tr>
-                <tr>
-                  <th class="border p-1 text-left" rowspan="3">Spätdienst</th>
-                  <td v-for="day in days" :key="`l1-${day}`" class="border p-1">{{ q1Assignments[buildCellKey('late', 1, day)] ?? '—' }}</td>
-                </tr>
-                <tr>
-                  <td v-for="day in days" :key="`l2-${day}`" class="border p-1">{{ q1Assignments[buildCellKey('late', 2, day)] ?? '—' }}</td>
-                </tr>
-                <tr>
-                  <td v-for="day in days" :key="`l3-${day}`" class="border p-1">{{ q1Assignments[buildCellKey('late', 3, day)] ?? '—' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="text-sm text-muted-foreground">
-            Abzüge: 2-silbig Früh {{ q1Stats.earlyTwoSyllable }}/9, 3-silbig Früh {{ q1Stats.earlyThreeSyllable }}/1,
-            1-silbig Spät {{ q1Stats.lateOneSyllable }}/8, 3-silbig Spät {{ q1Stats.lateThreeSyllable }}/7.
-          </p>
-        </section>
-
-        <section class="space-y-3">
-          <h3 class="text-lg font-semibold">BT – Aufgabe 2 ({{ q2ManualPoints ?? '—' }} P.)</h3>
-          <p class="text-sm text-muted-foreground">Punkteingabe durch Prüfer:in (manuell).</p>
-          <Input :model-value="q2ManualPointsInput" class="w-24" inputmode="numeric" @input="sanitizeManualPoints" @blur="persistQ2ManualPoints" />
-        </section>
-
-        <section class="space-y-3">
-          <h3 class="text-lg font-semibold">BT – Aufgabe 3 ({{ q3Score.points }}/{{ q3Score.max }})</h3>
-          <table class="min-w-full rounded-lg border text-sm shadow">
-            <thead>
-              <tr>
-                <th class="border p-1 text-left">Geldsorten</th>
-                <th v-for="entry in q3Denominations" :key="entry.key" class="border p-1 text-center">{{ entry.label }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th class="border p-1 text-left">Anzahl</th>
-                <td v-for="entry in q3Denominations" :key="`val-${entry.key}`" class="border p-1 text-center">{{ q3CashAnswers[entry.key] || '—' }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <p class="text-sm text-muted-foreground">Abzüge: {{ q3Score.mistakes.length ? q3Score.mistakes.join(' | ') : 'keine' }}.</p>
-        </section>
-
-        <section class="space-y-3">
-          <h3 class="text-lg font-semibold">BT – Aufgabe 4 ({{ q4Score.points }}/{{ q4Score.max }})</h3>
-          <table class="min-w-full rounded-lg border text-sm shadow">
-            <thead><tr><th class="border p-1 text-left">Ordner-Nr.</th><th v-for="i in 10" :key="`h-${i}`" class="border p-1">{{ i }}</th></tr></thead>
-            <tbody>
-              <tr><td class="border p-1">Buchstaben</td><td v-for="i in 10" :key="`f-${i}`" class="border p-1">{{ q4FolderAnswers[i] || '—' }}</td></tr>
-            </tbody>
-          </table>
-          <p class="text-sm text-muted-foreground">Abzüge: {{ q4Score.mistakes.length ? q4Score.mistakes.join(' | ') : 'keine' }}.</p>
-        </section>
-
-        <section class="space-y-3">
-          <h3 class="text-lg font-semibold">BT – Aufgabe 5 ({{ q5Score.points }}/{{ q5Score.max }})</h3>
-          <table class="min-w-full rounded-lg border text-sm shadow">
-            <thead>
-              <tr>
-                <th class="border p-1 text-left">Arbeitstag</th>
-                <th v-for="day in 10" :key="`head-${day}`" class="border p-1 text-center">{{ day }}.AT</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th class="border p-1 text-left">Markiert</th>
-                <td v-for="day in 10" :key="`mark-${day}`" class="border p-1 text-center">{{ q5StampDays[day] ? 'X' : '—' }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <p class="text-sm text-muted-foreground">Abzüge: {{ q5Score.mistakes.length ? q5Score.mistakes.join(' | ') : 'keine' }}.</p>
-        </section>
-
-        <section class="space-y-3">
-          <h3 class="text-lg font-semibold">BT – Aufgabe 6 ({{ q6Score.points }}/{{ q6Score.max }})</h3>
-          <table class="min-w-full rounded-lg border text-sm shadow">
-            <thead><tr><th class="border p-1">von</th><th class="border p-1">nach</th><th class="border p-1">Zeit (Weg)</th><th class="border p-1">Zeit (Nachr.)</th></tr></thead>
-            <tbody>
-              <tr v-for="row in 6" :key="row">
-                <td class="border p-1">{{ q6RouteAssignments[`route-from-${row}`] || '—' }}</td>
-                <td class="border p-1">{{ q6RouteAssignments[`route-to-${row}`] || '—' }}</td>
-                <td class="border p-1">{{ q6RouteTimes[`route-time-${row}`] || '—' }}</td>
-                <td class="border p-1">{{ q6RouteTimes[`route-msg-${row}`] || '—' }}</td>
-              </tr>
-              <tr>
-                <td class="border p-1 text-right" colspan="2">Gesamtzeit</td>
-                <td class="border p-1">{{ q6RouteTotals.totalWay || '—' }}</td>
-                <td class="border p-1">{{ q6RouteTotals.totalMsg || '—' }}</td>
-              </tr>
-              <tr>
-                <td class="border p-1 text-right" colspan="2">Rückweg</td>
-                <td class="border p-1">{{ q6RouteTotals.returnWay || '—' }}</td>
-                <td class="border p-1">—</td>
-              </tr>
-            </tbody>
-          </table>
-          <p class="text-sm text-muted-foreground">Punkte-Herleitung: {{ q6Score.explanation.join(' | ') }}</p>
-        </section>
+  <div class="space-y-3">
+    <div class="rounded-lg border-2 border-black bg-white p-3 text-sm">
+      <div class="mb-3 flex items-center justify-between border-b border-black pb-2">
+        <div class="font-semibold">BT – Auswertung Form A</div>
+        <div class="text-right">
+          <div><span class="font-semibold">Gesamtpunkte:</span> {{ totalPoints }} / 50</div>
+          <div><span class="font-semibold">Benötigte Zeit:</span> {{ totalTime }}</div>
+        </div>
       </div>
-    </details>
+
+      <table class="w-full border-collapse border border-black">
+        <thead>
+          <tr>
+            <th class="border border-black p-2 text-left">Aufgabe</th>
+            <th class="w-20 border border-black p-2 text-center">Punkte</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="border border-black p-2 align-top">
+              <div class="mb-2 font-semibold">Aufgabe 1</div>
+              <div>Frühdienst: zweisilbig {{ q1Stats.earlyTwoSyllable }}/9, dreisilbig {{ q1Stats.earlyThreeSyllable }}/1</div>
+              <div>Spätdienst: einsilbig {{ q1Stats.lateOneSyllable }}/8, dreisilbig {{ q1Stats.lateThreeSyllable }}/7</div>
+              <div class="mt-1 text-muted-foreground">Abzüge gemäß Soll-Verteilung.</div>
+            </td>
+            <td class="border border-black p-2 text-center font-semibold">{{ q1Stats.points }}</td>
+          </tr>
+
+          <tr>
+            <td class="border border-black p-2 align-top">
+              <div class="mb-2 font-semibold">Aufgabe 2</div>
+              <div class="mb-2">Manuelle Bewertung durch Prüfer:in (ein Feld).</div>
+              <Input :model-value="q2ManualPointsInput" class="w-24" inputmode="numeric" @input="sanitizeManualPoints" @blur="persistQ2ManualPoints" />
+            </td>
+            <td class="border border-black p-2 text-center font-semibold">{{ q2ManualPoints ?? '—' }}</td>
+          </tr>
+
+          <tr>
+            <td class="border border-black p-2 align-top">
+              <div class="mb-2 font-semibold">Aufgabe 3</div>
+              <table class="w-full border-collapse border border-black text-xs">
+                <thead>
+                  <tr>
+                    <th class="border border-black p-1 text-left">Geldsorten</th>
+                    <th v-for="entry in q3Denominations" :key="entry.key" class="border border-black p-1 text-center">{{ entry.label }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th class="border border-black p-1 text-left">Anzahl</th>
+                    <td v-for="entry in q3Denominations" :key="`q3-${entry.key}`" class="border border-black p-1 text-center">{{ q3CashAnswers[entry.key] || '—' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="mt-1 text-muted-foreground">Abzüge: {{ q3Score.mistakes.length ? q3Score.mistakes.join(' | ') : 'keine' }}.</div>
+            </td>
+            <td class="border border-black p-2 text-center font-semibold">{{ q3Score.points }}</td>
+          </tr>
+
+          <tr>
+            <td class="border border-black p-2 align-top">
+              <div class="mb-2 font-semibold">Aufgabe 4</div>
+              <table class="w-full border-collapse border border-black text-xs">
+                <thead>
+                  <tr>
+                    <th class="border border-black p-1 text-left">Ordner-Nr.</th>
+                    <th v-for="i in 10" :key="`h-${i}`" class="border border-black p-1 text-center">{{ i }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th class="border border-black p-1 text-left">Form A</th>
+                    <td v-for="i in 10" :key="`f-${i}`" class="border border-black p-1 text-center">{{ q4FolderAnswers[i] || '—' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="mt-1 text-muted-foreground">Abzüge: {{ q4Score.mistakes.length ? q4Score.mistakes.join(' | ') : 'keine' }}.</div>
+            </td>
+            <td class="border border-black p-2 text-center font-semibold">{{ q4Score.points }}</td>
+          </tr>
+
+          <tr>
+            <td class="border border-black p-2 align-top">
+              <div class="mb-2 font-semibold">Aufgabe 5</div>
+              <table class="w-full border-collapse border border-black text-xs">
+                <thead>
+                  <tr>
+                    <th class="border border-black p-1 text-left">Neue Briefmarken gekauft am</th>
+                    <th v-for="day in 10" :key="`d-${day}`" class="border border-black p-1 text-center">{{ day }}.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th class="border border-black p-1 text-left">Form A</th>
+                    <td v-for="day in 10" :key="`m-${day}`" class="border border-black p-1 text-center">{{ q5StampDays[day] ? 'X' : '' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="mt-1 text-muted-foreground">Abzüge: {{ q5Score.mistakes.length ? q5Score.mistakes.join(' | ') : 'keine' }}.</div>
+            </td>
+            <td class="border border-black p-2 text-center font-semibold">{{ q5Score.points }}</td>
+          </tr>
+
+          <tr>
+            <td class="border border-black p-2 align-top">
+              <div class="mb-2 font-semibold">Aufgabe 6</div>
+              <table class="w-full border-collapse border border-black text-xs">
+                <thead>
+                  <tr>
+                    <th class="border border-black p-1 text-left">von</th>
+                    <th class="border border-black p-1 text-left">nach</th>
+                    <th class="border border-black p-1 text-center">Zeit (Weg)</th>
+                    <th class="border border-black p-1 text-center">Zeit (Nachr.)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in 6" :key="`r-${row}`">
+                    <td class="border border-black p-1">{{ q6RouteAssignments[`route-from-${row}`] || '—' }}</td>
+                    <td class="border border-black p-1">{{ q6RouteAssignments[`route-to-${row}`] || '—' }}</td>
+                    <td class="border border-black p-1 text-center">{{ q6RouteTimes[`route-time-${row}`] || '—' }}</td>
+                    <td class="border border-black p-1 text-center">{{ q6RouteTimes[`route-msg-${row}`] || '—' }}</td>
+                  </tr>
+                  <tr>
+                    <td class="border border-black p-1 text-right" colspan="2">Gesamtzeit</td>
+                    <td class="border border-black p-1 text-center">{{ q6RouteTotals.totalWay || '—' }}</td>
+                    <td class="border border-black p-1 text-center">{{ q6RouteTotals.totalMsg || '—' }}</td>
+                  </tr>
+                  <tr>
+                    <td class="border border-black p-1 text-right" colspan="2">anschl. zurück z. eig. Wohnung</td>
+                    <td class="border border-black p-1 text-center">{{ q6RouteTotals.returnWay || '—' }}</td>
+                    <td class="border border-black p-1 text-center">—</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="mt-1 text-muted-foreground">Punkte-Herleitung: {{ q6Score.explanation.join(' | ') }}</div>
+            </td>
+            <td class="border border-black p-2 text-center font-semibold">{{ q6Score.points }}</td>
+          </tr>
+
+          <tr>
+            <td class="border border-black p-2 text-right font-bold">Gesamt</td>
+            <td class="border border-black p-2 text-center font-bold">{{ totalPoints }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
