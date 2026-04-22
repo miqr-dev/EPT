@@ -19,14 +19,32 @@ class ExamStepStatusController extends Controller
             return back(303)->with('error', 'Für pausierte oder beendete Tests kann keine zusätzliche Zeit vergeben werden.');
         }
 
+        $status->loadMissing('step');
+
         $additionalMinutes = (int) $data['minutes'];
         $additionalSeconds = $additionalMinutes * 60;
 
+        $stepDurationMinutes = $status->step->duration ?? 0;
+
+        $baseDurationSeconds = max(0, (int) $stepDurationMinutes * 60
+            + (int) $status->extra_time * 60
+            + (int) $status->grace_period_seconds);
+
+        $currentRemaining = $baseDurationSeconds;
+
+        if ($status->status === 'in_progress' && $status->started_at) {
+            $startTime = $status->started_at;
+            $endTime = $startTime->copy()->addSeconds($baseDurationSeconds);
+            $currentRemaining = now()->diffInSeconds($endTime, false);
+        }
+
+        $currentRemaining = max(0, (int) $currentRemaining);
+
         $status->increment('extra_time', $additionalMinutes);
 
-        if (!is_null($status->time_remaining_seconds)) {
-            $status->increment('time_remaining_seconds', $additionalSeconds);
-        }
+        $status->update([
+            'time_remaining_seconds' => $currentRemaining + $additionalSeconds,
+        ]);
 
         return back(303)->with('success', 'Zusätzliche Zeit wurde vergeben.');
     }
