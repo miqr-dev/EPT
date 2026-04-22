@@ -177,6 +177,8 @@ function handleDropOnCell(event: DragEvent, key: string) {
 
   const payload = JSON.parse(payloadText) as DragPayload;
   if (!payload?.name) return;
+  const targetValue = assignments.value[key];
+  if (targetValue && payload.key !== key) return;
 
   if (payload.from === 'cell' && payload.key) {
     assignments.value[payload.key] = null;
