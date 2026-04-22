@@ -60,7 +60,6 @@ const assignments = ref<Record<string, string | null>>(
   ),
 );
 
-const assignedNames = computed(() => new Set(Object.values(assignments.value).filter(Boolean)));
 const leftNames = computed(() => apprentices.value.slice(0, 13));
 const rightNames = computed(() => apprentices.value.slice(13));
 const maxPage = 6;
@@ -166,14 +165,6 @@ function buildCellKey(shift: 'early' | 'late', slot: number, day: string) {
   return `${shift}-${slot}-${day}`;
 }
 
-function clearNameFromAssignments(name: string) {
-  Object.keys(assignments.value).forEach((key) => {
-    if (assignments.value[key] === name) {
-      assignments.value[key] = null;
-    }
-  });
-}
-
 function handleDragStart(event: DragEvent, payload: DragPayload) {
   event.dataTransfer?.setData('text/plain', JSON.stringify(payload));
   event.dataTransfer?.setDragImage((event.target as HTMLElement) ?? document.body, 0, 0);
@@ -191,7 +182,6 @@ function handleDropOnCell(event: DragEvent, key: string) {
     assignments.value[payload.key] = null;
   }
 
-  clearNameFromAssignments(payload.name);
   assignments.value[key] = payload.name;
 }
 
@@ -203,7 +193,9 @@ function handleDropOnPool(event: DragEvent) {
   const payload = JSON.parse(payloadText) as DragPayload;
   if (!payload?.name) return;
 
-  clearNameFromAssignments(payload.name);
+  if (payload.from === 'cell' && payload.key) {
+    assignments.value[payload.key] = null;
+  }
 }
 
 function allowDrop(event: DragEvent) {
@@ -212,10 +204,6 @@ function allowDrop(event: DragEvent) {
 
 function clearCell(key: string) {
   assignments.value[key] = null;
-}
-
-function isAssigned(name: string) {
-  return assignedNames.value.has(name);
 }
 
 function handleCashInput(key: string, event: Event) {
@@ -457,17 +445,36 @@ const debugScores = computed(() => {
     q6Points = hasPhoneUsage ? 4 : 2;
   }
 
-  const earlyAssigned = Object.entries(assignments.value)
-    .filter(([key, value]) => key.startsWith('early-') && value)
-    .map(([, value]) => value as string);
-  const lateAssigned = Object.entries(assignments.value)
-    .filter(([key, value]) => key.startsWith('late-') && value)
-    .map(([, value]) => value as string);
+  const firstAppearanceNames = new Set<string>();
+  let earlyTwoSyllable = 0;
+  let earlyThreeSyllable = 0;
+  let lateOneSyllable = 0;
+  let lateThreeSyllable = 0;
 
-  const earlyTwoSyllable = earlyAssigned.filter((name) => twoSyllableNames.has(name)).length;
-  const earlyThreeSyllable = earlyAssigned.filter((name) => threeSyllableNames.has(name)).length;
-  const lateOneSyllable = lateAssigned.filter((name) => oneSyllableNames.has(name)).length;
-  const lateThreeSyllable = lateAssigned.filter((name) => threeSyllableNames.has(name)).length;
+  days.forEach((day) => {
+    const orderedSlots: Array<{ shift: 'early' | 'late'; slot: number }> = [
+      { shift: 'early', slot: 1 },
+      { shift: 'early', slot: 2 },
+      { shift: 'late', slot: 1 },
+      { shift: 'late', slot: 2 },
+      { shift: 'late', slot: 3 },
+    ];
+
+    orderedSlots.forEach(({ shift, slot }) => {
+      const key = buildCellKey(shift, slot, day);
+      const name = assignments.value[key];
+      if (!name || firstAppearanceNames.has(name)) return;
+
+      firstAppearanceNames.add(name);
+      if (shift === 'early') {
+        if (twoSyllableNames.has(name)) earlyTwoSyllable += 1;
+        if (threeSyllableNames.has(name)) earlyThreeSyllable += 1;
+      } else {
+        if (oneSyllableNames.has(name)) lateOneSyllable += 1;
+        if (threeSyllableNames.has(name)) lateThreeSyllable += 1;
+      }
+    });
+  });
 
   const q1Points =
     (earlyTwoSyllable === 9 ? 3 : 0) +
@@ -660,9 +667,7 @@ if (import.meta.env.DEV) {
                     <div class="space-y-0">
                       <div v-for="apprentice in leftNames" :key="apprentice.id" class="flex items-center gap-2">
                         <span class="w-6 text-right flex-none">{{ apprentice.id }}</span>
-                        <span class="flex-1 text-left text-xl"
-                          :class="{ 'line-through text-gray-500': isAssigned(apprentice.name) }"
-                          :draggable="!isAssigned(apprentice.name)"
+                        <span class="flex-1 text-left text-xl" draggable="true"
                           @dragstart="(event) => handleDragStart(event, { name: apprentice.name, from: 'pool' })">
                           {{ apprentice.name }}
                         </span>
@@ -672,9 +677,7 @@ if (import.meta.env.DEV) {
                     <div class="space-y-0">
                       <div v-for="apprentice in rightNames" :key="apprentice.id" class="flex items-center gap-2">
                         <span class="w-6 text-right flex-none">{{ apprentice.id }}</span>
-                        <span class="flex-1 text-left"
-                          :class="{ 'line-through text-gray-500': isAssigned(apprentice.name) }"
-                          :draggable="!isAssigned(apprentice.name)"
+                        <span class="flex-1 text-left" draggable="true"
                           @dragstart="(event) => handleDragStart(event, { name: apprentice.name, from: 'pool' })">
                           {{ apprentice.name }}
                         </span>
