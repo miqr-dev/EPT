@@ -240,12 +240,12 @@ async function persistQ2ManualPoints() {
 </script>
 
 <template>
-  <div class="space-y-3">
+  <div class="space-y-3 w-full lg:w-1/2 print:w-full">
     <div class="rounded-lg border-2 border-black bg-white p-3 text-sm">
       <div class="mb-3 flex items-center justify-between border-b border-black pb-2">
         <div class="font-semibold">BT – Auswertung Form A</div>
         <div class="text-right">
-          <div><span class="font-semibold">Gesamtpunkte:</span> {{ totalPoints }} / 50</div>
+          <div class="text-lg"><span class="font-semibold">Rohwert:</span> <span class="text-2xl font-bold">{{ totalPoints }}</span> <span class="font-semibold">/ 50</span></div>
           <div><span class="font-semibold">Benötigte Zeit:</span> {{ totalTime }}</div>
         </div>
       </div>
@@ -380,8 +380,8 @@ async function persistQ2ManualPoints() {
           </tr>
 
           <tr>
-            <td class="border border-black p-2 text-right font-bold">Gesamt</td>
-            <td class="border border-black p-2 text-center font-bold">{{ totalPoints }}</td>
+            <td class="border border-black p-2 text-right text-lg font-bold">Rohwert</td>
+            <td class="border border-black p-2 text-center text-xl font-extrabold">{{ totalPoints }}</td>
           </tr>
         </tbody>
       </table>
