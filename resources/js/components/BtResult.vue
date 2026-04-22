@@ -240,7 +240,7 @@ async function persistQ2ManualPoints() {
 </script>
 
 <template>
-  <div class="space-y-3 w-full lg:w-1/2 print:w-full">
+  <div :class="['space-y-3 w-full', !forceOpenAnswers ? 'lg:w-1/2' : '']">
     <div class="rounded-lg border-2 border-black bg-white p-3 text-sm">
       <div class="mb-3 flex items-center justify-between border-b border-black pb-2">
         <div class="font-semibold">BT – Auswertung Form A</div>
@@ -261,6 +261,36 @@ async function persistQ2ManualPoints() {
           <tr>
             <td class="border border-black p-2 align-top">
               <div class="mb-2 font-semibold">Aufgabe 1</div>
+              <table class="mb-2 w-full border-collapse border border-black text-xs">
+                <thead>
+                  <tr>
+                    <th class="w-20 border border-black p-1 text-left">Dienst</th>
+                    <th v-for="day in days" :key="`q1-head-${day}`" class="border border-black p-1 text-center">{{ day }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th class="border border-black p-1 text-left">Früh 1</th>
+                    <td v-for="day in days" :key="`q1-e1-${day}`" class="border border-black p-1 text-center">{{ q1Assignments[buildCellKey('early', 1, day)] ?? '—' }}</td>
+                  </tr>
+                  <tr>
+                    <th class="border border-black p-1 text-left">Früh 2</th>
+                    <td v-for="day in days" :key="`q1-e2-${day}`" class="border border-black p-1 text-center">{{ q1Assignments[buildCellKey('early', 2, day)] ?? '—' }}</td>
+                  </tr>
+                  <tr>
+                    <th class="border border-black p-1 text-left">Spät 1</th>
+                    <td v-for="day in days" :key="`q1-l1-${day}`" class="border border-black p-1 text-center">{{ q1Assignments[buildCellKey('late', 1, day)] ?? '—' }}</td>
+                  </tr>
+                  <tr>
+                    <th class="border border-black p-1 text-left">Spät 2</th>
+                    <td v-for="day in days" :key="`q1-l2-${day}`" class="border border-black p-1 text-center">{{ q1Assignments[buildCellKey('late', 2, day)] ?? '—' }}</td>
+                  </tr>
+                  <tr>
+                    <th class="border border-black p-1 text-left">Spät 3</th>
+                    <td v-for="day in days" :key="`q1-l3-${day}`" class="border border-black p-1 text-center">{{ q1Assignments[buildCellKey('late', 3, day)] ?? '—' }}</td>
+                  </tr>
+                </tbody>
+              </table>
               <div>Frühdienst: zweisilbig {{ q1Stats.earlyTwoSyllable }}/9, dreisilbig {{ q1Stats.earlyThreeSyllable }}/1</div>
               <div>Spätdienst: einsilbig {{ q1Stats.lateOneSyllable }}/8, dreisilbig {{ q1Stats.lateThreeSyllable }}/7</div>
               <div class="mt-1 text-muted-foreground">Abzüge gemäß Soll-Verteilung.</div>
