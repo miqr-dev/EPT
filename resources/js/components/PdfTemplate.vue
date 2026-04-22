@@ -54,7 +54,8 @@ const testDate = new Date().toLocaleDateString('de-DE', {
           :model-value="assignment.results[0].result_json"
           :participant-profile="participant?.participant_profile"
           :manual-scores="assignment.results[0].manual_scores ?? []"
-          :show-answers="false"
+          :show-answers="assignment.test.name === 'BT'"
+          :force-open-answers="assignment.test.name === 'BT'"
         />
         <div v-else class="text-center text-gray-500">
           <p>Keine Ergebnisse verfügbar.</p>

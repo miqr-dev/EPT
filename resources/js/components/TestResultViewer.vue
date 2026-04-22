@@ -45,6 +45,7 @@ const props = withDefaults(
     test: { name: string };
     participantProfile?: { age: number; sex?: string } | null;
     showAnswers?: boolean;
+    forceOpenAnswers?: boolean;
     testResultId?: number | null;
     manualScores?: Array<{ key: string; value: number | string | null }> | Record<string, any>;
   }>(),
@@ -218,6 +219,7 @@ const fpiRohwerte = computed(() => {
           :manual-scores="manualScoreMap"
           :results="local"
           :show-answers="showAnswers"
+          :force-open-answers="forceOpenAnswers"
           @manual-score-updated="handleManualScoreUpdated"
         />
         <AvemResult v-else-if="test.name === 'AVEM'" :results="local" />

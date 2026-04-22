@@ -4,6 +4,9 @@ import { Head } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
 const emit = defineEmits(['started', 'complete', 'update:answers']);
+const props = defineProps<{
+  timeRemainingSeconds?: number | null;
+}>();
 
 type Restriction = 'F' | 'S' | null;
 
@@ -65,6 +68,9 @@ const rightNames = computed(() => apprentices.value.slice(13));
 const maxPage = 6;
 const page = ref(1);
 const showTest = ref(false);
+const startedAtMs = ref<number | null>(null);
+const startTimeRemainingSeconds = ref<number | null>(null);
+const latestTimeRemainingSeconds = ref<number | null>(null);
 const cashDenominations = [
   { label: '100€', key: '100' },
   { label: '50€', key: '50' },
@@ -257,6 +263,29 @@ function handleRouteTotalInput(key: 'totalWay' | 'totalMsg' | 'returnWay', event
   target.value = cleaned;
 }
 
+
+watch(
+  () => props.timeRemainingSeconds,
+  (value) => {
+    if (typeof value !== 'number') return;
+    latestTimeRemainingSeconds.value = Math.max(0, Math.floor(value));
+    if (showTest.value && startTimeRemainingSeconds.value === null) {
+      startTimeRemainingSeconds.value = latestTimeRemainingSeconds.value;
+    }
+  },
+  { immediate: true },
+);
+
+function getElapsedSeconds() {
+  if (startTimeRemainingSeconds.value != null && latestTimeRemainingSeconds.value != null) {
+    return Math.max(0, startTimeRemainingSeconds.value - latestTimeRemainingSeconds.value);
+  }
+  if (startedAtMs.value != null) {
+    return Math.max(0, Math.floor((Date.now() - startedAtMs.value) / 1000));
+  }
+  return null;
+}
+
 function nextPage() {
   if (page.value < maxPage) {
     page.value += 1;
@@ -273,6 +302,12 @@ function startTest() {
   emit('started');
   showTest.value = true;
   page.value = 1;
+  startedAtMs.value = Date.now();
+  if (typeof props.timeRemainingSeconds === 'number') {
+    const remaining = Math.max(0, Math.floor(props.timeRemainingSeconds));
+    startTimeRemainingSeconds.value = remaining;
+    latestTimeRemainingSeconds.value = remaining;
+  }
 }
 
 function normalizeFolderLetters(value: string) {
@@ -547,6 +582,7 @@ const btResultPayload = computed(() => ({
   route_times: { ...routeTimes.value },
   route_totals: { ...routeTotals.value },
   scoring: debugScores.value,
+  total_time_seconds: getElapsedSeconds(),
 }));
 
 watch(

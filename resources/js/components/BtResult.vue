@@ -9,11 +9,13 @@ const props = withDefaults(
     manualScores?: Record<string, number | string | null>;
     results?: Record<string, any> | null;
     showAnswers?: boolean;
+    forceOpenAnswers?: boolean;
   }>(),
   {
     manualScores: () => ({}),
     results: null,
     showAnswers: true,
+    forceOpenAnswers: false,
   },
 );
 
@@ -252,7 +254,7 @@ async function persistQ2ManualPoints() {
       </tbody>
     </table>
 
-    <details v-if="showAnswers" class="mt-4">
+    <details v-if="showAnswers" class="mt-4 rounded-lg border bg-background p-3" :open="forceOpenAnswers">
       <summary class="cursor-pointer font-medium">Antworten anzeigen</summary>
 
       <div class="mt-4 space-y-8">
