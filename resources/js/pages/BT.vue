@@ -610,62 +610,6 @@ if (import.meta.env.DEV) {
       <Button v-if="page < maxPage" @click="nextPage">Weiter</Button>
       <Button v-else @click="completeBtTest">Test beenden</Button>
     </div>
-    <div v-if="showTest"
-      class="absolute bottom-4 left-4 z-20 w-[900px] max-w-[calc(100%-2rem)] rounded-lg border border-black bg-white/95 p-3 font-sans text-xs shadow-lg">
-      <div class="mb-2 font-semibold">DEV: Dynamische Punkte (temporär, horizontal)</div>
-      <div class="grid grid-cols-6 gap-2">
-        <div class="rounded border border-black/20 px-2 py-1">
-          <div class="font-semibold">A1</div>
-          <div class="font-bold">{{ debugScores.q1.points }}/9</div>
-          <div class="text-[10px] text-muted-foreground">
-            F2 {{ debugScores.q1.earlyTwoSyllable }}/9 · F3 {{ debugScores.q1.earlyThreeSyllable }}/1
-          </div>
-          <div class="text-[10px] text-muted-foreground">
-            S1 {{ debugScores.q1.lateOneSyllable }}/8 · S3 {{ debugScores.q1.lateThreeSyllable }}/7
-          </div>
-        </div>
-        <div class="rounded border border-black/20 px-2 py-1">
-          <div class="font-semibold">A2</div>
-          <div class="font-bold">—</div>
-          <div class="text-[10px] text-muted-foreground">{{ debugScores.q2.note }}</div>
-        </div>
-        <div class="rounded border border-black/20 px-2 py-1">
-          <div class="font-semibold">A3</div>
-          <div class="font-bold">{{ debugScores.q3.points }}/{{ debugScores.q3.max }}</div>
-          <div class="text-[10px] text-muted-foreground">richtige Felder</div>
-        </div>
-        <div class="rounded border border-black/20 px-2 py-1">
-          <div class="font-semibold">A4</div>
-          <div class="font-bold">{{ debugScores.q4.points }}/{{ debugScores.q4.max }}</div>
-          <div class="text-[10px] text-muted-foreground">
-            Ordner mit 10%: {{ debugScores.q4.correctFolders }}/10
-          </div>
-          <div class="text-[10px] text-muted-foreground">
-            Alpha {{ debugScores.q4.alphabeticalOrderMet ? '✓' : '✗' }} · Reihenfolge {{ debugScores.q4.folderOrderMet ?
-            '✓' : '✗' }}
-          </div>
-          <div class="text-[10px] text-muted-foreground">
-            Gewichte: {{ debugScores.q4.folderWeights.join(' / ') }}
-          </div>
-        </div>
-        <div class="rounded border border-black/20 px-2 py-1">
-          <div class="font-semibold">A5</div>
-          <div class="font-bold">{{ debugScores.q5.points }}/{{ debugScores.q5.max }}</div>
-          <div class="text-[10px] text-muted-foreground">5.AT=2 · 7.AT=2 · 10.AT=4</div>
-        </div>
-        <div class="rounded border border-black/20 px-2 py-1">
-          <div class="font-semibold">A6</div>
-          <div class="font-bold">{{ debugScores.q6.points }}/{{ debugScores.q6.max }}</div>
-          <div class="text-[10px] text-muted-foreground">
-            Reihen korrekt: {{ debugScores.q6.rowCorrectCount }} · Alle 6: {{ debugScores.q6.allPeopleNotified ? '✓' :
-            '✗' }}
-          </div>
-          <div class="text-[10px] text-muted-foreground">
-            Tel: {{ debugScores.q6.hasPhoneUsage ? '✓' : '✗' }} · Bestzeit: {{ debugScores.q6.isBestTime ? '✓' : '✗' }}
-          </div>
-        </div>
-      </div>
-    </div>
     <div v-if="!showTest" class="flex h-full items-center justify-center px-6">
       <div
         class="max-w-5xl space-y-6 rounded-2xl border border-black/20 bg-white p-8 font-serif text-base leading-relaxed shadow-sm">
