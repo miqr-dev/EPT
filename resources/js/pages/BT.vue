@@ -908,7 +908,7 @@ if (import.meta.env.DEV) {
             <p>b) welche bereits bezahlt und welche noch unbezahlt sind</p>
             <div class="flex flex-wrap items-center gap-4 pl-6">
               <p>Bezahlte Rechnungen haben entsprechenden Stempelaufdruck</p>
-              <div class="border border-black px-4 py-1 text-sm tracking-[0.5em]">BEZAHLT</div>
+              <div class="border border-black px-4 py-1 text-xl tracking-[0.5em]">BEZAHLT</div>
             </div>
           </div>
           <p>c) welche Höhe die unbezahlten Rechnungen insgesamt haben.</p>
