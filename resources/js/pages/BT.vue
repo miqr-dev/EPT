@@ -890,12 +890,12 @@ if (import.meta.env.DEV) {
       </div>
     </div>
 
-    <div v-else-if="page === 2" class="flex h-full flex-col px-12 py-8 font-serif text-base">
+    <div v-else-if="page === 2" class="flex h-full flex-col px-12 py-8 font-serif text-xl">
       <div class="text-center">
         <h1 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 2</h1>
       </div>
       <div class="mt-10 flex flex-1 flex-col items-center">
-        <div class="max-w-2xl text-center space-y-4 leading-relaxed">
+        <div class="max-w-2xl space-y-4 text-center leading-relaxed">
           <p>
             Sie erhalten ungeordnet 220 Kopien von Rechnungen aus den Orten Essen, Düsseldorf und Köln.
           </p>
@@ -907,15 +907,22 @@ if (import.meta.env.DEV) {
           <div class="space-y-2">
             <p>b) welche bereits bezahlt und welche noch unbezahlt sind</p>
             <div class="flex flex-wrap items-center gap-4 pl-6">
-              <p class="text-base">Bezahlte Rechnungen haben entsprechenden Stempelaufdruck</p>
+              <p>Bezahlte Rechnungen haben entsprechenden Stempelaufdruck</p>
               <div class="border border-black px-4 py-1 text-sm tracking-[0.5em]">BEZAHLT</div>
             </div>
           </div>
           <p>c) welche Höhe die unbezahlten Rechnungen insgesamt haben.</p>
         </div>
-        <p class="mt-10 max-w-2xl text-center">
-          Geben Sie bitte auf dem Lösungsblatt in Stichworten an, wie Sie diese Aufgabe anpacken würden.
-        </p>
+        <div class="mt-10 max-w-2xl space-y-4 text-center">
+          <p>Geben Sie bitte auf dem Lösungsblatt in Stichworten an, wie Sie diese Aufgabe anpacken würden.</p>
+          <p>Bitte beginnen Sie Ihren Satz wie unten gezeigt.</p>
+          <p>
+            Ich werde zuerst ___________________________________________________________________<br>
+            _____________________________________________________________________________________________________<br>
+            _____________________________________________________________________________________________________<br>
+            und zum Schluss ___________________________________________________________________________________
+          </p>
+        </div>
       </div>
     </div>
     <div v-else-if="page === 3" class="flex h-full flex-col">
