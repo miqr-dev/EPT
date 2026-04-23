@@ -723,7 +723,7 @@ if (import.meta.env.DEV) {
             <table class="mt-3 w-full table-fixed border border-black text-base">
               <thead>
                 <tr>
-                  <th class="w-24 border border-black p-1 text-left">Aufgabe 1</th>
+                  <th class="w-28 border border-black p-1 text-left">Aufgabe 1</th>
                   <th v-for="day in days" :key="day" class="border border-black p-1 text-center">
                     {{ day }}
                   </th>
@@ -731,7 +731,7 @@ if (import.meta.env.DEV) {
               </thead>
               <tbody>
                 <tr>
-                  <th class="border border-black p-1 text-left" rowspan="2">Frühdienst</th>
+                  <th class="border border-black p-1 pr-3 text-left" rowspan="2">Frühdienst</th>
                   <td v-for="day in days" :key="`early-1-${day}`" class="border border-black p-1 align-middle"
                     @dragover="allowDrop" @drop="(event) => handleDropOnCell(event, buildCellKey('early', 1, day))">
                     <div class="flex items-center gap-2">
@@ -1112,7 +1112,8 @@ if (import.meta.env.DEV) {
                       <td></td>
                       <td></td>
                       <td class="border-b border-black py-1 pl-8 text-left"><span class="tracking-[0.35em]">M</span> und
-                        <span class="tracking-[0.35em]">E</span></td>
+                        <span class="tracking-[0.35em]">E</span>
+                      </td>
                       <td class="border-b border-black py-1 pl-4 text-left">zusammen</td>
                       <td class="border-b border-black py-1 text-center">=</td>
                       <td class="border-b border-black py-1 text-right">20 % aller Briefe</td>
@@ -1273,7 +1274,8 @@ if (import.meta.env.DEV) {
                 </p>
                 <p>
                   Geben Sie bitte unten in der Tabelle an, in welcher Reihenfolge Sie Ihre Bekannten
-                  <span style="letter-spacing: 0.25em; white-space: pre;">b e n a c h r i c h t i g e n</span> (Namen mit der Maus in das
+                  <span style="letter-spacing: 0.25em; white-space: pre;">b e n a c h r i c h t i g e n</span> (Namen
+                  mit der Maus in das
                   jeweilige Feld hineinziehen) und wie viel Zeit Sie dafür jeweils im Einzelnen und insgesamt (ohne
                   Rückweg) brauchen (Zeiten eintragen).
                 </p>
