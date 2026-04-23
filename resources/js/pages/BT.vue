@@ -913,15 +913,21 @@ if (import.meta.env.DEV) {
           </div>
           <p>c) welche Höhe die unbezahlten Rechnungen insgesamt haben.</p>
         </div>
-        <div class="mt-10 max-w-2xl space-y-4 text-center">
+        <div class="mt-10 w-full max-w-4xl space-y-4 text-left">
           <p>Geben Sie bitte auf dem Lösungsblatt in Stichworten an, wie Sie diese Aufgabe anpacken würden.</p>
           <p>Bitte beginnen Sie Ihren Satz wie unten gezeigt.</p>
-          <p>
-            Ich werde zuerst ___________________________________________________________________<br>
-            _____________________________________________________________________________________________________<br>
-            _____________________________________________________________________________________________________<br>
-            und zum Schluss ___________________________________________________________________________________
-          </p>
+          <div class="space-y-4 pt-2">
+            <p class="flex items-end gap-2">
+              <span>Ich werde zuerst</span>
+              <span class="block flex-1 border-b border-black">&nbsp;</span>
+            </p>
+            <p class="border-b border-black">&nbsp;</p>
+            <p class="border-b border-black">&nbsp;</p>
+            <p class="flex items-end gap-2">
+              <span>und zum Schluss</span>
+              <span class="block flex-1 border-b border-black">&nbsp;</span>
+            </p>
+          </div>
         </div>
       </div>
     </div>
