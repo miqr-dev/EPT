@@ -170,38 +170,13 @@ class ExamController extends Controller
       return back(303)->with('error', 'Exam has no steps.');
     }
 
-    $firstStep = $exam->steps()->orderBy('step_order')->first();
-
     $exam->update([
       'status' => 'in_progress',
-      'current_exam_step_id' => $firstStep->id,
+      'current_exam_step_id' => null,
       'started_at' => now(),
     ]);
 
-    // Create status records for all participants for the first step
-    $exam->load('participants');
-    $participantIds = $exam->participants->pluck('participant_id');
-    $completedAssignments = collect();
-    if ($firstStep->test_id) {
-      $completedAssignments = TestAssignment::where('test_id', $firstStep->test_id)
-        ->whereIn('participant_id', $participantIds)
-        ->where('status', 'completed')
-        ->whereHas('results')
-        ->get(['participant_id', 'completed_at'])
-        ->keyBy('participant_id');
-    }
-    foreach ($exam->participants as $participant) {
-      $completedAssignment = $completedAssignments->get($participant->participant_id);
-      $isCompleted = $completedAssignment !== null;
-      ExamStepStatus::create([
-        'exam_id' => $exam->id,
-        'exam_step_id' => $firstStep->id,
-        'participant_id' => $participant->participant_id,
-        'status' => $isCompleted ? 'completed' : 'not_started',
-        'completed_at' => $isCompleted ? ($completedAssignment->completed_at ?? now()) : null,
-      ]);
-    }
-    return back(303)->with('success', 'Exam started!');
+    return back(303)->with('success', 'Exam started. Select a test to begin.');
   }
 
   public function nextStep(Exam $exam)
@@ -270,12 +245,16 @@ class ExamController extends Controller
       'step_id' => 'required|exists:exam_steps,id',
     ]);
 
+    $step = $exam->steps()->whereKey($data['step_id'])->first();
+    if (!$step) {
+      return back(303)->with('error', 'Selected step does not belong to this exam.');
+    }
+
     $exam->update(['current_exam_step_id' => $data['step_id']]);
 
     // Create status records for all participants for the new step
     $exam->load('participants');
     $participantIds = $exam->participants->pluck('participant_id');
-    $step = $exam->steps()->whereKey($data['step_id'])->first();
     $completedAssignments = collect();
     if ($step?->test_id) {
       $completedAssignments = TestAssignment::where('test_id', $step->test_id)

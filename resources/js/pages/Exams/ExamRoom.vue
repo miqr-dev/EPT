@@ -840,8 +840,7 @@ watch(
               <tr v-if="!visibleSteps.length">
                 <td colspan="3"
                   class="px-6 py-4 text-center text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                  Momentan sind keine Tests verfügbar. Bitte warten Sie, bis Ihre Prüfung startet oder der Prüfer den
-                  nächsten Test freigibt.
+                  Please wait.
                 </td>
               </tr>
             </tbody>
