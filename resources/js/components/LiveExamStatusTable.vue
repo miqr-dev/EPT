@@ -215,6 +215,13 @@ const setStatus = (status: string) => {
   })
 }
 
+const confirmAndFinishExam = () => {
+  const confirmed = window.confirm('Sind Sie sicher, dass Sie die Prüfung beenden möchten? Es gibt kein Zurück.')
+  if (!confirmed) return
+
+  setStatus('completed')
+}
+
 const getParticipantUserId = (participant: any) =>
   participant.participant_id ?? participant.user?.id
 
@@ -381,7 +388,7 @@ const canForceFinishParticipant = (participant: any) => {
             <Button v-else-if="exam.status === 'paused'" size="sm" @click="setStatus('in_progress')">
               Prüfung fortsetzen
             </Button>
-            <Button v-if="exam.status !== 'completed'" size="sm" @click="setStatus('completed')">
+            <Button v-if="exam.status !== 'completed'" size="sm" @click="confirmAndFinishExam">
               Prüfung beenden
             </Button>
           </div>
