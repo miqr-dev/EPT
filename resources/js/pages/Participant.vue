@@ -32,15 +32,30 @@ const flash = computed(() => page.props.flash)
 
 // Age calculation
 watch(() => form.birthday, val => {
-  if (!val) return form.age = ''
+  if (!val) {
+    form.age = ''
+    return
+  }
   const bday = new Date(val)
   let age = today.getFullYear() - bday.getFullYear()
   const m = today.getMonth() - bday.getMonth()
   if (m < 0 || (m === 0 && today.getDate() < bday.getDate())) age--
   form.age = age
+
+  // Basic client-side validation logic
+  if (age < 16) {
+    form.errors.birthday = 'Das Mindestalter für die Teilnahme beträgt 16 Jahre.'
+  } else if (age > 80) {
+    form.errors.birthday = 'Das Höchstalter für die Teilnahme beträgt 80 Jahre.'
+  } else {
+    delete form.errors.birthday
+  }
 })
 
 function submit() {
+  if (form.age < 16 || form.age > 80) {
+    return
+  }
   form.post('/onboarding')
 }
 

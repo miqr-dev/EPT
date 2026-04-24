@@ -58,10 +58,18 @@ class ParticipantController extends Controller
     $user = Auth::user();
 
     $data = $request->validate([
-      'birthday'             => 'required|date',
+      'birthday'             => [
+        'required',
+        'date',
+        'before_or_equal:' . now()->subYears(16)->format('Y-m-d'),
+        'after_or_equal:' . now()->subYears(80)->format('Y-m-d'),
+      ],
       'sex'                  => 'required|string|max:255',
       'employed_id'          => 'nullable|exists:employeds,id',
       'profession_group_id'  => 'nullable|exists:profession_groups,id',
+    ], [
+      'birthday.before_or_equal' => __('Das Mindestalter für die Teilnahme beträgt 16 Jahre.'),
+      'birthday.after_or_equal' => __('Das Höchstalter für die Teilnahme beträgt 80 Jahre.'),
     ]);
 
     $data['age'] = \Carbon\Carbon::parse($data['birthday'])->age;
