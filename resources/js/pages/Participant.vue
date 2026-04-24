@@ -34,6 +34,7 @@ const flash = computed(() => page.props.flash)
 watch(() => form.birthday, val => {
   if (!val) {
     form.age = ''
+    form.clearErrors('birthday')
     return
   }
   const bday = new Date(val)
@@ -43,12 +44,10 @@ watch(() => form.birthday, val => {
   form.age = age
 
   // Basic client-side validation logic
-  if (age < 16) {
-    form.errors.birthday = 'Das Mindestalter für die Teilnahme beträgt 16 Jahre.'
-  } else if (age > 80) {
-    form.errors.birthday = 'Das Höchstalter für die Teilnahme beträgt 80 Jahre.'
+  if (age < 16 || age > 80) {
+    form.errors.birthday = 'Bitte geben Sie ein gültiges Datum ein.'
   } else {
-    delete form.errors.birthday
+    form.clearErrors('birthday')
   }
 })
 

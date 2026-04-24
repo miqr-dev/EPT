@@ -68,8 +68,8 @@ class ParticipantController extends Controller
       'employed_id'          => 'nullable|exists:employeds,id',
       'profession_group_id'  => 'nullable|exists:profession_groups,id',
     ], [
-      'birthday.before_or_equal' => __('Das Mindestalter für die Teilnahme beträgt 16 Jahre.'),
-      'birthday.after_or_equal' => __('Das Höchstalter für die Teilnahme beträgt 80 Jahre.'),
+      'birthday.before_or_equal' => __('Bitte geben Sie ein gültiges Datum ein.'),
+      'birthday.after_or_equal' => __('Bitte geben Sie ein gültiges Datum ein.'),
     ]);
 
     $data['age'] = \Carbon\Carbon::parse($data['birthday'])->age;
