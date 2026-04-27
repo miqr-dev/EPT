@@ -31,6 +31,7 @@ const teacherName = computed(() => {
 });
 
 const isAvemTest = computed(() => props.assignment?.test?.name === 'AVEM');
+const requiresMainSaveButton = computed(() => ['BRT-A', 'BRT-B'].includes(props.assignment?.test?.name));
 const showTeacherInPdf = false;
 
 const pdfContainerStyle = computed(() => ({
@@ -155,7 +156,7 @@ async function downloadUnifiedPdf() {
                 class="mb-4 flex-1 overflow-y-auto"
             />
             <DialogFooter>
-                <Button type="button" @click="submit">Änderungen speichern</Button>
+                <Button v-if="requiresMainSaveButton" type="button" @click="submit">Änderungen speichern</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
