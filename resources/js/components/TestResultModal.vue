@@ -31,6 +31,7 @@ const teacherName = computed(() => {
 });
 
 const isAvemTest = computed(() => props.assignment?.test?.name === 'AVEM');
+const showTeacherInPdf = false;
 
 const pdfContainerStyle = computed(() => ({
     zIndex: -1,
@@ -161,6 +162,13 @@ async function downloadUnifiedPdf() {
 
     <!-- Hidden template for PDF generation -->
     <div v-if="isGeneratingPdf" class="fixed top-0 left-0" :style="pdfContainerStyle">
-        <PdfTemplate v-if="assignment" ref="pdfTemplateRef" :assignment="assignment" :participant="participant" :teacherName="teacherName" />
+        <PdfTemplate
+            v-if="assignment"
+            ref="pdfTemplateRef"
+            :assignment="assignment"
+            :participant="participant"
+            :teacherName="teacherName"
+            :show-teacher="showTeacherInPdf"
+        />
     </div>
 </template>
