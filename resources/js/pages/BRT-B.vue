@@ -51,7 +51,6 @@ const questions = ref<Question[]>([
 
 const showTest = ref(false);
 const currentQuestionIndex = ref(0);
-const nextButtonClickCount = ref(0);
 const userAnswers = ref<string[]>(Array(questions.value.length).fill(''));
 const answerInput = ref<InstanceType<typeof Input> | null>(null);
 const questionTimes = ref<number[]>(Array(questions.value.length).fill(0));
@@ -90,8 +89,6 @@ const isTestComplete = computed(() => currentQuestionIndex.value >= questions.va
 
 const currentQuestion = computed(() => (currentQuestionIndex.value < questions.value.length ? questions.value[currentQuestionIndex.value] : null));
 
-const nextButtonText = computed(() => (nextButtonClickCount.value === 1 ? 'Weiter (Bestätigen)' : 'Weiter'));
-
 const isLastQuestion = computed(() => currentQuestionIndex.value === questions.value.length - 1);
 
 const jumpToQuestion = (index: number) => {
@@ -107,31 +104,25 @@ const jumpToQuestion = (index: number) => {
         questionStartTimestamps.value[currentQuestionIndex.value] = null;
     }
     currentQuestionIndex.value = index;
-    nextButtonClickCount.value = 0;
 };
 
 const handleNextClick = () => {
-    nextButtonClickCount.value++;
-    if (nextButtonClickCount.value >= 2) {
-        const now = Date.now();
-        if (
-            currentQuestionIndex.value >= 0 &&
-            currentQuestionIndex.value < questions.value.length &&
-            questionStartTimestamps.value[currentQuestionIndex.value]
-        ) {
-            questionTimes.value[currentQuestionIndex.value] += Math.round(
-                (now - (questionStartTimestamps.value[currentQuestionIndex.value] as number)) / 1000,
-            );
-            questionStartTimestamps.value[currentQuestionIndex.value] = null;
-        }
-        if (currentQuestionIndex.value < questions.value.length - 1) {
-            currentQuestionIndex.value++;
-            nextButtonClickCount.value = 0;
-        } else {
-            // Complete test: move index past last question
-            currentQuestionIndex.value = questions.value.length;
-            nextButtonClickCount.value = 0;
-        }
+    const now = Date.now();
+    if (
+        currentQuestionIndex.value >= 0 &&
+        currentQuestionIndex.value < questions.value.length &&
+        questionStartTimestamps.value[currentQuestionIndex.value]
+    ) {
+        questionTimes.value[currentQuestionIndex.value] += Math.round(
+            (now - (questionStartTimestamps.value[currentQuestionIndex.value] as number)) / 1000,
+        );
+        questionStartTimestamps.value[currentQuestionIndex.value] = null;
+    }
+    if (currentQuestionIndex.value < questions.value.length - 1) {
+        currentQuestionIndex.value++;
+    } else {
+        // Complete test: move index past last question
+        currentQuestionIndex.value = questions.value.length;
     }
 };
 
@@ -149,7 +140,6 @@ const handlePrevClick = () => {
     }
     if (currentQuestionIndex.value > 0) {
         currentQuestionIndex.value--;
-        nextButtonClickCount.value = 0;
     }
 };
 
@@ -209,7 +199,6 @@ function confirmEnd() {
         questionStartTimestamps.value[currentQuestionIndex.value] = null;
     }
     currentQuestionIndex.value = questions.value.length;
-    nextButtonClickCount.value = 0;
     endConfirmOpen.value = false;
     const results = {
         answers: [...userAnswers.value],
@@ -255,7 +244,6 @@ const startTest = () => {
     emit('started');
     showTest.value = true;
     currentQuestionIndex.value = 0;
-    nextButtonClickCount.value = 0;
     userAnswers.value = Array(questions.value.length).fill('');
     questionTimes.value = Array(questions.value.length).fill(0);
     questionStartTimestamps.value = Array(questions.value.length).fill(null);
@@ -270,7 +258,7 @@ const startTest = () => {
             <h1 class="text-2xl font-bold">BRT-B</h1>
         </div>
         <div class="mb-4"></div>
-                <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4">
+        <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4">
             <!-- Sidebar Navigation: Only visible during the test -->
             <aside v-if="showTest" class="sticky top-8 flex h-fit w-64 flex-shrink-0 flex-col items-start space-y-2 py-4">
                 <h3 class="mb-2 pl-4 text-sm font-bold text-muted-foreground">Fragen</h3>
@@ -344,14 +332,9 @@ const startTest = () => {
                         <div class="mt-2 flex flex-row justify-between">
                             <Button @click="handlePrevClick" :disabled="currentQuestionIndex === 0" variant="outline"> Zurück </Button>
                             <Button v-if="isLastQuestion" @click="finishTest" variant="destructive"> Test beenden </Button>
-                            <Button v-else @click="handleNextClick">
-                                {{ nextButtonText }}
-                            </Button>
+                            <Button v-else @click="handleNextClick">Weiter</Button>
                         </div>
                     </div>
-                    <p v-if="nextButtonClickCount === 1" class="mt-2 text-sm text-muted-foreground">
-                        Klicken Sie erneut auf "Weiter (Bestätigen)", um fortzufahren.
-                    </p>
                 </div>
                 <!-- Test Results -->
                 <div v-else-if="isTestComplete"></div>
