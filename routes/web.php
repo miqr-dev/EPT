@@ -8,10 +8,26 @@ use App\Http\Controllers\UserPdfController;
 use App\Http\Controllers\TestResultController;
 use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\ExamStepStatusController;
+use App\Http\Controllers\CollaborationController;
 
 Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     // All role-protected pages
     Route::get('dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
+
+    Route::prefix('collaboration')->group(function () {
+        Route::get('/', [CollaborationController::class, 'index'])->name('collaboration.index');
+        Route::post('/news', [CollaborationController::class, 'storeNews'])->name('collaboration.news.store');
+        Route::delete('/news/{news}', [CollaborationController::class, 'destroyNews'])->name('collaboration.news.destroy');
+        Route::post('/todos', [CollaborationController::class, 'storeTodo'])->name('collaboration.todos.store');
+        Route::patch('/todos/{todo}', [CollaborationController::class, 'updateTodo'])->name('collaboration.todos.update');
+        Route::delete('/todos/{todo}', [CollaborationController::class, 'destroyTodo'])->name('collaboration.todos.destroy');
+        Route::post('/suggestions', [CollaborationController::class, 'storeSuggestion'])->name('collaboration.suggestions.store');
+        Route::patch('/suggestions/{suggestion}/hide', [CollaborationController::class, 'hideSuggestion'])->name('collaboration.suggestions.hide');
+        Route::post('/suggestions/{suggestion}/vote', [CollaborationController::class, 'voteSuggestion'])->name('collaboration.suggestions.vote');
+        Route::delete('/suggestions/{suggestion}/vote', [CollaborationController::class, 'removeVote'])->name('collaboration.suggestions.vote.remove');
+        Route::post('/suggestions/{suggestion}/promote', [CollaborationController::class, 'promoteSuggestion'])->name('collaboration.suggestions.promote');
+    });
+
     Route::get('participant', [ParticipantController::class, 'showProfileForm'])->name('participant');
     Route::get('mrt-a', fn () => Inertia::render('MRT-A'))->name('mrt-a');
     Route::get('mrt-b', fn () => Inertia::render('MRT-B'))->name('mrt-b');
