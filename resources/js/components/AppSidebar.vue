@@ -24,36 +24,36 @@ const mainNavItems: NavItem[] = [
         href: '/participants/import',
         icon: Users,
     },
-    // {
-    //     title: 'BRT-A',
-    //     href: '/brt-a', // The new route for the Tests page
-    //     icon: LayoutGrid, // Placeholder icon, can be changed later
-    // },
-    // {
-    //     title: 'BRT-B',
-    //     href: '/brt-b', // The new route for the Tests page
-    //     icon: LayoutGrid, // Placeholder icon, can be changed later
-    // },
-    // {
-    //     title: 'MRT-A',
-    //     href: '/mrt-a', // The new route for the Tests page
-    //     icon: LayoutGrid, // Placeholder icon, can be changed later
-    // },
-    // {
-    //     title: 'MRT-B',
-    //     href: '/mrt-b', // The new route for the Tests page
-    //     icon: LayoutGrid, // Placeholder icon, can be changed later
-    // },
-    // {
-    //     title: 'FPI-R',
-    //     href: '/fpi-r', // The new route for the Tests page
-    //     icon: LayoutGrid, // Placeholder icon, can be changed later
-    // },
-    // {
-    //     title: 'LMT',
-    //     href: '/lmt', // The new route for the Tests page
-    //     icon: LayoutGrid, // Placeholder icon, can be changed later
-    // },
+    {
+        title: 'BRT-A',
+        href: '/brt-a', // The new route for the Tests page
+        icon: LayoutGrid, // Placeholder icon, can be changed later
+    },
+    {
+        title: 'BRT-B',
+        href: '/brt-b', // The new route for the Tests page
+        icon: LayoutGrid, // Placeholder icon, can be changed later
+    },
+    {
+        title: 'MRT-A',
+        href: '/mrt-a', // The new route for the Tests page
+        icon: LayoutGrid, // Placeholder icon, can be changed later
+    },
+    {
+        title: 'MRT-B',
+        href: '/mrt-b', // The new route for the Tests page
+        icon: LayoutGrid, // Placeholder icon, can be changed later
+    },
+    {
+        title: 'FPI-R',
+        href: '/fpi-r', // The new route for the Tests page
+        icon: LayoutGrid, // Placeholder icon, can be changed later
+    },
+    {
+        title: 'LMT',
+        href: '/lmt', // The new route for the Tests page
+        icon: LayoutGrid, // Placeholder icon, can be changed later
+    },
     // {
     //     title: 'LPS-A',
     //     href: '/lps-a',
@@ -64,11 +64,11 @@ const mainNavItems: NavItem[] = [
         href: '/lps-b',
         icon: LayoutGrid,
     },
-    // {
-    //     title: 'BIT-2',
-    //     href: '/bit-2', // The new route for the Tests page
-    //     icon: LayoutGrid, // Placeholder icon, can be changed later
-    // },
+    {
+        title: 'BIT-2',
+        href: '/bit-2', // The new route for the Tests page
+        icon: LayoutGrid, // Placeholder icon, can be changed later
+    },
     {
         title: 'BT',
         href: '/bt',
