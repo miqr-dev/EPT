@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Settings, Users } from 'lucide-vue-next'; // Added Settings
+import { LayoutGrid, Users, MessageSquare } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -83,6 +83,11 @@ const mainNavItems: NavItem[] = [
         title: '628',
         href: '/konzentrationstest',
         icon: LayoutGrid,
+    },
+    {
+        title: 'Kollaboration',
+        href: '/kollaboration',
+        icon: MessageSquare,
     },
 ];
 

@@ -8,6 +8,7 @@ use App\Http\Controllers\UserPdfController;
 use App\Http\Controllers\TestResultController;
 use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\ExamStepStatusController;
+use App\Http\Controllers\CollaborationCenterController;
 
 Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     // All role-protected pages
@@ -27,6 +28,17 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('lps-b', fn () => Inertia::render('LPS', ['testName' => 'LPS-B']))->name('lps-b');
     Route::get('lps', fn () => Inertia::render('LPS'))->name('lps');
     Route::get('konzentrationstest', fn () => Inertia::render('Konzentrationstest'))->name('konzentrationstest');
+    Route::get('/kollaboration', [CollaborationCenterController::class, 'index'])->name('collaboration.index');
+    Route::post('/kollaboration/news', [CollaborationCenterController::class, 'storeNews'])->name('collaboration.news.store');
+    Route::delete('/kollaboration/news/{news}', [CollaborationCenterController::class, 'deleteNews'])->name('collaboration.news.delete');
+    Route::post('/kollaboration/todos', [CollaborationCenterController::class, 'storeTodo'])->name('collaboration.todos.store');
+    Route::patch('/kollaboration/todos/{todo}', [CollaborationCenterController::class, 'updateTodo'])->name('collaboration.todos.update');
+    Route::delete('/kollaboration/todos/{todo}', [CollaborationCenterController::class, 'deleteTodo'])->name('collaboration.todos.delete');
+    Route::post('/kollaboration/suggestions', [CollaborationCenterController::class, 'storeSuggestion'])->name('collaboration.suggestions.store');
+    Route::post('/kollaboration/suggestions/{suggestion}/vote', [CollaborationCenterController::class, 'voteSuggestion'])->name('collaboration.suggestions.vote');
+    Route::post('/kollaboration/suggestions/{suggestion}/promote', [CollaborationCenterController::class, 'promoteSuggestion'])->name('collaboration.suggestions.promote');
+    Route::post('/kollaboration/suggestions/{suggestion}/hide', [CollaborationCenterController::class, 'hideSuggestion'])->name('collaboration.suggestions.hide');
+
     Route::post('assign-tests', [TeacherController::class, 'assignTests'])->name('assign.tests');
     Route::post('remove-tests', [TeacherController::class, 'removeTests'])->name('remove.tests');
     Route::get('/onboarding', [ParticipantController::class, 'showProfileForm'])->name('participant.onboarding');
