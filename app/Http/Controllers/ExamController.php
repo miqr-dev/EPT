@@ -282,8 +282,11 @@ class ExamController extends Controller
 
   public function getActiveExams()
   {
+    $user = Auth::user();
+
     $activeExams = Exam::with(['steps.test', 'currentStep.test'])
       ->whereIn('status', ['in_progress', 'paused'])
+      ->where('city_id', $user->city_id)
       ->get();
 
     if ($activeExams->isEmpty()) {
