@@ -272,7 +272,11 @@ const totalTimeTaken = computed(() => {
                 <div class="overflow-x-auto">
                     <table class="min-w-full table-fixed border-separate border-spacing-y-0 text-sm">
                         <tbody>
-                            <tr v-for="q in questionsOnPage" :key="q.number" class="border-t border-gray-300 dark:border-gray-700">
+                            <tr
+                                v-for="q in questionsOnPage"
+                                :key="q.number"
+                                class="border-t border-gray-300 border-b-2 border-gray-200 dark:border-gray-700"
+                            >
                                 <td class="w-1/2 py-4 pr-4 align-top font-medium whitespace-normal text-gray-800 dark:text-gray-200">
                                     {{ q.number }}. {{ q.text }}
                                 </td>
