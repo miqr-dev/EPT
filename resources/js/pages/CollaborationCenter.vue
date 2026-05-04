@@ -23,6 +23,7 @@ const todoForm = useForm({ task: '' });
 const editTodoForm = useForm({ task: '' });
 const suggestionForm = useForm({ content: '' });
 const dislikeCommentBySuggestion = ref<Record<number, string>>({});
+const showDislikeCommentInput = ref<Record<number, boolean>>({});
 
 const editingNewsId = ref<number | null>(null);
 const editingTodoId = ref<number | null>(null);
@@ -34,10 +35,16 @@ const postTodo = () => todoForm.post(route('collaboration.todos.store'), { onSuc
 const updateTodoText = () => editingTodoId.value && editTodoForm.patch(route('collaboration.todos.update', editingTodoId.value), { onSuccess: () => (editingTodoId.value = null) });
 const postSuggestion = () => suggestionForm.post(route('collaboration.suggestions.store'), { onSuccess: () => suggestionForm.reset() });
 const submitVote = (id: number, vote: 'like' | 'dislike' | null) => {
+  if (vote === 'dislike') {
+    showDislikeCommentInput.value[id] = true;
+  }
+  if (vote === 'like' || vote === null) {
+    showDislikeCommentInput.value[id] = false;
+  }
   router.post(route('collaboration.suggestions.vote', id), {
     vote,
     comment: vote === 'dislike' ? (dislikeCommentBySuggestion.value[id] ?? '') : '',
-  }, { preserveScroll: true, preserveState: true, onSuccess: () => { dislikeCommentBySuggestion.value[id] = ''; } });
+  }, { preserveScroll: true, preserveState: true, onSuccess: () => { dislikeCommentBySuggestion.value[id] = ''; showDislikeCommentInput.value[id] = false; } });
 };
 
 const openNewsEdit = (item: any) => { editingNewsId.value = item.id; editNewsForm.title = item.title; editNewsForm.content = item.content; };
@@ -52,7 +59,7 @@ const submitDislikeComment = (id: number) => {
   router.post(route('collaboration.suggestions.vote', id), {
     vote: 'dislike',
     comment: dislikeCommentBySuggestion.value[id] ?? '',
-  }, { preserveScroll: true, preserveState: true, onSuccess: () => { dislikeCommentBySuggestion.value[id] = ''; } });
+  }, { preserveScroll: true, preserveState: true, onSuccess: () => { dislikeCommentBySuggestion.value[id] = ''; showDislikeCommentInput.value[id] = false; } });
 };
 
 </script>
@@ -107,13 +114,13 @@ const submitDislikeComment = (id: number) => {
                   <Button v-if="canManageTodos" size="sm" variant="secondary" @click="useForm({}).post(route('collaboration.suggestions.hide', s.id))">Verbergen</Button>
                 </div>
 
-                <div v-if="myVote(s) === 'dislike' && !myDislikeComment(s)" class="mt-2 space-y-2">
+                <div v-if="showDislikeCommentInput[s.id] && myVote(s) === 'dislike' && !myDislikeComment(s)" class="mt-2 space-y-2">
                   <Textarea v-model="dislikeCommentBySuggestion[s.id]" placeholder="Kommentar warum du nicht zustimmst" class="text-sm" />
                   <Button size="sm" variant="secondary" @click="submitDislikeComment(s.id)">Kommentar speichern</Button>
                 </div>
 
                 <div v-if="votesFor(s, 'dislike').length" class="mt-2 space-y-1 rounded-md border border-slate-200 bg-slate-50 p-2">
-                  <p class="text-xs font-semibold text-slate-700">Dislike-Kommentare</p>
+                  <p class="text-xs font-semibold text-slate-700">Kommentare</p>
                   <p v-for="v in votesFor(s, 'dislike').filter((x:any) => x.comment)" :key="`comment-${v.id}`" class="text-xs text-slate-700">
                     {{ v.comment }} — {{ v.user?.name }} ({{ formatter.format(new Date(v.updated_at || v.created_at)) }})
                   </p>
