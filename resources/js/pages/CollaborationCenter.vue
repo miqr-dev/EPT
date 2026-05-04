@@ -42,6 +42,17 @@ const submitVote = (id: number, vote: 'like' | 'dislike' | null) => {
 
 const openNewsEdit = (item: any) => { editingNewsId.value = item.id; editNewsForm.title = item.title; editNewsForm.content = item.content; };
 const openTodoEdit = (item: any) => { editingTodoId.value = item.id; editTodoForm.task = item.task; };
+const votesFor = (suggestion: any, type: 'like' | 'dislike') => (suggestion.votes || []).filter((v: any) => v.vote === type);
+const voteCount = (suggestion: any, type: 'like' | 'dislike') => votesFor(suggestion, type).length;
+const voteNames = (suggestion: any, type: 'like' | 'dislike') => votesFor(suggestion, type).map((v: any) => v.user?.name).filter(Boolean).join(', ');
+const myVote = (suggestion: any) => (suggestion.votes || []).find((v: any) => v.user_id === pageUser.value.id)?.vote ?? null;
+const submitDislikeComment = (id: number) => {
+  router.post(route('collaboration.suggestions.vote', id), {
+    vote: 'dislike',
+    comment: dislikeCommentBySuggestion.value[id] ?? '',
+  }, { preserveScroll: true, preserveState: true });
+};
+
 </script>
 
 <template>
@@ -73,8 +84,36 @@ const openTodoEdit = (item: any) => { editingTodoId.value = item.id; editTodoFor
               <div v-for="s in suggestions" :key="s.id" class="rounded-lg border border-violet-200 bg-white p-3">
                 <p class="text-base text-slate-800">{{ s.content }}</p>
                 <p class="mt-2 text-right text-xs text-slate-500">{{ formatter.format(new Date(s.created_at)) }} · von {{ s.author?.name }}</p>
-                <div class="mt-2 flex flex-wrap gap-2"><Button size="sm" variant="outline" @click="submitVote(s.id, 'like')"><ThumbsUp class="mr-1 h-4 w-4" />Like</Button><Button size="sm" variant="outline" @click="submitVote(s.id, 'dislike')"><ThumbsDown class="mr-1 h-4 w-4" />Dislike</Button><Button v-if="s.created_by === pageUser.id" size="icon" variant="ghost" @click="useForm({}).delete(route('collaboration.suggestions.delete', s.id))"><Trash2 class="h-4 w-4 text-red-600" /></Button><Button v-if="canManageTodos" size="sm" @click="useForm({}).post(route('collaboration.suggestions.promote', s.id))">In Aufgaben übernehmen</Button><Button v-if="canManageTodos" size="sm" variant="secondary" @click="useForm({}).post(route('collaboration.suggestions.hide', s.id))">Verbergen</Button></div>
-                <Textarea v-model="dislikeCommentBySuggestion[s.id]" placeholder="Kommentar bei Dislike" class="mt-2 text-sm" />
+                <div class="mt-2 flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    :variant="myVote(s) === 'like' ? 'default' : 'outline'"
+                    :class="myVote(s) === 'like' ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''"
+                    :title="voteNames(s, 'like') || 'Noch keine Likes'"
+                    @click="submitVote(s.id, 'like')"
+                  ><ThumbsUp class="mr-1 h-4 w-4" />Like ({{ voteCount(s, 'like') }})</Button>
+                  <Button
+                    size="sm"
+                    :variant="myVote(s) === 'dislike' ? 'destructive' : 'outline'"
+                    :title="voteNames(s, 'dislike') || 'Noch keine Dislikes'"
+                    @click="submitVote(s.id, 'dislike')"
+                  ><ThumbsDown class="mr-1 h-4 w-4" />Dislike ({{ voteCount(s, 'dislike') }})</Button>
+                  <Button v-if="s.created_by === pageUser.id" size="icon" variant="ghost" @click="useForm({}).delete(route('collaboration.suggestions.delete', s.id))"><Trash2 class="h-4 w-4 text-red-600" /></Button>
+                  <Button v-if="canManageTodos" size="sm" @click="useForm({}).post(route('collaboration.suggestions.promote', s.id))">In Aufgaben übernehmen</Button>
+                  <Button v-if="canManageTodos" size="sm" variant="secondary" @click="useForm({}).post(route('collaboration.suggestions.hide', s.id))">Verbergen</Button>
+                </div>
+
+                <div v-if="myVote(s) === 'dislike'" class="mt-2 space-y-2">
+                  <Textarea v-model="dislikeCommentBySuggestion[s.id]" placeholder="Kommentar warum du nicht zustimmst" class="text-sm" />
+                  <Button size="sm" variant="secondary" @click="submitDislikeComment(s.id)">Kommentar speichern</Button>
+                </div>
+
+                <div v-if="votesFor(s, 'dislike').length" class="mt-2 space-y-1 rounded-md border border-red-200 bg-red-50 p-2">
+                  <p class="text-xs font-semibold text-red-700">Dislike-Kommentare</p>
+                  <p v-for="v in votesFor(s, 'dislike').filter((x:any) => x.comment)" :key="`comment-${v.id}`" class="text-xs text-red-700">
+                    {{ v.comment }} — {{ v.user?.name }} ({{ formatter.format(new Date(v.updated_at || v.created_at)) }})
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
