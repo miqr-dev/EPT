@@ -115,6 +115,16 @@ class CollaborationCenterController extends Controller
         return back();
     }
 
+
+    public function deleteSuggestion(Request $request, CollaborationSuggestion $suggestion): RedirectResponse
+    {
+        abort_unless(in_array($request->user()?->role, ['admin', 'teacher'], true), 403);
+        abort_unless($suggestion->created_by === $request->user()->id, 403);
+
+        $suggestion->delete();
+        return back();
+    }
+
     public function hideSuggestion(Request $request, CollaborationSuggestion $suggestion): RedirectResponse
     {
         abort_unless($request->user()?->role === 'admin', 403);

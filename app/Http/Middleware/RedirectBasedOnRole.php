@@ -91,6 +91,7 @@ class RedirectBasedOnRole
         'collaboration.suggestions.store',
         'collaboration.suggestions.vote',
         'collaboration.suggestions.promote',
+        'collaboration.suggestions.delete',
         'collaboration.suggestions.hide',
         'api.active-exams',
         'exams.updateSteps',

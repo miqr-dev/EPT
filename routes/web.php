@@ -38,6 +38,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::post('/kollaboration/suggestions', [CollaborationCenterController::class, 'storeSuggestion'])->name('collaboration.suggestions.store');
     Route::post('/kollaboration/suggestions/{suggestion}/vote', [CollaborationCenterController::class, 'voteSuggestion'])->name('collaboration.suggestions.vote');
     Route::post('/kollaboration/suggestions/{suggestion}/promote', [CollaborationCenterController::class, 'promoteSuggestion'])->name('collaboration.suggestions.promote');
+    Route::delete('/kollaboration/suggestions/{suggestion}', [CollaborationCenterController::class, 'deleteSuggestion'])->name('collaboration.suggestions.delete');
     Route::post('/kollaboration/suggestions/{suggestion}/hide', [CollaborationCenterController::class, 'hideSuggestion'])->name('collaboration.suggestions.hide');
 
     Route::post('assign-tests', [TeacherController::class, 'assignTests'])->name('assign.tests');
