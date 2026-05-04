@@ -37,7 +37,7 @@ const submitVote = (id: number, vote: 'like' | 'dislike' | null) => {
   router.post(route('collaboration.suggestions.vote', id), {
     vote,
     comment: vote === 'dislike' ? (dislikeCommentBySuggestion.value[id] ?? '') : '',
-  }, { preserveScroll: true, preserveState: true });
+  }, { preserveScroll: true, preserveState: true, onSuccess: () => { dislikeCommentBySuggestion.value[id] = ''; } });
 };
 
 const openNewsEdit = (item: any) => { editingNewsId.value = item.id; editNewsForm.title = item.title; editNewsForm.content = item.content; };
@@ -46,11 +46,13 @@ const votesFor = (suggestion: any, type: 'like' | 'dislike') => (suggestion.vote
 const voteCount = (suggestion: any, type: 'like' | 'dislike') => votesFor(suggestion, type).length;
 const voteNames = (suggestion: any, type: 'like' | 'dislike') => votesFor(suggestion, type).map((v: any) => v.user?.name).filter(Boolean).join(', ');
 const myVote = (suggestion: any) => (suggestion.votes || []).find((v: any) => v.user_id === pageUser.value.id)?.vote ?? null;
+const myDislikeComment = (suggestion: any) => (suggestion.votes || []).find((v: any) => v.user_id === pageUser.value.id && v.vote === 'dislike')?.comment ?? '';
+const canVoteOn = (suggestion: any) => suggestion.created_by !== pageUser.value.id;
 const submitDislikeComment = (id: number) => {
   router.post(route('collaboration.suggestions.vote', id), {
     vote: 'dislike',
     comment: dislikeCommentBySuggestion.value[id] ?? '',
-  }, { preserveScroll: true, preserveState: true });
+  }, { preserveScroll: true, preserveState: true, onSuccess: () => { dislikeCommentBySuggestion.value[id] = ''; } });
 };
 
 </script>
@@ -89,28 +91,30 @@ const submitDislikeComment = (id: number) => {
                     size="sm"
                     :variant="myVote(s) === 'like' ? 'default' : 'outline'"
                     :class="myVote(s) === 'like' ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''"
-                    :title="voteNames(s, 'like') || 'Noch keine Likes'"
+                    :title="canVoteOn(s) ? (voteNames(s, 'like') || 'Noch keine Likes') : 'Eigene Vorschläge können nicht bewertet werden'"
+                    :disabled="!canVoteOn(s)"
                     @click="submitVote(s.id, 'like')"
-                  ><ThumbsUp class="mr-1 h-4 w-4" />Like ({{ voteCount(s, 'like') }})</Button>
+                  ><ThumbsUp class="mr-1 h-4 w-4" />Like{{ voteCount(s, 'like') ? ` ${voteCount(s, 'like')}` : '' }}</Button>
                   <Button
                     size="sm"
-                    :variant="myVote(s) === 'dislike' ? 'destructive' : 'outline'"
-                    :title="voteNames(s, 'dislike') || 'Noch keine Dislikes'"
+                    :variant="myVote(s) === 'dislike' ? 'secondary' : 'outline'"
+                    :title="canVoteOn(s) ? (voteNames(s, 'dislike') || 'Noch keine Dislikes') : 'Eigene Vorschläge können nicht bewertet werden'"
+                    :disabled="!canVoteOn(s)"
                     @click="submitVote(s.id, 'dislike')"
-                  ><ThumbsDown class="mr-1 h-4 w-4" />Dislike ({{ voteCount(s, 'dislike') }})</Button>
+                  ><ThumbsDown class="mr-1 h-4 w-4" />Dislike{{ voteCount(s, 'dislike') ? ` ${voteCount(s, 'dislike')}` : '' }}</Button>
                   <Button v-if="s.created_by === pageUser.id" size="icon" variant="ghost" @click="useForm({}).delete(route('collaboration.suggestions.delete', s.id))"><Trash2 class="h-4 w-4 text-red-600" /></Button>
                   <Button v-if="canManageTodos" size="sm" @click="useForm({}).post(route('collaboration.suggestions.promote', s.id))">In Aufgaben übernehmen</Button>
                   <Button v-if="canManageTodos" size="sm" variant="secondary" @click="useForm({}).post(route('collaboration.suggestions.hide', s.id))">Verbergen</Button>
                 </div>
 
-                <div v-if="myVote(s) === 'dislike'" class="mt-2 space-y-2">
+                <div v-if="myVote(s) === 'dislike' && !myDislikeComment(s)" class="mt-2 space-y-2">
                   <Textarea v-model="dislikeCommentBySuggestion[s.id]" placeholder="Kommentar warum du nicht zustimmst" class="text-sm" />
                   <Button size="sm" variant="secondary" @click="submitDislikeComment(s.id)">Kommentar speichern</Button>
                 </div>
 
-                <div v-if="votesFor(s, 'dislike').length" class="mt-2 space-y-1 rounded-md border border-red-200 bg-red-50 p-2">
-                  <p class="text-xs font-semibold text-red-700">Dislike-Kommentare</p>
-                  <p v-for="v in votesFor(s, 'dislike').filter((x:any) => x.comment)" :key="`comment-${v.id}`" class="text-xs text-red-700">
+                <div v-if="votesFor(s, 'dislike').length" class="mt-2 space-y-1 rounded-md border border-slate-200 bg-slate-50 p-2">
+                  <p class="text-xs font-semibold text-slate-700">Dislike-Kommentare</p>
+                  <p v-for="v in votesFor(s, 'dislike').filter((x:any) => x.comment)" :key="`comment-${v.id}`" class="text-xs text-slate-700">
                     {{ v.comment }} — {{ v.user?.name }} ({{ formatter.format(new Date(v.updated_at || v.created_at)) }})
                   </p>
                 </div>
