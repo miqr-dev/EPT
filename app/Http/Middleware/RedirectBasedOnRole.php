@@ -83,6 +83,7 @@ class RedirectBasedOnRole
         'konzentrationstest',
         'collaboration.index',
         'collaboration.news.store',
+        'collaboration.news.update',
         'collaboration.news.delete',
         'collaboration.todos.store',
         'collaboration.todos.update',

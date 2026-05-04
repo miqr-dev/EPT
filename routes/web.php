@@ -30,6 +30,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('konzentrationstest', fn () => Inertia::render('Konzentrationstest'))->name('konzentrationstest');
     Route::get('/kollaboration', [CollaborationCenterController::class, 'index'])->name('collaboration.index');
     Route::post('/kollaboration/news', [CollaborationCenterController::class, 'storeNews'])->name('collaboration.news.store');
+    Route::patch('/kollaboration/news/{news}', [CollaborationCenterController::class, 'updateNews'])->name('collaboration.news.update');
     Route::delete('/kollaboration/news/{news}', [CollaborationCenterController::class, 'deleteNews'])->name('collaboration.news.delete');
     Route::post('/kollaboration/todos', [CollaborationCenterController::class, 'storeTodo'])->name('collaboration.todos.store');
     Route::patch('/kollaboration/todos/{todo}', [CollaborationCenterController::class, 'updateTodo'])->name('collaboration.todos.update');

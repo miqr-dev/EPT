@@ -35,6 +35,14 @@ class CollaborationCenterController extends Controller
         return back();
     }
 
+    public function updateNews(Request $request, CollaborationNews $news): RedirectResponse
+    {
+        abort_unless($request->user()?->role === 'admin', 403);
+        $data = $request->validate(['title' => 'required|string|max:255', 'content' => 'required|string']);
+        $news->update($data);
+        return back();
+    }
+
     public function deleteNews(Request $request, CollaborationNews $news): RedirectResponse
     {
         abort_unless($request->user()?->role === 'admin', 403);
@@ -68,8 +76,8 @@ class CollaborationCenterController extends Controller
     public function storeSuggestion(Request $request): RedirectResponse
     {
         abort_unless(in_array($request->user()?->role, ['admin', 'teacher'], true), 403);
-        $data = $request->validate(['title' => 'required|string|max:255', 'content' => 'required|string']);
-        CollaborationSuggestion::create($data + ['created_by' => $request->user()->id]);
+        $data = $request->validate(['content' => 'required|string']);
+        CollaborationSuggestion::create(['title' => 'Vorschlag', 'content' => $data['content'], 'created_by' => $request->user()->id]);
         return back();
     }
 
