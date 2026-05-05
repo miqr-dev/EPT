@@ -100,12 +100,17 @@ class CollaborationCenterController extends Controller
             ->first();
 
         $comment = $existingVote?->comment;
-        if (($data['delete_comment'] ?? false) === true) {
+
+        if ($data['vote'] === 'like') {
             $comment = null;
+        } elseif ($data['vote'] === 'dislike') {
+            if (array_key_exists('comment', $data)) {
+                $comment = $data['comment'];
+            }
         }
 
-        if ($data['vote'] === 'dislike') {
-            $comment = $data['comment'] ?? $comment;
+        if (($data['delete_comment'] ?? false) === true) {
+            $comment = null;
         }
 
         CollaborationSuggestionVote::updateOrCreate(
@@ -139,10 +144,4 @@ class CollaborationCenterController extends Controller
         return back();
     }
 
-    public function hideSuggestion(Request $request, CollaborationSuggestion $suggestion): RedirectResponse
-    {
-        abort_unless($request->user()?->role === 'admin', 403);
-        $suggestion->update(['is_hidden' => true]);
-        return back();
-    }
 }
