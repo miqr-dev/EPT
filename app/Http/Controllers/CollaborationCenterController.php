@@ -100,12 +100,17 @@ class CollaborationCenterController extends Controller
             ->first();
 
         $comment = $existingVote?->comment;
-        if (($data['delete_comment'] ?? false) === true) {
+
+        if ($data['vote'] === 'like') {
             $comment = null;
+        } elseif ($data['vote'] === 'dislike') {
+            if (array_key_exists('comment', $data)) {
+                $comment = $data['comment'];
+            }
         }
 
-        if ($data['vote'] === 'dislike') {
-            $comment = $data['comment'] ?? $comment;
+        if (($data['delete_comment'] ?? false) === true) {
+            $comment = null;
         }
 
         CollaborationSuggestionVote::updateOrCreate(

@@ -34,16 +34,30 @@ const updateNews = () => editingNewsId.value && editNewsForm.patch(route('collab
 const postTodo = () => todoForm.post(route('collaboration.todos.store'), { onSuccess: () => todoForm.reset() });
 const updateTodoText = () => editingTodoId.value && editTodoForm.patch(route('collaboration.todos.update', editingTodoId.value), { onSuccess: () => (editingTodoId.value = null) });
 const postSuggestion = () => suggestionForm.post(route('collaboration.suggestions.store'), { onSuccess: () => suggestionForm.reset() });
-const submitVote = (id: number, vote: 'like' | 'dislike' | null) => {
+const submitVote = (id: number, vote: 'like' | 'dislike' | null, suggestion: any) => {
+  const currentVote = myVote(suggestion);
+
+  if (vote === currentVote) {
+    return; // Double click on same button does nothing
+  }
+
+  if (vote === 'like') {
+    const currentComment = myDislikeComment(suggestion);
+    if (currentComment) {
+      if (!confirm('Wenn Sie zu "Like" wechseln, wird Ihr Kommentar gelöscht. Fortfahren?')) {
+        return;
+      }
+    }
+  }
+
   if (vote === 'dislike') {
     showDislikeCommentInput.value[id] = true;
+    dislikeCommentBySuggestion.value[id] = myDislikeComment(suggestion) || '';
+    return; // Don't submit yet, wait for comment
   }
-  if (vote === 'like' || vote === null) {
-    showDislikeCommentInput.value[id] = false;
-  }
+
   router.post(route('collaboration.suggestions.vote', id), {
     vote,
-    comment: vote === 'dislike' ? (dislikeCommentBySuggestion.value[id] ?? '') : '',
   }, { preserveScroll: true, preserveState: true, onSuccess: () => { dislikeCommentBySuggestion.value[id] = ''; showDislikeCommentInput.value[id] = false; } });
 };
 
@@ -111,16 +125,38 @@ const submitDislikeComment = (id: number) => {
                   <Button v-if="canManageTodos" size="sm" variant="secondary" @click="useForm({}).post(route('collaboration.suggestions.hide', s.id))">Verbergen</Button>
                 </div>
 
-                <div v-if="showDislikeCommentInput[s.id] && !myDislikeComment(s)" class="mt-2 space-y-2">
-                  <Textarea v-model="dislikeCommentBySuggestion[s.id]" placeholder="what's the problem?" class="text-sm" />
-                  <Button size="sm" variant="secondary" @click="submitDislikeComment(s.id)">Kommentar speichern</Button>
+                <div v-if="showDislikeCommentInput[s.id]" class="mt-2 space-y-2">
+                  <Textarea
+                    v-model="dislikeCommentBySuggestion[s.id]"
+                    placeholder="(why you didn’t like the idea)"
+                    class="text-sm"
+                    @keydown.enter.prevent="submitDislikeComment(s.id)"
+                  />
+                  <div class="flex justify-end gap-2">
+                    <Button size="sm" variant="ghost" @click="showDislikeCommentInput[s.id] = false">Abbrechen</Button>
+                    <Button size="sm" variant="secondary" @click="submitDislikeComment(s.id)">Kommentar speichern</Button>
+                  </div>
                 </div>
 
                 <div v-if="votesFor(s, 'dislike').length" class="mt-2 space-y-1 rounded-md border border-slate-200 bg-slate-50 p-2">
-                                    <div v-for="v in votesFor(s, 'dislike').filter((x:any) => x.comment)" :key="`comment-${v.id}`" class="space-y-1">
+                  <div v-for="v in votesFor(s, 'dislike').filter((x:any) => x.comment)" :key="`comment-${v.id}`" class="group relative space-y-1">
                     <p class="text-xs font-medium text-slate-700">{{ v.user?.name }}</p>
-                    <div class="rounded-md border border-slate-200 bg-white p-2 text-xs text-slate-700">{{ v.comment }}</div>
-                    <p class="text-right text-[11px] text-slate-500">{{ formatter.format(new Date(v.updated_at || v.created_at)) }}</p>
+                    <div class="rounded-md border border-slate-200 bg-white p-2 text-xs text-slate-700">
+                      {{ v.comment }}
+                      <Button
+                        v-if="v.user_id === pageUser.id"
+                        size="icon"
+                        variant="ghost"
+                        class="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+                        @click="() => { showDislikeCommentInput[s.id] = true; dislikeCommentBySuggestion[s.id] = v.comment; }"
+                      >
+                        <Pencil class="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <p class="text-right text-[11px] text-slate-500">
+                      <span v-if="v.updated_at && v.updated_at !== v.created_at">bearbeitet am </span>
+                      {{ formatter.format(new Date(v.updated_at || v.created_at)) }}
+                    </p>
                   </div>
                 </div>
               </div>
