@@ -92,6 +92,7 @@ const userAnswers = ref<(number | null)[]>(Array(questions.value.length).fill(nu
 const questionTimes = ref<number[]>(Array(questions.value.length).fill(0));
 const questionStartTimestamps = ref<(number | null)[]>(Array(questions.value.length).fill(null));
 const startTime = ref<number | null>(null);
+const completedAt = ref<number | null>(null);
 
 const totalPages = computed(() => Math.ceil(questions.value.length / questionsPerPage));
 
@@ -132,6 +133,7 @@ function startTest() {
     questionTimes.value = Array(questions.value.length).fill(0);
     questionStartTimestamps.value = Array(questions.value.length).fill(null);
     startTime.value = Date.now();
+    completedAt.value = null;
 
     // Start timing for visible questions
     questionsOnPage.value.forEach((q) => {
@@ -187,6 +189,7 @@ function stopTimingCurrentPage() {
 
 function completeTest() {
     stopTimingCurrentPage();
+    completedAt.value = Date.now();
     isTestComplete.value = true;
     showTest.value = false;
 }
@@ -242,7 +245,10 @@ function formatTime(sec: number | null): string {
 }
 
 const totalTimeTaken = computed(() => {
-    return isTestComplete.value ? questionTimes.value.reduce((a, b) => a + b, 0) : null;
+    if (!isTestComplete.value || startTime.value === null || completedAt.value === null) {
+        return null;
+    }
+    return Math.round((completedAt.value - startTime.value) / 1000);
 });
 </script>
 
