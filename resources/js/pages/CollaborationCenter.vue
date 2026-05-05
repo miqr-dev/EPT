@@ -10,7 +10,7 @@ import Input from '@/components/ui/input/Input.vue';
 import Textarea from '@/components/ui/textarea/Textarea.vue';
 import { Check, Pencil, Plus, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-vue-next';
 
-defineProps<{ newsItems: any[]; todos: any[]; suggestions: any[] }>();
+const props = defineProps<{ newsItems: any[]; todos: any[]; suggestions: any[] }>();
 const pageUser = computed(() => (usePage().props.auth as any).user);
 const role = computed(() => pageUser.value.role);
 
@@ -30,6 +30,10 @@ const editingTodoId = ref<number | null>(null);
 const showNewsDialog = ref(false);
 const showTodoDialog = ref(false);
 const showSuggestionDialog = ref(false);
+const activeTab = ref<'news' | 'suggestions' | 'todos'>('news');
+
+const recentSuggestions = computed(() => [...props.suggestions].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 3));
+const recentTodos = computed(() => [...props.todos].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 3));
 
 const formatter = new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
 
@@ -43,7 +47,7 @@ const submitVote = (id: number, vote: 'like' | 'dislike' | null, suggestion: any
   const currentVote = myVote(suggestion);
 
   if (vote === currentVote) {
-    return; // Double click on same button does nothing
+    return;
   }
 
   if (vote === 'like') {
@@ -58,7 +62,7 @@ const submitVote = (id: number, vote: 'like' | 'dislike' | null, suggestion: any
   if (vote === 'dislike') {
     showDislikeCommentInput.value[id] = true;
     dislikeCommentBySuggestion.value[id] = myDislikeComment(suggestion) || '';
-    return; // Don't submit yet, wait for comment
+    return;
   }
 
   router.post(route('collaboration.suggestions.vote', id), {
@@ -105,7 +109,6 @@ const toggleTodoCompleted = (todo: any) => {
 const promoteSuggestion = (id: number) => {
   router.post(route('collaboration.suggestions.promote', id));
 };
-
 </script>
 
 <template>
@@ -114,97 +117,105 @@ const promoteSuggestion = (id: number) => {
     <div class="space-y-5 p-6">
       <h1 class="text-2xl font-bold">Kollaboration</h1>
 
-      <div class="grid grid-cols-1 gap-4 xl:grid-cols-12">
-        <section class="xl:col-span-8">
-          <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-semibold text-[#661421]">Neuigkeiten & Updates</h2><Dialog v-if="canManageNews" :open="showNewsDialog" @update:open="(val) => showNewsDialog = val"><DialogTrigger as-child><Button size="icon"><Plus class="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Update veröffentlichen</DialogTitle></DialogHeader><Input v-model="newsForm.title" placeholder="Titel" /><Textarea v-model="newsForm.content" placeholder="Information" /><DialogFooter><Button @click="postNews">Speichern</Button></DialogFooter></DialogContent></Dialog></div>
-          <div class="space-y-4 rounded-xl border border-[#661421]/20 bg-[#661421]/5 p-4">
-            <article v-for="item in newsItems" :key="item.id" class="pb-4">
-              <div class="mb-1 flex items-start justify-between gap-3"><h3 class="text-lg font-semibold text-[#661421]">{{ item.title }}</h3><div class="flex gap-1" v-if="canManageNews"><Button size="icon" variant="ghost" @click="openNewsEdit(item)"><Pencil class="h-4 w-4" /></Button><Button size="icon" variant="ghost" @click="deleteNews(item.id)"><Trash2 class="h-4 w-4 text-red-600" /></Button></div></div>
-              <p class="text-base leading-7 text-slate-800">{{ item.content }}</p>
-              <p class="mt-2 text-right text-sm text-slate-500">{{ formatter.format(new Date(item.created_at)) }} · von {{ item.author?.name }}</p>
-              <hr class="mt-4 border-[#661421]/20" />
-            </article>
-          </div>
-        </section>
-
-        <section class="xl:col-span-4 xl:row-span-2">
-          <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-semibold text-violet-900">Vorschläge</h2><Dialog :open="showSuggestionDialog" @update:open="(val) => showSuggestionDialog = val"><DialogTrigger as-child><Button size="icon"><Plus class="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Vorschlag erstellen</DialogTitle><DialogDescription>Ohne Titel, kurz und konkret.</DialogDescription></DialogHeader><Textarea v-model="suggestionForm.content" placeholder="Dein Vorschlag" /><DialogFooter><Button @click="postSuggestion">Senden</Button></DialogFooter></DialogContent></Dialog></div>
-          <Card class="h-full border-violet-300 bg-violet-50/50">
-            <CardContent class="space-y-3">
-              <div v-for="s in suggestions" :key="s.id" class="rounded-lg border border-violet-200 bg-white p-3">
-                <p class="text-base text-slate-800">{{ s.content }}</p>
-                <p class="mt-2 text-right text-xs text-slate-500">{{ formatter.format(new Date(s.created_at)) }} · von {{ s.author?.name }}</p>
-                <div class="mt-2 flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    :variant="myVote(s) === 'like' ? 'default' : 'outline'"
-                    :class="myVote(s) === 'like' ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''"
-                    :title="canVoteOn(s) ? (voteNames(s, 'like') || 'Noch keine Likes') : 'Eigene Vorschläge können nicht bewertet werden'"
-                    :disabled="!canVoteOn(s)"
-                    @click="submitVote(s.id, 'like', s)"
-                  ><ThumbsUp class="mr-1 h-4 w-4" />Like{{ voteCount(s, 'like') ? ` ${voteCount(s, 'like')}` : '' }}</Button>
-                  <Button
-                    size="sm"
-                    :variant="myVote(s) === 'dislike' ? 'destructive' : 'outline'"
-                    :title="canVoteOn(s) ? (voteNames(s, 'dislike') || 'Noch keine Dislikes') : 'Eigene Vorschläge können nicht bewertet werden'"
-                    :disabled="!canVoteOn(s)"
-                    @click="submitVote(s.id, 'dislike', s)"
-                  ><ThumbsDown class="mr-1 h-4 w-4" />Dislike{{ voteCount(s, 'dislike') ? ` ${voteCount(s, 'dislike')}` : '' }}</Button>
-                  <Button v-if="s.created_by === pageUser.id" size="icon" variant="ghost" @click="deleteSuggestion(s.id)"><Trash2 class="h-4 w-4 text-red-600" /></Button>
-                  <Button v-if="canManageTodos" size="sm" @click="promoteSuggestion(s.id)">In Aufgaben übernehmen</Button>
-                </div>
-
-                <div v-if="showDislikeCommentInput[s.id]" class="mt-2 space-y-2">
-                  <Textarea
-                    v-model="dislikeCommentBySuggestion[s.id]"
-                    placeholder="(why you didn’t like the idea)"
-                    class="text-sm"
-                    @keydown.enter.prevent="submitDislikeComment(s.id)"
-                  />
-                  <div class="flex justify-end gap-2">
-                    <Button size="sm" variant="ghost" @click="showDislikeCommentInput[s.id] = false">Abbrechen</Button>
-                    <Button size="sm" variant="secondary" @click="submitDislikeComment(s.id)">Kommentar speichern</Button>
-                  </div>
-                </div>
-
-                <div v-if="votesFor(s, 'dislike').length" class="mt-2 space-y-1 rounded-md border border-slate-200 bg-slate-50 p-2">
-                  <div v-for="v in votesFor(s, 'dislike').filter((x:any) => x.comment)" :key="`comment-${v.id}`" class="group relative space-y-1">
-                    <p class="text-xs font-medium text-slate-700">{{ v.user?.name }}</p>
-                    <div class="rounded-md border border-slate-200 bg-white p-2 text-xs text-slate-700">
-                      {{ v.comment }}
-                      <Button
-                        v-if="v.user_id === pageUser.id"
-                        size="icon"
-                        variant="ghost"
-                        class="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
-                        @click="() => { showDislikeCommentInput[s.id] = true; dislikeCommentBySuggestion[s.id] = v.comment; }"
-                      >
-                        <Pencil class="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <p class="text-right text-[11px] text-slate-500">
-                      <span v-if="v.updated_at && v.updated_at !== v.created_at">bearbeitet am </span>
-                      {{ formatter.format(new Date(v.updated_at || v.created_at)) }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        <section class="xl:col-span-3">
-          <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-semibold text-blue-900">Todos</h2><Dialog v-if="canManageTodos" :open="showTodoDialog" @update:open="(val) => showTodoDialog = val"><DialogTrigger as-child><Button size="icon"><Plus class="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Todo anlegen</DialogTitle><DialogDescription>Für alle sichtbar.</DialogDescription></DialogHeader><Textarea v-model="todoForm.task" placeholder="Aufgabe" /><DialogFooter><Button @click="postTodo">Speichern</Button></DialogFooter></DialogContent></Dialog></div>
-          <Card class="border-blue-300 bg-blue-50/60">
-            <CardContent class="space-y-3">
-              <div v-for="todo in todos" :key="todo.id" class="rounded-lg border border-blue-200 bg-white p-3">
-                <div class="flex items-start gap-2"><Button v-if="canManageTodos" size="icon" variant="outline" @click="toggleTodoCompleted(todo)"><Check class="h-4 w-4" /></Button><p class="flex-1" :class="{ 'line-through text-slate-500': todo.is_completed }">{{ todo.task }}</p><Badge :variant="todo.is_completed ? 'secondary' : 'outline'">{{ todo.is_completed ? 'Erledigt' : 'Aktiv' }}</Badge><Button v-if="canManageTodos" size="icon" variant="ghost" @click="openTodoEdit(todo)"><Pencil class="h-4 w-4" /></Button><Button v-if="canManageTodos" size="icon" variant="ghost" @click="deleteTodo(todo.id)"><Trash2 class="h-4 w-4 text-red-600" /></Button></div>
-                <p class="mt-2 text-right text-xs text-slate-500">{{ formatter.format(new Date(todo.created_at)) }} · von {{ todo.author?.name }}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+      <div class="flex flex-wrap gap-2 rounded-xl border bg-white p-2">
+        <Button :variant="activeTab === 'news' ? 'default' : 'outline'" @click="activeTab = 'news'">Neuigkeiten & Updates</Button>
+        <Button :variant="activeTab === 'suggestions' ? 'default' : 'outline'" @click="activeTab = 'suggestions'">Vorschläge</Button>
+        <Button :variant="activeTab === 'todos' ? 'default' : 'outline'" @click="activeTab = 'todos'">Todos</Button>
       </div>
+
+      <section v-if="activeTab === 'news'" class="space-y-4">
+        <Card class="border-amber-300 bg-amber-50/60">
+          <CardContent class="space-y-4 p-4">
+            <h2 class="text-lg font-semibold text-amber-900">Zusammenfassung neuer Vorschläge & Todos</h2>
+            <div class="grid gap-4 md:grid-cols-2">
+              <div class="space-y-2 rounded-lg border border-violet-200 bg-white p-3">
+                <p class="font-medium text-violet-900">Neueste Vorschläge</p>
+                <p class="text-sm text-slate-600">Gesamt: {{ suggestions.length }}</p>
+                <div v-if="recentSuggestions.length" class="space-y-2">
+                  <div v-for="item in recentSuggestions" :key="`summary-s-${item.id}`" class="rounded-md border border-violet-100 p-2 text-sm">
+                    <p>{{ item.content }}</p>
+                    <p class="mt-1 text-right text-xs text-slate-500">{{ formatter.format(new Date(item.created_at)) }}</p>
+                  </div>
+                </div>
+                <p v-else class="text-sm text-slate-500">Noch keine Vorschläge vorhanden.</p>
+              </div>
+
+              <div class="space-y-2 rounded-lg border border-blue-200 bg-white p-3">
+                <p class="font-medium text-blue-900">Neueste Todos</p>
+                <p class="text-sm text-slate-600">Gesamt: {{ todos.length }}</p>
+                <div v-if="recentTodos.length" class="space-y-2">
+                  <div v-for="item in recentTodos" :key="`summary-t-${item.id}`" class="rounded-md border border-blue-100 p-2 text-sm">
+                    <p>{{ item.task }}</p>
+                    <p class="mt-1 text-right text-xs text-slate-500">{{ formatter.format(new Date(item.created_at)) }}</p>
+                  </div>
+                </div>
+                <p v-else class="text-sm text-slate-500">Noch keine Todos vorhanden.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-semibold text-[#661421]">Neuigkeiten & Updates</h2><Dialog v-if="canManageNews" :open="showNewsDialog" @update:open="(val) => showNewsDialog = val"><DialogTrigger as-child><Button size="icon"><Plus class="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Update veröffentlichen</DialogTitle></DialogHeader><Input v-model="newsForm.title" placeholder="Titel" /><Textarea v-model="newsForm.content" placeholder="Information" /><DialogFooter><Button @click="postNews">Speichern</Button></DialogFooter></DialogContent></Dialog></div>
+        <div class="space-y-4 rounded-xl border border-[#661421]/20 bg-[#661421]/5 p-4">
+          <article v-for="item in newsItems" :key="item.id" class="pb-4">
+            <div class="mb-1 flex items-start justify-between gap-3"><h3 class="text-lg font-semibold text-[#661421]">{{ item.title }}</h3><div class="flex gap-1" v-if="canManageNews"><Button size="icon" variant="ghost" @click="openNewsEdit(item)"><Pencil class="h-4 w-4" /></Button><Button size="icon" variant="ghost" @click="deleteNews(item.id)"><Trash2 class="h-4 w-4 text-red-600" /></Button></div></div>
+            <p class="text-base leading-7 text-slate-800">{{ item.content }}</p>
+            <p class="mt-2 text-right text-sm text-slate-500">{{ formatter.format(new Date(item.created_at)) }} · von {{ item.author?.name }}</p>
+            <hr class="mt-4 border-[#661421]/20" />
+          </article>
+        </div>
+      </section>
+
+      <section v-if="activeTab === 'suggestions'">
+        <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-semibold text-violet-900">Vorschläge</h2><Dialog :open="showSuggestionDialog" @update:open="(val) => showSuggestionDialog = val"><DialogTrigger as-child><Button size="icon"><Plus class="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Vorschlag erstellen</DialogTitle><DialogDescription>Ohne Titel, kurz und konkret.</DialogDescription></DialogHeader><Textarea v-model="suggestionForm.content" placeholder="Dein Vorschlag" /><DialogFooter><Button @click="postSuggestion">Senden</Button></DialogFooter></DialogContent></Dialog></div>
+        <Card class="border-violet-300 bg-violet-50/50">
+          <CardContent class="space-y-3">
+            <div v-for="s in suggestions" :key="s.id" class="rounded-lg border border-violet-200 bg-white p-3">
+              <p class="text-base text-slate-800">{{ s.content }}</p>
+              <p class="mt-2 text-right text-xs text-slate-500">{{ formatter.format(new Date(s.created_at)) }} · von {{ s.author?.name }}</p>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <Button size="sm" :variant="myVote(s) === 'like' ? 'default' : 'outline'" :class="myVote(s) === 'like' ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''" :title="canVoteOn(s) ? (voteNames(s, 'like') || 'Noch keine Likes') : 'Eigene Vorschläge können nicht bewertet werden'" :disabled="!canVoteOn(s)" @click="submitVote(s.id, 'like', s)"><ThumbsUp class="mr-1 h-4 w-4" />Like{{ voteCount(s, 'like') ? ` ${voteCount(s, 'like')}` : '' }}</Button>
+                <Button size="sm" :variant="myVote(s) === 'dislike' ? 'destructive' : 'outline'" :title="canVoteOn(s) ? (voteNames(s, 'dislike') || 'Noch keine Dislikes') : 'Eigene Vorschläge können nicht bewertet werden'" :disabled="!canVoteOn(s)" @click="submitVote(s.id, 'dislike', s)"><ThumbsDown class="mr-1 h-4 w-4" />Dislike{{ voteCount(s, 'dislike') ? ` ${voteCount(s, 'dislike')}` : '' }}</Button>
+                <Button v-if="s.created_by === pageUser.id" size="icon" variant="ghost" @click="deleteSuggestion(s.id)"><Trash2 class="h-4 w-4 text-red-600" /></Button>
+                <Button v-if="canManageTodos" size="sm" @click="promoteSuggestion(s.id)">In Aufgaben übernehmen</Button>
+              </div>
+
+              <div v-if="showDislikeCommentInput[s.id]" class="mt-2 space-y-2">
+                <Textarea v-model="dislikeCommentBySuggestion[s.id]" placeholder="(why you didn’t like the idea)" class="text-sm" @keydown.enter.prevent="submitDislikeComment(s.id)" />
+                <div class="flex justify-end gap-2">
+                  <Button size="sm" variant="ghost" @click="showDislikeCommentInput[s.id] = false">Abbrechen</Button>
+                  <Button size="sm" variant="secondary" @click="submitDislikeComment(s.id)">Kommentar speichern</Button>
+                </div>
+              </div>
+
+              <div v-if="votesFor(s, 'dislike').length" class="mt-2 space-y-1 rounded-md border border-slate-200 bg-slate-50 p-2">
+                <div v-for="v in votesFor(s, 'dislike').filter((x:any) => x.comment)" :key="`comment-${v.id}`" class="group relative space-y-1">
+                  <p class="text-xs font-medium text-slate-700">{{ v.user?.name }}</p>
+                  <div class="rounded-md border border-slate-200 bg-white p-2 text-xs text-slate-700">
+                    {{ v.comment }}
+                    <Button v-if="v.user_id === pageUser.id" size="icon" variant="ghost" class="absolute right-1 top-1 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100" @click="() => { showDislikeCommentInput[s.id] = true; dislikeCommentBySuggestion[s.id] = v.comment; }">
+                      <Pencil class="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <p class="text-right text-[11px] text-slate-500"><span v-if="v.updated_at && v.updated_at !== v.created_at">bearbeitet am </span>{{ formatter.format(new Date(v.updated_at || v.created_at)) }}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section v-if="activeTab === 'todos'">
+        <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-semibold text-blue-900">Todos</h2><Dialog v-if="canManageTodos" :open="showTodoDialog" @update:open="(val) => showTodoDialog = val"><DialogTrigger as-child><Button size="icon"><Plus class="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Todo anlegen</DialogTitle><DialogDescription>Für alle sichtbar.</DialogDescription></DialogHeader><Textarea v-model="todoForm.task" placeholder="Aufgabe" /><DialogFooter><Button @click="postTodo">Speichern</Button></DialogFooter></DialogContent></Dialog></div>
+        <Card class="border-blue-300 bg-blue-50/60">
+          <CardContent class="space-y-3">
+            <div v-for="todo in todos" :key="todo.id" class="rounded-lg border border-blue-200 bg-white p-3">
+              <div class="flex items-start gap-2"><Button v-if="canManageTodos" size="icon" variant="outline" @click="toggleTodoCompleted(todo)"><Check class="h-4 w-4" /></Button><p class="flex-1" :class="{ 'line-through text-slate-500': todo.is_completed }">{{ todo.task }}</p><Badge :variant="todo.is_completed ? 'secondary' : 'outline'">{{ todo.is_completed ? 'Erledigt' : 'Aktiv' }}</Badge><Button v-if="canManageTodos" size="icon" variant="ghost" @click="openTodoEdit(todo)"><Pencil class="h-4 w-4" /></Button><Button v-if="canManageTodos" size="icon" variant="ghost" @click="deleteTodo(todo.id)"><Trash2 class="h-4 w-4 text-red-600" /></Button></div>
+              <p class="mt-2 text-right text-xs text-slate-500">{{ formatter.format(new Date(todo.created_at)) }} · von {{ todo.author?.name }}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
     </div>
 
     <Dialog :open="editingNewsId !== null" @update:open="(o) => { if (!o) editingNewsId = null }">
