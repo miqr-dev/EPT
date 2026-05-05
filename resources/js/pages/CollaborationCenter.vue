@@ -97,14 +97,14 @@ const submitDislikeComment = (id: number) => {
                     :class="myVote(s) === 'like' ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''"
                     :title="canVoteOn(s) ? (voteNames(s, 'like') || 'Noch keine Likes') : 'Eigene Vorschläge können nicht bewertet werden'"
                     :disabled="!canVoteOn(s)"
-                    @click="submitVote(s.id, 'like')"
+                    @click="submitVote(s.id, 'like', s)"
                   ><ThumbsUp class="mr-1 h-4 w-4" />Like{{ voteCount(s, 'like') ? ` ${voteCount(s, 'like')}` : '' }}</Button>
                   <Button
                     size="sm"
                     :variant="myVote(s) === 'dislike' ? 'secondary' : 'outline'"
                     :title="canVoteOn(s) ? (voteNames(s, 'dislike') || 'Noch keine Dislikes') : 'Eigene Vorschläge können nicht bewertet werden'"
                     :disabled="!canVoteOn(s)"
-                    @click="submitVote(s.id, 'dislike')"
+                    @click="submitVote(s.id, 'dislike', s)"
                   ><ThumbsDown class="mr-1 h-4 w-4" />Dislike{{ voteCount(s, 'dislike') ? ` ${voteCount(s, 'dislike')}` : '' }}</Button>
                   <Button v-if="s.created_by === pageUser.id" size="icon" variant="ghost" @click="() => { if (confirm('Vorschlag wirklich löschen?')) useForm({}).delete(route('collaboration.suggestions.delete', s.id)); }"><Trash2 class="h-4 w-4 text-red-600" /></Button>
                   <Button v-if="canManageTodos" size="sm" @click="useForm({}).post(route('collaboration.suggestions.promote', s.id))">In Aufgaben übernehmen</Button>
@@ -112,13 +112,12 @@ const submitDislikeComment = (id: number) => {
                 </div>
 
                 <div v-if="showDislikeCommentInput[s.id] && myVote(s) === 'dislike' && !myDislikeComment(s)" class="mt-2 space-y-2">
-                  <Textarea v-model="dislikeCommentBySuggestion[s.id]" placeholder="Kommentar warum du nicht zustimmst" class="text-sm" />
+                  <Textarea v-model="dislikeCommentBySuggestion[s.id]" placeholder="what's the problem?" class="text-sm" />
                   <Button size="sm" variant="secondary" @click="submitDislikeComment(s.id)">Kommentar speichern</Button>
                 </div>
 
                 <div v-if="votesFor(s, 'dislike').length" class="mt-2 space-y-1 rounded-md border border-slate-200 bg-slate-50 p-2">
-                  <p class="text-xs font-semibold text-slate-700">Kommentare</p>
-                  <div v-for="v in votesFor(s, 'dislike').filter((x:any) => x.comment)" :key="`comment-${v.id}`" class="space-y-1">
+                                    <div v-for="v in votesFor(s, 'dislike').filter((x:any) => x.comment)" :key="`comment-${v.id}`" class="space-y-1">
                     <p class="text-xs font-medium text-slate-700">{{ v.user?.name }}</p>
                     <div class="rounded-md border border-slate-200 bg-white p-2 text-xs text-slate-700">{{ v.comment }}</div>
                     <p class="text-right text-[11px] text-slate-500">{{ formatter.format(new Date(v.updated_at || v.created_at)) }}</p>

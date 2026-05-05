@@ -87,6 +87,7 @@ class CollaborationCenterController extends Controller
         $data = $request->validate([
             'vote' => 'nullable|in:like,dislike',
             'comment' => 'nullable|string',
+            'delete_comment' => 'nullable|boolean',
         ]);
 
         if (empty($data['vote'])) {
@@ -94,9 +95,22 @@ class CollaborationCenterController extends Controller
             return back();
         }
 
+        $existingVote = CollaborationSuggestionVote::where('suggestion_id', $suggestion->id)
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        $comment = $existingVote?->comment;
+        if (($data['delete_comment'] ?? false) === true) {
+            $comment = null;
+        }
+
+        if ($data['vote'] === 'dislike') {
+            $comment = $data['comment'] ?? $comment;
+        }
+
         CollaborationSuggestionVote::updateOrCreate(
             ['suggestion_id' => $suggestion->id, 'user_id' => $request->user()->id],
-            ['vote' => $data['vote'], 'comment' => $data['vote'] === 'dislike' ? ($data['comment'] ?? null) : null]
+            ['vote' => $data['vote'], 'comment' => $comment]
         );
 
         return back();
