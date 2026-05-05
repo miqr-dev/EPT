@@ -104,16 +104,21 @@ const submitDislikeComment = (id: number) => {
 <template>
     <Head title="Kollaboration" />
     <AppLayout>
-        <div class="space-y-6 bg-slate-50 p-6">
-            <div class="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
+        <div class="space-y-6 p-6">
+            <div class="rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-white px-6 py-5 shadow-sm">
                 <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Kollaboration</h1>
-                <p class="mt-1 text-sm text-slate-600">Zentrale Übersicht für Team-News, Vorschläge und aktuelle Aufgaben.</p>
+                <p class="mt-1 max-w-3xl text-sm text-slate-600">
+                    Professionelle Teamfläche für Informationsaustausch, gemeinsame Vorschläge und transparente Aufgabenplanung.
+                </p>
             </div>
 
-            <div class="grid grid-cols-1 gap-5 2xl:grid-cols-12">
+            <div class="grid grid-cols-1 gap-6 2xl:grid-cols-12">
                 <section class="2xl:col-span-7">
                     <div class="mb-3 flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-slate-900">1) Info · Neuigkeiten & Updates</h2>
+                        <div>
+                            <h2 class="text-lg font-semibold text-slate-900">Info</h2>
+                            <p class="text-sm text-slate-500">Neuigkeiten und Updates für Lehrkräfte.</p>
+                        </div>
                         <Dialog v-if="canManageNews"
                             ><DialogTrigger as-child
                                 ><Button size="icon"><Plus class="h-4 w-4" /></Button></DialogTrigger
@@ -156,7 +161,10 @@ const submitDislikeComment = (id: number) => {
 
                 <section class="2xl:col-span-5">
                     <div class="mb-3 flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-slate-900">2) Vorschläge</h2>
+                        <div>
+                            <h2 class="text-lg font-semibold text-slate-900">Vorschläge</h2>
+                            <p class="text-sm text-slate-500">Ideen einreichen und direkt im Team bewerten.</p>
+                        </div>
                         <Dialog
                             ><DialogTrigger as-child
                                 ><Button size="icon"><Plus class="h-4 w-4" /></Button></DialogTrigger
@@ -172,7 +180,6 @@ const submitDislikeComment = (id: number) => {
                     </div>
                     <Card class="h-full rounded-2xl border-slate-200 bg-white shadow-sm">
                         <CardContent class="space-y-3 p-5">
-                            <p class="text-sm text-slate-600">Lehrkräfte können Vorschläge posten und direkt per Like/Dislike reagieren.</p>
                             <div v-for="s in suggestions" :key="s.id" class="rounded-xl border border-slate-200 bg-slate-50 p-3">
                                 <p class="text-base text-slate-800">{{ s.content }}</p>
                                 <p class="mt-2 text-right text-xs text-slate-500">
@@ -254,7 +261,10 @@ const submitDislikeComment = (id: number) => {
 
                 <section class="2xl:col-span-12">
                     <div class="mb-3 flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-slate-900">3) Todo-Liste</h2>
+                        <div>
+                            <h2 class="text-lg font-semibold text-slate-900">Todo-Liste</h2>
+                            <p class="text-sm text-slate-500">Transparenz darüber, woran aktuell gearbeitet wird.</p>
+                        </div>
                         <Dialog v-if="canManageTodos"
                             ><DialogTrigger as-child
                                 ><Button size="icon"><Plus class="h-4 w-4" /></Button></DialogTrigger
@@ -269,7 +279,6 @@ const submitDislikeComment = (id: number) => {
                     </div>
                     <Card class="rounded-2xl border-slate-200 bg-white shadow-sm">
                         <CardContent class="space-y-3 p-5">
-                            <p class="text-sm text-slate-600">Hier sieht das Kollegium, woran gerade gearbeitet wird.</p>
                             <div v-for="todo in todos" :key="todo.id" class="rounded-xl border border-slate-200 bg-slate-50 p-3">
                                 <div class="flex items-start gap-2">
                                     <Button
