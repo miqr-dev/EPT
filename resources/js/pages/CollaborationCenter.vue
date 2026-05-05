@@ -111,7 +111,7 @@ const submitDislikeComment = (id: number) => {
                   <Button v-if="canManageTodos" size="sm" variant="secondary" @click="useForm({}).post(route('collaboration.suggestions.hide', s.id))">Verbergen</Button>
                 </div>
 
-                <div v-if="showDislikeCommentInput[s.id] && myVote(s) === 'dislike' && !myDislikeComment(s)" class="mt-2 space-y-2">
+                <div v-if="showDislikeCommentInput[s.id] && !myDislikeComment(s)" class="mt-2 space-y-2">
                   <Textarea v-model="dislikeCommentBySuggestion[s.id]" placeholder="what's the problem?" class="text-sm" />
                   <Button size="sm" variant="secondary" @click="submitDislikeComment(s.id)">Kommentar speichern</Button>
                 </div>
