@@ -123,11 +123,22 @@ const promoteSuggestion = (id: number) => {
         <Button :variant="activeTab === 'todos' ? 'default' : 'outline'" @click="activeTab = 'todos'">Todos</Button>
       </div>
 
-      <section v-if="activeTab === 'news'" class="space-y-4">
-        <Card class="border-amber-300 bg-amber-50/60">
+      <section v-if="activeTab === 'news'" class="grid gap-4 xl:grid-cols-5">
+        <div class="xl:col-span-4 space-y-4">
+          <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-semibold text-[#661421]">Neuigkeiten & Updates</h2><Dialog v-if="canManageNews" :open="showNewsDialog" @update:open="(val) => showNewsDialog = val"><DialogTrigger as-child><Button size="icon"><Plus class="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Update veröffentlichen</DialogTitle></DialogHeader><Input v-model="newsForm.title" placeholder="Titel" /><Textarea v-model="newsForm.content" placeholder="Information" /><DialogFooter><Button @click="postNews">Speichern</Button></DialogFooter></DialogContent></Dialog></div>
+          <div class="space-y-4 rounded-xl border border-[#661421]/20 bg-[#661421]/5 p-4">
+            <article v-for="item in newsItems" :key="item.id" class="pb-4">
+              <div class="mb-1 flex items-start justify-between gap-3"><h3 class="text-lg font-semibold text-[#661421]">{{ item.title }}</h3><div class="flex gap-1" v-if="canManageNews"><Button size="icon" variant="ghost" @click="openNewsEdit(item)"><Pencil class="h-4 w-4" /></Button><Button size="icon" variant="ghost" @click="deleteNews(item.id)"><Trash2 class="h-4 w-4 text-red-600" /></Button></div></div>
+              <p class="text-base leading-7 text-slate-800">{{ item.content }}</p>
+              <p class="mt-2 text-right text-sm text-slate-500">{{ formatter.format(new Date(item.created_at)) }} · von {{ item.author?.name }}</p>
+              <hr class="mt-4 border-[#661421]/20" />
+            </article>
+          </div>
+        </div>
+        <Card class="xl:col-span-1 border-amber-300 bg-amber-50/60">
           <CardContent class="space-y-4 p-4">
             <h2 class="text-lg font-semibold text-amber-900">Zusammenfassung neuer Vorschläge & Todos</h2>
-            <div class="grid gap-4 md:grid-cols-2">
+            <div class="space-y-4">
               <div class="space-y-2 rounded-lg border border-violet-200 bg-white p-3">
                 <p class="font-medium text-violet-900">Neueste Vorschläge</p>
                 <p class="text-sm text-slate-600">Gesamt: {{ suggestions.length }}</p>
@@ -139,7 +150,6 @@ const promoteSuggestion = (id: number) => {
                 </div>
                 <p v-else class="text-sm text-slate-500">Noch keine Vorschläge vorhanden.</p>
               </div>
-
               <div class="space-y-2 rounded-lg border border-blue-200 bg-white p-3">
                 <p class="font-medium text-blue-900">Neueste Todos</p>
                 <p class="text-sm text-slate-600">Gesamt: {{ todos.length }}</p>
@@ -154,16 +164,6 @@ const promoteSuggestion = (id: number) => {
             </div>
           </CardContent>
         </Card>
-
-        <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-semibold text-[#661421]">Neuigkeiten & Updates</h2><Dialog v-if="canManageNews" :open="showNewsDialog" @update:open="(val) => showNewsDialog = val"><DialogTrigger as-child><Button size="icon"><Plus class="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Update veröffentlichen</DialogTitle></DialogHeader><Input v-model="newsForm.title" placeholder="Titel" /><Textarea v-model="newsForm.content" placeholder="Information" /><DialogFooter><Button @click="postNews">Speichern</Button></DialogFooter></DialogContent></Dialog></div>
-        <div class="space-y-4 rounded-xl border border-[#661421]/20 bg-[#661421]/5 p-4">
-          <article v-for="item in newsItems" :key="item.id" class="pb-4">
-            <div class="mb-1 flex items-start justify-between gap-3"><h3 class="text-lg font-semibold text-[#661421]">{{ item.title }}</h3><div class="flex gap-1" v-if="canManageNews"><Button size="icon" variant="ghost" @click="openNewsEdit(item)"><Pencil class="h-4 w-4" /></Button><Button size="icon" variant="ghost" @click="deleteNews(item.id)"><Trash2 class="h-4 w-4 text-red-600" /></Button></div></div>
-            <p class="text-base leading-7 text-slate-800">{{ item.content }}</p>
-            <p class="mt-2 text-right text-sm text-slate-500">{{ formatter.format(new Date(item.created_at)) }} · von {{ item.author?.name }}</p>
-            <hr class="mt-4 border-[#661421]/20" />
-          </article>
-        </div>
       </section>
 
       <section v-if="activeTab === 'suggestions'">
