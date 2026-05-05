@@ -72,13 +72,10 @@ const submitDislikeComment = (id: number) => {
 
       <div class="grid grid-cols-1 gap-4 xl:grid-cols-12">
         <section class="xl:col-span-8">
-          <h2 class="mb-3 text-lg font-semibold text-[#661421]">Neuigkeiten & Updates</h2>
+          <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-semibold text-[#661421]">Neuigkeiten & Updates</h2><Dialog v-if="canManageNews"><DialogTrigger as-child><Button size="icon"><Plus class="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Update veröffentlichen</DialogTitle></DialogHeader><Input v-model="newsForm.title" placeholder="Titel" /><Textarea v-model="newsForm.content" placeholder="Information" /><DialogFooter><Button @click="postNews">Speichern</Button></DialogFooter></DialogContent></Dialog></div>
           <div class="space-y-4 rounded-xl border border-[#661421]/20 bg-[#661421]/5 p-4">
-            <div class="flex justify-end" v-if="canManageNews">
-              <Dialog><DialogTrigger as-child><Button size="icon"><Plus class="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Update veröffentlichen</DialogTitle></DialogHeader><Input v-model="newsForm.title" placeholder="Titel" /><Textarea v-model="newsForm.content" placeholder="Information" /><DialogFooter><Button @click="postNews">Speichern</Button></DialogFooter></DialogContent></Dialog>
-            </div>
             <article v-for="item in newsItems" :key="item.id" class="pb-4">
-              <div class="mb-1 flex items-start justify-between gap-3"><h3 class="text-lg font-semibold text-[#661421]">{{ item.title }}</h3><div class="flex gap-1" v-if="canManageNews"><Button size="icon" variant="ghost" @click="openNewsEdit(item)"><Pencil class="h-4 w-4" /></Button><Button size="icon" variant="ghost" @click="useForm({}).delete(route('collaboration.news.delete', item.id))"><Trash2 class="h-4 w-4 text-red-600" /></Button></div></div>
+              <div class="mb-1 flex items-start justify-between gap-3"><h3 class="text-lg font-semibold text-[#661421]">{{ item.title }}</h3><div class="flex gap-1" v-if="canManageNews"><Button size="icon" variant="ghost" @click="openNewsEdit(item)"><Pencil class="h-4 w-4" /></Button><Button size="icon" variant="ghost" @click="() => { if (confirm('News wirklich löschen?')) useForm({}).delete(route('collaboration.news.delete', item.id)); }"><Trash2 class="h-4 w-4 text-red-600" /></Button></div></div>
               <p class="text-base leading-7 text-slate-800">{{ item.content }}</p>
               <p class="mt-2 text-right text-sm text-slate-500">{{ formatter.format(new Date(item.created_at)) }} · von {{ item.author?.name }}</p>
               <hr class="mt-4 border-[#661421]/20" />
@@ -109,7 +106,7 @@ const submitDislikeComment = (id: number) => {
                     :disabled="!canVoteOn(s)"
                     @click="submitVote(s.id, 'dislike')"
                   ><ThumbsDown class="mr-1 h-4 w-4" />Dislike{{ voteCount(s, 'dislike') ? ` ${voteCount(s, 'dislike')}` : '' }}</Button>
-                  <Button v-if="s.created_by === pageUser.id" size="icon" variant="ghost" @click="useForm({}).delete(route('collaboration.suggestions.delete', s.id))"><Trash2 class="h-4 w-4 text-red-600" /></Button>
+                  <Button v-if="s.created_by === pageUser.id" size="icon" variant="ghost" @click="() => { if (confirm('Vorschlag wirklich löschen?')) useForm({}).delete(route('collaboration.suggestions.delete', s.id)); }"><Trash2 class="h-4 w-4 text-red-600" /></Button>
                   <Button v-if="canManageTodos" size="sm" @click="useForm({}).post(route('collaboration.suggestions.promote', s.id))">In Aufgaben übernehmen</Button>
                   <Button v-if="canManageTodos" size="sm" variant="secondary" @click="useForm({}).post(route('collaboration.suggestions.hide', s.id))">Verbergen</Button>
                 </div>
@@ -121,9 +118,11 @@ const submitDislikeComment = (id: number) => {
 
                 <div v-if="votesFor(s, 'dislike').length" class="mt-2 space-y-1 rounded-md border border-slate-200 bg-slate-50 p-2">
                   <p class="text-xs font-semibold text-slate-700">Kommentare</p>
-                  <p v-for="v in votesFor(s, 'dislike').filter((x:any) => x.comment)" :key="`comment-${v.id}`" class="text-xs text-slate-700">
-                    {{ v.comment }} — {{ v.user?.name }} ({{ formatter.format(new Date(v.updated_at || v.created_at)) }})
-                  </p>
+                  <div v-for="v in votesFor(s, 'dislike').filter((x:any) => x.comment)" :key="`comment-${v.id}`" class="space-y-1">
+                    <p class="text-xs font-medium text-slate-700">{{ v.user?.name }}</p>
+                    <div class="rounded-md border border-slate-200 bg-white p-2 text-xs text-slate-700">{{ v.comment }}</div>
+                    <p class="text-right text-[11px] text-slate-500">{{ formatter.format(new Date(v.updated_at || v.created_at)) }}</p>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -135,7 +134,7 @@ const submitDislikeComment = (id: number) => {
           <Card class="border-blue-300 bg-blue-50/60">
             <CardContent class="space-y-3">
               <div v-for="todo in todos" :key="todo.id" class="rounded-lg border border-blue-200 bg-white p-3">
-                <div class="flex items-start gap-2"><Button v-if="canManageTodos" size="icon" variant="outline" @click="useForm({ is_completed: !todo.is_completed }).patch(route('collaboration.todos.update', todo.id))"><Check class="h-4 w-4" /></Button><p class="flex-1" :class="{ 'line-through text-slate-500': todo.is_completed }">{{ todo.task }}</p><Badge :variant="todo.is_completed ? 'secondary' : 'outline'">{{ todo.is_completed ? 'Erledigt' : 'Aktiv' }}</Badge><Button v-if="canManageTodos" size="icon" variant="ghost" @click="openTodoEdit(todo)"><Pencil class="h-4 w-4" /></Button><Button v-if="canManageTodos" size="icon" variant="ghost" @click="useForm({}).delete(route('collaboration.todos.delete', todo.id))"><Trash2 class="h-4 w-4 text-red-600" /></Button></div>
+                <div class="flex items-start gap-2"><Button v-if="canManageTodos" size="icon" variant="outline" @click="useForm({ is_completed: !todo.is_completed }).patch(route('collaboration.todos.update', todo.id))"><Check class="h-4 w-4" /></Button><p class="flex-1" :class="{ 'line-through text-slate-500': todo.is_completed }">{{ todo.task }}</p><Badge :variant="todo.is_completed ? 'secondary' : 'outline'">{{ todo.is_completed ? 'Erledigt' : 'Aktiv' }}</Badge><Button v-if="canManageTodos" size="icon" variant="ghost" @click="openTodoEdit(todo)"><Pencil class="h-4 w-4" /></Button><Button v-if="canManageTodos" size="icon" variant="ghost" @click="() => { if (confirm('Todo wirklich löschen?')) useForm({}).delete(route('collaboration.todos.delete', todo.id)); }"><Trash2 class="h-4 w-4 text-red-600" /></Button></div>
                 <p class="mt-2 text-right text-xs text-slate-500">{{ formatter.format(new Date(todo.created_at)) }} · von {{ todo.author?.name }}</p>
               </div>
             </CardContent>
