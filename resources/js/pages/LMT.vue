@@ -92,6 +92,7 @@ const userAnswers = ref<(number | null)[]>(Array(questions.value.length).fill(nu
 const questionTimes = ref<number[]>(Array(questions.value.length).fill(0));
 const questionStartTimestamps = ref<(number | null)[]>(Array(questions.value.length).fill(null));
 const startTime = ref<number | null>(null);
+const finishTime = ref<number | null>(null);
 
 const totalPages = computed(() => Math.ceil(questions.value.length / questionsPerPage));
 
@@ -132,6 +133,7 @@ function startTest() {
     questionTimes.value = Array(questions.value.length).fill(0);
     questionStartTimestamps.value = Array(questions.value.length).fill(null);
     startTime.value = Date.now();
+    finishTime.value = null;
 
     // Start timing for visible questions
     questionsOnPage.value.forEach((q) => {
@@ -174,19 +176,32 @@ function startTimingCurrentPage() {
 
 function stopTimingCurrentPage() {
     const now = Date.now();
+    const questionsCount = questionsOnPage.value.length;
+    if (questionsCount === 0) return;
+
+    let pageStart: number | null = null;
     questionsOnPage.value.forEach((q) => {
-        const index = q.number - 1;
-        const start = questionStartTimestamps.value[index];
-        if (start) {
-            const elapsed = Math.round((now - start) / 1000);
-            questionTimes.value[index] += elapsed;
-            questionStartTimestamps.value[index] = null;
+        const start = questionStartTimestamps.value[q.number - 1];
+        if (start && (pageStart === null || start < pageStart)) {
+            pageStart = start;
         }
     });
+
+    if (pageStart) {
+        const totalElapsed = Math.round((now - pageStart) / 1000);
+        const perQuestionElapsed = totalElapsed / questionsCount;
+
+        questionsOnPage.value.forEach((q) => {
+            const index = q.number - 1;
+            questionTimes.value[index] += perQuestionElapsed;
+            questionStartTimestamps.value[index] = null;
+        });
+    }
 }
 
 function completeTest() {
     stopTimingCurrentPage();
+    finishTime.value = Date.now();
     isTestComplete.value = true;
     showTest.value = false;
 }
@@ -217,7 +232,7 @@ function confirmEnd() {
                 selected_category: opt ? opt.category : null,
                 selected_group: opt ? (opt.group ?? null) : null,
                 points: opt ? opt.points : null,
-                time_seconds: questionTimes.value[idx],
+                time_seconds: Math.round(questionTimes.value[idx]),
             };
         }),
     };
@@ -236,13 +251,17 @@ function selectAnswer(questionIndex: number, optionIndex: number) {
 
 function formatTime(sec: number | null): string {
     if (sec === null || isNaN(sec)) return '–';
-    if (sec < 60) return `${sec} Sekunden`;
-    const min = Math.round(sec / 60);
+    const roundedSec = Math.round(sec);
+    if (roundedSec < 60) return `${roundedSec} Sekunden`;
+    const min = Math.round(roundedSec / 60);
     return `${min} Minuten`;
 }
 
 const totalTimeTaken = computed(() => {
-    return isTestComplete.value ? questionTimes.value.reduce((a, b) => a + b, 0) : null;
+    if (isTestComplete.value && startTime.value && finishTime.value) {
+        return Math.round((finishTime.value - startTime.value) / 1000);
+    }
+    return null;
 });
 </script>
 
