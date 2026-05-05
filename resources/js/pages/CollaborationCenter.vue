@@ -142,7 +142,7 @@ const submitDislikeComment = (id: number) => {
                                         variant="ghost"
                                         @click="
                                             () => {
-                                                if (confirm('News wirklich löschen?'))
+                                                if (window.confirm('News wirklich löschen?'))
                                                     useForm({}).delete(route('collaboration.news.delete', item.id));
                                             }
                                         "
@@ -219,7 +219,7 @@ const submitDislikeComment = (id: number) => {
                                         variant="ghost"
                                         @click="
                                             () => {
-                                                if (confirm('Vorschlag wirklich löschen?'))
+                                                if (window.confirm('Vorschlag wirklich löschen?'))
                                                     useForm({}).delete(route('collaboration.suggestions.delete', s.id));
                                             }
                                         "
@@ -300,7 +300,7 @@ const submitDislikeComment = (id: number) => {
                                         variant="ghost"
                                         @click="
                                             () => {
-                                                if (confirm('Todo wirklich löschen?'))
+                                                if (window.confirm('Todo wirklich löschen?'))
                                                     useForm({}).delete(route('collaboration.todos.delete', todo.id));
                                             }
                                         "
