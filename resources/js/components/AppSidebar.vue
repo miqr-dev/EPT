@@ -91,6 +91,8 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+const footerNavItems: NavItem[] = [];
+
 </script>
 
 <template>
