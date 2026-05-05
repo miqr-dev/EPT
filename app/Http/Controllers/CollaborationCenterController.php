@@ -18,9 +18,9 @@ class CollaborationCenterController extends Controller
         abort_unless(in_array($request->user()?->role, ['admin', 'teacher'], true), 403);
 
         return Inertia::render('CollaborationCenter', [
-            'newsItems' => CollaborationNews::with('author:id,name')->latest()->get(),
-            'todos' => CollaborationTodo::with('author:id,name')->latest()->get(),
-            'suggestions' => CollaborationSuggestion::with(['author:id,name', 'votes.user:id,name'])
+            'newsItems' => CollaborationNews::with('author:id,name,city_id', 'author.city:id,name')->latest()->get(),
+            'todos' => CollaborationTodo::with('author:id,name,city_id', 'author.city:id,name')->latest()->get(),
+            'suggestions' => CollaborationSuggestion::with(['author:id,name,city_id', 'author.city:id,name', 'votes.user:id,name,city_id', 'votes.user.city:id,name'])
                 ->where('is_hidden', false)
                 ->latest()
                 ->get(),

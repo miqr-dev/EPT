@@ -38,7 +38,8 @@ const recentTodos = computed(() => [...props.todos].sort((a, b) => new Date(b.cr
 const formatter = new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium' });
 const authorWithCity = (author: any) => {
   if (!author) return '';
-  const city = author.city ? ` - ${author.city}` : '';
+  const cityName = author.city?.name ?? author.city_name ?? author.city ?? '';
+  const city = cityName ? ` - ${cityName}` : '';
   return `${author.name ?? ''}${city}`;
 };
 
