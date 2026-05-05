@@ -144,10 +144,4 @@ class CollaborationCenterController extends Controller
         return back();
     }
 
-    public function hideSuggestion(Request $request, CollaborationSuggestion $suggestion): RedirectResponse
-    {
-        abort_unless($request->user()?->role === 'admin', 403);
-        $suggestion->update(['is_hidden' => true]);
-        return back();
-    }
 }
