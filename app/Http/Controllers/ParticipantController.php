@@ -250,9 +250,10 @@ class ParticipantController extends Controller
       'force_finish_deadline' => null,
     ]);
 
+    $hasResults = $request->has('results');
     $results = $request->input('results');
 
-    if ($results) {
+    if ($hasResults) {
       $examStep = $examStepStatus->step;
       if ($examStep && $examStep->test) {
         $assignment = TestAssignment::firstOrCreate(
@@ -629,9 +630,10 @@ class ParticipantController extends Controller
       ->where('exam_step_id', $request->input('exam_step_id'))
       ->firstOrFail();
 
+    $hasResults = $request->has('results');
     $results = $request->input('results');
 
-    if ($results) {
+    if ($hasResults) {
       $examStep = $examStepStatus->step;
       if ($examStep && $examStep->test) {
         $assignment = TestAssignment::firstOrCreate(
