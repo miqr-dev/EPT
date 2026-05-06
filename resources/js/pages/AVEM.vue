@@ -6,9 +6,15 @@ import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { AVEM_QUESTIONS } from '@/pages/Questions/AVEMQuestions';
 import { Head } from '@inertiajs/vue3';
 import { Info } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
-const emit = defineEmits(['complete', 'started']);
+const props = defineProps<{
+    pausedTestResult?: {
+        answers: { number: number; answer: number | null }[];
+    };
+}>();
+
+const emit = defineEmits(['complete', 'started', 'update:answers']);
 
 const showTest = ref(false);
 const answers = ref<Record<number, number | null>>({});
@@ -32,6 +38,23 @@ const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
 
 // init answers
 AVEM_QUESTIONS.forEach((q) => (answers.value[q.number] = null));
+
+if (props.pausedTestResult?.answers) {
+    props.pausedTestResult.answers.forEach((a) => {
+        answers.value[a.number] = a.answer;
+    });
+    showTest.value = true;
+}
+
+watch(
+    answers,
+    (newAnswers) => {
+        emit('update:answers', {
+            answers: AVEM_QUESTIONS.map((q) => ({ number: q.number, answer: newAnswers[q.number] })),
+        });
+    },
+    { deep: true, immediate: true },
+);
 
 const instructions = `Wir bitten Sie, einige Ihrer üblichen Verhaltensweisen, Einstellungen und Gewohnheiten zu beschreiben, wobei vor allem Ihr Arbeitsleben Bezug genommen wird. Dazu finden Sie im Folgenden eine Reihe von Aussagen. Lesen Sie jeden dieser Sätze gründlich und entscheiden Sie, in welchem Maße er auf Sie persönlich zutrifft.`;
 

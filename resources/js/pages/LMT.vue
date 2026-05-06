@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { Head } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import { LMT_QUESTIONS, LMTQuestion } from '@/pages/Questions/LMTQuestions';
 
@@ -100,7 +100,14 @@ const totalPages = computed(() => Math.ceil(questions.value.length / questionsPe
 
 const isTestComplete = ref(false);
 
-const emit = defineEmits(['complete', 'started']);
+const props = defineProps<{
+    pausedTestResult?: {
+        answers: { number: number; answer: number | null }[];
+        currentPage?: number;
+    };
+}>();
+
+const emit = defineEmits(['complete', 'started', 'update:answers']);
 
 const endConfirmOpen = ref(false);
 
@@ -125,6 +132,28 @@ const questionsOnPage = computed(() => {
     const end = start + questionsPerPage;
     return questions.value.slice(start, end);
 });
+
+if (props.pausedTestResult?.answers) {
+    props.pausedTestResult.answers.forEach((a) => {
+        userAnswers.value[a.number - 1] = a.answer;
+    });
+    if (typeof props.pausedTestResult.currentPage === 'number' && props.pausedTestResult.currentPage >= 1) {
+        currentPage.value = props.pausedTestResult.currentPage;
+    }
+    showTest.value = true;
+    startTimingCurrentPage();
+}
+
+watch(
+    [userAnswers, currentPage],
+    ([newAnswers, newCurrentPage]) => {
+        emit('update:answers', {
+            answers: questions.value.map((q, idx) => ({ number: q.number, answer: newAnswers[idx] })),
+            currentPage: newCurrentPage,
+        });
+    },
+    { deep: true, immediate: true },
+);
 
 function startTest() {
     emit('started');
