@@ -6,7 +6,23 @@ import { Input } from '@/components/ui/input';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { KONZ_PAGE2_SVG_ROWS } from '@/pages/Questions/konzPage2SvgRows';
 import { Head } from '@inertiajs/vue3';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+
+const props = defineProps<{
+    pausedTestResult?: {
+        page?: number;
+        page1?: string[];
+        page2?: string[];
+        page3?: string[];
+        page4?: string[];
+        page5?: string[];
+        copy_marks?: boolean[][][];
+        page4_marks?: boolean[][];
+        page5_marks?: boolean[];
+        page5_marks2?: boolean[];
+        page5_tick_marks?: boolean[][];
+    };
+}>();
 
 const startedAtMs = Date.now();
 
@@ -103,7 +119,7 @@ const confirmFinishDespiteUnanswered = () => {
     showUnansweredDialog.value = false;
     submitResults();
 };
-const emit = defineEmits(['complete', 'started']);
+const emit = defineEmits(['complete', 'started', 'update:answers']);
 
 onMounted(() => {
     emit('started');
@@ -675,6 +691,40 @@ const rowLabel = (i: number) => String.fromCharCode(97 + i); // a..j
 // put near your other PAGE 5 helpers
 const GAP_AFTER = [5, 8, 15, 18, 21, 23]; // 1-based
 const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedIndex + 1);
+
+if (props.pausedTestResult) {
+    page.value = props.pausedTestResult.page ?? page.value;
+    if (props.pausedTestResult.page1) page1Inputs.value = [...props.pausedTestResult.page1];
+    if (props.pausedTestResult.page2) page2Answers.value = [...props.pausedTestResult.page2];
+    if (props.pausedTestResult.page3) copyCounts.value = [...props.pausedTestResult.page3];
+    if (props.pausedTestResult.page4) page4Answers.value = [...props.pausedTestResult.page4];
+    if (props.pausedTestResult.page5) page5TickSums.value = [...props.pausedTestResult.page5];
+    if (props.pausedTestResult.copy_marks) copyMarks.value = props.pausedTestResult.copy_marks;
+    if (props.pausedTestResult.page4_marks) page4Marks.value = props.pausedTestResult.page4_marks;
+    if (props.pausedTestResult.page5_marks) page5Marks.value = props.pausedTestResult.page5_marks;
+    if (props.pausedTestResult.page5_marks2) page5Marks2.value = props.pausedTestResult.page5_marks2;
+    if (props.pausedTestResult.page5_tick_marks) page5TickMarks.value = props.pausedTestResult.page5_tick_marks;
+}
+
+watch(
+    [page, page1Inputs, page2Answers, copyCounts, page4Answers, page5TickSums, copyMarks, page4Marks, page5Marks, page5Marks2, page5TickMarks],
+    () => {
+        emit('update:answers', {
+            page: page.value,
+            page1: page1Inputs.value,
+            page2: page2Answers.value,
+            page3: copyCounts.value,
+            page4: page4Answers.value,
+            page5: page5TickSums.value,
+            copy_marks: copyMarks.value,
+            page4_marks: page4Marks.value,
+            page5_marks: page5Marks.value,
+            page5_marks2: page5Marks2.value,
+            page5_tick_marks: page5TickMarks.value,
+        });
+    },
+    { deep: true, immediate: true },
+);
 </script>
 
 <template>
