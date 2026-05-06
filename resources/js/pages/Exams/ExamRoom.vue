@@ -112,7 +112,7 @@ const testComponents: Record<string, unknown> = {
 };
 
 const stepStatuses = ref<Record<number, StepStatusEntry>>(normalizeStepStatuses(props.stepStatuses));
-const testsWithPauseSupport = new Set(['BIT-2', 'FPI-R', 'MRT-A', 'MRT-B', 'LMT', 'AVEM', '628']);
+const testsWithPauseSupport = new Set(['BIT-2', 'FPI-R', 'MRT-A', 'MRT-B', 'LMT', 'AVEM', '628', 'Konzentrationstest']);
 const visibleSteps = computed(() =>
   props.exam.steps.filter((step) => {
     if (props.exam.current_step?.id === step.id) {
