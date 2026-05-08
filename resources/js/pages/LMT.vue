@@ -92,9 +92,7 @@ const userAnswers = ref<(number | null)[]>(Array(questions.value.length).fill(nu
 const questionTimes = ref<number[]>(Array(questions.value.length).fill(0));
 const questionStartTimestamps = ref<(number | null)[]>(Array(questions.value.length).fill(null));
 const startTime = ref<number | null>(null);
-const completedAt = ref<number | null>(null);
-const startTimePerf = ref<number | null>(null);
-const completedAtPerf = ref<number | null>(null);
+const elapsedSecondsBeforeResume = ref(0);
 
 const totalPages = computed(() => Math.ceil(questions.value.length / questionsPerPage));
 
@@ -104,6 +102,7 @@ const props = defineProps<{
     pausedTestResult?: {
         answers: { number: number; answer: number | null }[];
         currentPage?: number;
+        total_time_seconds?: number;
     };
 }>();
 
@@ -140,7 +139,9 @@ if (props.pausedTestResult?.answers) {
     if (typeof props.pausedTestResult.currentPage === 'number' && props.pausedTestResult.currentPage >= 1) {
         currentPage.value = props.pausedTestResult.currentPage;
     }
+    elapsedSecondsBeforeResume.value = props.pausedTestResult.total_time_seconds ?? 0;
     showTest.value = true;
+    startTime.value = Date.now();
     startTimingCurrentPage();
 }
 
@@ -150,6 +151,7 @@ watch(
         emit('update:answers', {
             answers: questions.value.map((q, idx) => ({ number: q.number, answer: newAnswers[idx] })),
             currentPage: newCurrentPage,
+            total_time_seconds: getCurrentElapsedSeconds(),
         });
     },
     { deep: true, immediate: true },
@@ -164,9 +166,7 @@ function startTest() {
     questionTimes.value = Array(questions.value.length).fill(0);
     questionStartTimestamps.value = Array(questions.value.length).fill(null);
     startTime.value = Date.now();
-    startTimePerf.value = performance.now();
-    completedAt.value = null;
-    completedAtPerf.value = null;
+    elapsedSecondsBeforeResume.value = 0;
 
     // Start timing for visible questions
     questionsOnPage.value.forEach((q) => {
@@ -222,8 +222,6 @@ function stopTimingCurrentPage() {
 
 function completeTest() {
     stopTimingCurrentPage();
-    completedAt.value = Date.now();
-    completedAtPerf.value = performance.now();
     isTestComplete.value = true;
     showTest.value = false;
 }
@@ -282,14 +280,16 @@ const totalTimeTaken = computed(() => {
     if (!isTestComplete.value) {
         return null;
     }
-    if (startTimePerf.value !== null && completedAtPerf.value !== null) {
-        return Math.round((completedAtPerf.value - startTimePerf.value) / 1000);
-    }
-    if (startTime.value === null || completedAt.value === null) {
-        return null;
-    }
-    return Math.round((completedAt.value - startTime.value) / 1000);
+    return getCurrentElapsedSeconds();
 });
+
+function getCurrentElapsedSeconds(): number {
+    if (startTime.value === null) {
+        return elapsedSecondsBeforeResume.value;
+    }
+    const runningElapsed = Math.max(0, Math.round((Date.now() - startTime.value) / 1000));
+    return elapsedSecondsBeforeResume.value + runningElapsed;
+}
 </script>
 
 <template>
