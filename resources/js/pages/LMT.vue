@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { Head } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 import { LMT_QUESTIONS, LMTQuestion } from '@/pages/Questions/LMTQuestions';
 
@@ -95,6 +95,7 @@ const startTime = ref<number | null>(null);
 const completedAt = ref<number | null>(null);
 const startTimePerf = ref<number | null>(null);
 const completedAtPerf = ref<number | null>(null);
+const totalTimeAccumulated = ref(0);
 
 const totalPages = computed(() => Math.ceil(questions.value.length / questionsPerPage));
 
@@ -104,6 +105,7 @@ const props = defineProps<{
     pausedTestResult?: {
         answers: { number: number; answer: number | null }[];
         currentPage?: number;
+        total_time_accumulated?: number;
     };
 }>();
 
@@ -136,24 +138,62 @@ const questionsOnPage = computed(() => {
 if (props.pausedTestResult?.answers) {
     props.pausedTestResult.answers.forEach((a) => {
         userAnswers.value[a.number - 1] = a.answer;
+        if (typeof a.time_seconds === 'number') {
+            questionTimes.value[a.number - 1] = a.time_seconds;
+        }
     });
     if (typeof props.pausedTestResult.currentPage === 'number' && props.pausedTestResult.currentPage >= 1) {
         currentPage.value = props.pausedTestResult.currentPage;
     }
+    const accumulated = props.pausedTestResult.total_time_seconds ?? props.pausedTestResult.total_time_accumulated;
+    if (typeof accumulated === 'number') {
+        totalTimeAccumulated.value = accumulated;
+    }
     showTest.value = true;
+    startTimePerf.value = performance.now();
     startTimingCurrentPage();
 }
 
+const getEmittedResults = () => {
+    const nowPerf = performance.now();
+    const currentSessionTime = startTimePerf.value !== null ? Math.round((nowPerf - startTimePerf.value) / 1000) : 0;
+    return {
+        answers: questions.value.map((q, idx) => {
+            let ts = questionTimes.value[idx];
+            const start = questionStartTimestamps.value[idx];
+            if (start !== null) {
+                ts += Math.round((Date.now() - start) / 1000);
+            }
+            return {
+                number: q.number,
+                answer: userAnswers.value[idx],
+                time_seconds: ts,
+            };
+        }),
+        currentPage: currentPage.value,
+        total_time_seconds: totalTimeAccumulated.value + currentSessionTime,
+    };
+};
+
 watch(
     [userAnswers, currentPage],
-    ([newAnswers, newCurrentPage]) => {
-        emit('update:answers', {
-            answers: questions.value.map((q, idx) => ({ number: q.number, answer: newAnswers[idx] })),
-            currentPage: newCurrentPage,
-        });
+    () => {
+        emit('update:answers', getEmittedResults());
     },
     { deep: true, immediate: true },
 );
+
+let timer: any;
+onMounted(() => {
+    timer = setInterval(() => {
+        if (showTest.value && !isTestComplete.value) {
+            emit('update:answers', getEmittedResults());
+        }
+    }, 5000);
+});
+onUnmounted(() => {
+    if (timer) clearInterval(timer);
+});
 
 function startTest() {
     emit('started');
@@ -282,13 +322,15 @@ const totalTimeTaken = computed(() => {
     if (!isTestComplete.value) {
         return null;
     }
+    let currentSessionSeconds = 0;
     if (startTimePerf.value !== null && completedAtPerf.value !== null) {
-        return Math.round((completedAtPerf.value - startTimePerf.value) / 1000);
+        currentSessionSeconds = Math.round((completedAtPerf.value - startTimePerf.value) / 1000);
+    } else if (startTime.value !== null && completedAt.value !== null) {
+        currentSessionSeconds = Math.round((completedAt.value - startTime.value) / 1000);
+    } else {
+        return totalTimeAccumulated.value;
     }
-    if (startTime.value === null || completedAt.value === null) {
-        return null;
-    }
-    return Math.round((completedAt.value - startTime.value) / 1000);
+    return totalTimeAccumulated.value + currentSessionSeconds;
 });
 </script>
 

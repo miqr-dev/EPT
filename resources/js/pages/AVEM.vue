@@ -6,11 +6,12 @@ import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { AVEM_QUESTIONS } from '@/pages/Questions/AVEMQuestions';
 import { Head } from '@inertiajs/vue3';
 import { Info } from 'lucide-vue-next';
-import { ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 
 const props = defineProps<{
     pausedTestResult?: {
         answers: { number: number; answer: number | null }[];
+        total_time_accumulated?: number;
     };
 }>();
 
@@ -18,6 +19,8 @@ const emit = defineEmits(['complete', 'started', 'update:answers']);
 
 const showTest = ref(false);
 const answers = ref<Record<number, number | null>>({});
+const startTime = ref<number | null>(null);
+const totalTimeAccumulated = ref(0);
 const endConfirmOpen = ref(false);
 
 const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
@@ -43,18 +46,41 @@ if (props.pausedTestResult?.answers) {
     props.pausedTestResult.answers.forEach((a) => {
         answers.value[a.number] = a.answer;
     });
+    const accumulated = props.pausedTestResult.total_time_seconds ?? props.pausedTestResult.total_time_accumulated;
+    if (typeof accumulated === 'number') {
+        totalTimeAccumulated.value = accumulated;
+    }
     showTest.value = true;
+    startTime.value = Date.now();
 }
+
+const getEmittedResults = () => {
+    const currentSessionTime = startTime.value ? Math.round((Date.now() - startTime.value) / 1000) : 0;
+    return {
+        answers: AVEM_QUESTIONS.map((q) => ({ number: q.number, answer: answers.value[q.number] })),
+        total_time_seconds: totalTimeAccumulated.value + currentSessionTime,
+    };
+};
 
 watch(
     answers,
-    (newAnswers) => {
-        emit('update:answers', {
-            answers: AVEM_QUESTIONS.map((q) => ({ number: q.number, answer: newAnswers[q.number] })),
-        });
+    () => {
+        emit('update:answers', getEmittedResults());
     },
     { deep: true, immediate: true },
 );
+
+let timer: any;
+onMounted(() => {
+    timer = setInterval(() => {
+        if (showTest.value && endConfirmOpen.value === false) {
+            emit('update:answers', getEmittedResults());
+        }
+    }, 5000);
+});
+onUnmounted(() => {
+    if (timer) clearInterval(timer);
+});
 
 const instructions = `Wir bitten Sie, einige Ihrer üblichen Verhaltensweisen, Einstellungen und Gewohnheiten zu beschreiben, wobei vor allem Ihr Arbeitsleben Bezug genommen wird. Dazu finden Sie im Folgenden eine Reihe von Aussagen. Lesen Sie jeden dieser Sätze gründlich und entscheiden Sie, in welchem Maße er auf Sie persönlich zutrifft.`;
 
@@ -82,6 +108,7 @@ const LEGEND_TOP = [
 
 function startTest() {
     emit('started');
+    startTime.value = Date.now();
     showTest.value = true;
 }
 function finishTest() {
@@ -96,8 +123,10 @@ function cancelEnd() {
 function confirmEnd() {
     clearForcedFinish(false);
     endConfirmOpen.value = false;
+    const currentSessionTime = startTime.value ? Math.round((Date.now() - startTime.value) / 1000) : 0;
     const results = {
         answers: AVEM_QUESTIONS.map((q) => ({ number: q.number, answer: answers.value[q.number] })),
+        total_time_seconds: totalTimeAccumulated.value + currentSessionTime,
     };
     emit('complete', results);
 }

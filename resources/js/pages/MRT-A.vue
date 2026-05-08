@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useMrtA } from '@/composables/useMrtA';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { Head, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const { mrtQuestions, calculateScores } = useMrtA();
 
@@ -85,26 +85,52 @@ if (props.pausedTestResult) {
             questionTimes.value[i] = a.time_seconds;
         });
     }
-    if (props.pausedTestResult.currentQuestionIndex) {
+    if (typeof props.pausedTestResult.currentQuestionIndex === 'number') {
         currentQuestionIndex.value = props.pausedTestResult.currentQuestionIndex;
     }
     showTest.value = true;
+    if (typeof currentQuestionIndex.value === 'number') {
+        questionStartTimestamps.value[currentQuestionIndex.value] = Date.now();
+    }
 }
+
+const getEmittedResults = () => {
+    const answers = mrtQuestions.map((q, i) => {
+        let ts = questionTimes.value[i];
+        if (i === currentQuestionIndex.value && questionStartTimestamps.value[i]) {
+            ts += Math.round((Date.now() - (questionStartTimestamps.value[i] as number)) / 1000);
+        }
+        return {
+            user_answer: userAnswers.value[i],
+            time_seconds: ts,
+        };
+    });
+    return {
+        answers,
+        currentQuestionIndex: currentQuestionIndex.value,
+        total_time_seconds: answers.reduce((acc, a) => acc + (a.time_seconds || 0), 0),
+    };
+};
 
 watch(
     [userAnswers, questionTimes, currentQuestionIndex],
-    ([newUserAnswers, newQuestionTimes, newCurrentQuestionIndex]) => {
-        const results = {
-            answers: mrtQuestions.map((q, i) => ({
-                user_answer: newUserAnswers[i],
-                time_seconds: newQuestionTimes[i],
-            })),
-            currentQuestionIndex: newCurrentQuestionIndex,
-        };
-        emit('update:answers', results);
+    () => {
+        emit('update:answers', getEmittedResults());
     },
     { deep: true, immediate: true },
 );
+
+let timer: any;
+onMounted(() => {
+    timer = setInterval(() => {
+        if (showTest.value && !isTestComplete.value) {
+            emit('update:answers', getEmittedResults());
+        }
+    }, 5000);
+});
+onUnmounted(() => {
+    if (timer) clearInterval(timer);
+});
 
 const isTestComplete = computed(() => currentQuestionIndex.value >= mrtQuestions.length);
 
