@@ -4,12 +4,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { BIT2_QUESTIONS } from '@/pages/Questions/BIT2Questions';
 import { Head } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const props = defineProps<{
     pausedTestResult?: {
         answers: { number: number; answer: number | null }[];
         pageIndex?: number;
+        total_time_accumulated?: number;
     };
     timeRemainingSeconds?: number | null;
 }>();
@@ -19,6 +20,8 @@ const emit = defineEmits(['complete', 'update:answers', 'started']);
 const showTest = ref(false);
 const pageIndex = ref(0); // 0 first 27, 1 remaining
 const answers = ref<Record<number, number | null>>({});
+const startTime = ref<number | null>(null);
+const totalTimeAccumulated = ref(0);
 const endConfirmOpen = ref(false);
 
 const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
@@ -48,23 +51,45 @@ if (props.pausedTestResult) {
     if (props.pausedTestResult.pageIndex) {
         pageIndex.value = props.pausedTestResult.pageIndex;
     }
+    const accumulated = props.pausedTestResult.total_time_seconds ?? props.pausedTestResult.total_time_accumulated;
+    if (typeof accumulated === 'number') {
+        totalTimeAccumulated.value = accumulated;
+    }
     showTest.value = true;
+    startTime.value = Date.now();
 }
+
+const getEmittedResults = () => {
+    const currentSessionTime = startTime.value ? Math.round((Date.now() - startTime.value) / 1000) : 0;
+    return {
+        answers: BIT2_QUESTIONS.map((q) => ({
+            number: q.number,
+            answer: answers.value[q.number],
+        })),
+        pageIndex: pageIndex.value,
+        total_time_seconds: totalTimeAccumulated.value + currentSessionTime,
+    };
+};
 
 watch(
     [answers, pageIndex],
-    ([newAnswers, newPageIndex]) => {
-        const results = {
-            answers: BIT2_QUESTIONS.map((q) => ({
-                number: q.number,
-                answer: newAnswers[q.number],
-            })),
-            pageIndex: newPageIndex,
-        };
-        emit('update:answers', results);
+    () => {
+        emit('update:answers', getEmittedResults());
     },
     { deep: true, immediate: true },
 );
+
+let timer: any;
+onMounted(() => {
+    timer = setInterval(() => {
+        if (showTest.value && endConfirmOpen.value === false) {
+            emit('update:answers', getEmittedResults());
+        }
+    }, 5000);
+});
+onUnmounted(() => {
+    if (timer) clearInterval(timer);
+});
 
 const firstPageQuestions = computed(() => BIT2_QUESTIONS.slice(0, 27));
 const secondPageLeft = computed(() => BIT2_QUESTIONS.slice(27, 54));
@@ -72,6 +97,7 @@ const secondPageRight = computed(() => BIT2_QUESTIONS.slice(54));
 
 function startTest() {
     emit('started');
+    startTime.value = Date.now();
     showTest.value = true;
     pageIndex.value = 0;
 }
@@ -93,8 +119,10 @@ function cancelEnd() {
 function confirmEnd() {
     clearForcedFinish(false);
     endConfirmOpen.value = false;
+    const currentSessionTime = startTime.value ? Math.round((Date.now() - startTime.value) / 1000) : 0;
     const results = {
         answers: BIT2_QUESTIONS.map((q) => ({ number: q.number, answer: answers.value[q.number] })),
+        total_time_seconds: totalTimeAccumulated.value + currentSessionTime,
     };
     emit('complete', results);
 }

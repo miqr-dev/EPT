@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { KONZ_PAGE2_SVG_ROWS } from '@/pages/Questions/konzPage2SvgRows';
 import { Head } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const props = defineProps<{
     pausedTestResult?: {
@@ -21,10 +21,12 @@ const props = defineProps<{
         page5_marks?: boolean[];
         page5_marks2?: boolean[];
         page5_tick_marks?: boolean[][];
+        total_time_seconds?: number;
     };
 }>();
 
-const startedAtMs = Date.now();
+const startedAtMs = ref(Date.now());
+const accumulatedTimeSeconds = ref(0);
 
 /* =========================================================
    NAV
@@ -67,7 +69,7 @@ const buildResults = () => ({
     page5: page5TickSums.value,
     wrong_count: wrongCount.value,
     performance_category: performanceCategory.value,
-    total_time_seconds: Math.max(0, Math.round((Date.now() - startedAtMs) / 1000)),
+    total_time_seconds: accumulatedTimeSeconds.value + Math.max(0, Math.round((Date.now() - startedAtMs.value) / 1000)),
 });
 
 const countEmpty = (answers: string[]) => answers.filter((a) => a.trim() === '').length;
@@ -121,8 +123,17 @@ const confirmFinishDespiteUnanswered = () => {
 };
 const emit = defineEmits(['complete', 'started', 'update:answers']);
 
+let timer: any;
 onMounted(() => {
     emit('started');
+    timer = setInterval(() => {
+        if (!hasCompleted.value) {
+            emit('update:answers', buildResults());
+        }
+    }, 5000);
+});
+onUnmounted(() => {
+    if (timer) clearInterval(timer);
 });
 
 const toggleMark = (marks: boolean[], i: number) => (marks[i] = !marks[i]);
@@ -704,6 +715,9 @@ if (props.pausedTestResult) {
     if (props.pausedTestResult.page5_marks) page5Marks.value = props.pausedTestResult.page5_marks;
     if (props.pausedTestResult.page5_marks2) page5Marks2.value = props.pausedTestResult.page5_marks2;
     if (props.pausedTestResult.page5_tick_marks) page5TickMarks.value = props.pausedTestResult.page5_tick_marks;
+    if (typeof props.pausedTestResult.total_time_seconds === 'number') {
+        accumulatedTimeSeconds.value = props.pausedTestResult.total_time_seconds;
+    }
 }
 
 watch(

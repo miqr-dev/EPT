@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { FPI_QUESTIONS } from '@/pages/Questions/FPIQuestions';
 import { Head } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 import { watch } from 'vue';
 
@@ -12,6 +12,7 @@ const props = defineProps<{
     pausedTestResult?: {
         answers: { number: number; answer: 'stimmt' | 'stimmtNicht' | null }[];
         blockIndex?: number;
+        total_time_accumulated?: number;
     };
     timeRemainingSeconds?: number | null;
 }>();
@@ -45,6 +46,7 @@ const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
     },
 });
 const startTime = ref<number | null>(null);
+const totalTimeAccumulated = ref(0);
 const totalQuestions = FPI_QUESTIONS.length;
 const currentFrom = computed(() => blockIndex.value * QUESTIONS_PER_BLOCK + 1);
 const currentTo = computed(() => Math.min((blockIndex.value + 1) * QUESTIONS_PER_BLOCK, totalQuestions));
@@ -64,23 +66,44 @@ if (props.pausedTestResult) {
     if (props.pausedTestResult.blockIndex) {
         blockIndex.value = props.pausedTestResult.blockIndex;
     }
+    if (typeof props.pausedTestResult.total_time_accumulated === 'number') {
+        totalTimeAccumulated.value = props.pausedTestResult.total_time_accumulated;
+    }
     showTest.value = true;
+    startTime.value = Date.now();
 }
+
+const getEmittedResults = () => {
+    const currentSessionTime = startTime.value ? Math.round((Date.now() - startTime.value) / 1000) : 0;
+    return {
+        answers: FPI_QUESTIONS.map((q) => ({
+            number: q.number,
+            answer: answers.value[q.number],
+        })),
+        blockIndex: blockIndex.value,
+        total_time_accumulated: totalTimeAccumulated.value + currentSessionTime,
+    };
+};
 
 watch(
     [answers, blockIndex],
-    ([newAnswers, newBlockIndex]) => {
-        const results = {
-            answers: FPI_QUESTIONS.map((q) => ({
-                number: q.number,
-                answer: newAnswers[q.number],
-            })),
-            blockIndex: newBlockIndex,
-        };
-        emit('update:answers', results);
+    () => {
+        emit('update:answers', getEmittedResults());
     },
     { deep: true, immediate: true },
 );
+
+let timer: any;
+onMounted(() => {
+    timer = setInterval(() => {
+        if (showTest.value && !finished.value) {
+            emit('update:answers', getEmittedResults());
+        }
+    }, 5000);
+});
+onUnmounted(() => {
+    if (timer) clearInterval(timer);
+});
 
 // Compute block questions
 const totalBlocks = computed(() => Math.ceil(FPI_QUESTIONS.length / QUESTIONS_PER_BLOCK));
@@ -144,7 +167,8 @@ function confirmEnd() {
     });
     endConfirmOpen.value = false;
     finished.value = true;
-    const totalTimeSeconds = startTime.value ? Math.round((Date.now() - startTime.value) / 1000) : null;
+    const currentSessionTime = startTime.value ? Math.round((Date.now() - startTime.value) / 1000) : 0;
+    const totalTimeSeconds = totalTimeAccumulated.value + currentSessionTime;
     const results = {
         answers: FPI_QUESTIONS.map((q) => ({
             number: q.number,
