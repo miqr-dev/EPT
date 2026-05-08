@@ -78,6 +78,15 @@ const questionTimes = ref<number[]>(Array(mrtQuestions.length).fill(0));
 const questionStartTimestamps = ref<(number | null)[]>(Array(mrtQuestions.length).fill(null));
 const startTime = ref<number | null>(null);
 
+const getPersistedQuestionTimes = () => {
+    const now = Date.now();
+    return questionTimes.value.map((time, index) => {
+        const startedAt = questionStartTimestamps.value[index];
+        if (!startedAt) return time;
+        return time + Math.round((now - startedAt) / 1000);
+    });
+};
+
 if (props.pausedTestResult) {
     if (props.pausedTestResult.answers) {
         props.pausedTestResult.answers.forEach((a, i) => {
@@ -93,11 +102,12 @@ if (props.pausedTestResult) {
 
 watch(
     [userAnswers, questionTimes, currentQuestionIndex],
-    ([newUserAnswers, newQuestionTimes, newCurrentQuestionIndex]) => {
+    ([newUserAnswers, , newCurrentQuestionIndex]) => {
+        const persistedTimes = getPersistedQuestionTimes();
         const results = {
             answers: mrtQuestions.map((q, i) => ({
                 user_answer: newUserAnswers[i],
-                time_seconds: newQuestionTimes[i],
+                time_seconds: persistedTimes[i],
             })),
             currentQuestionIndex: newCurrentQuestionIndex,
         };

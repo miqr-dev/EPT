@@ -21,10 +21,12 @@ const props = defineProps<{
         page5_marks?: boolean[];
         page5_marks2?: boolean[];
         page5_tick_marks?: boolean[][];
+        total_time_seconds?: number;
     };
 }>();
 
-const startedAtMs = Date.now();
+const elapsedSecondsBeforeResume = ref(0);
+const startedAtMs = ref(Date.now());
 
 /* =========================================================
    NAV
@@ -67,7 +69,7 @@ const buildResults = () => ({
     page5: page5TickSums.value,
     wrong_count: wrongCount.value,
     performance_category: performanceCategory.value,
-    total_time_seconds: Math.max(0, Math.round((Date.now() - startedAtMs) / 1000)),
+    total_time_seconds: getElapsedSeconds(),
 });
 
 const countEmpty = (answers: string[]) => answers.filter((a) => a.trim() === '').length;
@@ -704,6 +706,8 @@ if (props.pausedTestResult) {
     if (props.pausedTestResult.page5_marks) page5Marks.value = props.pausedTestResult.page5_marks;
     if (props.pausedTestResult.page5_marks2) page5Marks2.value = props.pausedTestResult.page5_marks2;
     if (props.pausedTestResult.page5_tick_marks) page5TickMarks.value = props.pausedTestResult.page5_tick_marks;
+    elapsedSecondsBeforeResume.value = props.pausedTestResult.total_time_seconds ?? 0;
+    startedAtMs.value = Date.now();
 }
 
 watch(
@@ -721,10 +725,15 @@ watch(
             page5_marks: page5Marks.value,
             page5_marks2: page5Marks2.value,
             page5_tick_marks: page5TickMarks.value,
+            total_time_seconds: getElapsedSeconds(),
         });
     },
     { deep: true, immediate: true },
 );
+
+function getElapsedSeconds() {
+    return elapsedSecondsBeforeResume.value + Math.max(0, Math.round((Date.now() - startedAtMs.value) / 1000));
+}
 </script>
 
 <template>
