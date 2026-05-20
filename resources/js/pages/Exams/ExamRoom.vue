@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import TimeRemainingAlerts from '@/components/TimeRemainingAlerts.vue';
@@ -128,6 +128,10 @@ const previousForceFinishByStep = ref<Record<number, string | null>>({});
 const remotelyPausedStepIds = new Set<number>();
 const pendingForceFinishRequests = new Map<number, ForceFinishDetail>();
 const hasRequestedAutoForceFinish = ref(false);
+
+const handleLogout = () => {
+  router.flushAll();
+};
 
 const hasPausedStep = computed(() =>
   Object.values(stepStatuses.value || {}).some((status) => status?.status === 'paused'),
@@ -769,7 +773,18 @@ watch(
   <Head title="My Exam" />
   <div class="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
     <div class="w-full max-w-2xl space-y-6 rounded-lg bg-white p-8 shadow-md dark:bg-gray-800">
-      <h1 class="text-center text-2xl font-bold text-gray-800 dark:text-gray-100">{{ exam.name }}</h1>
+      <div class="flex items-center justify-between gap-3">
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ exam.name }}</h1>
+        <Link
+          :href="route('logout')"
+          method="post"
+          as="button"
+          @click="handleLogout"
+          class="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+        >
+          Abmelden
+        </Link>
+      </div>
       <div v-if="isContractAvailable" class="flex justify-end">
         <Button variant="outline" @click="openContract">Vertrag anzeigen</Button>
       </div>
