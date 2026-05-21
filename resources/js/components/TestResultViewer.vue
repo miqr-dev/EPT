@@ -222,7 +222,7 @@ const fpiRohwerte = computed(() => {
           :force-open-answers="forceOpenAnswers"
           @manual-score-updated="handleManualScoreUpdated"
         />
-        <AvemResult v-else-if="test.name === 'AVEM'" :results="local" />
+        <AvemResult v-else-if="test.name === 'AVEM'" :results="local" :show-answers="showAnswers" />
     <template v-else>
       <table class="mb-4 w-full overflow-hidden rounded-lg border text-sm shadow">
         <tbody>

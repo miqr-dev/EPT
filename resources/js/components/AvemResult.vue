@@ -7,10 +7,15 @@ import { Line } from 'vue-chartjs';
 
 Chart.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title, annotationPlugin);
 
-const props = defineProps<{
-    results: any;
-    showAnswers: boolean;
-}>();
+const props = withDefaults(
+    defineProps<{
+        results: any;
+        showAnswers?: boolean;
+    }>(),
+    {
+        showAnswers: true,
+    },
+);
 
 const scaleLabels = [
     'Subjektive Bedeutsamkeit der Arbeit',
@@ -25,6 +30,14 @@ const scaleLabels = [
     'Lebenszufriedenheit',
     'Erleben sozialer Unterstützung',
 ];
+
+const answerLabels: Record<number, string> = {
+    5: 'trifft völlig zu',
+    4: 'trifft überwiegend zu',
+    3: 'teils/teils',
+    2: 'trifft überwiegend nicht zu',
+    1: 'trifft überhaupt nicht zu',
+};
 
 // Stanine-Zelltexte (aus der Vorlage)
 const NORM_INTERVALS: string[][] = [
@@ -251,7 +264,7 @@ const localPlugins = [topBottomPlugin, intervalsAndPointLabels, frameBorder];
 const chartOptions = computed(() => ({
     responsive: true,
     maintainAspectRatio: false,
-    animation: false,
+    animation: false as const,
     devicePixelRatio: 3,
     indexAxis: 'y' as const,
     scales: {
@@ -278,10 +291,10 @@ const chartOptions = computed(() => ({
         annotation: {
             annotations: {
                 // grey band 4..6 (behind lines)
-                band: { type: 'box', xMin: 3.5, xMax: 6.5, yMin: -0.5, yMax: 10.5, backgroundColor: 'rgba(150,150,150,0.12)', borderWidth: 0, z: 0 },
+                band: { type: 'box' as const, xMin: 3.5, xMax: 6.5, yMin: -0.5, yMax: 10.5, backgroundColor: 'rgba(150,150,150,0.12)', borderWidth: 0, z: 0 },
                 // SOLID boundaries between stanine groups
-                lineBetweenSAndB: { type: 'line', scaleID: 'x', value: 3.5, borderColor: '#111', borderWidth: 1.2, z: 10 },
-                lineBetweenGAndA: { type: 'line', scaleID: 'x', value: 6.5, borderColor: '#111', borderWidth: 1.2, z: 10 },
+                lineBetweenSAndB: { type: 'line' as const, scaleID: 'x', value: 3.5, borderColor: '#111', borderWidth: 1.2, z: 10 },
+                lineBetweenGAndA: { type: 'line' as const, scaleID: 'x', value: 6.5, borderColor: '#111', borderWidth: 1.2, z: 10 },
             },
         },
     },
@@ -296,8 +309,16 @@ const detailRows = computed(() => {
     return arr.map((a: any, idx: number) => {
         const num = Number(a.number ?? idx + 1);
         const q = AVEM_QUESTIONS.find((q) => q.number === num)?.text ?? '';
-        const val = a.answer ?? null;
-        return { number: num, text: q, answer: val };
+        const rawAnswer = a.user_answer ?? a.answer ?? null;
+        const numericAnswer = Number(rawAnswer);
+        const answer =
+            rawAnswer === null || rawAnswer === undefined || rawAnswer === ''
+                ? '-'
+                : Number.isFinite(numericAnswer)
+                  ? (answerLabels[numericAnswer] ?? rawAnswer)
+                  : rawAnswer;
+
+        return { number: num, question: q, user_answer: answer };
     });
 });
 </script>
@@ -310,22 +331,22 @@ const detailRows = computed(() => {
             </div>
         </div>
 
-        <details v-if="showAnswers && detailRows.length" class="mt-2">
-            <summary class="cursor-pointer rounded bg-muted/40 px-2 py-1 select-none">Antworten</summary>
+        <details v-if="showAnswers && detailRows.length" class="mt-4">
+            <summary class="cursor-pointer">Antworten anzeigen</summary>
             <div class="mt-3 overflow-x-auto">
-                <table class="min-w-full rounded border text-sm shadow">
-                    <thead class="bg-muted/40">
-                        <tr>
-                            <th class="w-14 p-2 text-right">Nr.</th>
-                            <th class="p-2 text-left">Frage</th>
-                            <th class="w-28 p-2 text-center">Antwort (1–5)</th>
+                <table class="w-full border-collapse border border-gray-300 text-sm">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border border-gray-300 p-2">#</th>
+                            <th class="border border-gray-300 p-2">Frage</th>
+                            <th class="border border-gray-300 p-2">Ihre Antwort</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="row in detailRows" :key="row.number" class="border-t">
-                            <td class="p-2 text-right font-mono">{{ row.number }}.</td>
-                            <td class="p-2">{{ row.text }}</td>
-                            <td class="p-2 text-center">{{ row.answer ?? '—' }}</td>
+                        <tr v-for="answer in detailRows" :key="answer.number">
+                            <td class="border border-gray-300 p-2">{{ answer.number }}</td>
+                            <td class="border border-gray-300 p-2">{{ answer.question }}</td>
+                            <td class="border border-gray-300 p-2">{{ answer.user_answer }}</td>
                         </tr>
                     </tbody>
                 </table>
