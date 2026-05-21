@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import TestResultViewer from '@/components/TestResultViewer.vue';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { generatePdfFromElement } from '@/lib/pdf';
 import { useForm } from '@inertiajs/vue3';
+import { X } from 'lucide-vue-next';
 import { computed, nextTick, ref, watch } from 'vue';
 import PdfTemplate from './PdfTemplate.vue';
 
@@ -134,14 +136,29 @@ async function downloadUnifiedPdf() {
         "
     >
         <DialogContent class="!top-0 !left-0 !h-screen w-screen !max-w-none !translate-x-0 !translate-y-0 !rounded-none">
-            <DialogHeader>
-                <div class="flex w-full items-center justify-between">
-                    <DialogTitle>{{ dialogTitle }}</DialogTitle>
-                    <div v-if="assignment" class="flex gap-2">
-                        <Button variant="outline" size="sm" @click="downloadUnifiedPdf" :disabled="isGeneratingPdf">
-                            {{ isGeneratingPdf ? 'Generiere PDF...' : 'Ergebnis PDF' }}
-                        </Button>
-                    </div>
+            <template #top-right>
+                <TooltipProvider :delay-duration="0">
+                    <Tooltip>
+                        <TooltipTrigger as-child>
+                            <DialogClose
+                                aria-label="Schließen"
+                                class="absolute top-4 right-4 inline-flex size-9 items-center justify-center rounded-md text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none dark:hover:bg-red-950/30"
+                            >
+                                <X class="size-5" aria-hidden="true" />
+                                <span class="sr-only">Schließen</span>
+                            </DialogClose>
+                        </TooltipTrigger>
+                        <TooltipContent side="left">Schließen</TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </template>
+
+            <DialogHeader class="items-start pr-12 text-left">
+                <DialogTitle>{{ dialogTitle }}</DialogTitle>
+                <div v-if="assignment" class="flex">
+                    <Button variant="outline" size="sm" @click="downloadUnifiedPdf" :disabled="isGeneratingPdf">
+                        {{ isGeneratingPdf ? 'Generiere PDF...' : 'Ergebnis PDF' }}
+                    </Button>
                 </div>
             </DialogHeader>
             <TestResultViewer
