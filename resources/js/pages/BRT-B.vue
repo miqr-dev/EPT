@@ -410,7 +410,15 @@ const startTest = () => {
 
                 <!-- Test Content -->
                 <div v-else-if="!isTestComplete && currentQuestion" class="rounded-lg border bg-background p-6">
-                    <h2 class="mb-4 text-xl font-semibold">Frage {{ currentQuestionIndex + 1 }}:</h2>
+                    <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
+                        <h2 class="text-xl font-semibold">Frage {{ currentQuestionIndex + 1 }}:</h2>
+                        <p
+                            v-if="currentQuestionIndex === 4"
+                            class="rounded border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-medium text-blue-800"
+                        >
+                            Bitte Bruch mit "/" eingeben (z. B. 5/10).
+                        </p>
+                    </div>
                     <p class="mb-6 text-lg" v-html="formatQuestionMark(currentQuestion.text)"></p>
                     <div v-if="currentQuestion.image" class="mb-4">
                         <img :src="currentQuestion.image" alt="Fragebild" class="max-w-xs rounded border shadow" />
