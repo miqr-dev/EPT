@@ -6,25 +6,33 @@ import { Input } from '@/components/ui/input';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { KONZ_PAGE2_SVG_ROWS } from '@/pages/Questions/konzPage2SvgRows';
 import { Head } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const props = defineProps<{
     pausedTestResult?: {
         page?: number;
-        page1?: string[];
-        page2?: string[];
-        page3?: string[];
-        page4?: string[];
-        page5?: string[];
+        page1?: Array<string | number | null>;
+        page2?: Array<string | number | null>;
+        page3?: Array<string | number | null>;
+        page4?: Array<string | number | null>;
+        page5?: Array<string | number | null>;
         copy_marks?: boolean[][][];
         page4_marks?: boolean[][];
         page5_marks?: boolean[];
         page5_marks2?: boolean[];
         page5_tick_marks?: boolean[][];
+        total_time_seconds?: number | null;
     };
+    timeRemainingSeconds?: number | null;
+    testName?: string;
 }>();
 
-const startedAtMs = Date.now();
+const elapsedBeforeResumeSeconds = ref(0);
+const activeTimingStartedAtMs = ref(performance.now());
+
+const currentElapsedSeconds = () => {
+    return elapsedBeforeResumeSeconds.value + Math.max(0, Math.round((performance.now() - activeTimingStartedAtMs.value) / 1000));
+};
 
 /* =========================================================
    NAV
@@ -67,10 +75,10 @@ const buildResults = () => ({
     page5: page5TickSums.value,
     wrong_count: wrongCount.value,
     performance_category: performanceCategory.value,
-    total_time_seconds: Math.max(0, Math.round((Date.now() - startedAtMs) / 1000)),
+    total_time_seconds: currentElapsedSeconds(),
 });
 
-const countEmpty = (answers: string[]) => answers.filter((a) => a.trim() === '').length;
+const countEmpty = (answers: Array<string | number | null | undefined>) => answers.filter((a) => String(a ?? '').trim() === '').length;
 
 const getUnansweredNotes = () => {
     const notes: string[] = [];
@@ -105,6 +113,8 @@ const forceFinish = () => {
 };
 
 const finishTest = () => {
+    window.dispatchEvent(new Event('start-finish'));
+
     const notes = getUnansweredNotes();
     if (notes.length) {
         unansweredNotes.value = notes;
@@ -121,9 +131,23 @@ const confirmFinishDespiteUnanswered = () => {
 };
 const emit = defineEmits(['complete', 'started', 'update:answers']);
 
-onMounted(() => {
-    emit('started');
-});
+const cancelFinishDialog = () => {
+    showUnansweredDialog.value = false;
+    window.dispatchEvent(new Event('cancel-finish'));
+};
+
+const setUnansweredDialogOpen = (open: boolean) => {
+    if (open) {
+        showUnansweredDialog.value = true;
+        return;
+    }
+
+    if (showUnansweredDialog.value) {
+        cancelFinishDialog();
+    }
+};
+
+let progressEmitInterval: number | null = null;
 
 const toggleMark = (marks: boolean[], i: number) => (marks[i] = !marks[i]);
 
@@ -692,13 +716,17 @@ const rowLabel = (i: number) => String.fromCharCode(97 + i); // a..j
 const GAP_AFTER = [5, 8, 15, 18, 21, 23]; // 1-based
 const hasGapAfter = (zeroBasedIndex: number) => GAP_AFTER.includes(zeroBasedIndex + 1);
 
+const normalizeSavedTextAnswers = (answers: Array<string | number | null>) => answers.map((answer) => String(answer ?? ''));
+
 if (props.pausedTestResult) {
     page.value = props.pausedTestResult.page ?? page.value;
-    if (props.pausedTestResult.page1) page1Inputs.value = [...props.pausedTestResult.page1];
-    if (props.pausedTestResult.page2) page2Answers.value = [...props.pausedTestResult.page2];
-    if (props.pausedTestResult.page3) copyCounts.value = [...props.pausedTestResult.page3];
-    if (props.pausedTestResult.page4) page4Answers.value = [...props.pausedTestResult.page4];
-    if (props.pausedTestResult.page5) page5TickSums.value = [...props.pausedTestResult.page5];
+    elapsedBeforeResumeSeconds.value = Number(props.pausedTestResult.total_time_seconds ?? 0);
+    activeTimingStartedAtMs.value = performance.now();
+    if (props.pausedTestResult.page1) page1Inputs.value = normalizeSavedTextAnswers(props.pausedTestResult.page1);
+    if (props.pausedTestResult.page2) page2Answers.value = normalizeSavedTextAnswers(props.pausedTestResult.page2);
+    if (props.pausedTestResult.page3) copyCounts.value = normalizeSavedTextAnswers(props.pausedTestResult.page3);
+    if (props.pausedTestResult.page4) page4Answers.value = normalizeSavedTextAnswers(props.pausedTestResult.page4);
+    if (props.pausedTestResult.page5) page5TickSums.value = normalizeSavedTextAnswers(props.pausedTestResult.page5);
     if (props.pausedTestResult.copy_marks) copyMarks.value = props.pausedTestResult.copy_marks;
     if (props.pausedTestResult.page4_marks) page4Marks.value = props.pausedTestResult.page4_marks;
     if (props.pausedTestResult.page5_marks) page5Marks.value = props.pausedTestResult.page5_marks;
@@ -706,25 +734,50 @@ if (props.pausedTestResult) {
     if (props.pausedTestResult.page5_tick_marks) page5TickMarks.value = props.pausedTestResult.page5_tick_marks;
 }
 
+const buildProgressPayload = () => ({
+    page: page.value,
+    page1: page1Inputs.value,
+    page2: page2Answers.value,
+    page3: copyCounts.value,
+    page4: page4Answers.value,
+    page5: page5TickSums.value,
+    copy_marks: copyMarks.value,
+    page4_marks: page4Marks.value,
+    page5_marks: page5Marks.value,
+    page5_marks2: page5Marks2.value,
+    page5_tick_marks: page5TickMarks.value,
+    total_time_seconds: currentElapsedSeconds(),
+});
+
+const emitProgress = () => {
+    if (hasCompleted.value) {
+        return;
+    }
+
+    emit('update:answers', buildProgressPayload());
+};
+
 watch(
     [page, page1Inputs, page2Answers, copyCounts, page4Answers, page5TickSums, copyMarks, page4Marks, page5Marks, page5Marks2, page5TickMarks],
     () => {
-        emit('update:answers', {
-            page: page.value,
-            page1: page1Inputs.value,
-            page2: page2Answers.value,
-            page3: copyCounts.value,
-            page4: page4Answers.value,
-            page5: page5TickSums.value,
-            copy_marks: copyMarks.value,
-            page4_marks: page4Marks.value,
-            page5_marks: page5Marks.value,
-            page5_marks2: page5Marks2.value,
-            page5_tick_marks: page5TickMarks.value,
-        });
+        emitProgress();
     },
     { deep: true, immediate: true },
 );
+
+onMounted(() => {
+    emit('started');
+    emitProgress();
+    progressEmitInterval = window.setInterval(() => {
+        emitProgress();
+    }, 1000);
+});
+
+onUnmounted(() => {
+    if (progressEmitInterval !== null) {
+        window.clearInterval(progressEmitInterval);
+    }
+});
 </script>
 
 <template>
@@ -1047,7 +1100,7 @@ watch(
             <Button variant="destructive" @click="finishTest" v-if="page === MAX_PAGE">Test beenden</Button>
         </div>
 
-        <Dialog :open="showUnansweredDialog" @update:open="(val) => (showUnansweredDialog = val)">
+        <Dialog :open="showUnansweredDialog" @update:open="setUnansweredDialogOpen">
             <DialogContent class="max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Nicht alle Antworten sind ausgefüllt</DialogTitle>
@@ -1060,7 +1113,7 @@ watch(
                     </ul>
                 </div>
                 <DialogFooter class="gap-2">
-                    <Button variant="outline" @click="showUnansweredDialog = false">Zurück zum Test</Button>
+                    <Button variant="outline" @click="cancelFinishDialog">Zurück zum Test</Button>
                     <Button variant="destructive" @click="confirmFinishDespiteUnanswered">Trotzdem beenden</Button>
                 </DialogFooter>
             </DialogContent>
