@@ -54,10 +54,13 @@ class TestResultController extends Controller
             $userAnswers = array_column($validatedData['answers'], 'user_answer');
             $originalAnswers = $testResult->result_json['answers'] ?? [];
             $questionTimes = array_column($originalAnswers, 'time_seconds');
+            $totalTime = isset($testResult->result_json['total_time_seconds'])
+                ? (int) $testResult->result_json['total_time_seconds']
+                : null;
 
             $resultData = $testName === 'BRT-A'
-                ? BrtAScorer::score($userAnswers, $questionTimes)
-                : BrtBScorer::score($userAnswers, $questionTimes);
+                ? BrtAScorer::score($userAnswers, $questionTimes, $totalTime)
+                : BrtBScorer::score($userAnswers, $questionTimes, $totalTime);
 
 
         } else {

@@ -60,7 +60,7 @@ class BrtBScorer
     ['pr' => 100, 't' => 80],
   ];
 
-  public static function score(array $answers, array $times): array
+  public static function score(array $answers, array $times, ?int $totalTimeSeconds = null): array
   {
     $details = [];
     $correct = 0;
@@ -81,7 +81,9 @@ class BrtBScorer
 
     $pr = self::$rohwertToPR[$correct] ?? 0;
     $twert = self::getTwertFromPR($pr);
-    $totalTime = array_sum($times);
+    $totalTime = $totalTimeSeconds !== null
+      ? max(0, $totalTimeSeconds)
+      : array_sum($times);
 
     return [
       'rohwert' => $correct,

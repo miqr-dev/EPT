@@ -4,15 +4,27 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { Head } from '@inertiajs/vue3';
-import { computed, nextTick, ref, watch } from 'vue';
-
-const emit = defineEmits(['complete', 'started']);
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
 interface Question {
     text: string;
     answers: string[];
     image?: string;
 }
+
+interface PausedBrtResult {
+    answers?: (string | { user_answer?: string | null; time_seconds?: number | null })[];
+    question_times?: number[];
+    currentQuestionIndex?: number;
+    total_time_seconds?: number | null;
+}
+
+const props = defineProps<{
+    pausedTestResult?: PausedBrtResult;
+    timeRemainingSeconds?: number | null;
+}>();
+
+const emit = defineEmits(['complete', 'started', 'update:answers']);
 
 const questions = ref<Question[]>([
     { text: '619020 – 541600 = ?', answers: ['77420'] },
@@ -56,6 +68,8 @@ const answerInput = ref<InstanceType<typeof Input> | null>(null);
 const questionTimes = ref<number[]>(Array(questions.value.length).fill(0));
 const questionStartTimestamps = ref<(number | null)[]>(Array(questions.value.length).fill(null));
 const startTime = ref<number | null>(null);
+const startTimePerf = ref<number | null>(null);
+const elapsedBeforeResumeSeconds = ref(0);
 const endConfirmOpen = ref(false);
 
 const MAX_ANSWER_LENGTH = 9;
@@ -91,33 +105,119 @@ const currentQuestion = computed(() => (currentQuestionIndex.value < questions.v
 
 const isLastQuestion = computed(() => currentQuestionIndex.value === questions.value.length - 1);
 
-const jumpToQuestion = (index: number) => {
-    const now = Date.now();
-    if (
-        currentQuestionIndex.value >= 0 &&
-        currentQuestionIndex.value < questions.value.length &&
-        questionStartTimestamps.value[currentQuestionIndex.value]
-    ) {
-        questionTimes.value[currentQuestionIndex.value] += Math.round(
-            (now - (questionStartTimestamps.value[currentQuestionIndex.value] as number)) / 1000,
-        );
-        questionStartTimestamps.value[currentQuestionIndex.value] = null;
+function normalizePausedAnswer(answer: string | { user_answer?: string | null } | null | undefined): string {
+    if (typeof answer === 'string') {
+        return answer;
     }
+
+    return answer?.user_answer ?? '';
+}
+
+function stopTimingQuestion(index: number) {
+    if (index < 0 || index >= questions.value.length) {
+        return;
+    }
+
+    const start = questionStartTimestamps.value[index];
+    if (!start) {
+        return;
+    }
+
+    questionTimes.value[index] += Math.round((Date.now() - start) / 1000);
+    questionStartTimestamps.value[index] = null;
+}
+
+function startTimingQuestion(index: number) {
+    if (!showTest.value || isTestComplete.value || index < 0 || index >= questions.value.length) {
+        return;
+    }
+
+    if (!questionStartTimestamps.value[index]) {
+        questionStartTimestamps.value[index] = Date.now();
+    }
+}
+
+function currentQuestionTimes() {
+    const now = Date.now();
+    const times = [...questionTimes.value];
+    const index = currentQuestionIndex.value;
+    const start = questionStartTimestamps.value[index];
+
+    if (index >= 0 && index < questions.value.length && start) {
+        times[index] += Math.round((now - start) / 1000);
+    }
+
+    return times;
+}
+
+function currentElapsedSeconds() {
+    const activeStart = startTimePerf.value ?? startTime.value;
+    if (activeStart === null) {
+        return elapsedBeforeResumeSeconds.value;
+    }
+
+    const now = startTimePerf.value !== null ? performance.now() : Date.now();
+    return elapsedBeforeResumeSeconds.value + Math.round((now - activeStart) / 1000);
+}
+
+function buildProgressPayload() {
+    return {
+        answers: [...userAnswers.value],
+        question_times: currentQuestionTimes(),
+        currentQuestionIndex: currentQuestionIndex.value,
+        total_time_seconds: currentElapsedSeconds(),
+    };
+}
+
+function emitProgress() {
+    if (!showTest.value || isTestComplete.value) {
+        return;
+    }
+
+    emit('update:answers', buildProgressPayload());
+}
+
+if (props.pausedTestResult) {
+    const paused = props.pausedTestResult;
+
+    if (Array.isArray(paused.answers)) {
+        paused.answers.forEach((answer, index) => {
+            if (index >= questions.value.length) return;
+            userAnswers.value[index] = normalizePausedAnswer(answer);
+
+            if (typeof answer === 'object' && answer?.time_seconds != null) {
+                questionTimes.value[index] = Number(answer.time_seconds);
+            }
+        });
+    }
+
+    if (Array.isArray(paused.question_times)) {
+        paused.question_times.forEach((seconds, index) => {
+            if (index < questions.value.length) {
+                questionTimes.value[index] = Number(seconds ?? 0);
+            }
+        });
+    }
+
+    if (typeof paused.currentQuestionIndex === 'number') {
+        currentQuestionIndex.value = Math.min(Math.max(paused.currentQuestionIndex, 0), questions.value.length - 1);
+    }
+
+    elapsedBeforeResumeSeconds.value = Number(paused.total_time_seconds ?? questionTimes.value.reduce((total, seconds) => total + seconds, 0));
+    startTime.value = Date.now();
+    startTimePerf.value = performance.now();
+    showTest.value = true;
+    startTimingQuestion(currentQuestionIndex.value);
+}
+
+const jumpToQuestion = (index: number) => {
+    stopTimingQuestion(currentQuestionIndex.value);
     currentQuestionIndex.value = index;
+    startTimingQuestion(index);
 };
 
 const handleNextClick = () => {
-    const now = Date.now();
-    if (
-        currentQuestionIndex.value >= 0 &&
-        currentQuestionIndex.value < questions.value.length &&
-        questionStartTimestamps.value[currentQuestionIndex.value]
-    ) {
-        questionTimes.value[currentQuestionIndex.value] += Math.round(
-            (now - (questionStartTimestamps.value[currentQuestionIndex.value] as number)) / 1000,
-        );
-        questionStartTimestamps.value[currentQuestionIndex.value] = null;
-    }
+    stopTimingQuestion(currentQuestionIndex.value);
     if (currentQuestionIndex.value < questions.value.length - 1) {
         currentQuestionIndex.value++;
     } else {
@@ -127,17 +227,7 @@ const handleNextClick = () => {
 };
 
 const handlePrevClick = () => {
-    const now = Date.now();
-    if (
-        currentQuestionIndex.value >= 0 &&
-        currentQuestionIndex.value < questions.value.length &&
-        questionStartTimestamps.value[currentQuestionIndex.value]
-    ) {
-        questionTimes.value[currentQuestionIndex.value] += Math.round(
-            (now - (questionStartTimestamps.value[currentQuestionIndex.value] as number)) / 1000,
-        );
-        questionStartTimestamps.value[currentQuestionIndex.value] = null;
-    }
+    stopTimingQuestion(currentQuestionIndex.value);
     if (currentQuestionIndex.value > 0) {
         currentQuestionIndex.value--;
     }
@@ -187,23 +277,14 @@ const handleAnswerInput = (event: Event) => {
 
 function confirmEnd() {
     clearForcedFinish(false);
-    const now = Date.now();
-    if (
-        currentQuestionIndex.value >= 0 &&
-        currentQuestionIndex.value < questions.value.length &&
-        questionStartTimestamps.value[currentQuestionIndex.value]
-    ) {
-        questionTimes.value[currentQuestionIndex.value] += Math.round(
-            (now - (questionStartTimestamps.value[currentQuestionIndex.value] as number)) / 1000,
-        );
-        questionStartTimestamps.value[currentQuestionIndex.value] = null;
-    }
+    stopTimingQuestion(currentQuestionIndex.value);
     currentQuestionIndex.value = questions.value.length;
     endConfirmOpen.value = false;
 
     const results = {
         answers: [...userAnswers.value],
         question_times: [...questionTimes.value],
+        total_time_seconds: currentElapsedSeconds(),
     };
     emit('complete', results);
 }
@@ -214,18 +295,30 @@ const cancelEnd = () => {
     clearForcedFinish(false);
 };
 
+watch([userAnswers, questionTimes, currentQuestionIndex], () => emitProgress(), { deep: true });
+
+let progressEmitInterval: number | null = null;
+
+onMounted(() => {
+    progressEmitInterval = window.setInterval(() => {
+        emitProgress();
+    }, 1000);
+});
+
+onUnmounted(() => {
+    if (progressEmitInterval !== null) {
+        window.clearInterval(progressEmitInterval);
+    }
+});
+
 // Per-question timer starter
 watch(
     currentQuestionIndex,
     async (newIndex, oldIndex) => {
-        const now = Date.now();
-        if (typeof newIndex === 'number' && newIndex >= 0 && newIndex < questions.value.length) {
-            if (!questionStartTimestamps.value[newIndex]) {
-                questionStartTimestamps.value[newIndex] = now;
-            }
-        }
-        if (newIndex === 0 && startTime.value === null) {
-            startTime.value = now;
+        startTimingQuestion(newIndex);
+        if (showTest.value && newIndex === 0 && startTime.value === null) {
+            startTime.value = Date.now();
+            startTimePerf.value = performance.now();
         }
         if (newIndex !== oldIndex && newIndex < questions.value.length) {
             await nextTick();
@@ -248,7 +341,11 @@ const startTest = () => {
     userAnswers.value = Array(questions.value.length).fill('');
     questionTimes.value = Array(questions.value.length).fill(0);
     questionStartTimestamps.value = Array(questions.value.length).fill(null);
-    startTime.value = null;
+    elapsedBeforeResumeSeconds.value = 0;
+    startTime.value = Date.now();
+    startTimePerf.value = performance.now();
+    startTimingQuestion(0);
+    emitProgress();
 };
 </script>
 

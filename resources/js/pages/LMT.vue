@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { Head } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 import { LMT_QUESTIONS, LMTQuestion } from '@/pages/Questions/LMTQuestions';
 
@@ -95,6 +95,7 @@ const startTime = ref<number | null>(null);
 const completedAt = ref<number | null>(null);
 const startTimePerf = ref<number | null>(null);
 const completedAtPerf = ref<number | null>(null);
+const elapsedBeforeResumeSeconds = ref(0);
 
 const totalPages = computed(() => Math.ceil(questions.value.length / questionsPerPage));
 
@@ -102,8 +103,9 @@ const isTestComplete = ref(false);
 
 const props = defineProps<{
     pausedTestResult?: {
-        answers: { number: number; answer: number | null }[];
+        answers: { number: number; answer: number | null; time_seconds?: number }[];
         currentPage?: number;
+        total_time_seconds?: number | null;
     };
 }>();
 
@@ -136,24 +138,77 @@ const questionsOnPage = computed(() => {
 if (props.pausedTestResult?.answers) {
     props.pausedTestResult.answers.forEach((a) => {
         userAnswers.value[a.number - 1] = a.answer;
+        questionTimes.value[a.number - 1] = Number(a.time_seconds ?? 0);
     });
     if (typeof props.pausedTestResult.currentPage === 'number' && props.pausedTestResult.currentPage >= 1) {
         currentPage.value = props.pausedTestResult.currentPage;
     }
+    elapsedBeforeResumeSeconds.value = Number(props.pausedTestResult.total_time_seconds ?? 0);
+    startTime.value = Date.now();
+    startTimePerf.value = performance.now();
     showTest.value = true;
     startTimingCurrentPage();
 }
 
+function currentQuestionTimes() {
+    const now = Date.now();
+    const times = [...questionTimes.value];
+
+    questionsOnPage.value.forEach((q) => {
+        const index = q.number - 1;
+        const start = questionStartTimestamps.value[index];
+        if (start) {
+            times[index] += Math.round((now - start) / 1000);
+        }
+    });
+
+    return times;
+}
+
+function currentElapsedSeconds() {
+    const activeStart = startTimePerf.value ?? startTime.value;
+    if (activeStart === null) {
+        return elapsedBeforeResumeSeconds.value;
+    }
+
+    const now = startTimePerf.value !== null ? performance.now() : Date.now();
+    return elapsedBeforeResumeSeconds.value + Math.round((now - activeStart) / 1000);
+}
+
+function emitProgress() {
+    const liveQuestionTimes = currentQuestionTimes();
+    emit('update:answers', {
+        answers: questions.value.map((q, idx) => ({
+            number: q.number,
+            answer: userAnswers.value[idx],
+            time_seconds: liveQuestionTimes[idx],
+        })),
+        currentPage: currentPage.value,
+        total_time_seconds: currentElapsedSeconds(),
+    });
+}
+
 watch(
-    [userAnswers, currentPage],
-    ([newAnswers, newCurrentPage]) => {
-        emit('update:answers', {
-            answers: questions.value.map((q, idx) => ({ number: q.number, answer: newAnswers[idx] })),
-            currentPage: newCurrentPage,
-        });
-    },
+    [userAnswers, questionTimes, currentPage],
+    () => emitProgress(),
     { deep: true, immediate: true },
 );
+
+let progressEmitInterval: number | null = null;
+
+onMounted(() => {
+    progressEmitInterval = window.setInterval(() => {
+        if (showTest.value && !isTestComplete.value) {
+            emitProgress();
+        }
+    }, 1000);
+});
+
+onUnmounted(() => {
+    if (progressEmitInterval !== null) {
+        window.clearInterval(progressEmitInterval);
+    }
+});
 
 function startTest() {
     emit('started');
@@ -163,6 +218,7 @@ function startTest() {
     userAnswers.value = Array(questions.value.length).fill(null);
     questionTimes.value = Array(questions.value.length).fill(0);
     questionStartTimestamps.value = Array(questions.value.length).fill(null);
+    elapsedBeforeResumeSeconds.value = 0;
     startTime.value = Date.now();
     startTimePerf.value = performance.now();
     completedAt.value = null;
@@ -283,12 +339,12 @@ const totalTimeTaken = computed(() => {
         return null;
     }
     if (startTimePerf.value !== null && completedAtPerf.value !== null) {
-        return Math.round((completedAtPerf.value - startTimePerf.value) / 1000);
+        return elapsedBeforeResumeSeconds.value + Math.round((completedAtPerf.value - startTimePerf.value) / 1000);
     }
     if (startTime.value === null || completedAt.value === null) {
-        return null;
+        return elapsedBeforeResumeSeconds.value || null;
     }
-    return Math.round((completedAt.value - startTime.value) / 1000);
+    return elapsedBeforeResumeSeconds.value + Math.round((completedAt.value - startTime.value) / 1000);
 });
 </script>
 

@@ -271,11 +271,13 @@ class ParticipantController extends Controller
         if ($examStep->test->name === 'BRT-A') {
           $answers = $results['answers'] ?? [];
           $times = $results['question_times'] ?? [];
-          $resultData = \App\Services\BrtAScorer::score($answers, $times);
+          $totalTime = isset($results['total_time_seconds']) ? (int) $results['total_time_seconds'] : null;
+          $resultData = \App\Services\BrtAScorer::score($answers, $times, $totalTime);
         } elseif ($examStep->test->name === 'BRT-B') {
           $answers = $results['answers'] ?? [];
           $times = $results['question_times'] ?? [];
-          $resultData = \App\Services\BrtBScorer::score($answers, $times);
+          $totalTime = isset($results['total_time_seconds']) ? (int) $results['total_time_seconds'] : null;
+          $resultData = \App\Services\BrtBScorer::score($answers, $times, $totalTime);
         } elseif ($examStep->test->name === 'FPI-R') {
           $answers = $results['answers'] ?? [];
           $totalTime = $results['total_time_seconds'] ?? null;
