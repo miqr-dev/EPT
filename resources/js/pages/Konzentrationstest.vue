@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { KONZ_PAGE2_SVG_ROWS } from '@/pages/Questions/konzPage2SvgRows';
 import { Head } from '@inertiajs/vue3';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const props = defineProps<{
     pausedTestResult?: {
@@ -48,8 +48,16 @@ const prevPage = () => {
 };
 
 const showUnansweredDialog = ref(false);
-const unansweredNotes = ref<string[]>([]);
 const hasCompleted = ref(false);
+
+type UnansweredItem = {
+    id: string;
+    page: number;
+    label: string;
+    target: string;
+};
+
+const unansweredItems = ref<UnansweredItem[]>([]);
 
 const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
     isActive: () => !hasCompleted.value,
@@ -78,28 +86,39 @@ const buildResults = () => ({
     total_time_seconds: currentElapsedSeconds(),
 });
 
-const countEmpty = (answers: Array<string | number | null | undefined>) => answers.filter((a) => String(a ?? '').trim() === '').length;
+const isEmptyAnswer = (answer: string | number | null | undefined) => String(answer ?? '').trim() === '';
 
-const getUnansweredNotes = () => {
-    const notes: string[] = [];
+const collectUnansweredItems = (
+    answers: Array<string | number | null | undefined>,
+    pageNumber: number,
+    targetPrefix: string,
+    labelForIndex: (index: number) => string,
+) =>
+    answers
+        .map((answer, index) =>
+            isEmptyAnswer(answer)
+                ? {
+                      id: `${targetPrefix}-${index}`,
+                      page: pageNumber,
+                      label: labelForIndex(index),
+                      target: `${targetPrefix}-${index}`,
+                  }
+                : null,
+        )
+        .filter((item): item is UnansweredItem => item !== null);
 
-    const page1Missing = countEmpty(page1Inputs.value);
-    if (page1Missing) notes.push(`${page1Missing} offene Antwort${page1Missing > 1 ? 'en' : ''} in Aufgabe 1 (Zahlenreihen)`);
-
-    const page2Missing = countEmpty(page2Answers.value);
-    if (page2Missing) notes.push(`${page2Missing} offene Antwort${page2Missing > 1 ? 'en' : ''} in Aufgabe 2 (Zuordnung)`);
-
-    const page3Missing = countEmpty(copyCounts.value);
-    if (page3Missing) notes.push(`${page3Missing} offene Antwort${page3Missing > 1 ? 'en' : ''} in Aufgabe 3 (Abschrift)`);
-
-    const page4Missing = countEmpty(page4Answers.value);
-    if (page4Missing) notes.push(`${page4Missing} offene Antwort${page4Missing > 1 ? 'en' : ''} in Aufgabe 4 (Ziffern zählen)`);
-
-    const page5Missing = countEmpty(page5TickSums.value);
-    if (page5Missing) notes.push(`${page5Missing} offene Antwort${page5Missing > 1 ? 'en' : ''} in Aufgabe 5 (Zeichen zählen)`);
-
-    return notes;
-};
+const getUnansweredItems = () => [
+    ...collectUnansweredItems(page1Inputs.value, 1, 'page-1-answer', (index) => `Aufgabe 1, Frage ${index + 1} (Zahlenreihen)`),
+    ...collectUnansweredItems(page2Answers.value, 2, 'page-2-answer', (index) => `Aufgabe 2, Frage ${index + 1} (Zuordnung)`),
+    ...collectUnansweredItems(copyCounts.value, 3, 'page-3-answer', (index) => `Aufgabe 3, Zeile ${String.fromCharCode(97 + index)}) (Abschrift)`),
+    ...collectUnansweredItems(page4Answers.value, 4, 'page-4-answer', (index) => `Aufgabe 4, Zeile ${index + 1} (Ziffern zählen)`),
+    ...collectUnansweredItems(
+        page5TickSums.value,
+        5,
+        'page-5-answer',
+        (index) => `Aufgabe 5, Zeile ${String.fromCharCode(97 + index)}) (Zeichen zählen)`,
+    ),
+];
 
 const submitResults = () => {
     clearForcedFinish(false);
@@ -115,9 +134,9 @@ const forceFinish = () => {
 const finishTest = () => {
     window.dispatchEvent(new Event('start-finish'));
 
-    const notes = getUnansweredNotes();
-    if (notes.length) {
-        unansweredNotes.value = notes;
+    const items = getUnansweredItems();
+    if (items.length) {
+        unansweredItems.value = items;
         showUnansweredDialog.value = true;
         return;
     }
@@ -145,6 +164,17 @@ const setUnansweredDialogOpen = (open: boolean) => {
     if (showUnansweredDialog.value) {
         cancelFinishDialog();
     }
+};
+
+const goToUnansweredItem = async (item: UnansweredItem) => {
+    cancelFinishDialog();
+    page.value = item.page;
+
+    await nextTick();
+
+    const target = document.querySelector<HTMLElement>(`[data-unanswered-target="${item.target}"]`);
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    target?.focus();
 };
 
 let progressEmitInterval: number | null = null;
@@ -803,7 +833,12 @@ onUnmounted(() => {
                 <li v-for="(row, i) in page1Series" :key="i" class="flex items-center gap-2">
                     <span class="text-[18px] whitespace-pre">{{ row.join(' . ') }} . ?</span>
 
-                    <input v-model="page1Inputs[i]" class="answer-box h-8 w-12 text-[18px]" inputmode="numeric" />
+                    <input
+                        v-model="page1Inputs[i]"
+                        class="answer-box h-8 w-12 text-[18px]"
+                        inputmode="numeric"
+                        :data-unanswered-target="`page-1-answer-${i}`"
+                    />
                 </li>
             </ul>
         </div>
@@ -830,7 +865,13 @@ onUnmounted(() => {
                     <template v-for="(row, i) in page2Rows" :key="`page2-row-${i}`">
                         <div class="page2-row page2-left-row">
                             <div class="page2-svg page2-question-svg" v-html="row.questionSvg"></div>
-                            <input v-model="page2Answers[i]" class="answer-box page2-answer-input text-[18px]" inputmode="numeric" maxlength="1" />
+                            <input
+                                v-model="page2Answers[i]"
+                                class="answer-box page2-answer-input text-[18px]"
+                                inputmode="numeric"
+                                maxlength="1"
+                                :data-unanswered-target="`page-2-answer-${i}`"
+                            />
                         </div>
                         <div class="hidden self-stretch bg-black/60 lg:block"></div>
                         <div class="page2-row">
@@ -988,6 +1029,7 @@ onUnmounted(() => {
                                     class="answer-box count-box row-span-2 self-center justify-self-center"
                                     inputmode="numeric"
                                     maxlength="2"
+                                    :data-unanswered-target="`page-3-answer-${rIdx}`"
                                 />
 
                                 <!-- Row 2 -->
@@ -1038,7 +1080,7 @@ onUnmounted(() => {
                         >{{ ch }}</span
                     >
                 </div>
-                <Input v-model="page4Answers[i]" class="inline h-9 w-16 text-[18px]" />
+                <Input v-model="page4Answers[i]" class="inline h-9 w-16 text-[18px]" :data-unanswered-target="`page-4-answer-${i}`" />
             </div>
         </div>
 
@@ -1088,7 +1130,12 @@ onUnmounted(() => {
                         </span>
                     </div>
                     <!-- right input -->
-                    <Input v-model="page5TickSums[r]" class="inline h-9 w-16 border border-gray-400 bg-white text-[18px]" placeholder="" />
+                    <Input
+                        v-model="page5TickSums[r]"
+                        class="inline h-9 w-16 border border-gray-400 bg-white text-[18px]"
+                        placeholder=""
+                        :data-unanswered-target="`page-5-answer-${r}`"
+                    />
                 </div>
             </div>
         </div>
@@ -1107,9 +1154,17 @@ onUnmounted(() => {
                     <DialogDescription> Bitte prüfen Sie die offenen Felder. Leere Eingaben werden als unbeantwortet gespeichert. </DialogDescription>
                 </DialogHeader>
                 <div class="space-y-3">
-                    <p class="text-base">Offene Bereiche:</p>
-                    <ul class="list-disc space-y-1 pl-5 text-base">
-                        <li v-for="note in unansweredNotes" :key="note">{{ note }}</li>
+                    <p class="text-base">Offene Antworten:</p>
+                    <ul class="max-h-[50vh] space-y-2 overflow-y-auto pr-1 text-base">
+                        <li v-for="item in unansweredItems" :key="item.id">
+                            <button
+                                type="button"
+                                class="w-full rounded-md border border-gray-200 px-3 py-2 text-left transition hover:border-gray-400 hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:outline-none dark:border-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-800 dark:focus-visible:ring-gray-100"
+                                @click="goToUnansweredItem(item)"
+                            >
+                                {{ item.label }}
+                            </button>
+                        </li>
                     </ul>
                 </div>
                 <DialogFooter class="gap-2">
