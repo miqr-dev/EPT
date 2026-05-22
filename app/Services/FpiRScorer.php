@@ -22,7 +22,8 @@ class FpiRScorer
         if (!$sex || !$age) {
             return null;
         }
-        $sex = strtolower($sex) === 'f' ? 'female' : 'male';
+        $sexValue = strtolower(trim($sex));
+        $sex = in_array($sexValue, ['f', 'female', 'w', 'weiblich'], true) ? 'female' : 'male';
         if ($age >= 16 && $age <= 24) {
             $range = '16_24';
         } elseif ($age >= 25 && $age <= 44) {
@@ -39,56 +40,81 @@ class FpiRScorer
         return json_decode(file_get_contents($file), true);
     }
 
+    protected static function getNormRanges(array $normTable, string $key): ?array
+    {
+        if (isset($normTable[$key])) {
+            return $normTable[$key];
+        }
+
+        if ($key === 'KORP') {
+            return $normTable["K\xC3\x96RP"] ?? null;
+        }
+
+        return null;
+    }
+
     public static function score(array $answers, ?string $sex, ?int $age, ?int $totalTimeSeconds = null): array
     {
         $questions = self::loadQuestions();
-        $questionMap = [];
-        foreach ($questions as $q) {
-            $questionMap[$q['number']] = $q;
-        }
 
         $scores = [];
         foreach (self::$categoryKeys as $key) {
             $scores[$key] = 0;
         }
 
-        $details = [];
+        $answerMap = [];
         foreach ($answers as $entry) {
             $num = $entry['number'] ?? null;
-            $ans = $entry['answer'] ?? null;
-            if ($num === null || $ans === null) {
+            if ($num === null) {
                 continue;
             }
-            $q = $questionMap[$num] ?? null;
-            $text = $q['text'] ?? '';
+
+            $answerMap[(int) $num] = $entry['answer'] ?? $entry['user_answer'] ?? null;
+        }
+
+        $details = [];
+        $missingAnswerNumbers = [];
+        foreach ($questions as $q) {
+            $num = (int) $q['number'];
+            $ans = $answerMap[$num] ?? null;
             $details[] = [
                 'number' => $num,
-                'text' => $text,
+                'text' => $q['text'] ?? '',
                 'answer' => $ans,
             ];
-            if ($q && isset($q[$ans])) {
-                foreach ($q[$ans] as $effect) {
-                    $cat = $effect['category'];
-                    $points = $effect['points'];
-                    $scores[$cat] = ($scores[$cat] ?? 0) + $points;
-                }
+
+            if ($ans === null || $ans === '' || !isset($q[$ans])) {
+                $missingAnswerNumbers[] = $num;
+                continue;
+            }
+
+            foreach ($q[$ans] as $effect) {
+                $cat = $effect['category'];
+                $points = $effect['points'];
+                $scores[$cat] = ($scores[$cat] ?? 0) + $points;
             }
         }
 
         $stanines = [];
+        foreach (self::$stanineKeys as $key) {
+            $stanines[$key] = null;
+        }
+
         $normTable = self::getNormTable($sex, $age);
         if ($normTable) {
             foreach (self::$stanineKeys as $index => $key) {
                 $scoreKey = self::$categoryKeys[$index];
                 $value = $scores[$scoreKey] ?? 0;
-                $stanines[$key] = null;
-                if (isset($normTable[$key])) {
-                    foreach ($normTable[$key] as $i => $range) {
-                        [$min, $max] = $range;
-                        if ($value >= $min && $value <= $max) {
-                            $stanines[$key] = $i + 1;
-                            break;
-                        }
+                $ranges = self::getNormRanges($normTable, $key);
+                if (!$ranges) {
+                    continue;
+                }
+
+                foreach ($ranges as $i => $range) {
+                    [$min, $max] = $range;
+                    if ($value >= $min && $value <= $max) {
+                        $stanines[$key] = $i + 1;
+                        break;
                     }
                 }
             }
@@ -109,8 +135,9 @@ class FpiRScorer
             'rohwerte' => $rohwerte,
             'stanines' => $stanineArray,
             'total_time_seconds' => $totalTimeSeconds,
+            'missing_answer_count' => count($missingAnswerNumbers),
+            'missing_answer_numbers' => $missingAnswerNumbers,
             'answers' => $details,
         ];
     }
 }
-

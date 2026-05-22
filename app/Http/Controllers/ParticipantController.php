@@ -278,12 +278,13 @@ class ParticipantController extends Controller
           $times = $results['question_times'] ?? [];
           $totalTime = isset($results['total_time_seconds']) ? (int) $results['total_time_seconds'] : null;
           $resultData = \App\Services\BrtBScorer::score($answers, $times, $totalTime);
-        } elseif ($examStep->test->name === 'FPI-R') {
+        } elseif ($examStep->test->name === 'FPI-R' || $examStep->test->code === 'FPI-R') {
           $answers = $results['answers'] ?? [];
           $totalTime = $results['total_time_seconds'] ?? null;
-          $profile = $user->participant_profile;
+          $user->loadMissing('participantProfile');
+          $profile = $user->participantProfile;
           $sex = $profile->sex ?? null;
-          $age = $profile->age ?? null;
+          $age = isset($profile->age) ? (int) $profile->age : null;
           $resultData = \App\Services\FpiRScorer::score($answers, $sex, $age, $totalTime);
         } elseif ($examStep->test->name === 'MRT-A') {
           $userAnswers = array_column($results['answers'] ?? [], 'user_answer');

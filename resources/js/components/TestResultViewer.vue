@@ -11,6 +11,7 @@ import LpsResult from '@/components/LpsResult.vue';
 import MrtAResult from '@/components/MrtAResult.vue';
 import MrtBResult from '@/components/MrtBResult.vue';
 import { Input } from '@/components/ui/input';
+import { FPI_QUESTIONS } from '@/pages/Questions/FPIQuestions';
 import FpiResult from '@/pages/Scores/FPI/FPIResult.vue';
 import { norms_female_16_24 } from '@/pages/Scores/FPI/norms_female_16_24';
 import { norms_female_25_44 } from '@/pages/Scores/FPI/norms_female_25_44';
@@ -39,10 +40,12 @@ interface ResultJson {
     [key: string]: any;
 }
 
+type FpiAnswerValue = 'stimmt' | 'stimmtNicht';
+
 const props = withDefaults(
     defineProps<{
         modelValue: ResultJson | null;
-        test: { name: string };
+        test: { name: string; code?: string };
         participantProfile?: { age: number; sex?: string } | null;
         showAnswers?: boolean;
         forceOpenAnswers?: boolean;
@@ -74,6 +77,10 @@ const manualScoreMap = computed<Record<string, number | string | null>>(() => {
     return {};
 });
 const isKonzentrationstest = computed(() => ['Konzentrationstest', '628 Test'].includes((props.test?.name || '').trim()));
+const isFpiRTest = computed(() => [props.test?.name, props.test?.code].some((value) => String(value ?? '').trim() === 'FPI-R'));
+
+const fpiStanineKeys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
+const fpiScoreKeys: (number | string)[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'E', 'N'];
 
 watch(
     () => props.modelValue,
@@ -140,10 +147,98 @@ function getFpiNormTable(sex?: string, age?: number) {
     return isFemale ? norms_female_60up : norms_male_60up;
 }
 
+function getFpiNormRanges(table: Record<string, [number, number][]>, key: string) {
+    return table[key] ?? (key === 'KORP' ? table['K\u00d6RP'] : undefined) ?? [];
+}
+
+function getFpiAnswer(entry: any): FpiAnswerValue | null {
+    const value = entry?.answer ?? entry?.user_answer;
+    return value === 'stimmt' || value === 'stimmtNicht' ? value : null;
+}
+
+function calculateFpiScoreMapFromAnswers(answers: any[] | null | undefined) {
+    if (!Array.isArray(answers)) return null;
+
+    const scores = fpiScoreKeys.reduce<Record<string, number>>((acc, key) => {
+        acc[String(key)] = 0;
+        return acc;
+    }, {});
+
+    let hasScorableAnswer = false;
+
+    answers.forEach((entry, index) => {
+        const answer = getFpiAnswer(entry);
+        const number = entry?.number != null ? Number(entry.number) : FPI_QUESTIONS[index]?.number;
+        const question = FPI_QUESTIONS.find((candidate) => candidate.number === number);
+
+        if (!answer || !question) return;
+
+        hasScorableAnswer = true;
+        for (const effect of question[answer] ?? []) {
+            const key = String(effect.category);
+            scores[key] = (scores[key] ?? 0) + effect.points;
+        }
+    });
+
+    return hasScorableAnswer ? scores : null;
+}
+
+function calculateFpiMissingAnswerNumbers(answers: any[] | null | undefined) {
+    const answerByNumber = new Map<number, FpiAnswerValue | null>();
+
+    if (Array.isArray(answers)) {
+        answers.forEach((entry, index) => {
+            const number = entry?.number != null ? Number(entry.number) : FPI_QUESTIONS[index]?.number;
+            if (typeof number === 'number' && Number.isFinite(number)) {
+                answerByNumber.set(number, getFpiAnswer(entry));
+            }
+        });
+    }
+
+    return FPI_QUESTIONS.filter((question) => !answerByNumber.has(question.number) || !answerByNumber.get(question.number)).map(
+        (question) => question.number,
+    );
+}
+
+function normalizeFpiScoreMap(src: any) {
+    const categoryScores = src?.category_scores ?? src?.categoryScores;
+    if (categoryScores && typeof categoryScores === 'object' && !Array.isArray(categoryScores)) {
+        return categoryScores as Record<string, number | string | null>;
+    }
+
+    const rawArray =
+        Array.isArray(src?.rohwerte) && src.rohwerte.length
+            ? src.rohwerte
+            : Array.isArray(src?.categoryScores) && src.categoryScores.length
+              ? src.categoryScores
+              : null;
+
+    if (rawArray) {
+        return fpiScoreKeys.reduce<Record<string, number | string | null>>((acc, key, index) => {
+            acc[String(key)] = rawArray[index] ?? null;
+            return acc;
+        }, {});
+    }
+
+    return calculateFpiScoreMapFromAnswers(src?.answers);
+}
+
+const fpiMissingAnswerCount = computed(() => {
+    if (!local.value) return 0;
+
+    const src: any = local.value;
+    const rawCount = src.missing_answer_count ?? src.missingAnswerCount ?? src.unanswered_count ?? src.unansweredCount;
+    const count = Number(rawCount);
+
+    if (rawCount != null && Number.isFinite(count)) {
+        return count;
+    }
+
+    return calculateFpiMissingAnswerNumbers(src.answers).length;
+});
+
 const fpiStanines = computed(() => {
     if (!local.value) return [];
-    const stanineKeys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
-    const scoreKeys: (number | string)[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'E', 'N'];
     const src: any = local.value;
 
     // Direct arrays
@@ -155,19 +250,22 @@ const fpiStanines = computed(() => {
     // Object with keys
     const obj = src.category_stanines || src.categoryStanines || src.stanines;
     if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-        const arr = stanineKeys.map((k) => (obj[k] != null ? Number(obj[k]) : null));
+        const arr = fpiStanineKeys.map((key) => {
+            const value = obj[key] ?? (key === 'KORP' ? obj['K\u00d6RP'] : null);
+            return value != null ? Number(value) : null;
+        });
         if (arr.some((v) => v != null)) return arr;
     }
 
-    // Derive from raw scores
-    const scores = src.category_scores || src.categoryScores;
+    // Derive from stored or legacy raw answers.
+    const scores = normalizeFpiScoreMap(src);
     if (scores) {
         const table = getFpiNormTable(props.participantProfile?.sex, props.participantProfile?.age);
         if (!table) return [];
-        return stanineKeys.map((key, idx) => {
-            const raw = scores[scoreKeys[idx]];
-            if (raw == null) return null;
-            const ranges: [number, number][] = (table as any)[key] ?? [];
+        return fpiStanineKeys.map((key, idx) => {
+            const raw = Number(scores[String(fpiScoreKeys[idx])] ?? NaN);
+            if (!Number.isFinite(raw)) return null;
+            const ranges: [number, number][] = getFpiNormRanges(table as any, key);
             for (let i = 0; i < ranges.length; i++) {
                 const [min, max] = ranges[i];
                 if (raw >= min && raw <= max) return i + 1;
@@ -181,12 +279,11 @@ const fpiStanines = computed(() => {
 const fpiRohwerte = computed(() => {
     if (!local.value) return [];
     const src: any = local.value;
-    if (Array.isArray(src.rohwerte)) return src.rohwerte;
-    if (Array.isArray(src.categoryScores)) return src.categoryScores;
-    const scores = src.category_scores || src.categoryScores;
+    if (Array.isArray(src.rohwerte) && src.rohwerte.length) return src.rohwerte;
+    if (Array.isArray(src.categoryScores) && src.categoryScores.length) return src.categoryScores;
+    const scores = normalizeFpiScoreMap(src);
     if (scores) {
-        const keys: (string | number)[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'E', 'N'];
-        return keys.map((k) => scores[k] ?? null);
+        return fpiScoreKeys.map((key) => scores[String(key)] ?? null);
     }
     return [];
 });
@@ -199,10 +296,11 @@ const fpiRohwerte = computed(() => {
         <KonzentrationstestResult v-else-if="isKonzentrationstest" :results="local" :show-answers="showAnswers" />
         <LmtResult v-else-if="test.name === 'LMT'" :results="local" :show-answers="showAnswers" />
         <FpiResult
-            v-else-if="test.name === 'FPI-R'"
+            v-else-if="isFpiRTest"
             :stanines="fpiStanines"
             :rohwerte="fpiRohwerte"
             :answers="local.answers"
+            :missing-answer-count="fpiMissingAnswerCount"
             :show-answers="showAnswers"
         />
         <BIT2Result v-else-if="test.name === 'BIT-2'" :results="local" :participantProfile="participantProfile" :show-answers="showAnswers" />
