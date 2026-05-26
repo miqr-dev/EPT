@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Input from '@/components/ui/input/Input.vue';
 import Textarea from '@/components/ui/textarea/Textarea.vue';
-import { Check, Pencil, Plus, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-vue-next';
+import { Check, Circle, Pencil, Plus, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-vue-next';
 
 const props = defineProps<{ newsItems: any[]; todos: any[]; suggestions: any[] }>();
 const pageUser = computed(() => (usePage().props.auth as any).user);
@@ -216,7 +216,7 @@ const promoteSuggestion = (id: number) => {
         <Card class="border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
           <CardContent class="space-y-3">
             <div v-for="todo in todos" :key="todo.id" class="rounded-lg border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
-              <div class="flex items-start gap-2"><Button v-if="canManageTodos" size="icon" variant="outline" @click="toggleTodoCompleted(todo)"><Check class="h-4 w-4" /></Button><p class="flex-1" :class="{ 'line-through text-slate-500': todo.is_completed }">{{ todo.task }}</p><Badge :variant="todo.is_completed ? 'secondary' : 'outline'">{{ todo.is_completed ? 'Erledigt' : 'Aktiv' }}</Badge><Button v-if="canManageTodos" size="icon" variant="ghost" @click="openTodoEdit(todo)"><Pencil class="h-4 w-4" /></Button><Button v-if="canManageTodos" size="icon" variant="ghost" @click="deleteTodo(todo.id)"><Trash2 class="h-4 w-4 text-red-600" /></Button></div>
+              <div class="flex items-start gap-2"><Button v-if="canManageTodos" size="icon" variant="outline" :aria-label="todo.is_completed ? 'Todo als aktiv markieren' : 'Todo als erledigt markieren'" :title="todo.is_completed ? 'Als aktiv markieren' : 'Als erledigt markieren'" @click="toggleTodoCompleted(todo)"><Check v-if="todo.is_completed" class="h-4 w-4" /><Circle v-else class="h-4 w-4" /></Button><p class="flex-1" :class="{ 'line-through text-slate-500': todo.is_completed }">{{ todo.task }}</p><Badge :variant="todo.is_completed ? 'secondary' : 'outline'">{{ todo.is_completed ? 'Erledigt' : 'Aktiv' }}</Badge><Button v-if="canManageTodos" size="icon" variant="ghost" @click="openTodoEdit(todo)"><Pencil class="h-4 w-4" /></Button><Button v-if="canManageTodos" size="icon" variant="ghost" @click="deleteTodo(todo.id)"><Trash2 class="h-4 w-4 text-red-600" /></Button></div>
               <p class="mt-2 text-right text-xs text-slate-500 dark:text-slate-400">{{ formatter.format(new Date(todo.created_at)) }} · {{ authorWithCity(todo.author) }}</p>
             </div>
           </CardContent>
