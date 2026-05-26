@@ -215,9 +215,44 @@ const promoteSuggestion = (id: number) => {
         <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-semibold text-slate-800 dark:text-slate-100">Todos</h2><Dialog v-if="canManageTodos" :open="showTodoDialog" @update:open="(val) => showTodoDialog = val"><DialogTrigger as-child><Button size="icon" variant="outline"><Plus class="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Todo anlegen</DialogTitle><DialogDescription>Für alle sichtbar.</DialogDescription></DialogHeader><Textarea v-model="todoForm.task" placeholder="Aufgabe" /><DialogFooter><Button @click="postTodo">Speichern</Button></DialogFooter></DialogContent></Dialog></div>
         <Card class="border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
           <CardContent class="space-y-3">
-            <div v-for="todo in todos" :key="todo.id" class="rounded-lg border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
-              <div class="flex items-start gap-2"><Button v-if="canManageTodos" size="icon" variant="outline" :aria-label="todo.is_completed ? 'Todo als aktiv markieren' : 'Todo als erledigt markieren'" :title="todo.is_completed ? 'Als aktiv markieren' : 'Als erledigt markieren'" @click="toggleTodoCompleted(todo)"><Check v-if="todo.is_completed" class="h-4 w-4" /><Circle v-else class="h-4 w-4" /></Button><p class="flex-1" :class="{ 'line-through text-slate-500': todo.is_completed }">{{ todo.task }}</p><Badge :variant="todo.is_completed ? 'secondary' : 'outline'">{{ todo.is_completed ? 'Erledigt' : 'Aktiv' }}</Badge><Button v-if="canManageTodos" size="icon" variant="ghost" @click="openTodoEdit(todo)"><Pencil class="h-4 w-4" /></Button><Button v-if="canManageTodos" size="icon" variant="ghost" @click="deleteTodo(todo.id)"><Trash2 class="h-4 w-4 text-red-600" /></Button></div>
-              <p class="mt-2 text-right text-xs text-slate-500 dark:text-slate-400">{{ formatter.format(new Date(todo.created_at)) }} · {{ authorWithCity(todo.author) }}</p>
+            <div v-for="todo in todos" :key="todo.id" class="rounded-lg border border-slate-300 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex min-w-0 flex-1 items-center gap-3">
+                  <Button
+                    v-if="canManageTodos"
+                    size="icon"
+                    variant="outline"
+                    class="h-9 w-9 shrink-0 rounded-md"
+                    :aria-label="todo.is_completed ? 'Todo als aktiv markieren' : 'Todo als erledigt markieren'"
+                    :title="todo.is_completed ? 'Als aktiv markieren' : 'Als erledigt markieren'"
+                    @click="toggleTodoCompleted(todo)"
+                  >
+                    <Check v-if="todo.is_completed" class="h-4 w-4" />
+                    <Circle v-else class="h-4 w-4" />
+                  </Button>
+
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm leading-6 text-slate-900 dark:text-slate-100" :class="{ 'line-through text-slate-500 dark:text-slate-400': todo.is_completed }">
+                      {{ todo.task }}
+                    </p>
+                    <p class="text-xs leading-5 text-slate-500 dark:text-slate-400">
+                      {{ formatter.format(new Date(todo.created_at)) }} · {{ authorWithCity(todo.author) }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex shrink-0 items-center gap-1.5 self-start sm:self-center">
+                  <Badge :variant="todo.is_completed ? 'secondary' : 'outline'" class="h-6 px-2.5 text-xs">
+                    {{ todo.is_completed ? 'Erledigt' : 'Aktiv' }}
+                  </Badge>
+                  <Button v-if="canManageTodos" size="icon" variant="ghost" class="h-9 w-9 rounded-md" @click="openTodoEdit(todo)">
+                    <Pencil class="h-4 w-4" />
+                  </Button>
+                  <Button v-if="canManageTodos" size="icon" variant="ghost" class="h-9 w-9 rounded-md" @click="deleteTodo(todo.id)">
+                    <Trash2 class="h-4 w-4 text-red-600" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
