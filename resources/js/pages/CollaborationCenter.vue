@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,6 +31,7 @@ const showNewsDialog = ref(false);
 const showTodoDialog = ref(false);
 const showSuggestionDialog = ref(false);
 const activeTab = ref<'news' | 'suggestions' | 'todos'>('news');
+const highlightedSuggestionId = ref<number | null>(null);
 
 const recentSuggestions = computed(() => [...props.suggestions].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 3));
 const recentTodos = computed(() => [...props.todos].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 3));
@@ -84,6 +85,23 @@ const voteNames = (suggestion: any, type: 'like' | 'dislike') => votesFor(sugges
 const myVote = (suggestion: any) => (suggestion.votes || []).find((v: any) => v.user_id === pageUser.value.id)?.vote ?? null;
 const myDislikeComment = (suggestion: any) => (suggestion.votes || []).find((v: any) => v.user_id === pageUser.value.id && v.vote === 'dislike')?.comment ?? '';
 const canVoteOn = (suggestion: any) => suggestion.created_by !== pageUser.value.id;
+const goToSuggestionVote = async (id: number) => {
+  activeTab.value = 'suggestions';
+  highlightedSuggestionId.value = id;
+
+  await nextTick();
+
+  document.getElementById(`suggestion-${id}`)?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'center',
+  });
+
+  window.setTimeout(() => {
+    if (highlightedSuggestionId.value === id) {
+      highlightedSuggestionId.value = null;
+    }
+  }, 2500);
+};
 const submitDislikeComment = (id: number) => {
   router.post(route('collaboration.suggestions.vote', id), {
     vote: 'dislike',
@@ -151,7 +169,10 @@ const promoteSuggestion = (id: number) => {
                 <div v-if="recentSuggestions.length" class="space-y-2">
                   <div v-for="item in recentSuggestions" :key="`summary-s-${item.id}`" class="rounded-md border border-slate-200 p-2 text-sm dark:border-slate-600">
                     <p>{{ item.content }}</p>
-                    <p class="mt-1 text-right text-xs text-slate-500 dark:text-slate-400">{{ formatter.format(new Date(item.created_at)) }}</p>
+                    <div class="mt-2 flex items-center justify-between gap-2">
+                      <Button size="sm" variant="outline" class="h-8 px-3" @click="goToSuggestionVote(item.id)">Vote</Button>
+                      <p class="text-right text-xs text-slate-500 dark:text-slate-400">{{ formatter.format(new Date(item.created_at)) }}</p>
+                    </div>
                   </div>
                 </div>
                 <p v-else class="text-sm text-slate-500 dark:text-slate-400">Noch keine Vorschläge vorhanden.</p>
@@ -176,7 +197,13 @@ const promoteSuggestion = (id: number) => {
         <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-semibold text-slate-800 dark:text-slate-100">Vorschläge</h2><Dialog :open="showSuggestionDialog" @update:open="(val) => showSuggestionDialog = val"><DialogTrigger as-child><Button size="icon" variant="outline"><Plus class="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Vorschlag erstellen</DialogTitle><DialogDescription>Ohne Titel, kurz und konkret.</DialogDescription></DialogHeader><Textarea v-model="suggestionForm.content" placeholder="Dein Vorschlag" /><DialogFooter><Button @click="postSuggestion">Senden</Button></DialogFooter></DialogContent></Dialog></div>
         <Card class="border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
           <CardContent class="space-y-3">
-            <div v-for="s in suggestions" :key="s.id" class="rounded-lg border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+            <div
+              v-for="s in suggestions"
+              :id="`suggestion-${s.id}`"
+              :key="s.id"
+              class="scroll-mt-24 rounded-lg border p-3 transition-colors"
+              :class="highlightedSuggestionId === s.id ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200 dark:border-blue-400 dark:bg-blue-950/30 dark:ring-blue-500/40' : 'border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800'"
+            >
               <p class="text-base text-slate-800 dark:text-slate-200">{{ s.content }}</p>
               <p class="mt-2 text-right text-xs text-slate-500 dark:text-slate-400">{{ formatter.format(new Date(s.created_at)) }} · {{ authorWithCity(s.author) }}</p>
               <div class="mt-2 flex flex-wrap gap-2">
