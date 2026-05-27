@@ -19,6 +19,8 @@ class Exam extends Model
 
   protected $casts = [
     'contract_view_enabled' => 'boolean',
+    'started_at' => 'datetime',
+    'completed_at' => 'datetime',
   ];
 
   public function city()

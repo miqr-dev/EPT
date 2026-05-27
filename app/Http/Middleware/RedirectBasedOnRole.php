@@ -58,6 +58,7 @@ class RedirectBasedOnRole
       // Allowed routes for teachers/admins
       $teacherAdminRoutes = [
         'dashboard',
+        'admin.exam-overview',
         'participant',
         'participant.onboarding',
         'participant.onboarding.save',

@@ -7,12 +7,14 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserPdfController;
 use App\Http\Controllers\TestResultController;
 use App\Http\Controllers\ParticipantController;
+use App\Http\Controllers\AdminExamOverviewController;
 use App\Http\Controllers\ExamStepStatusController;
 use App\Http\Controllers\CollaborationCenterController;
 
 Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     // All role-protected pages
     Route::get('dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
+    Route::get('/admin/pruefungen', AdminExamOverviewController::class)->name('admin.exam-overview');
     Route::get('participant', [ParticipantController::class, 'showProfileForm'])->name('participant');
     Route::get('mrt-a', fn () => Inertia::render('MRT-A'))->name('mrt-a');
     Route::get('mrt-b', fn () => Inertia::render('MRT-B'))->name('mrt-b');
