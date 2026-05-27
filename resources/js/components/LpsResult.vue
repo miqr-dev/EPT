@@ -137,6 +137,55 @@ const displayRows = computed(() =>
   })),
 );
 
+type LpsbAnswerLetter = {
+  char: string;
+  selected: boolean;
+  correct: boolean;
+};
+
+function buildAnswerLetters(value: string, picks?: boolean[], correctIndices: number[] = []): LpsbAnswerLetter[] {
+  return value.split('').map((char, idx) => ({
+    char,
+    selected: !!picks?.[idx],
+    correct: correctIndices.includes(idx),
+  }));
+}
+
+function selectedAnswerClass(letter: LpsbAnswerLetter) {
+  if (!letter.selected) return '';
+
+  return letter.correct ? 'lpsb-answer-letter--correct' : 'lpsb-answer-letter--wrong';
+}
+
+function selectedShapeClass(selected: boolean | undefined, correct: boolean) {
+  if (!selected) return '';
+
+  return correct ? 'lpsb-answer-shape--correct' : 'lpsb-answer-shape--wrong';
+}
+
+function selectedImageClass(selected: boolean | undefined, correct: boolean) {
+  if (!selected) return '';
+
+  return correct ? 'lpsb-answer-image-option--correct' : 'lpsb-answer-image-option--wrong';
+}
+
+const lpsbAnswerRows = computed(() =>
+  displayRows.value.map(({ row, response }, idx) => {
+    const solution = lpsSolutions[idx];
+
+    return {
+      number: idx + 1,
+      col1Letters: buildAnswerLetters(row.column1, response.col1, solution?.col1 ?? []),
+      col2Letters: buildAnswerLetters(row.column2, response.col2, solution?.col2 ?? []),
+      col3Options: row.column3 ?? [],
+      col3Picks: response.col3 ?? [],
+      col3CorrectIndices: solution?.col3 ?? [],
+      col3SvgMeta: row.column3SvgMeta ?? null,
+      col4Letters: buildAnswerLetters(row.column4, response.col4, solution?.col4 ?? []),
+    };
+  }),
+);
+
 const isPage7ExamplePrompt = (rowIdx: number, promptIdx: number) =>
   props.testName === 'LPS-B' && rowIdx === 0 && promptIdx < 2;
 const isPage8ExamplePrompt = (rowIdx: number, promptIdx: number) =>
@@ -786,6 +835,90 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
           </tbody>
         </table>
       </div>
+
+      <details class="mt-4">
+        <summary class="cursor-pointer">Antworten anzeigen</summary>
+        <div class="mt-2 overflow-x-auto">
+          <table class="w-full min-w-[760px] border-collapse border border-gray-300 text-sm">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="border border-gray-300 p-2 text-left">Spalte 1</th>
+                <th class="border border-gray-300 p-2 text-left">Spalte 2</th>
+                <th class="border border-gray-300 p-2 text-left">Spalte 3</th>
+                <th class="border border-gray-300 p-2 text-left">Spalte 4</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in lpsbAnswerRows" :key="`lpsb-answer-row-${row.number}`">
+                <td class="border border-gray-300 p-2 align-top">
+                  <div class="lpsb-answer-word font-mono">
+                    <span
+                      v-for="(letter, letterIdx) in row.col1Letters"
+                      :key="`${row.number}-col1-${letterIdx}`"
+                      :class="['lpsb-answer-letter', selectedAnswerClass(letter)]"
+                    >{{ letter.char }}</span>
+                  </div>
+                </td>
+                <td class="border border-gray-300 p-2 align-top">
+                  <div class="lpsb-answer-word font-mono">
+                    <span
+                      v-for="(letter, letterIdx) in row.col2Letters"
+                      :key="`${row.number}-col2-${letterIdx}`"
+                      :class="['lpsb-answer-letter', selectedAnswerClass(letter)]"
+                    >{{ letter.char }}</span>
+                  </div>
+                </td>
+                <td class="border border-gray-300 p-2 align-top">
+                  <svg
+                    v-if="row.col3Options.length && row.col3SvgMeta"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="lpsb-answer-shapes"
+                    :viewBox="row.col3SvgMeta.viewBox"
+                    :aria-label="`Spalte 3 Antwort Aufgabe ${row.number}`"
+                  >
+                    <g
+                      v-for="(option, optionIdx) in row.col3Options"
+                      :key="`${row.number}-col3-${option.id}`"
+                      :transform="option.transform"
+                    >
+                      <path
+                        v-if="option.pathData"
+                        :d="option.pathData"
+                        :class="[
+                          'lpsb-answer-shape',
+                          selectedShapeClass(row.col3Picks?.[optionIdx], row.col3CorrectIndices.includes(optionIdx)),
+                        ]"
+                      />
+                    </g>
+                  </svg>
+                  <div v-else-if="row.col3Options.length" class="flex flex-wrap gap-2">
+                    <div
+                      v-for="(option, optionIdx) in row.col3Options"
+                      :key="`${row.number}-col3-img-${option.id}`"
+                      :class="[
+                        'lpsb-answer-image-option',
+                        selectedImageClass(row.col3Picks?.[optionIdx], row.col3CorrectIndices.includes(optionIdx)),
+                      ]"
+                    >
+                      <img v-if="option.src" :src="option.src" class="h-10 w-10" alt="" />
+                    </div>
+                  </div>
+                  <span v-else class="text-muted-foreground">-</span>
+                </td>
+                <td class="border border-gray-300 p-2 align-top">
+                  <div class="lpsb-answer-word font-mono">
+                    <span
+                      v-for="(letter, letterIdx) in row.col4Letters"
+                      :key="`${row.number}-col4-${letterIdx}`"
+                      :class="['lpsb-answer-letter', selectedAnswerClass(letter)]"
+                    >{{ letter.char }}</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
     </div>
   </div>
 </template>
@@ -910,6 +1043,69 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
   margin-bottom: 0;
   padding: 0 12px;
   box-sizing: border-box;
+}
+
+.lpsb-answer-word {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.lpsb-answer-letter {
+  display: inline-block;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.lpsb-answer-letter--correct {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.lpsb-answer-letter--wrong {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.lpsb-answer-shapes {
+  display: block;
+  width: 220px;
+  max-width: 100%;
+  height: auto;
+}
+
+.lpsb-answer-shape {
+  fill: #d1d5db;
+  stroke: transparent;
+  stroke-width: 5;
+}
+
+.lpsb-answer-shape--correct {
+  fill: #22c55e;
+  stroke: #166534;
+}
+
+.lpsb-answer-shape--wrong {
+  fill: #ef4444;
+  stroke: #991b1b;
+}
+
+.lpsb-answer-image-option {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px;
+  opacity: 0.35;
+}
+
+.lpsb-answer-image-option--correct {
+  border-color: #166534;
+  background: #dcfce7;
+  opacity: 1;
+}
+
+.lpsb-answer-image-option--wrong {
+  border-color: #991b1b;
+  background: #fee2e2;
+  opacity: 1;
 }
 
 </style>

@@ -25,7 +25,6 @@ class TestsTableSeeder extends Seeder
       ['name' => 'BT', 'code' => 'BT', 'duration' => 60],
       ['name' => 'AVEM', 'code' => 'AVEM', 'duration' => 20],
       ['name' => 'Konzentrationstest', 'code' => 'Konzentrationstest', 'duration' => 6],
-      ['name' => 'LPS-B', 'code' => 'LPS-B', 'duration' => 60],
     ];
 
     foreach ($tests as $test) {
