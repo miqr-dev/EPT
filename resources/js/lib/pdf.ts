@@ -4,7 +4,27 @@ import jsPDF from 'jspdf';
 type GeneratePdfOptions = {
     zoom?: number;
     scale?: number;
+    maxCanvasWidth?: number;
+    imageType?: 'jpeg' | 'png';
+    imageQuality?: number;
 };
+
+const DEFAULT_RENDER_SCALE = 2;
+const DEFAULT_MAX_CANVAS_WIDTH = 2480; // A4 at about 300 DPI.
+const DEFAULT_IMAGE_TYPE: NonNullable<GeneratePdfOptions['imageType']> = 'png';
+const DEFAULT_IMAGE_QUALITY = 0.98;
+
+function resolveCanvasScale(element: HTMLElement, options: GeneratePdfOptions) {
+    const requestedScale = Math.max(options.scale ?? DEFAULT_RENDER_SCALE, window.devicePixelRatio || 1);
+    const maxCanvasWidth = options.maxCanvasWidth ?? DEFAULT_MAX_CANVAS_WIDTH;
+    const elementWidth = element.offsetWidth || element.scrollWidth || element.getBoundingClientRect().width;
+
+    if (maxCanvasWidth > 0 && elementWidth > 0 && elementWidth * requestedScale > maxCanvasWidth) {
+        return Math.max(1, maxCanvasWidth / elementWidth);
+    }
+
+    return requestedScale;
+}
 
 async function captureElement(element: HTMLElement, options: GeneratePdfOptions = {}) {
     if (!element) {
@@ -24,7 +44,7 @@ async function captureElement(element: HTMLElement, options: GeneratePdfOptions 
             element.style.transformOrigin = 'top left';
         }
 
-        const resolvedScale = Math.max(scale ?? 3, window.devicePixelRatio || 1);
+        const resolvedScale = resolveCanvasScale(element, { ...options, scale });
 
         return await html2canvas(element, {
             scale: resolvedScale,
@@ -39,7 +59,7 @@ async function captureElement(element: HTMLElement, options: GeneratePdfOptions 
     }
 }
 
-function addCanvasToPdfPage(pdf: jsPDF, canvas: HTMLCanvasElement) {
+function addCanvasToPdfPage(pdf: jsPDF, canvas: HTMLCanvasElement, options: GeneratePdfOptions = {}) {
     const pdfW = pdf.internal.pageSize.getWidth();
     const pdfH = pdf.internal.pageSize.getHeight();
 
@@ -51,7 +71,14 @@ function addCanvasToPdfPage(pdf: jsPDF, canvas: HTMLCanvasElement) {
     }
 
     const marginX = (pdfW - imgW) / 2;
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', marginX, 0, imgW, imgH);
+    const imageType = options.imageType ?? DEFAULT_IMAGE_TYPE;
+    const imageFormat = imageType === 'png' ? 'PNG' : 'JPEG';
+    const imageData =
+        imageType === 'png'
+            ? canvas.toDataURL('image/png')
+            : canvas.toDataURL('image/jpeg', options.imageQuality ?? DEFAULT_IMAGE_QUALITY);
+
+    pdf.addImage(imageData, imageFormat, marginX, 0, imgW, imgH, undefined, imageType === 'png' ? 'SLOW' : 'MEDIUM');
 }
 
 export async function generatePdfFromElements(elements: HTMLElement[], filename: string, options: GeneratePdfOptions = {}) {
@@ -62,7 +89,7 @@ export async function generatePdfFromElements(elements: HTMLElement[], filename:
         return;
     }
 
-    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
     let renderedPages = 0;
 
     for (let index = 0; index < validElements.length; index++) {
@@ -76,7 +103,7 @@ export async function generatePdfFromElements(elements: HTMLElement[], filename:
             pdf.addPage();
         }
 
-        addCanvasToPdfPage(pdf, canvas);
+        addCanvasToPdfPage(pdf, canvas, options);
         renderedPages++;
     }
 
