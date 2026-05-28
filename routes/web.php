@@ -82,8 +82,6 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('/participants/import', [ParticipantController::class, 'importPage'])->name('participants.import.page');
     Route::post('/participants/import', [ParticipantController::class, 'import'])->name('participants.import');
     Route::patch('/participants/import/{importedUser}', [ParticipantController::class, 'updateImportedUser'])->name('participants.import.update');
-    Route::patch('/participants/{participant}/login-permission', [ParticipantController::class, 'updateLoginPermission'])
-      ->name('participants.login-permission');
     Route::post('/participants/{participant}/set-contract-visibility', [ParticipantController::class, 'setContractVisibility'])
       ->name('participants.set-contract-visibility');
     Route::patch('/teachers/{teacher}/role', [TeacherController::class, 'downgradeTeacherToParticipant'])

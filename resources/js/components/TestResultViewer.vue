@@ -311,6 +311,7 @@ const fpiRohwerte = computed(() => {
             :participant-profile="participantProfile"
             :test-result-id="testResultId"
             :manual-scores="manualScoreMap"
+            :show-answers="showAnswers"
             @manual-score-updated="handleManualScoreUpdated"
         />
         <BtResult
@@ -345,7 +346,7 @@ const fpiRohwerte = computed(() => {
                 </tbody>
             </table>
 
-            <template v-if="test.name === 'BRT-A' || test.name === 'BRT-B'">
+            <template v-if="showAnswers && (test.name === 'BRT-A' || test.name === 'BRT-B')">
                 <h3 class="mb-2 font-bold">Antworten</h3>
                 <div class="overflow-x-auto">
                     <table class="min-w-full rounded-lg border text-sm shadow">

@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import TestResultViewer from '@/components/TestResultViewer.vue';
 
-defineProps<{
-    assignment: any;
-    participant: any;
-    teacherName: string;
-    showTeacher?: boolean;
-}>();
+withDefaults(
+    defineProps<{
+        assignment: any;
+        participant: any;
+        teacherName: string;
+        showTeacher?: boolean;
+        showAnswers?: boolean;
+    }>(),
+    {
+        showAnswers: false,
+    },
+);
 
 const testDate = new Date().toLocaleDateString('de-DE', {
     year: 'numeric',
@@ -53,8 +59,8 @@ const testDate = new Date().toLocaleDateString('de-DE', {
                     :model-value="assignment.results[0].result_json"
                     :participant-profile="participant?.participant_profile"
                     :manual-scores="assignment.results[0].manual_scores ?? []"
-                    :show-answers="assignment.test.name === 'BT'"
-                    :force-open-answers="assignment.test.name === 'BT'"
+                    :show-answers="showAnswers"
+                    :force-open-answers="showAnswers && assignment.test.name === 'BT'"
                 />
                 <div v-else class="text-center text-gray-500">
                     <p>Keine Ergebnisse verfügbar.</p>

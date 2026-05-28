@@ -6,7 +6,7 @@ type GeneratePdfOptions = {
     scale?: number;
 };
 
-export async function generatePdfFromElement(element: HTMLElement, filename: string, options: GeneratePdfOptions = {}) {
+async function captureElement(element: HTMLElement, options: GeneratePdfOptions = {}) {
     if (!element) {
         console.error('Element for PDF generation not found.');
         return;
@@ -18,27 +18,28 @@ export async function generatePdfFromElement(element: HTMLElement, filename: str
     const originalTransform = element.style.transform;
     const originalTransformOrigin = element.style.transformOrigin;
 
-    if (shouldZoom) {
-        element.style.transform = `scale(${zoom})`;
-        element.style.transformOrigin = 'top left';
+    try {
+        if (shouldZoom) {
+            element.style.transform = `scale(${zoom})`;
+            element.style.transformOrigin = 'top left';
+        }
+
+        const resolvedScale = Math.max(scale ?? 3, window.devicePixelRatio || 1);
+
+        return await html2canvas(element, {
+            scale: resolvedScale,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+        });
+    } finally {
+        if (shouldZoom) {
+            element.style.transform = originalTransform;
+            element.style.transformOrigin = originalTransformOrigin;
+        }
     }
+}
 
-    const resolvedScale = Math.max(scale ?? 3, window.devicePixelRatio || 1);
-
-    const canvas = await html2canvas(element, {
-        scale: resolvedScale,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-    });
-
-    if (shouldZoom) {
-        element.style.transform = originalTransform;
-        element.style.transformOrigin = originalTransformOrigin;
-    }
-
-    const img = canvas.toDataURL('image/png');
-
-    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+function addCanvasToPdfPage(pdf: jsPDF, canvas: HTMLCanvasElement) {
     const pdfW = pdf.internal.pageSize.getWidth();
     const pdfH = pdf.internal.pageSize.getHeight();
 
@@ -50,6 +51,43 @@ export async function generatePdfFromElement(element: HTMLElement, filename: str
     }
 
     const marginX = (pdfW - imgW) / 2;
-    pdf.addImage(img, 'PNG', marginX, 0, imgW, imgH);
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', marginX, 0, imgW, imgH);
+}
+
+export async function generatePdfFromElements(elements: HTMLElement[], filename: string, options: GeneratePdfOptions = {}) {
+    const validElements = elements.filter(Boolean);
+
+    if (validElements.length === 0) {
+        console.error('Elements for PDF generation not found.');
+        return;
+    }
+
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+    let renderedPages = 0;
+
+    for (let index = 0; index < validElements.length; index++) {
+        const canvas = await captureElement(validElements[index], options);
+
+        if (!canvas) {
+            continue;
+        }
+
+        if (renderedPages > 0) {
+            pdf.addPage();
+        }
+
+        addCanvasToPdfPage(pdf, canvas);
+        renderedPages++;
+    }
+
+    if (renderedPages === 0) {
+        console.error('PDF generation failed because no pages could be rendered.');
+        return;
+    }
+
     pdf.save(filename);
+}
+
+export async function generatePdfFromElement(element: HTMLElement, filename: string, options: GeneratePdfOptions = {}) {
+    await generatePdfFromElements([element], filename, options);
 }
