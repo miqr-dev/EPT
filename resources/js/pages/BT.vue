@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Head } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
@@ -90,9 +91,16 @@ const rightNames = computed(() => apprentices.value.slice(13));
 const maxPage = 6;
 const page = ref(1);
 const showTest = ref(false);
+const dragDropExampleOpen = ref(false);
+const dragDropExampleCompleted = ref(false);
+const dragDropExampleCell = ref<{ row: number; column: number } | null>(null);
 const startedAtMs = ref<number | null>(null);
 const startTimeRemainingSeconds = ref<number | null>(null);
 const latestTimeRemainingSeconds = ref<number | null>(null);
+const dragDropExampleText = 'Beispieltext';
+const dragDropExampleRows = Array.from({ length: 5 }, (_, index) => index + 1);
+const dragDropExampleColumns = Array.from({ length: 4 }, (_, index) => index + 1);
+const dragDropExampleTarget = { row: 3, column: 2 };
 const cashDenominations = [
     { label: '100€', key: '100' },
     { label: '50€', key: '50' },
@@ -389,6 +397,47 @@ function handleDropOnPool(event: DragEvent) {
 
 function allowDrop(event: DragEvent) {
     event.preventDefault();
+}
+
+function openDragDropExample() {
+    dragDropExampleOpen.value = true;
+    dragDropExampleCompleted.value = false;
+    dragDropExampleCell.value = null;
+}
+
+function setDragDropExampleOpen(open: boolean) {
+    if (open || dragDropExampleCompleted.value) {
+        dragDropExampleOpen.value = open;
+    }
+}
+
+function closeDragDropExample() {
+    if (!dragDropExampleCompleted.value) return;
+    dragDropExampleOpen.value = false;
+}
+
+function handleDragDropExampleStart(event: DragEvent) {
+    event.dataTransfer?.setData('text/plain', dragDropExampleText);
+    event.dataTransfer?.setDragImage((event.target as HTMLElement) ?? document.body, 0, 0);
+}
+
+function handleDragDropExampleDrop(event: DragEvent, row: number, column: number) {
+    event.preventDefault();
+    const payloadText = event.dataTransfer?.getData('text/plain');
+    if (payloadText !== dragDropExampleText) return;
+
+    if (row === dragDropExampleTarget.row && column === dragDropExampleTarget.column) {
+        dragDropExampleCell.value = { row, column };
+        dragDropExampleCompleted.value = true;
+    }
+}
+
+function isDragDropExampleTarget(row: number, column: number) {
+    return row === dragDropExampleTarget.row && column === dragDropExampleTarget.column;
+}
+
+function hasDragDropExampleText(row: number, column: number) {
+    return dragDropExampleCell.value?.row === row && dragDropExampleCell.value?.column === column;
 }
 
 function clearCell(key: string) {
@@ -863,33 +912,100 @@ if (import.meta.env.DEV) {
             <Button v-if="page < maxPage" @click="nextPage">Weiter</Button>
             <Button v-else @click="completeBtTest">Test beenden</Button>
         </div>
-        <div v-if="!showTest" class="flex h-full items-center justify-center px-6">
-            <div class="max-w-5xl space-y-6 rounded-2xl border border-black/20 bg-white p-8 font-serif text-base leading-relaxed shadow-sm">
-                <h1 class="text-center text-2xl font-semibold tracking-[0.2em]">EINFÜHRUNG</h1>
-                <p class="text-lg">
-                    Die Aufgaben auf den folgenden Seiten geben Ihnen Gelegenheit, Ihr Verständnis für einfache Zusammenhänge verwaltungs-büromäßiger
-                    Art zu zeigen. Sie brauchen dazu keine kaufmännischen Fachkenntnisse, sondern müssen nur etwas geschickt und anstellig sein.
-                </p>
-                <p class="text-lg">
-                    Jede Aufgabe wird genau beschrieben. Lesen Sie sich bitte diese Schilderungen Wort für Wort langsam durch und vergleichen Sie das
-                    Gelesene bitte mit den vorgegebenen Antwort-„Feldern“. Dann stellen Sie sich in Gedanken vor, wie Sie diese Arbeit in der Praxis
-                    durchführen würden und fügen Sie erst dann die Lösungen ein.
-                </p>
-                <p class="text-lg">
-                    Bitte schreiben Sie etwaige Nebenrechnungen auf ein extra Blatt und versehen dieses mit Ihrem Namen und dem Datum. Von der Aufgabe
-                    3 ab wird keiner ohne Nebenrechnungen auskommen. Jeder im Büro Beschäftigte macht sich derartige Notizen. Es ist daher auch bei
-                    diesen Aufgaben ratsam, sich Notizen zu machen. Bei der Aufgabe 5 müssen unbedingt die Nebenrechnungen angegeben werden.
-                </p>
-                <p class="text-lg">
-                    Sollten Sie einmal bei einer Aufgabe nicht zurechtkommen, so versuchen Sie wenigstens, einen Ansatz zu finden und einzutragen.
-                    Versäumen Sie bei den leichten Aufgaben am Anfang nicht zu viel Zeit, da Ihnen dann nachher bei den umfangreicheren Aufgaben 4-6
-                    Zeit fehlen muss. Halten Sie sich nicht zu lange bei einer Aufgabe auf. Sie haben 60 Minuten Zeit für sechs Aufgaben.
-                </p>
-                <div class="pt-2 text-center">
-                    <Button class="px-8" @click="startTest">Test starten</Button>
+        <template v-if="!showTest">
+            <div class="flex h-full items-center justify-center px-6">
+                <div class="max-w-5xl space-y-6 rounded-2xl border border-black/20 bg-white p-8 font-serif text-base leading-relaxed shadow-sm">
+                    <h1 class="text-center text-2xl font-semibold tracking-[0.2em]">EINFÜHRUNG</h1>
+                    <p class="text-lg">
+                        Die Aufgaben auf den folgenden Seiten geben Ihnen Gelegenheit, Ihr Verständnis für einfache Zusammenhänge
+                        verwaltungs-büromäßiger Art zu zeigen. Sie brauchen dazu keine kaufmännischen Fachkenntnisse, sondern müssen nur etwas
+                        geschickt und anstellig sein.
+                    </p>
+                    <p class="text-lg">
+                        Jede Aufgabe wird genau beschrieben. Lesen Sie sich bitte diese Schilderungen Wort für Wort langsam durch und vergleichen Sie
+                        das Gelesene bitte mit den vorgegebenen Antwort-„Feldern“. Dann stellen Sie sich in Gedanken vor, wie Sie diese Arbeit in der
+                        Praxis durchführen würden und fügen Sie erst dann die Lösungen ein.
+                    </p>
+                    <p class="text-lg">
+                        Bitte schreiben Sie etwaige Nebenrechnungen auf ein extra Blatt und versehen dieses mit Ihrem Namen und dem Datum. Von der
+                        Aufgabe 3 ab wird keiner ohne Nebenrechnungen auskommen. Jeder im Büro Beschäftigte macht sich derartige Notizen. Es ist daher
+                        auch bei diesen Aufgaben ratsam, sich Notizen zu machen. Bei der Aufgabe 5 müssen unbedingt die Nebenrechnungen angegeben
+                        werden.
+                    </p>
+                    <p class="text-lg">
+                        Sollten Sie einmal bei einer Aufgabe nicht zurechtkommen, so versuchen Sie wenigstens, einen Ansatz zu finden und einzutragen.
+                        Versäumen Sie bei den leichten Aufgaben am Anfang nicht zu viel Zeit, da Ihnen dann nachher bei den umfangreicheren Aufgaben
+                        4-6 Zeit fehlen muss. Halten Sie sich nicht zu lange bei einer Aufgabe auf. Sie haben 60 Minuten Zeit für sechs Aufgaben.
+                    </p>
+                    <div class="pt-2 text-center">
+                        <Button v-if="!dragDropExampleCompleted" class="px-8" @click="openDragDropExample">Drag and Drop Example</Button>
+                        <div v-else class="space-y-3">
+                            <p class="text-base font-semibold text-green-700">Das Beispiel ist abgeschlossen.</p>
+                            <Button class="px-8" @click="startTest">Test starten</Button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+            <Dialog :open="dragDropExampleOpen" @update:open="setDragDropExampleOpen">
+                <DialogContent class="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-3xl" @escape-key-down.prevent @interact-outside.prevent>
+                    <template #top-right>
+                        <span />
+                    </template>
+                    <DialogHeader>
+                        <DialogTitle>Drag&amp;Drop</DialogTitle>
+                        <DialogDescription>Ziehen Sie den Text in die zweite Spalte und dritte Reihe.</DialogDescription>
+                    </DialogHeader>
+
+                    <div class="grid gap-5 lg:grid-cols-[180px_1fr]">
+                        <div class="flex items-center justify-center rounded-md border border-dashed border-black/30 bg-gray-50 p-4">
+                            <span
+                                v-if="!dragDropExampleCompleted"
+                                class="cursor-move rounded-md border border-black/30 bg-white px-4 py-2 text-sm font-semibold shadow-sm"
+                                draggable="true"
+                                @dragstart="handleDragDropExampleStart"
+                            >
+                                {{ dragDropExampleText }}
+                            </span>
+                            <span v-else class="text-sm font-semibold text-green-700">Richtig abgelegt</span>
+                        </div>
+
+                        <table class="w-full table-fixed border border-black text-center text-sm">
+                            <tbody>
+                                <tr v-for="row in dragDropExampleRows" :key="`example-row-${row}`">
+                                    <td
+                                        v-for="column in dragDropExampleColumns"
+                                        :key="`example-cell-${row}-${column}`"
+                                        :class="[
+                                            'h-16 border border-black p-2 align-middle transition-colors',
+                                            isDragDropExampleTarget(row, column) && dragDropExampleCompleted
+                                                ? 'bg-green-100 ring-2 ring-green-500 ring-inset'
+                                                : isDragDropExampleTarget(row, column)
+                                                  ? 'bt-example-target-blink ring-2 ring-green-400 ring-inset'
+                                                  : 'bg-white',
+                                        ]"
+                                        @dragover="allowDrop"
+                                        @drop="(event) => handleDragDropExampleDrop(event, row, column)"
+                                    >
+                                        <span v-if="hasDragDropExampleText(row, column)" class="font-semibold text-green-800">
+                                            {{ dragDropExampleText }}
+                                        </span>
+                                        <span v-else>&nbsp;</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <DialogFooter v-if="dragDropExampleCompleted" class="items-center gap-3 sm:justify-between">
+                        <div>
+                            <p class="text-lg font-semibold text-green-700">Richtig!</p>
+                            <p class="text-sm text-gray-600">Schliessen Sie das Fenster, um den Test zu starten.</p>
+                        </div>
+                        <Button @click="closeDragDropExample">Schliessen</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </template>
         <div v-else-if="page === 1" class="flex h-full flex-col">
             <div class="flex-[0.6] overflow-hidden px-6 pt-3 font-serif text-base">
                 <div class="flex h-full flex-col gap-4">
@@ -1971,3 +2087,20 @@ if (import.meta.env.DEV) {
         </div>
     </div>
 </template>
+
+<style scoped>
+.bt-example-target-blink {
+    animation: bt-example-green-blink 1s ease-in-out infinite;
+}
+
+@keyframes bt-example-green-blink {
+    0%,
+    100% {
+        background-color: rgb(220 252 231);
+    }
+
+    50% {
+        background-color: rgb(34 197 94 / 0.45);
+    }
+}
+</style>

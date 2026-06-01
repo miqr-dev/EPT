@@ -22,7 +22,7 @@ const testDate = new Date().toLocaleDateString('de-DE', {
 </script>
 
 <template>
-    <div class="bg-white p-8 font-sans text-black">
+    <div class="pdf-template bg-white p-8 font-sans text-black" :class="{ 'pdf-template--compact': assignment?.test?.name === 'LPS-B' }">
         <!-- Header -->
         <div class="flex items-center justify-between border-b-2 border-gray-200 pb-4">
             <div>
@@ -74,3 +74,27 @@ const testDate = new Date().toLocaleDateString('de-DE', {
     </div> -->
     </div>
 </template>
+
+<style scoped>
+.pdf-template--compact {
+    padding: 18px;
+}
+
+.pdf-template--compact h1 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+}
+
+.pdf-template--compact .mt-8 {
+    margin-top: 1rem;
+}
+
+.pdf-template--compact .mb-4 {
+    margin-bottom: 0.5rem;
+}
+
+.pdf-template--compact h2 {
+    font-size: 1rem;
+    line-height: 1.5rem;
+}
+</style>

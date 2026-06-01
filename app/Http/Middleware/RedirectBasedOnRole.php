@@ -106,7 +106,10 @@ class RedirectBasedOnRole
         'test-results.update',
         'test-results.manual-scores.update',
         'test-results.download',
+        'test-results.print',
         'test-results.pdf',
+        'participants.results.print',
+        'participants.results.pdf',
         'exam-step-status.add-time',
       ];
 

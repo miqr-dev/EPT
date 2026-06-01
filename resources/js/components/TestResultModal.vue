@@ -3,11 +3,10 @@ import TestResultViewer from '@/components/TestResultViewer.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { generatePdfFromElement } from '@/lib/pdf';
+import { downloadPdfOrOpenPrint, openPrintPreview } from '@/lib/pdf-export';
 import { useForm } from '@inertiajs/vue3';
 import { X } from 'lucide-vue-next';
-import { computed, nextTick, ref, watch } from 'vue';
-import PdfTemplate from './PdfTemplate.vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps<{
     isOpen: boolean;
@@ -23,23 +22,11 @@ const form = useForm({
 
 const editable = ref<any | null>(null);
 const viewerRef = ref<any>(null);
-const pdfTemplateRef = ref<any>(null);
 const isGeneratingPdf = ref(false);
 
 const dialogTitle = computed(() => props.participant?.name || 'Testergebnis bearbeiten');
 
-const teacherName = computed(() => {
-    return props.assignment?.results?.[0]?.teacher?.name || 'N/A';
-});
-
-const isAvemTest = computed(() => props.assignment?.test?.name === 'AVEM');
 const requiresMainSaveButton = computed(() => ['BRT-A', 'BRT-B'].includes(props.assignment?.test?.name));
-const showTeacherInPdf = false;
-
-const pdfContainerStyle = computed(() => ({
-    zIndex: -1,
-    width: '1200px',
-}));
 
 watch(
     () => props.assignment,
@@ -110,19 +97,33 @@ function handleManualScoreUpdated(payload: { key: string; value: number | null }
 }
 
 async function downloadUnifiedPdf() {
-    isGeneratingPdf.value = true;
-    await nextTick(); // Wait for the v-if to render the component
+    const testResultId = props.assignment?.results?.[0]?.id;
 
-    setTimeout(async () => {
-        const el = pdfTemplateRef.value?.$el as HTMLElement | undefined;
-        if (el) {
-            const filename = `${props.participant.name}_${props.assignment.test.name}_Ergebnis.pdf`;
-            await generatePdfFromElement(el, filename, { scale: isAvemTest.value ? 4 : 3 });
-        } else {
-            console.error('PDF template element not found.');
-        }
+    if (!testResultId || isGeneratingPdf.value) {
+        return;
+    }
+
+    const filename = `${sanitizeFilename(props.participant?.name ?? 'Teilnehmer')}_${sanitizeFilename(props.assignment?.test?.name ?? 'Test')}_Ergebnis.pdf`;
+    const pdfUrl = route('test-results.pdf', { testResult: testResultId });
+    const printUrl = route('test-results.print', { testResult: testResultId });
+
+    isGeneratingPdf.value = true;
+
+    try {
+        await downloadPdfOrOpenPrint(pdfUrl, printUrl, filename);
+    } catch (error) {
+        console.error('PDF export failed, opening print preview.', error);
+        openPrintPreview(printUrl);
+    } finally {
         isGeneratingPdf.value = false;
-    }, 200); // 200ms delay
+    }
+}
+
+function sanitizeFilename(value: string) {
+    return value
+        .replace(/[\\/:*?"<>|]+/g, '-')
+        .replace(/\s+/g, '_')
+        .trim();
 }
 </script>
 
@@ -177,16 +178,4 @@ async function downloadUnifiedPdf() {
             </DialogFooter>
         </DialogContent>
     </Dialog>
-
-    <!-- Hidden template for PDF generation -->
-    <div v-if="isGeneratingPdf" class="fixed top-0 left-0" :style="pdfContainerStyle">
-        <PdfTemplate
-            v-if="assignment"
-            ref="pdfTemplateRef"
-            :assignment="assignment"
-            :participant="participant"
-            :teacherName="teacherName"
-            :show-teacher="showTeacherInPdf"
-        />
-    </div>
 </template>

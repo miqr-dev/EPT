@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'browsershot' => [
+        'chrome_path' => env('BROWSERSHOT_CHROME_PATH'),
+        'node_binary' => env('BROWSERSHOT_NODE_BINARY'),
+        'npm_binary' => env('BROWSERSHOT_NPM_BINARY'),
+        'node_module_path' => env('BROWSERSHOT_NODE_MODULE_PATH'),
+        'no_sandbox' => env('BROWSERSHOT_NO_SANDBOX', false),
+    ],
+
 ];

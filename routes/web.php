@@ -7,6 +7,7 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserPdfController;
 use App\Http\Controllers\TestResultController;
 use App\Http\Controllers\ParticipantController;
+use App\Http\Controllers\ResultPdfExportController;
 use App\Http\Controllers\AdminExamOverviewController;
 use App\Http\Controllers\ExamStepStatusController;
 use App\Http\Controllers\CollaborationCenterController;
@@ -89,6 +90,14 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::put('/test-results/{testResult}', [TestResultController::class, 'update'])->name('test-results.update');
     Route::put('/test-results/{testResult}/manual-scores', [TestResultController::class, 'updateManualScore'])
         ->name('test-results.manual-scores.update');
+    Route::get('/test-results/{testResult}/print', [ResultPdfExportController::class, 'showTestResult'])
+        ->name('test-results.print');
+    Route::get('/test-results/{testResult}/pdf', [ResultPdfExportController::class, 'downloadTestResult'])
+        ->name('test-results.pdf');
+    Route::get('/participants/{participant}/results/print', [ResultPdfExportController::class, 'showParticipantResults'])
+        ->name('participants.results.print');
+    Route::get('/participants/{participant}/results/pdf', [ResultPdfExportController::class, 'downloadParticipantResults'])
+        ->name('participants.results.pdf');
 
 
     //!PDF
@@ -98,6 +107,13 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('/participants/{participant}/pdf', [UserPdfController::class, 'showParticipantPdf'])
     ->middleware('auth')
     ->name('participants.pdf');
+});
+
+Route::middleware(['signed:relative'])->group(function () {
+    Route::get('/signed/test-results/{testResult}/print', [ResultPdfExportController::class, 'showTestResult'])
+        ->name('test-results.print-signed');
+    Route::get('/signed/participants/{participant}/results/print', [ResultPdfExportController::class, 'showParticipantResults'])
+        ->name('participants.results.print-signed');
 });
 
 Route::get('/login', function () {

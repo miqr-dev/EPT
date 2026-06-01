@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import PdfTemplate from '@/components/PdfTemplate.vue';
 import TestResultModal from '@/components/TestResultModal.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { generatePdfFromElements } from '@/lib/pdf';
+import { downloadPdfOrOpenPrint, openPrintPreview } from '@/lib/pdf-export';
 import { Link, router } from '@inertiajs/vue3';
 import { FileText, Loader2 } from 'lucide-vue-next';
-import { computed, nextTick, ref } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps<{
     participants: {
@@ -24,9 +23,6 @@ const selectedAssignment = ref(null);
 const selectedParticipant = ref(null);
 const searchQuery = ref(props.filters.search ?? '');
 const pdfParticipant = ref<any | null>(null);
-const pdfAssignments = ref<any[]>([]);
-const pdfPageRefs = ref<HTMLElement[]>([]);
-const pdfFilename = ref('');
 const isGeneratingPdf = ref(false);
 
 const TEST_PDF_ORDER = [
@@ -66,11 +62,6 @@ function closeModal() {
     selectedParticipant.value = null;
 }
 
-const pdfContainerStyle = computed(() => ({
-    zIndex: -1,
-    width: '1200px',
-}));
-
 function completedAssignments(participant: any) {
     return (participant?.test_assignments ?? []).filter((assignment: any) => (assignment?.results ?? []).length > 0);
 }
@@ -99,12 +90,6 @@ function sanitizeFilename(value: string) {
         .trim();
 }
 
-function setPdfPageRef(el: Element | null) {
-    if (el instanceof HTMLElement) {
-        pdfPageRefs.value.push(el);
-    }
-}
-
 async function downloadParticipantAssignmentsPdf(participant: any, assignments: any[], filename: string) {
     const exportableAssignments = assignments.filter((assignment) => (assignment?.results ?? []).length > 0);
 
@@ -114,23 +99,19 @@ async function downloadParticipantAssignmentsPdf(participant: any, assignments: 
 
     isGeneratingPdf.value = true;
     pdfParticipant.value = participant;
-    pdfAssignments.value = exportableAssignments;
-    pdfFilename.value = filename;
-    pdfPageRefs.value = [];
 
-    await nextTick();
+    const pdfUrl = route('participants.results.pdf', { participant: participant.id });
+    const printUrl = route('participants.results.print', { participant: participant.id });
 
-    setTimeout(async () => {
-        try {
-            await generatePdfFromElements(pdfPageRefs.value, pdfFilename.value, { scale: 3 });
-        } finally {
-            isGeneratingPdf.value = false;
-            pdfParticipant.value = null;
-            pdfAssignments.value = [];
-            pdfFilename.value = '';
-            pdfPageRefs.value = [];
-        }
-    }, 200);
+    try {
+        await downloadPdfOrOpenPrint(pdfUrl, printUrl, filename);
+    } catch (error) {
+        console.error('PDF export failed, opening print preview.', error);
+        openPrintPreview(printUrl);
+    } finally {
+        isGeneratingPdf.value = false;
+        pdfParticipant.value = null;
+    }
 }
 
 function downloadFullTestsPdf(participant: any) {
@@ -264,11 +245,5 @@ function updateSearch() {
             </Card>
         </div>
         <TestResultModal :isOpen="isModalOpen" :assignment="selectedAssignment" :participant="selectedParticipant" @close="closeModal" />
-
-        <div v-if="isGeneratingPdf" class="fixed top-0 left-0" :style="pdfContainerStyle" aria-hidden="true">
-            <div v-for="assignment in pdfAssignments" :key="assignment.id" :ref="setPdfPageRef" class="bg-white">
-                <PdfTemplate :assignment="assignment" :participant="pdfParticipant" teacher-name="" :show-teacher="false" :show-answers="false" />
-            </div>
-        </div>
     </AppLayout>
 </template>

@@ -140,6 +140,15 @@ function rowY(idx: number) {
     return rowHeight * idx + rowHeight / 2;
 }
 
+const gridDots = computed(() =>
+    chartCategories.flatMap((_, rowIndex) =>
+        Array.from({ length: 9 }, (_, colIndex) => ({
+            x: colIndex * cellWidth + cellWidth / 2,
+            y: rowY(rowIndex),
+        })),
+    ),
+);
+
 const splitAfterRows = [9]; // after Offenheit
 
 interface Pt {
@@ -187,10 +196,8 @@ const polySegments = computed<{ x: number; y: number }[][]>(() => {
     return segs;
 });
 
-const LINE_W = 2; // same as CSS .blue-line width
+const LINE_W = 2;
 const blueStanines = [7, 3]; // the two stanine columns you want to cross
-const MARKER_R = 6; // was 4
-const MARKER_SW = 1.75; // thicker outline
 
 const snap = (x: number) => Math.round(x) + 0.5;
 
@@ -253,24 +260,22 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value);
                     height: `${gridHeight}px`,
                 }"
             >
-                <div
-                    v-for="s in blueStanines"
-                    :key="`blue-${s}`"
-                    class="blue-line"
-                    :style="{ left: `${xForStanine(s) - LINE_W / 2}px`, width: `${LINE_W}px` }"
-                />
-                <!-- overlay markers -->
-                <circle
-                    v-for="(pt, idx) in drawablePoints"
-                    :key="'dot-' + idx"
-                    :cx="pt.x"
-                    :cy="pt.y"
-                    :r="MARKER_R"
-                    fill="var(--overlay-fill)"
-                    stroke="var(--overlay-stroke)"
-                    :stroke-width="MARKER_SW"
-                />
                 <svg :width="gridWidth" :height="gridHeight" class="polyline-svg">
+                    <line
+                        v-for="s in blueStanines"
+                        :key="`blue-${s}`"
+                        :x1="xForStanine(s)"
+                        y1="0"
+                        :x2="xForStanine(s)"
+                        :y2="gridHeight"
+                        stroke="var(--blue)"
+                        :stroke-width="LINE_W"
+                        opacity="0.7"
+                        vector-effect="non-scaling-stroke"
+                    />
+
+                    <circle v-for="(dot, idx) in gridDots" :key="'grid-dot-' + idx" :cx="dot.x" :cy="dot.y" r="2" fill="var(--overlay-stroke)" />
+
                     <template v-for="(seg, sIdx) in polySegments" :key="'seg-' + sIdx">
                         <polyline :points="seg.map((p) => `${p.x},${p.y}`).join(' ')" fill="none" stroke="black" stroke-width="1.5" />
                     </template>
@@ -404,6 +409,12 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value);
     margin: 2rem auto;
     font-size: 11px;
     line-height: 1.25;
+}
+
+.fpi-sheet,
+.fpi-sheet * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
 }
 
 /* Dark mode */
