@@ -263,6 +263,23 @@ const q5FirstWindowEffectivePoints = computed(() => q5FirstWindowManualPoints.va
 const q5AfterWindowEffectivePoints = computed(() => q5AfterWindowManualPoints.value ?? q5AfterAutoPoints.value);
 const q5EffectivePoints = computed(() => q5FirstWindowEffectivePoints.value + q5AfterWindowEffectivePoints.value);
 
+function hasQ6TableInput(source: Record<string, any> | null | undefined) {
+    const routeAssignments = (source?.route_assignments ?? {}) as Record<string, string | null>;
+    const routeTimes = (source?.route_times ?? {}) as Record<string, string>;
+    const routeTotals = (source?.route_totals ?? {}) as Record<string, string>;
+
+    const hasRouteRowInput = Array.from({ length: 6 }, (_, index) => index + 1).some((row) => {
+        const fromRaw = String(routeAssignments[`route-from-${row}`] ?? '').trim();
+        const toRaw = String(routeAssignments[`route-to-${row}`] ?? '').trim();
+        const wayRaw = String(routeTimes[`route-time-${row}`] ?? '').trim();
+        const msgRaw = String(routeTimes[`route-msg-${row}`] ?? '').trim();
+        const hasEditableFromInput = row !== 1 && fromRaw !== '';
+        return hasEditableFromInput || toRaw !== '' || wayRaw !== '' || msgRaw !== '';
+    });
+
+    return hasRouteRowInput || ['totalWay', 'totalMsg', 'returnWay'].some((key) => String(routeTotals[key] ?? '').trim() !== '');
+}
+
 function formatManualInputValue(value: unknown) {
     const parsed = toNumber(value);
     return parsed == null ? '' : `${parsed}`;
@@ -302,8 +319,8 @@ watch(
     { immediate: true, deep: true },
 );
 
-function buildQ6Score(scoring: any) {
-    const points = toNumber(scoring?.points) ?? 0;
+function buildQ6Score(scoring: any, hasTableInput = true) {
+    let points = toNumber(scoring?.points) ?? 0;
     const max = toNumber(scoring?.max) ?? 8;
     const explanation: string[] = [];
 
@@ -316,13 +333,19 @@ function buildQ6Score(scoring: any) {
     explanation.push(`Alle 6 Personen benachrichtigt: ${scoring.allPeopleNotified ? 'ja' : 'nein'}`);
     explanation.push(`Telefon sinnvoll eingesetzt: ${scoring.hasPhoneUsage ? 'ja' : 'nein'}`);
     explanation.push(`Bestzeit erreicht: ${scoring.isBestTime ? 'ja' : 'nein'}`);
+    explanation.push(`Eintrag vorhanden: ${hasTableInput ? 'ja' : 'nein'}`);
+
+    if (!hasTableInput) {
+        points = 0;
+    }
+
     explanation.push(`Vergabtes Ergebnis: ${points}/${max}`);
 
     return { points, max, explanation };
 }
 
-const q6Score = computed(() => buildQ6Score(q6Scoring.value));
-const firstWindowQ6Score = computed(() => buildQ6Score(firstWindowQ6Scoring.value ?? q6Scoring.value));
+const q6Score = computed(() => buildQ6Score(q6Scoring.value, hasQ6TableInput(props.results)));
+const firstWindowQ6Score = computed(() => buildQ6Score(firstWindowQ6Scoring.value ?? q6Scoring.value, hasQ6TableInput(firstWindowResults.value)));
 
 const totalPoints = computed(
     () =>

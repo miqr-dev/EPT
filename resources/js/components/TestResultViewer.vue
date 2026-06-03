@@ -4,13 +4,13 @@ defineOptions({
 });
 import AvemResult from '@/components/AvemResult.vue';
 import BIT2Result from '@/components/BIT2Result.vue';
+import BrtResult from '@/components/BrtResult.vue';
 import BtResult from '@/components/BtResult.vue';
 import KonzentrationstestResult from '@/components/KonzentrationstestResult.vue';
 import LmtResult from '@/components/LmtResult.vue';
 import LpsResult from '@/components/LpsResult.vue';
 import MrtAResult from '@/components/MrtAResult.vue';
 import MrtBResult from '@/components/MrtBResult.vue';
-import { Input } from '@/components/ui/input';
 import { FPI_QUESTIONS } from '@/pages/Questions/FPIQuestions';
 import FpiResult from '@/pages/Scores/FPI/FPIResult.vue';
 import { norms_female_16_24 } from '@/pages/Scores/FPI/norms_female_16_24';
@@ -48,12 +48,14 @@ const props = withDefaults(
         test: { name: string; code?: string };
         participantProfile?: { age: number; sex?: string } | null;
         showAnswers?: boolean;
+        pdfMode?: boolean;
         forceOpenAnswers?: boolean;
         testResultId?: number | null;
         manualScores?: Array<{ key: string; value: number | string | null }> | Record<string, any>;
     }>(),
     {
         showAnswers: true,
+        pdfMode: false,
     },
 );
 
@@ -78,6 +80,7 @@ const manualScoreMap = computed<Record<string, number | string | null>>(() => {
 });
 const isKonzentrationstest = computed(() => ['Konzentrationstest', '628 Test'].includes((props.test?.name || '').trim()));
 const isFpiRTest = computed(() => [props.test?.name, props.test?.code].some((value) => String(value ?? '').trim() === 'FPI-R'));
+const isBrtTest = computed(() => [props.test?.name, props.test?.code].some((value) => ['BRT-A', 'BRT-B'].includes(String(value ?? '').trim())));
 
 const fpiStanineKeys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
 const fpiScoreKeys: (number | string)[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'E', 'N'];
@@ -293,6 +296,13 @@ const fpiRohwerte = computed(() => {
     <div v-if="local" v-bind="$attrs">
         <MrtAResult v-if="test.name === 'MRT-A'" :results="local" />
         <MrtBResult v-else-if="test.name === 'MRT-B'" :results="local" />
+        <BrtResult
+            v-else-if="isBrtTest"
+            :results="local"
+            :show-answers="showAnswers"
+            :editable-answers="showAnswers && !pdfMode"
+            :pdf-mode="pdfMode"
+        />
         <KonzentrationstestResult v-else-if="isKonzentrationstest" :results="local" :show-answers="showAnswers" />
         <LmtResult v-else-if="test.name === 'LMT'" :results="local" :show-answers="showAnswers" />
         <FpiResult
@@ -345,42 +355,6 @@ const fpiRohwerte = computed(() => {
                     </tr>
                 </tbody>
             </table>
-
-            <template v-if="showAnswers && (test.name === 'BRT-A' || test.name === 'BRT-B')">
-                <h3 class="mb-2 font-bold">Antworten</h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full rounded-lg border text-sm shadow">
-                        <thead class="bg-muted/40 dark:bg-gray-700">
-                            <tr>
-                                <th class="px-2 py-1 text-left font-semibold">#</th>
-                                <th class="px-2 py-1 text-left font-semibold">Frage</th>
-                                <th class="px-2 py-1 text-left font-semibold">Ihre Antwort</th>
-                                <th class="px-2 py-1 text-left font-semibold">Richtige Antwort</th>
-                                <th class="px-2 py-1 text-left font-semibold">Bearbeitungszeit</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr
-                                v-for="(ans, idx) in local.answers"
-                                :key="idx"
-                                :class="ans.is_correct ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'"
-                            >
-                                <td class="px-2 py-1 font-medium text-muted-foreground">{{ idx + 1 }}</td>
-                                <td class="px-2 py-1 align-top">{{ ans.question }}</td>
-                                <td class="px-2 py-1">
-                                    <Input v-model="ans.user_answer" class="w-24" />
-                                </td>
-                                <td class="px-2 py-1">
-                                    <span class="font-mono">{{
-                                        Array.isArray(ans.correct_answers) ? ans.correct_answers.join(', ') : ans.correct_answers
-                                    }}</span>
-                                </td>
-                                <td class="min-w-[60px] px-2 py-1 text-right font-mono">{{ formatTime(ans.time_seconds) }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </template>
         </template>
     </div>
 </template>

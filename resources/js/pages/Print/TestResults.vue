@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import PdfTemplate from '@/components/PdfTemplate.vue';
 import { Head } from '@inertiajs/vue3';
+import type { ComponentPublicInstance } from 'vue';
 import { onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue';
 
 const props = withDefaults(
@@ -18,7 +19,7 @@ const props = withDefaults(
 
 const sheetRefs = ref<HTMLElement[]>([]);
 
-function setSheetRef(el: Element | null) {
+function setSheetRef(el: Element | ComponentPublicInstance | null) {
     if (el instanceof HTMLElement) {
         sheetRefs.value.push(el);
     }
@@ -247,6 +248,11 @@ onUnmounted(() => {
 
 .print-sheet[data-test-name='LPS-B'] .result-source {
     width: 760px;
+}
+
+.print-sheet[data-test-name='BRT-A'] .result-source,
+.print-sheet[data-test-name='BRT-B'] .result-source {
+    width: 820px;
 }
 
 @media print {

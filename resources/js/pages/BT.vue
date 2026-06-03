@@ -679,7 +679,8 @@ function evaluateBtSnapshot(snapshot: BtAnswerSnapshot) {
         const effectiveFrom = fromRaw;
         const wayRaw = snapshot.route_times[`route-time-${row}`] ?? '';
         const msgRaw = snapshot.route_times[`route-msg-${row}`] ?? '';
-        const hasRowInput = fromRaw !== '' || toRaw !== '' || wayRaw !== '' || msgRaw !== '';
+        const hasEditableFromInput = row !== 1 && fromRaw !== '';
+        const hasRowInput = hasEditableFromInput || toRaw !== '' || wayRaw !== '' || msgRaw !== '';
         if (hasRowInput) {
             hasAnyInput = true;
         }
