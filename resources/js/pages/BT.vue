@@ -939,7 +939,7 @@ if (import.meta.env.DEV) {
                         4-6 Zeit fehlen muss. Halten Sie sich nicht zu lange bei einer Aufgabe auf. Sie haben 60 Minuten Zeit für sechs Aufgaben.
                     </p>
                     <div class="pt-2 text-center">
-                        <Button v-if="!dragDropExampleCompleted" class="px-8" @click="openDragDropExample">Drag and Drop Example</Button>
+                        <Button v-if="!dragDropExampleCompleted" class="px-8" @click="openDragDropExample">Drag & Drop Beispiel</Button>
                         <div v-else class="space-y-3">
                             <p class="text-base font-semibold text-green-700">Das Beispiel ist abgeschlossen.</p>
                             <Button class="px-8" @click="startTest">Test starten</Button>
