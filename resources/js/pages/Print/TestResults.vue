@@ -133,6 +133,7 @@ onUnmounted(() => {
             :ref="setSheetRef"
             class="print-sheet"
             :data-test-name="assignment.test?.name"
+            :data-test-code="assignment.test?.code"
         >
             <div class="sheet-frame" data-print-frame>
                 <div class="result-source" data-print-source>
@@ -253,6 +254,20 @@ onUnmounted(() => {
 .print-sheet[data-test-name='BRT-A'] .result-source,
 .print-sheet[data-test-name='BRT-B'] .result-source {
     width: 820px;
+}
+
+.print-sheet[data-test-name='MRT-A'] .result-source,
+.print-sheet[data-test-name='MRT-B'] .result-source {
+    width: 900px;
+}
+
+.print-sheet[data-test-name='BT'] .result-source {
+    width: 920px;
+}
+
+.print-sheet[data-test-name='FPI-R'] .result-source,
+.print-sheet[data-test-code='FPI-R'] .result-source {
+    width: 920px;
 }
 
 @media print {

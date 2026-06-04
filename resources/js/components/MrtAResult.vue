@@ -7,9 +7,15 @@ import { Line } from 'vue-chartjs';
 Chart.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Title);
 Chart.register(...registerables, annotationPlugin);
 
-const props = defineProps<{
-    results: any;
-}>();
+const props = withDefaults(
+    defineProps<{
+        results: any;
+        pdfMode?: boolean;
+    }>(),
+    {
+        pdfMode: false,
+    },
+);
 
 const showDetails = ref(false);
 
@@ -99,7 +105,7 @@ const chartData = computed(() => {
 const chartOptions: any = {
     responsive: true,
     maintainAspectRatio: false,
-    devicePixelRatio: 2,
+    devicePixelRatio: props.pdfMode ? 4 : 2,
     animation: false as const,
     indexAxis: 'y' as const,
     plugins: {
@@ -240,9 +246,9 @@ const mrtQuestions = [
 </script>
 
 <template>
-    <div class="rounded-lg border bg-background p-6">
+    <div class="mrt-result rounded-lg border bg-background p-6" :class="{ 'mrt-result--pdf': pdfMode }">
         <h2 class="mb-4 text-xl font-semibold">Test abgeschlossen!</h2>
-        <div class="mb-6 w-full max-w-md">
+        <div class="mrt-summary mb-6 w-full max-w-md">
             <table class="w-full overflow-hidden rounded-lg border text-sm shadow">
                 <tbody>
                     <tr class="bg-muted/40">
@@ -265,13 +271,13 @@ const mrtQuestions = [
             </table>
         </div>
 
-        <button v-if="!showDetails" @click="showDetails = true" class="mb-4 rounded-lg px-4 py-2 font-semibold">
+        <button v-if="!pdfMode && !showDetails" @click="showDetails = true" class="mb-4 rounded-lg px-4 py-2 font-semibold">
             Antwort- und Bearbeitungszeit je Aufgabe anzeigen
         </button>
-        <button v-else @click="showDetails = false" class="mb-4 rounded-lg px-4 py-2 font-semibold">
+        <button v-else-if="!pdfMode" @click="showDetails = false" class="mb-4 rounded-lg px-4 py-2 font-semibold">
             Antwort- und Bearbeitungszeit je Aufgabe verbergen
         </button>
-        <div v-if="showDetails">
+        <div v-if="!pdfMode && showDetails">
             <h3 class="mb-2 font-bold">Antwort- und Bearbeitungszeit je Aufgabe</h3>
             <div class="overflow-x-auto">
                 <table class="min-w-full rounded-lg border text-sm shadow">
@@ -310,7 +316,7 @@ const mrtQuestions = [
         </div>
 
         <div>
-            <div class="my-10 flex w-full flex-col items-center justify-center">
+            <div class="mrt-chart-section my-10 flex w-full flex-col items-center justify-center">
                 <!-- <div class="flex flex-row items-center gap-3 mb-8">
           <span class="font-bold text-base mr-3">RW</span>
           <template v-for="(score, i) in results.group_scores" :key="'rwbox' + i">
@@ -337,14 +343,14 @@ const mrtQuestions = [
 </div>
 </div> -->
                 <!-- Chart + explanation side-by-side on large screens, stacked on small -->
-                <div class="grid w-full max-w-[1080px] grid-cols-1 items-start gap-6 lg:grid-cols-[740px_minmax(0,1fr)]">
+                <div class="mrt-chart-grid grid w-full max-w-[1080px] grid-cols-1 items-start gap-6 lg:grid-cols-[740px_minmax(0,1fr)]">
                     <!-- Chart (stretches to given height because maintainAspectRatio=false) -->
-                    <div class="h-[420px] w-full">
+                    <div class="mrt-chart-panel h-[420px] w-full">
                         <Line :data="chartData" :options="chartOptions" />
                     </div>
 
                     <!-- Explanation card OUTSIDE the chart -->
-                    <aside class="rounded-lg border bg-white p-4 shadow-sm dark:bg-neutral-900">
+                    <aside class="mrt-hints-card rounded-lg border bg-white p-4 shadow-sm dark:bg-neutral-900">
                         <h4 class="mb-3 text-sm font-semibold">Hinweise</h4>
                         <ul class="space-y-2 text-sm leading-5">
                             <li v-for="(text, idx) in uExplanations" :key="'ux-' + idx" class="flex">
@@ -371,3 +377,108 @@ const mrtQuestions = [
         </div>
     </div>
 </template>
+
+<style scoped>
+.mrt-result {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+
+.mrt-result--pdf {
+    border-color: #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 18px;
+    box-shadow: none;
+}
+
+.mrt-result--pdf h2 {
+    margin-bottom: 12px;
+    font-size: 15px;
+    line-height: 1.35;
+}
+
+.mrt-result--pdf .mrt-summary {
+    max-width: 360px;
+    margin-bottom: 16px;
+}
+
+.mrt-result--pdf .mrt-summary table {
+    border-color: #e5e7eb;
+    box-shadow: none;
+}
+
+.mrt-result--pdf .mrt-summary td {
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.mrt-result--pdf .mrt-chart-section {
+    align-items: stretch;
+    margin-top: 16px;
+    margin-bottom: 0;
+}
+
+.mrt-result--pdf .mrt-chart-grid {
+    display: block;
+    max-width: 100%;
+}
+
+.mrt-result--pdf .mrt-chart-panel {
+    position: relative;
+    width: 100%;
+    height: 430px;
+}
+
+.mrt-result--pdf .mrt-chart-panel :deep(canvas) {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.mrt-result--pdf .mrt-hints-card {
+    margin-top: 16px;
+    border-color: #e5e7eb;
+    border-radius: 6px;
+    background: #ffffff;
+    padding: 14px 16px 15px;
+    box-shadow: none;
+}
+
+.mrt-result--pdf .mrt-hints-card h4 {
+    margin-bottom: 10px;
+    font-size: 13.5px;
+    line-height: 1.25;
+    color: #111827;
+}
+
+.mrt-result--pdf .mrt-hints-card ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px 24px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: #111827;
+}
+
+.mrt-result--pdf .mrt-hints-card li {
+    align-items: flex-start;
+}
+
+.mrt-result--pdf .mrt-hints-card li span:first-child {
+    width: 34px;
+    flex: 0 0 34px;
+    color: #111827;
+}
+
+.mrt-result--pdf .mrt-hints-card li span:nth-child(2) {
+    margin-left: 2px;
+    margin-right: 8px;
+    color: #6b7280;
+}
+
+@media print {
+    .mrt-result--pdf {
+        break-inside: avoid;
+    }
+}
+</style>

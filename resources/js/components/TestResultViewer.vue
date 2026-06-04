@@ -294,8 +294,8 @@ const fpiRohwerte = computed(() => {
 
 <template>
     <div v-if="local" v-bind="$attrs">
-        <MrtAResult v-if="test.name === 'MRT-A'" :results="local" />
-        <MrtBResult v-else-if="test.name === 'MRT-B'" :results="local" />
+        <MrtAResult v-if="test.name === 'MRT-A'" :results="local" :pdf-mode="pdfMode" />
+        <MrtBResult v-else-if="test.name === 'MRT-B'" :results="local" :pdf-mode="pdfMode" />
         <BrtResult
             v-else-if="isBrtTest"
             :results="local"
@@ -312,6 +312,7 @@ const fpiRohwerte = computed(() => {
             :answers="local.answers"
             :missing-answer-count="fpiMissingAnswerCount"
             :show-answers="showAnswers"
+            :pdf-mode="pdfMode"
         />
         <BIT2Result v-else-if="test.name === 'BIT-2'" :results="local" :participantProfile="participantProfile" :show-answers="showAnswers" />
         <LpsResult
@@ -330,6 +331,7 @@ const fpiRohwerte = computed(() => {
             :manual-scores="manualScoreMap"
             :results="local"
             :show-answers="showAnswers"
+            :pdf-mode="pdfMode"
             :force-open-answers="forceOpenAnswers"
             @manual-score-updated="handleManualScoreUpdated"
         />

@@ -30,6 +30,18 @@ function isBrtTest(assignment: any) {
     return ['BRT-A', 'BRT-B'].includes(String(assignment?.test?.name ?? '').trim());
 }
 
+function isMrtTest(assignment: any) {
+    return ['MRT-A', 'MRT-B'].includes(String(assignment?.test?.name ?? '').trim());
+}
+
+function isBtTest(assignment: any) {
+    return String(assignment?.test?.name ?? '').trim() === 'BT';
+}
+
+function isFpiRTest(assignment: any) {
+    return [assignment?.test?.name, assignment?.test?.code].some((value) => String(value ?? '').trim() === 'FPI-R');
+}
+
 function displayDate(assignment: any) {
     return isBrtTest(assignment) ? shortTestDate : testDate;
 }
@@ -38,7 +50,13 @@ function displayDate(assignment: any) {
 <template>
     <div
         class="pdf-template bg-white p-8 font-sans text-black"
-        :class="{ 'pdf-template--compact': assignment?.test?.name === 'LPS-B', 'pdf-template--brt': isBrtTest(assignment) }"
+        :class="{
+            'pdf-template--compact': assignment?.test?.name === 'LPS-B',
+            'pdf-template--brt': isBrtTest(assignment),
+            'pdf-template--mrt': isMrtTest(assignment),
+            'pdf-template--bt': isBtTest(assignment),
+            'pdf-template--fpi': isFpiRTest(assignment),
+        }"
     >
         <!-- Header -->
         <div class="pdf-header flex items-center justify-between border-b-2 border-gray-200 pb-4">
@@ -155,6 +173,138 @@ function displayDate(assignment: any) {
 }
 
 .pdf-template--brt .result-panel {
+    border: 0;
+    background: transparent;
+    padding: 0;
+}
+
+.pdf-template--mrt {
+    padding: 22px 24px;
+}
+
+.pdf-template--mrt .pdf-header {
+    align-items: flex-start;
+    gap: 24px;
+    padding-bottom: 14px;
+}
+
+.pdf-template--mrt .pdf-date {
+    flex-shrink: 0;
+    min-width: max-content;
+    white-space: nowrap;
+}
+
+.pdf-template--mrt h1 {
+    font-size: 1.625rem;
+    line-height: 2rem;
+}
+
+.pdf-template--mrt .mt-8 {
+    margin-top: 1.25rem;
+}
+
+.pdf-template--mrt .participant-grid {
+    display: block;
+}
+
+.pdf-template--mrt .mb-4 {
+    margin-bottom: 0.75rem;
+}
+
+.pdf-template--mrt h2 {
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+}
+
+.pdf-template--mrt .result-panel {
+    border: 0;
+    background: transparent;
+    padding: 0;
+}
+
+.pdf-template--bt {
+    padding: 20px 22px;
+}
+
+.pdf-template--bt .pdf-header {
+    align-items: flex-start;
+    gap: 24px;
+    padding-bottom: 12px;
+}
+
+.pdf-template--bt .pdf-date {
+    flex-shrink: 0;
+    min-width: max-content;
+    white-space: nowrap;
+}
+
+.pdf-template--bt h1 {
+    font-size: 1.55rem;
+    line-height: 1.95rem;
+}
+
+.pdf-template--bt .mt-8 {
+    margin-top: 1rem;
+}
+
+.pdf-template--bt .participant-grid {
+    display: block;
+}
+
+.pdf-template--bt .mb-4 {
+    margin-bottom: 0.65rem;
+}
+
+.pdf-template--bt h2 {
+    font-size: 1.075rem;
+    line-height: 1.45rem;
+}
+
+.pdf-template--bt .result-panel {
+    border: 0;
+    background: transparent;
+    padding: 0;
+}
+
+.pdf-template--fpi {
+    padding: 18px 20px;
+}
+
+.pdf-template--fpi .pdf-header {
+    align-items: flex-start;
+    gap: 24px;
+    padding-bottom: 12px;
+}
+
+.pdf-template--fpi .pdf-date {
+    flex-shrink: 0;
+    min-width: max-content;
+    white-space: nowrap;
+}
+
+.pdf-template--fpi h1 {
+    font-size: 1.55rem;
+    line-height: 1.95rem;
+}
+
+.pdf-template--fpi .mt-8 {
+    margin-top: 1rem;
+}
+
+.pdf-template--fpi .participant-grid {
+    display: block;
+}
+
+.pdf-template--fpi .mb-4 {
+    margin-bottom: 0.65rem;
+}
+
+.pdf-template--fpi h2 {
+    font-size: 1.075rem;
+    line-height: 1.45rem;
+}
+
+.pdf-template--fpi .result-panel {
     border: 0;
     background: transparent;
     padding: 0;

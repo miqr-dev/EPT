@@ -11,12 +11,14 @@ const props = withDefaults(
         answers?: any[];
         missingAnswerCount?: number | null;
         showAnswers?: boolean;
+        pdfMode?: boolean;
     }>(),
     {
         stanines: () => [],
         rohwerte: () => [],
         answers: () => [],
         showAnswers: true,
+        pdfMode: false,
     },
 );
 
@@ -208,7 +210,7 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value);
 </script>
 
 <template>
-    <div class="fpi-sheet">
+    <div class="fpi-sheet" :class="{ 'fpi-sheet--pdf': props.pdfMode }">
         <div class="main-grid">
             <!-- Grid Headers -->
             <div class="header-cell rohwert-title">Rohwert</div>
@@ -338,7 +340,7 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value);
             <div class="footer-cell standardwert-cell">fehlende Antworten</div>
         </div>
     </div>
-    <details v-if="showAnswers" class="mt-4">
+    <details v-if="props.showAnswers && !props.pdfMode" class="mt-4">
         <summary class="cursor-pointer">Antworten anzeigen</summary>
         <table class="w-full border-collapse border border-gray-300 text-sm">
             <thead>
@@ -406,6 +408,7 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value);
     color: var(--fg);
     font-family: Arial, sans-serif;
     width: 100%;
+    max-width: 920px;
     margin: 2rem auto;
     font-size: 11px;
     line-height: 1.25;
@@ -442,6 +445,95 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value);
     --overlay-stroke: #f8fafc;
     --overlay-fill: #0f1115;
     --dot-size: 5px;
+}
+
+.fpi-sheet--pdf {
+    --bg: #ffffff;
+    --fg: #111827;
+    --muted-fg: #374151;
+    --grid: #d5dbe3;
+    --border: #1f2937;
+    --blue: #2563eb;
+    --overlay-stroke: #111827;
+    --overlay-fill: #ffffff;
+    --dot-size: 4px;
+
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid #cfd6df;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    font-size: 11.75px;
+    line-height: 1.28;
+}
+
+.fpi-sheet--pdf .header-cell,
+.fpi-sheet--pdf .cell,
+.fpi-sheet--pdf .footer-cell {
+    padding: 5px;
+}
+
+.fpi-sheet--pdf .standardwert-cell,
+.fpi-sheet--pdf .right-desc-cell {
+    padding-right: 12px;
+    padding-left: 12px;
+}
+
+.fpi-sheet--pdf .header-cell {
+    background: #f8fafc;
+}
+
+.fpi-sheet--pdf .rohwert-title,
+.fpi-sheet--pdf .standardwert-title,
+.fpi-sheet--pdf .graph-title,
+.fpi-sheet--pdf .right-desc-title,
+.fpi-sheet--pdf .normstichprobe-label {
+    color: #111827;
+    font-weight: 700;
+}
+
+.fpi-sheet--pdf .cat-title {
+    margin-bottom: 3px;
+    color: #0f172a;
+    font-size: 12.75px;
+}
+
+.fpi-sheet--pdf .cat-desc {
+    color: #334155;
+    font-size: 11.35px;
+}
+
+.fpi-sheet--pdf .right-desc-cell .cat-desc {
+    line-height: 1.24;
+}
+
+.fpi-sheet--pdf .rohwert-box {
+    width: 46px;
+    height: 28px;
+    border-color: #475569;
+    border-radius: 999px;
+    font-size: 13.5px;
+}
+
+.fpi-sheet--pdf .footer-cell {
+    background: #fbfdff;
+}
+
+.fpi-sheet--pdf .percent-label {
+    font-size: 11.5px;
+}
+
+.fpi-sheet--pdf .dot {
+    display: none;
+}
+
+.fpi-sheet--pdf .polyline-svg polyline {
+    stroke-width: 2.5;
+}
+
+.fpi-sheet--pdf .polyline-svg circle {
+    shape-rendering: geometricPrecision;
 }
 
 /* =========================

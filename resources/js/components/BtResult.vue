@@ -10,12 +10,14 @@ const props = withDefaults(
         results?: Record<string, any> | null;
         showAnswers?: boolean;
         forceOpenAnswers?: boolean;
+        pdfMode?: boolean;
     }>(),
     {
         manualScores: () => ({}),
         results: null,
         showAnswers: true,
         forceOpenAnswers: false,
+        pdfMode: false,
     },
 );
 
@@ -263,6 +265,51 @@ const q5FirstWindowEffectivePoints = computed(() => q5FirstWindowManualPoints.va
 const q5AfterWindowEffectivePoints = computed(() => q5AfterWindowManualPoints.value ?? q5AfterAutoPoints.value);
 const q5EffectivePoints = computed(() => q5FirstWindowEffectivePoints.value + q5AfterWindowEffectivePoints.value);
 
+function hasStoredManualScore(key: string) {
+    const raw = props.manualScores?.[key];
+    return raw !== null && raw !== undefined && String(raw).trim() !== '';
+}
+
+function manualEntry(label: string, value: string, tone: 'regular' | 'late' = 'regular') {
+    return { label, value, tone };
+}
+
+const q2PdfManualEntries = computed(() => {
+    const entries = [];
+
+    if (hasStoredManualScore(q2FirstWindowManualScoreKey)) {
+        entries.push(manualEntry('bis 30 Min.', q2FirstWindowManualPointsInput.value));
+    }
+
+    if (hasStoredManualScore(q2AfterWindowManualScoreKey)) {
+        entries.push(manualEntry('nach 30 Min.', q2AfterWindowManualPointsInput.value, 'late'));
+    }
+
+    if (entries.length === 0 && hasStoredManualScore(q2ManualScoreKey)) {
+        entries.push(manualEntry('gesamt', q2AfterWindowManualPointsInput.value || q2FirstWindowManualPointsInput.value, 'late'));
+    }
+
+    return entries.filter((entry) => entry.value.trim() !== '');
+});
+
+const q5PdfManualEntries = computed(() => {
+    const entries = [];
+
+    if (hasStoredManualScore(q5FirstWindowManualScoreKey)) {
+        entries.push(manualEntry('bis 30 Min.', q5FirstWindowManualPointsInput.value));
+    }
+
+    if (hasStoredManualScore(q5AfterWindowManualScoreKey)) {
+        entries.push(manualEntry('nach 30 Min.', q5AfterWindowManualPointsInput.value, 'late'));
+    }
+
+    if (entries.length === 0 && hasStoredManualScore(q5ManualScoreKey)) {
+        entries.push(manualEntry('gesamt', String(q5EffectivePoints.value), 'late'));
+    }
+
+    return entries.filter((entry) => entry.value.trim() !== '');
+});
+
 function hasQ6TableInput(source: Record<string, any> | null | undefined) {
     const routeAssignments = (source?.route_assignments ?? {}) as Record<string, string | null>;
     const routeTimes = (source?.route_times ?? {}) as Record<string, string>;
@@ -426,17 +473,19 @@ async function persistQ5AfterWindowManualPoints() {
 </script>
 
 <template>
-    <div :class="['w-full space-y-3', !forceOpenAnswers ? 'lg:w-1/2' : '']">
-        <div class="rounded-lg border-2 border-black bg-white p-3 text-sm">
-            <div class="mb-3 flex items-center justify-between border-b border-black pb-2">
+    <div :class="['bt-result w-full space-y-3', { 'bt-result--pdf': pdfMode }, !forceOpenAnswers && !pdfMode ? 'lg:w-1/2' : '']">
+        <div class="bt-evaluation-card rounded-lg border-2 border-black bg-white p-3 text-sm">
+            <div class="bt-summary-header mb-3 flex items-center justify-between border-b border-black pb-2">
                 <div class="font-semibold">BT – Auswertung Form A</div>
                 <div class="text-right">
                     <div class="text-sm">
-                        <span class="font-semibold">Rohwert bis 30 Min.:</span> <span class="text-xl font-bold">{{ firstWindowTotalPoints }}</span>
+                        <span class="font-semibold">Rohwert bis 30 Min.:</span>
+                        <span class="bt-window-score text-xl font-bold">{{ firstWindowTotalPoints }}</span>
                         <span class="font-semibold">/ 50</span>
                     </div>
                     <div class="text-lg">
-                        <span class="font-semibold">Rohwert gesamt:</span> <span class="text-2xl font-bold">{{ totalPoints }}</span>
+                        <span class="font-semibold">Rohwert gesamt:</span>
+                        <span class="bt-total-score text-2xl font-bold">{{ totalPoints }}</span>
                         <span class="font-semibold">/ 50</span>
                     </div>
                     <div><span class="font-semibold">Benötigte Zeit:</span> {{ totalTime }}</div>
@@ -444,7 +493,7 @@ async function persistQ5AfterWindowManualPoints() {
                 </div>
             </div>
 
-            <table class="w-full border-collapse border border-black">
+            <table class="bt-score-table w-full border-collapse border border-black">
                 <thead>
                     <tr>
                         <th class="border border-black p-2 text-left">Aufgabe</th>
@@ -534,8 +583,8 @@ async function persistQ5AfterWindowManualPoints() {
                         <td class="border border-black p-2 align-top">
                             <div class="mb-2 font-semibold">Aufgabe 2</div>
                             <div class="mb-2">Manuelle Bewertung durch Prüfer:in.</div>
-                            <div class="flex flex-wrap gap-3">
-                                <label class="flex flex-col gap-1 text-xs text-muted-foreground">
+                            <div v-if="!pdfMode" class="bt-manual-controls flex flex-wrap gap-3">
+                                <label class="bt-manual-label flex flex-col gap-1 text-xs text-muted-foreground">
                                     bis 30 Min.
                                     <Input
                                         :model-value="q2FirstWindowManualPointsInput"
@@ -545,7 +594,7 @@ async function persistQ5AfterWindowManualPoints() {
                                         @blur="persistQ2FirstWindowManualPoints"
                                     />
                                 </label>
-                                <label class="flex flex-col gap-1 text-xs text-blue-700">
+                                <label class="bt-manual-label flex flex-col gap-1 text-xs text-blue-700">
                                     nach 30 Min.
                                     <Input
                                         :model-value="q2AfterWindowManualPointsInput"
@@ -555,6 +604,16 @@ async function persistQ5AfterWindowManualPoints() {
                                         @blur="persistQ2AfterWindowManualPoints"
                                     />
                                 </label>
+                            </div>
+                            <div v-else-if="q2PdfManualEntries.length" class="bt-pdf-manual-values">
+                                <div
+                                    v-for="entry in q2PdfManualEntries"
+                                    :key="`q2-${entry.label}`"
+                                    :class="['bt-pdf-manual-value', { 'bt-pdf-manual-value--late': entry.tone === 'late' }]"
+                                >
+                                    <span>{{ entry.label }}</span>
+                                    <strong>{{ entry.value }}</strong>
+                                </div>
                             </div>
                         </td>
                         <td class="border border-black p-2 text-center font-semibold">{{ q2FirstWindowManualPoints ?? '—' }}</td>
@@ -651,8 +710,8 @@ async function persistQ5AfterWindowManualPoints() {
                             <div class="mt-1 text-muted-foreground">
                                 Abzüge: {{ q5Score.mistakes.length ? q5Score.mistakes.join(' | ') : 'keine' }}.
                             </div>
-                            <div class="mt-3 flex flex-wrap gap-3">
-                                <label class="flex flex-col gap-1 text-xs text-muted-foreground">
+                            <div v-if="!pdfMode" class="bt-manual-controls mt-3 flex flex-wrap gap-3">
+                                <label class="bt-manual-label flex flex-col gap-1 text-xs text-muted-foreground">
                                     bis 30 Min.
                                     <Input
                                         :model-value="q5FirstWindowManualPointsInput"
@@ -662,7 +721,7 @@ async function persistQ5AfterWindowManualPoints() {
                                         @blur="persistQ5FirstWindowManualPoints"
                                     />
                                 </label>
-                                <label class="flex flex-col gap-1 text-xs text-blue-700">
+                                <label class="bt-manual-label flex flex-col gap-1 text-xs text-blue-700">
                                     nach 30 Min.
                                     <Input
                                         :model-value="q5AfterWindowManualPointsInput"
@@ -672,6 +731,16 @@ async function persistQ5AfterWindowManualPoints() {
                                         @blur="persistQ5AfterWindowManualPoints"
                                     />
                                 </label>
+                            </div>
+                            <div v-else-if="q5PdfManualEntries.length" class="bt-pdf-manual-values mt-3">
+                                <div
+                                    v-for="entry in q5PdfManualEntries"
+                                    :key="`q5-${entry.label}`"
+                                    :class="['bt-pdf-manual-value', { 'bt-pdf-manual-value--late': entry.tone === 'late' }]"
+                                >
+                                    <span>{{ entry.label }}</span>
+                                    <strong>{{ entry.value }}</strong>
+                                </div>
                             </div>
                         </td>
                         <td class="border border-black p-2 text-center font-semibold">{{ q5FirstWindowEffectivePoints }}</td>
@@ -731,11 +800,166 @@ async function persistQ5AfterWindowManualPoints() {
 
                     <tr>
                         <td class="border border-black p-2 text-right text-lg font-bold">Rohwert</td>
-                        <td class="border border-black p-2 text-center text-xl font-extrabold">{{ firstWindowTotalPoints }}</td>
-                        <td class="border border-black p-2 text-center text-xl font-extrabold">{{ totalPoints }}</td>
+                        <td class="bt-window-score border border-black p-2 text-center text-xl font-extrabold">{{ firstWindowTotalPoints }}</td>
+                        <td class="bt-total-score border border-black p-2 text-center text-xl font-extrabold">{{ totalPoints }}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </template>
+
+<style scoped>
+.bt-result {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+
+.bt-window-score {
+    color: #111827;
+}
+
+.bt-total-score {
+    color: #1d4ed8;
+}
+
+.bt-result--pdf {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.bt-result--pdf .bt-evaluation-card {
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 14px;
+    box-shadow: none;
+}
+
+.bt-result--pdf .bt-summary-header {
+    align-items: flex-start;
+    gap: 18px;
+    border-color: #d1d5db;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+}
+
+.bt-result--pdf .bt-summary-header > :first-child {
+    font-size: 15px;
+    line-height: 1.3;
+}
+
+.bt-result--pdf .bt-summary-header .text-right {
+    min-width: 270px;
+    color: #111827;
+}
+
+.bt-result--pdf .bt-summary-header .text-sm {
+    font-size: 13.5px;
+    line-height: 1.4;
+}
+
+.bt-result--pdf .bt-summary-header .text-lg {
+    font-size: 15px;
+    line-height: 1.45;
+}
+
+.bt-result--pdf .bt-summary-header .text-xs {
+    margin-top: 2px;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.bt-result--pdf .bt-score-table,
+.bt-result--pdf .bt-score-table table {
+    border-color: #9ca3af;
+}
+
+.bt-result--pdf .bt-score-table th,
+.bt-result--pdf .bt-score-table td {
+    border-color: #9ca3af;
+}
+
+.bt-result--pdf .bt-score-table > thead > tr > th {
+    background: #f8fafc;
+    padding: 7px 8px;
+    font-size: 13px;
+    line-height: 1.25;
+}
+
+.bt-result--pdf .bt-score-table > tbody > tr > td {
+    padding: 7px 8px;
+    vertical-align: top;
+}
+
+.bt-result--pdf .bt-score-table > tbody > tr > td:first-child {
+    font-size: 13px;
+}
+
+.bt-result--pdf .bt-score-table > tbody > tr > td:nth-child(2),
+.bt-result--pdf .bt-score-table > tbody > tr > td:nth-child(3) {
+    width: 86px;
+    font-size: 15px;
+}
+
+.bt-result--pdf .bt-score-table table {
+    margin-top: 4px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    line-height: 1.25;
+}
+
+.bt-result--pdf .bt-score-table table th,
+.bt-result--pdf .bt-score-table table td {
+    padding: 4px 5px;
+}
+
+.bt-result--pdf .bt-score-table .text-xs {
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.bt-result--pdf .bt-score-table .text-muted-foreground {
+    color: #4b5563;
+}
+
+.bt-result--pdf .bt-pdf-manual-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.bt-result--pdf .bt-pdf-manual-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #f8fafc;
+    padding: 5px 8px;
+    color: #111827;
+    font-size: 12.5px;
+    line-height: 1.2;
+}
+
+.bt-result--pdf .bt-pdf-manual-value--late {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+}
+
+.bt-result--pdf .bt-pdf-manual-value span {
+    color: #4b5563;
+}
+
+.bt-result--pdf .bt-pdf-manual-value strong {
+    min-width: 18px;
+    text-align: center;
+    font-size: 14px;
+}
+
+@media print {
+    .bt-result--pdf {
+        break-inside: avoid;
+    }
+}
+</style>
