@@ -56,6 +56,7 @@ class ResultPdfExportController extends Controller
       'assignments' => [$assignment],
       'autoPrint' => $request->boolean('auto_print'),
       'filename' => $this->filename($participant->name, '_' . ($assignment->test?->name ?? 'Test') . '_Ergebnis.pdf'),
+      'pdfUrl' => URL::route('test-results.pdf', ['testResult' => $testResult->id], false),
     ]);
   }
 
@@ -84,6 +85,7 @@ class ResultPdfExportController extends Controller
       'assignments' => $this->orderedAssignments($participant),
       'autoPrint' => $request->boolean('auto_print'),
       'filename' => $this->filename($participant->name, '_Alle_Tests.pdf'),
+      'pdfUrl' => URL::route('participants.results.pdf', ['participant' => $participant->id], false),
     ]);
   }
 

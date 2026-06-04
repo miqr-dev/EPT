@@ -10,14 +10,17 @@ const props = withDefaults(
         assignments: any[];
         autoPrint?: boolean;
         filename?: string;
+        pdfUrl?: string | null;
     }>(),
     {
         autoPrint: false,
         filename: 'Testergebnisse.pdf',
+        pdfUrl: null,
     },
 );
 
 const sheetRefs = ref<HTMLElement[]>([]);
+const isSavingPdf = ref(false);
 
 function setSheetRef(el: Element | ComponentPublicInstance | null) {
     if (el instanceof HTMLElement) {
@@ -85,6 +88,45 @@ function printDocument() {
     window.print();
 }
 
+async function savePdf() {
+    if (!props.pdfUrl || isSavingPdf.value) {
+        return;
+    }
+
+    isSavingPdf.value = true;
+
+    try {
+        const response = await fetch(props.pdfUrl, {
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/pdf',
+            },
+        });
+        const contentType = response.headers.get('Content-Type') || '';
+
+        if (!response.ok || !contentType.includes('application/pdf')) {
+            throw new Error(`PDF download failed with status ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.href = objectUrl;
+        link.download = props.filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    } catch (error) {
+        console.error('PDF download failed.', error);
+        window.alert('PDF konnte nicht automatisch gespeichert werden. Bitte versuchen Sie es erneut oder nutzen Sie Drucken.');
+    } finally {
+        isSavingPdf.value = false;
+    }
+}
+
 function closeWindow() {
     window.close();
 
@@ -120,7 +162,10 @@ onUnmounted(() => {
         <div class="print-toolbar" aria-label="PDF">
             <div class="truncate text-sm font-semibold text-gray-700">{{ filename }}</div>
             <div class="flex items-center gap-2">
-                <button type="button" class="toolbar-button" @click="printDocument">Drucken / PDF speichern</button>
+                <button type="button" class="toolbar-button" @click="printDocument">Drucken</button>
+                <button type="button" class="toolbar-button" :disabled="!pdfUrl || isSavingPdf" @click="savePdf">
+                    {{ isSavingPdf ? 'Speichere...' : 'PDF speichern' }}
+                </button>
                 <button type="button" class="toolbar-button" @click="closeWindow">Schliessen</button>
             </div>
         </div>
@@ -201,6 +246,13 @@ onUnmounted(() => {
 .toolbar-button:hover {
     border-color: #93c5fd;
     background: #eff6ff;
+}
+
+.toolbar-button:disabled {
+    cursor: not-allowed;
+    border-color: #e5e7eb;
+    background: #f9fafb;
+    color: #9ca3af;
 }
 
 .print-sheet,
