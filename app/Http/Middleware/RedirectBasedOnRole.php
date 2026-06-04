@@ -24,6 +24,8 @@ class RedirectBasedOnRole
         'password.reset',
         'participant.onboarding',
         'participant.onboarding.save',
+        'test-results.print-signed',
+        'participants.results.print-signed',
         // ...any other auth routes
       ])
     ) {
