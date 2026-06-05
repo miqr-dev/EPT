@@ -1,96 +1,192 @@
 <script setup lang="ts">
 import { LMT_QUESTIONS } from '@/pages/Questions/LMTQuestions';
-const props = defineProps<{
-  results: any;
-  showAnswers: boolean;
-}>();
-const { results } = props;
+
+const props = withDefaults(
+    defineProps<{
+        results: any;
+        showAnswers?: boolean;
+        pdfMode?: boolean;
+    }>(),
+    {
+        showAnswers: true,
+        pdfMode: false,
+    },
+);
 
 function formatTime(sec: number | null | undefined): string {
-  if (sec == null || isNaN(sec)) return '–'
-  const s = Number(sec)
-  if (s < 60) return `${s} s`
-  const m = Math.floor(s / 60)
-  const rest = s % 60
-  return rest ? `${m}m ${rest}s` : `${m}m`
+    if (sec == null || isNaN(Number(sec))) return '-';
+    const totalSeconds = Math.max(0, Number(sec) || 0);
+    const minutes = Math.floor(totalSeconds / 60);
+    const rest = totalSeconds % 60;
+    return `${minutes}:${rest.toString().padStart(2, '0')}`;
+}
+
+function formatValue(value: number | string | null | undefined): string {
+    if (value == null || value === '') return '-';
+    return String(value);
 }
 
 const scales = [
-  { key: 'L1', label: 'L1' },
-  { key: 'L2', label: 'L2' },
-  { key: 'F-', label: 'F−' },
-  { key: 'F+', label: 'F⁺' },
-]
+    { key: 'L1', label: 'L1' },
+    { key: 'L2', label: 'L2' },
+    { key: 'F-', label: 'F-' },
+    { key: 'F+', label: 'F+' },
+];
 </script>
 
 <template>
-  <div class="p-6 bg-background border rounded-lg">
-    <h2 class="text-xl font-semibold mb-4">Test abgeschlossen!</h2>
-    <div class="mb-6 w-full max-w-md">
-      <table class="w-full text-sm border rounded-lg overflow-hidden shadow">
-        <tbody>
-          <tr class="bg-muted/40">
-            <td class="font-semibold px-3 py-2 w-1/2">Gesamtdauer</td>
-            <td class="px-3 py-2">{{ formatTime(results.total_time_seconds) }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div v-if="props.results" class="lmt-result rounded-lg border bg-background p-6" :class="{ 'lmt-result--pdf': props.pdfMode }">
+        <h2 v-if="!props.pdfMode" class="mb-4 text-xl font-semibold">Test abgeschlossen!</h2>
+
+        <div class="lmt-time-wrap mb-6 w-full max-w-md">
+            <table class="lmt-summary-table w-full overflow-hidden rounded-lg border text-sm shadow-sm">
+                <tbody>
+                    <tr class="bg-muted/40">
+                        <td class="w-1/2 px-3 py-2 font-semibold">Benötigte Zeit</td>
+                        <td class="px-3 py-2">{{ formatTime(props.results.total_time_seconds) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="lmt-score-wrap mb-6 overflow-x-auto">
+            <table class="lmt-score-table min-w-full rounded-lg border text-sm shadow-sm">
+                <thead class="bg-muted/40">
+                    <tr>
+                        <th class="p-2 text-left"></th>
+                        <th v-for="scale in scales" :key="scale.key" class="p-2 text-left">
+                            {{ scale.label }}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-t">
+                        <td class="p-2 font-semibold">Rohwert</td>
+                        <td v-for="scale in scales" :key="scale.key" class="p-2">
+                            {{ formatValue(props.results.group_scores?.[scale.key]) }}
+                        </td>
+                    </tr>
+                    <tr class="border-t">
+                        <td class="p-2 font-semibold">T-Wert</td>
+                        <td v-for="scale in scales" :key="scale.key" class="p-2">
+                            {{ formatValue(props.results.group_t_values?.[scale.key]) }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="overflow-x-auto mb-6">
-      <table class="min-w-full text-sm border rounded shadow">
-        <thead class="bg-muted/40">
-          <tr>
-            <th class="p-2 text-left"></th>
-            <th v-for="scale in scales" :key="scale.key" class="p-2 text-left">
-              {{ scale.label }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="border-t">
-            <td class="p-2 font-semibold">Rohwert</td>
-            <td v-for="scale in scales" :key="scale.key" class="p-2">
-              {{ results.group_scores?.[scale.key] ?? '–' }}
-            </td>
-          </tr>
-          <tr class="border-t">
-            <td class="p-2 font-semibold">T-Wert</td>
-            <td v-for="scale in scales" :key="scale.key" class="p-2">
-              {{ results.group_t_values?.[scale.key] ?? '–' }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-      <details v-if="showAnswers && results.answers" class="mb-6">
-      <summary class="cursor-pointer select-none px-2 py-1 bg-muted/40 rounded">
-        Antworten
-      </summary>
-      <div class="overflow-x-auto mt-2">
-        <table class="min-w-full text-sm border rounded shadow">
-          <thead class="bg-muted/40">
-            <tr>
-              <th class="p-2 text-left">#</th>
-              <th class="p-2 text-left">Frage</th>
-              <th class="p-2 text-left">Antwort</th>
-              <th class="p-2 text-left">Gruppe</th>
-              <th class="p-2 text-left">Punkte</th>
-              <th class="p-2 text-left">Zeit</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(ans, idx) in results.answers" :key="idx" class="border-t">
-              <td class="p-2">{{ ans.number }}</td>
-              <td class="p-2">{{ LMT_QUESTIONS[idx].text }}</td>
-              <td class="p-2">{{ ans.selected_category ?? '–' }}</td>
-              <td class="p-2">{{ ans.selected_group ?? '–' }}</td>
-              <td class="p-2">{{ ans.points ?? '–' }}</td>
-              <td class="p-2">{{ formatTime(ans.time_seconds) }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <details v-if="props.showAnswers && !props.pdfMode && props.results?.answers" class="lmt-answer-section mb-6">
+        <summary class="cursor-pointer rounded bg-muted/40 px-2 py-1 select-none">Antworten</summary>
+        <div class="mt-2 overflow-x-auto">
+            <table class="min-w-full rounded border text-sm shadow-sm">
+                <thead class="bg-muted/40">
+                    <tr>
+                        <th class="p-2 text-left">#</th>
+                        <th class="p-2 text-left">Frage</th>
+                        <th class="p-2 text-left">Antwort</th>
+                        <th class="p-2 text-left">Gruppe</th>
+                        <th class="p-2 text-left">Punkte</th>
+                        <th class="p-2 text-left">Zeit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(ans, idx) in props.results.answers" :key="idx" class="border-t">
+                        <td class="p-2">{{ ans.number }}</td>
+                        <td class="p-2">{{ LMT_QUESTIONS[idx].text }}</td>
+                        <td class="p-2">{{ ans.selected_category ?? '-' }}</td>
+                        <td class="p-2">{{ ans.selected_group ?? '-' }}</td>
+                        <td class="p-2">{{ ans.points ?? '-' }}</td>
+                        <td class="p-2">{{ formatTime(ans.time_seconds) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </details>
 </template>
+
+<style scoped>
+.lmt-score-table th,
+.lmt-score-table td,
+.lmt-summary-table td {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.lmt-score-table tbody tr:last-child td,
+.lmt-summary-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.lmt-result--pdf {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    color: #111827;
+}
+
+.lmt-result--pdf .lmt-time-wrap,
+.lmt-result--pdf .lmt-score-wrap {
+    max-width: 100%;
+    margin-bottom: 16px;
+}
+
+.lmt-result--pdf .lmt-time-wrap {
+    max-width: 420px;
+}
+
+.lmt-result--pdf .lmt-summary-table,
+.lmt-result--pdf .lmt-score-table {
+    overflow: hidden;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: none;
+}
+
+.lmt-result--pdf .lmt-summary-table tr,
+.lmt-result--pdf .lmt-score-table tr {
+    background: #ffffff;
+}
+
+.lmt-result--pdf .lmt-summary-table tr:nth-child(odd),
+.lmt-result--pdf .lmt-score-table tbody tr:nth-child(odd) {
+    background: #f9fafb;
+}
+
+.lmt-result--pdf .lmt-score-table thead tr {
+    background: #f3f6fa;
+}
+
+.lmt-result--pdf .lmt-summary-table td,
+.lmt-result--pdf .lmt-score-table th,
+.lmt-result--pdf .lmt-score-table td {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    line-height: 1.35;
+}
+
+.lmt-result--pdf .lmt-summary-table td:first-child,
+.lmt-result--pdf .lmt-score-table td:first-child,
+.lmt-result--pdf .lmt-score-table th {
+    color: #111827;
+    font-weight: 700;
+}
+
+.lmt-result--pdf .lmt-summary-table td:last-child,
+.lmt-result--pdf .lmt-score-table td:not(:first-child) {
+    color: #1f2937;
+    font-weight: 600;
+}
+
+.lmt-result--pdf .lmt-score-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+@media print {
+    .lmt-result--pdf {
+        font-size: 12px;
+    }
+}
+</style>

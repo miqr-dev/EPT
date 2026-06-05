@@ -42,6 +42,29 @@ function isFpiRTest(assignment: any) {
     return [assignment?.test?.name, assignment?.test?.code].some((value) => String(value ?? '').trim() === 'FPI-R');
 }
 
+function isLmtTest(assignment: any) {
+    return [assignment?.test?.name, assignment?.test?.code].some((value) => String(value ?? '').trim() === 'LMT');
+}
+
+function isBit2Test(assignment: any) {
+    return [assignment?.test?.name, assignment?.test?.code].some((value) => String(value ?? '').trim() === 'BIT-2');
+}
+
+function isAvemTest(assignment: any) {
+    return [assignment?.test?.name, assignment?.test?.code].some((value) => String(value ?? '').trim() === 'AVEM');
+}
+
+function isKonzentrationstest(assignment: any) {
+    const names = new Set(['628', '628 TEST', 'KONZENTRATIONSTEST', '628 08.03']);
+    return [assignment?.test?.name, assignment?.test?.code].some((value) =>
+        names.has(
+            String(value ?? '')
+                .trim()
+                .toUpperCase(),
+        ),
+    );
+}
+
 function displayDate(assignment: any) {
     return isBrtTest(assignment) ? shortTestDate : testDate;
 }
@@ -56,6 +79,10 @@ function displayDate(assignment: any) {
             'pdf-template--mrt': isMrtTest(assignment),
             'pdf-template--bt': isBtTest(assignment),
             'pdf-template--fpi': isFpiRTest(assignment),
+            'pdf-template--lmt': isLmtTest(assignment),
+            'pdf-template--bit2': isBit2Test(assignment),
+            'pdf-template--avem': isAvemTest(assignment),
+            'pdf-template--konz': isKonzentrationstest(assignment),
         }"
     >
         <!-- Header -->
@@ -305,6 +332,182 @@ function displayDate(assignment: any) {
 }
 
 .pdf-template--fpi .result-panel {
+    border: 0;
+    background: transparent;
+    padding: 0;
+}
+
+.pdf-template--lmt {
+    padding: 22px;
+}
+
+.pdf-template--lmt .pdf-header {
+    align-items: flex-start;
+    gap: 24px;
+    padding-bottom: 14px;
+}
+
+.pdf-template--lmt .pdf-date {
+    flex-shrink: 0;
+    min-width: max-content;
+    white-space: nowrap;
+}
+
+.pdf-template--lmt h1 {
+    font-size: 1.625rem;
+    line-height: 2rem;
+}
+
+.pdf-template--lmt .mt-8 {
+    margin-top: 1.25rem;
+}
+
+.pdf-template--lmt .participant-grid {
+    display: block;
+}
+
+.pdf-template--lmt .mb-4 {
+    margin-bottom: 0.75rem;
+}
+
+.pdf-template--lmt h2 {
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+}
+
+.pdf-template--lmt .result-panel {
+    border: 0;
+    background: transparent;
+    padding: 0;
+}
+
+.pdf-template--bit2 {
+    padding: 18px;
+}
+
+.pdf-template--bit2 .pdf-header {
+    align-items: flex-start;
+    gap: 24px;
+    padding-bottom: 12px;
+}
+
+.pdf-template--bit2 .pdf-date {
+    flex-shrink: 0;
+    min-width: max-content;
+    white-space: nowrap;
+}
+
+.pdf-template--bit2 h1 {
+    font-size: 1.55rem;
+    line-height: 1.95rem;
+}
+
+.pdf-template--bit2 .mt-8 {
+    margin-top: 1rem;
+}
+
+.pdf-template--bit2 .participant-grid {
+    display: block;
+}
+
+.pdf-template--bit2 .mb-4 {
+    margin-bottom: 0.65rem;
+}
+
+.pdf-template--bit2 h2 {
+    font-size: 1.075rem;
+    line-height: 1.45rem;
+}
+
+.pdf-template--bit2 .result-panel {
+    border: 0;
+    background: transparent;
+    padding: 0;
+}
+
+.pdf-template--konz {
+    padding: 22px;
+}
+
+.pdf-template--konz .pdf-header {
+    align-items: flex-start;
+    gap: 24px;
+    padding-bottom: 14px;
+}
+
+.pdf-template--konz .pdf-date {
+    flex-shrink: 0;
+    min-width: max-content;
+    white-space: nowrap;
+}
+
+.pdf-template--konz h1 {
+    font-size: 1.625rem;
+    line-height: 2rem;
+}
+
+.pdf-template--konz .mt-8 {
+    margin-top: 1.25rem;
+}
+
+.pdf-template--konz .participant-grid {
+    display: block;
+}
+
+.pdf-template--konz .mb-4 {
+    margin-bottom: 0.75rem;
+}
+
+.pdf-template--konz h2 {
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+}
+
+.pdf-template--konz .result-panel {
+    border: 0;
+    background: transparent;
+    padding: 0;
+}
+
+.pdf-template--avem {
+    padding: 18px 20px;
+}
+
+.pdf-template--avem .pdf-header {
+    align-items: flex-start;
+    gap: 24px;
+    padding-bottom: 12px;
+}
+
+.pdf-template--avem .pdf-date {
+    flex-shrink: 0;
+    min-width: max-content;
+    white-space: nowrap;
+}
+
+.pdf-template--avem h1 {
+    font-size: 1.55rem;
+    line-height: 1.95rem;
+}
+
+.pdf-template--avem .mt-8 {
+    margin-top: 1rem;
+}
+
+.pdf-template--avem .participant-grid {
+    display: block;
+}
+
+.pdf-template--avem .mb-4 {
+    margin-bottom: 0.65rem;
+}
+
+.pdf-template--avem h2 {
+    font-size: 1.075rem;
+    line-height: 1.45rem;
+}
+
+.pdf-template--avem .result-panel {
     border: 0;
     background: transparent;
     padding: 0;

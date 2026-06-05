@@ -61,6 +61,8 @@ const props = withDefaults(
 
 const emit = defineEmits(['update:modelValue', 'manual-score-updated']);
 
+const KONZENTRATIONSTEST_NAMES = new Set(['628', '628 TEST', 'KONZENTRATIONSTEST', '628 08.03']);
+
 const local = ref<ResultJson | null>(null);
 const localManualScores = ref<Array<{ key: string; value: number | string | null }> | Record<string, any>>(props.manualScores ?? []);
 const manualScoreMap = computed<Record<string, number | string | null>>(() => {
@@ -78,9 +80,20 @@ const manualScoreMap = computed<Record<string, number | string | null>>(() => {
     }
     return {};
 });
-const isKonzentrationstest = computed(() => ['Konzentrationstest', '628 Test'].includes((props.test?.name || '').trim()));
+const isKonzentrationstest = computed(() =>
+    [props.test?.name, props.test?.code].some((value) =>
+        KONZENTRATIONSTEST_NAMES.has(
+            String(value ?? '')
+                .trim()
+                .toUpperCase(),
+        ),
+    ),
+);
 const isFpiRTest = computed(() => [props.test?.name, props.test?.code].some((value) => String(value ?? '').trim() === 'FPI-R'));
 const isBrtTest = computed(() => [props.test?.name, props.test?.code].some((value) => ['BRT-A', 'BRT-B'].includes(String(value ?? '').trim())));
+const isLmtTest = computed(() => [props.test?.name, props.test?.code].some((value) => String(value ?? '').trim() === 'LMT'));
+const isBit2Test = computed(() => [props.test?.name, props.test?.code].some((value) => String(value ?? '').trim() === 'BIT-2'));
+const isAvemTest = computed(() => [props.test?.name, props.test?.code].some((value) => String(value ?? '').trim() === 'AVEM'));
 
 const fpiStanineKeys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
 const fpiScoreKeys: (number | string)[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'E', 'N'];
@@ -303,8 +316,8 @@ const fpiRohwerte = computed(() => {
             :editable-answers="showAnswers && !pdfMode"
             :pdf-mode="pdfMode"
         />
-        <KonzentrationstestResult v-else-if="isKonzentrationstest" :results="local" :show-answers="showAnswers" />
-        <LmtResult v-else-if="test.name === 'LMT'" :results="local" :show-answers="showAnswers" />
+        <KonzentrationstestResult v-else-if="isKonzentrationstest" :results="local" :show-answers="showAnswers" :pdf-mode="pdfMode" />
+        <LmtResult v-else-if="isLmtTest" :results="local" :show-answers="showAnswers" :pdf-mode="pdfMode" />
         <FpiResult
             v-else-if="isFpiRTest"
             :stanines="fpiStanines"
@@ -314,7 +327,13 @@ const fpiRohwerte = computed(() => {
             :show-answers="showAnswers"
             :pdf-mode="pdfMode"
         />
-        <BIT2Result v-else-if="test.name === 'BIT-2'" :results="local" :participantProfile="participantProfile" :show-answers="showAnswers" />
+        <BIT2Result
+            v-else-if="isBit2Test"
+            :results="local"
+            :participantProfile="participantProfile"
+            :show-answers="showAnswers"
+            :pdf-mode="pdfMode"
+        />
         <LpsResult
             v-else-if="['LPS', 'LPS-A', 'LPS-B'].includes(test.name)"
             :results="local"
@@ -335,7 +354,7 @@ const fpiRohwerte = computed(() => {
             :force-open-answers="forceOpenAnswers"
             @manual-score-updated="handleManualScoreUpdated"
         />
-        <AvemResult v-else-if="test.name === 'AVEM'" :results="local" :show-answers="showAnswers" />
+        <AvemResult v-else-if="isAvemTest" :results="local" :show-answers="showAnswers" :pdf-mode="pdfMode" />
         <template v-else>
             <table class="mb-4 w-full overflow-hidden rounded-lg border text-sm shadow">
                 <tbody>

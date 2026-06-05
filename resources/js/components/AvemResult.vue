@@ -11,9 +11,11 @@ const props = withDefaults(
     defineProps<{
         results: any;
         showAnswers?: boolean;
+        pdfMode?: boolean;
     }>(),
     {
         showAnswers: true,
+        pdfMode: false,
     },
 );
 
@@ -135,11 +137,12 @@ const chartData = computed(() => ({
             data: stanines.value,
             borderColor: '#c1121f',
             backgroundColor: '#ffffff',
-            borderWidth: 1.4,
+            borderWidth: props.pdfMode ? 2 : 2.8,
+            clip: false,
             tension: 0,
-            pointRadius: 4,
-            pointHoverRadius: 5,
-            pointBorderWidth: 1.6,
+            pointRadius: props.pdfMode ? 5 : 5.2,
+            pointHoverRadius: props.pdfMode ? 6 : 6.2,
+            pointBorderWidth: props.pdfMode ? 2 : 2.3,
             pointStyle: 'rectRot',
             pointBorderColor: '#c1121f',
             pointBackgroundColor: '#ffffff',
@@ -149,13 +152,6 @@ const chartData = computed(() => ({
 }));
 
 const FRAME_PADDING = { top: 76, bottom: 84, left: 36, right: 36 };
-const LABEL_GUTTER = 224;
-const LAYOUT_PADDING = {
-    top: FRAME_PADDING.top,
-    bottom: FRAME_PADDING.bottom,
-    left: FRAME_PADDING.left + LABEL_GUTTER,
-    right: FRAME_PADDING.right,
-};
 
 const getFrameBounds = (chart: any) => {
     const { chartArea } = chart;
@@ -178,16 +174,18 @@ const topBottomPlugin = {
         const centerX = (frame.left + frame.right) / 2;
 
         ctx.save();
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.fillStyle = '#222';
         ctx.textAlign = 'center';
 
         // Title within top band
-        ctx.font = '16px "Helvetica Neue", Helvetica, Arial, sans-serif';
+        ctx.font = `${props.pdfMode ? 18 : 16}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
         ctx.textBaseline = 'top';
         ctx.fillText('Stanine-Werte', centerX, frame.top + 18);
 
         // Top 1..9 inside the frame band
-        ctx.font = '12px "Helvetica Neue", Helvetica, Arial, sans-serif';
+        ctx.font = `${props.pdfMode ? 13.5 : 12}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
         ctx.textBaseline = 'middle';
         const topNumY = frame.top + 48;
         for (let s = 1; s <= 9; s++) ctx.fillText(String(s), x.getPixelForValue(s), topNumY);
@@ -221,8 +219,10 @@ const intervalsAndPointLabels = {
 
         // Cell interval strings
         ctx.save();
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.fillStyle = '#333';
-        ctx.font = '10px "Helvetica Neue", Helvetica, Arial, sans-serif';
+        ctx.font = `${props.pdfMode ? 10.75 : 10}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         for (let row = 0; row < NORM_INTERVALS.length; row++) {
@@ -232,7 +232,7 @@ const intervalsAndPointLabels = {
         }
         // Left column labels inside the frame
         ctx.textAlign = 'right';
-        ctx.font = '12px "Helvetica Neue", Helvetica, Arial, sans-serif';
+        ctx.font = `${props.pdfMode ? 12.6 : 12}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
         const textX = frame.left - 12;
         for (let row = 0; row < scaleLabels.length; row++) {
             const yPos = y.getPixelForValue(row);
@@ -251,8 +251,10 @@ const frameBorder = {
         const { ctx } = chart;
         const frame = getFrameBounds(chart);
         ctx.save();
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.strokeStyle = '#2a2a2a';
-        ctx.lineWidth = 2.2;
+        ctx.lineWidth = props.pdfMode ? 2 : 2.4;
         ctx.strokeRect(frame.left, frame.top, frame.right - frame.left, frame.bottom - frame.top);
         ctx.restore();
     },
@@ -265,7 +267,7 @@ const chartOptions = computed(() => ({
     responsive: true,
     maintainAspectRatio: false,
     animation: false as const,
-    devicePixelRatio: 3,
+    devicePixelRatio: props.pdfMode ? 4 : 6,
     indexAxis: 'y' as const,
     scales: {
         x: {
@@ -278,8 +280,8 @@ const chartOptions = computed(() => ({
         y: {
             ticks: { display: false },
             grid: {
-                color: 'rgba(0,0,0,0.12)',
-                lineWidth: 0.8, // optional: makes all horizontal lines same thickness too
+                color: props.pdfMode ? 'rgba(0,0,0,0.14)' : 'rgba(17,24,39,0.28)',
+                lineWidth: props.pdfMode ? 0.9 : 1.2, // optional: makes all horizontal lines same thickness too
             },
             border: { display: false },
         },
@@ -291,16 +293,52 @@ const chartOptions = computed(() => ({
         annotation: {
             annotations: {
                 // grey band 4..6 (behind lines)
-                band: { type: 'box' as const, xMin: 3.5, xMax: 6.5, yMin: -0.5, yMax: 10.5, backgroundColor: 'rgba(150,150,150,0.12)', borderWidth: 0, z: 0 },
+                band: {
+                    type: 'box' as const,
+                    xMin: 3.5,
+                    xMax: 6.5,
+                    yMin: -0.5,
+                    yMax: 10.5,
+                    backgroundColor: 'rgba(150,150,150,0.12)',
+                    borderWidth: 0,
+                    z: 0,
+                },
                 // SOLID boundaries between stanine groups
-                lineBetweenSAndB: { type: 'line' as const, scaleID: 'x', value: 3.5, borderColor: '#111', borderWidth: 1.2, z: 10 },
-                lineBetweenGAndA: { type: 'line' as const, scaleID: 'x', value: 6.5, borderColor: '#111', borderWidth: 1.2, z: 10 },
+                lineBetweenSAndB: {
+                    type: 'line' as const,
+                    scaleID: 'x',
+                    value: 3.5,
+                    borderColor: '#111',
+                    borderWidth: props.pdfMode ? 1.2 : 1.8,
+                    z: 10,
+                },
+                lineBetweenGAndA: {
+                    type: 'line' as const,
+                    scaleID: 'x',
+                    value: 6.5,
+                    borderColor: '#111',
+                    borderWidth: props.pdfMode ? 1.2 : 1.8,
+                    z: 10,
+                },
             },
         },
     },
     // padding outside data area that becomes part of the framed chart bands
-    layout: { padding: LAYOUT_PADDING },
-    elements: { point: { hitRadius: 6 } },
+    layout: {
+        padding: {
+            top: FRAME_PADDING.top,
+            bottom: FRAME_PADDING.bottom,
+            left: FRAME_PADDING.left + (props.pdfMode ? 262 : 246),
+            right: FRAME_PADDING.right,
+        },
+    },
+    elements: {
+        line: {
+            borderCapStyle: 'butt' as const,
+            borderJoinStyle: 'miter' as const,
+        },
+        point: { hitRadius: 6 },
+    },
     color: '#111',
 }));
 
@@ -324,14 +362,14 @@ const detailRows = computed(() => {
 </script>
 
 <template>
-    <div class="rounded-lg bg-background p-6">
-        <div class="mb-6 rounded-md bg-white p-4">
-            <div style="width: 920px; height: 560px">
+    <div class="avem-result rounded-lg bg-background p-6" :class="{ 'avem-result--pdf': props.pdfMode }">
+        <div class="avem-chart-shell mb-6 rounded-md bg-white p-4">
+            <div class="avem-chart-panel">
                 <Line :data="chartData" :options="chartOptions" :plugins="localPlugins" />
             </div>
         </div>
 
-        <details v-if="showAnswers && detailRows.length" class="mt-4">
+        <details v-if="props.showAnswers && !props.pdfMode && detailRows.length" class="mt-4">
             <summary class="cursor-pointer">Antworten anzeigen</summary>
             <div class="mt-3 overflow-x-auto">
                 <table class="w-full border-collapse border border-gray-300 text-sm">
@@ -354,3 +392,47 @@ const detailRows = computed(() => {
         </details>
     </div>
 </template>
+
+<style scoped>
+.avem-result {
+    color: #111827;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+
+.avem-chart-panel {
+    width: 920px;
+    height: 560px;
+}
+
+.avem-chart-panel :deep(canvas) {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.avem-result--pdf {
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+}
+
+.avem-result--pdf .avem-chart-shell {
+    margin-bottom: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 12px 10px 10px;
+    box-shadow: none;
+}
+
+.avem-result--pdf .avem-chart-panel {
+    width: 100%;
+    height: 600px;
+}
+
+@media print {
+    .avem-result--pdf {
+        break-inside: avoid;
+    }
+}
+</style>

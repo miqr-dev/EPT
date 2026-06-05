@@ -322,6 +322,32 @@ onUnmounted(() => {
     width: 920px;
 }
 
+.print-sheet[data-test-name='LMT'] .result-source,
+.print-sheet[data-test-code='LMT'] .result-source {
+    width: 820px;
+}
+
+.print-sheet[data-test-name='BIT-2'] .result-source,
+.print-sheet[data-test-code='BIT-2'] .result-source {
+    width: 760px;
+}
+
+.print-sheet[data-test-name='628'] .result-source,
+.print-sheet[data-test-code='628'] .result-source,
+.print-sheet[data-test-name='628 Test'] .result-source,
+.print-sheet[data-test-code='628 Test'] .result-source,
+.print-sheet[data-test-name='628 08.03'] .result-source,
+.print-sheet[data-test-code='628 08.03'] .result-source,
+.print-sheet[data-test-name='Konzentrationstest'] .result-source,
+.print-sheet[data-test-code='Konzentrationstest'] .result-source {
+    width: 820px;
+}
+
+.print-sheet[data-test-name='AVEM'] .result-source,
+.print-sheet[data-test-code='AVEM'] .result-source {
+    width: 860px;
+}
+
 @media print {
     :global(html),
     :global(body),
