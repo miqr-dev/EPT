@@ -2,7 +2,8 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Head } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { MousePointer2 } from 'lucide-vue-next';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 
 const emit = defineEmits(['started', 'complete', 'update:answers']);
 const props = defineProps<{
@@ -23,6 +24,8 @@ type DragPayload = {
     from: 'pool' | 'cell';
     key?: string;
 };
+
+type DragDropExamplePhase = 'idle' | 'auto' | 'participant' | 'complete';
 
 type BtAnswerTimes = {
     assignments: Record<string, number>;
@@ -93,14 +96,52 @@ const page = ref(1);
 const showTest = ref(false);
 const dragDropExampleOpen = ref(false);
 const dragDropExampleCompleted = ref(false);
-const dragDropExampleCell = ref<{ row: number; column: number } | null>(null);
+const dragDropExamplePhase = ref<DragDropExamplePhase>('idle');
+const dragDropExampleAnimationReady = ref(false);
+const dragDropExampleAssignments = ref<Record<string, string | null>>(buildEmptyDragDropExampleAssignments());
+const dragDropExampleBoard = ref<HTMLElement | null>(null);
+const dragDropExampleAnimationStyle = ref<Record<string, string>>({});
 const startedAtMs = ref<number | null>(null);
 const startTimeRemainingSeconds = ref<number | null>(null);
 const latestTimeRemainingSeconds = ref<number | null>(null);
-const dragDropExampleText = 'Beispieltext';
-const dragDropExampleRows = Array.from({ length: 5 }, (_, index) => index + 1);
-const dragDropExampleColumns = Array.from({ length: 4 }, (_, index) => index + 1);
-const dragDropExampleTarget = { row: 3, column: 2 };
+const dragDropExampleNames: Apprentice[] = [
+    { id: 1, name: 'Albrecht', restriction: null },
+    { id: 2, name: 'Becker', restriction: null },
+    { id: 3, name: 'Conrad', restriction: null },
+    { id: 4, name: 'Danner', restriction: null },
+    { id: 5, name: 'Ebert', restriction: null },
+    { id: 6, name: 'Gerlach', restriction: null },
+    { id: 7, name: 'Hahn', restriction: null },
+    { id: 8, name: 'Jaeger', restriction: null },
+    { id: 9, name: 'Keller', restriction: null },
+    { id: 10, name: 'Lehmann', restriction: null },
+    { id: 11, name: 'Meyer', restriction: null },
+    { id: 12, name: 'Neumann', restriction: null },
+    { id: 13, name: 'Otto', restriction: null },
+    { id: 14, name: 'Pohl', restriction: null },
+    { id: 15, name: 'Richter', restriction: null },
+    { id: 16, name: 'Unger', restriction: null },
+    { id: 17, name: 'Vogel', restriction: null },
+    { id: 18, name: 'Wagner', restriction: null },
+    { id: 19, name: 'Zimmermann', restriction: null },
+    { id: 20, name: 'Brandt', restriction: null },
+    { id: 21, name: 'Hartmann', restriction: null },
+    { id: 22, name: 'Koch', restriction: null },
+    { id: 23, name: 'Lange', restriction: null },
+    { id: 24, name: 'Ritter', restriction: null },
+    { id: 25, name: 'Weber', restriction: null },
+];
+const dragDropExampleLeftNames = dragDropExampleNames.slice(0, 13);
+const dragDropExampleRightNames = dragDropExampleNames.slice(13);
+const dragDropExampleRows: Array<{ shift: 'early' | 'late'; label: string; slots: number[] }> = [
+    { shift: 'early', label: 'Frühdienst', slots: earlySlots },
+    { shift: 'late', label: 'Spätdienst', slots: lateSlots },
+];
+const dragDropExampleAutoName = dragDropExampleNames[0].name;
+const dragDropExampleParticipantName = dragDropExampleNames[1].name;
+const dragDropExampleAutoTargetKey = 'early-1-Montag';
+const dragDropExampleParticipantTargetKey = 'late-1-Dienstag';
+const dragDropExampleTimers: ReturnType<typeof setTimeout>[] = [];
 const cashDenominations = [
     { label: '100€', key: '100' },
     { label: '50€', key: '50' },
@@ -194,6 +235,15 @@ const q5DayPoints: Record<number, number> = {
 const oneSyllableNames = new Set(['Fuchs', 'Hans', 'Kurz', 'Mann', 'Pahl', 'Paul', 'Pees', 'Roth']);
 const twoSyllableNames = new Set(['Basten', 'Bauer', 'Bertram', 'Bolte', 'Krämer', 'Kühne', 'Müller', 'Schneider', 'Schuster']);
 const threeSyllableNames = new Set(['Angermann', 'Berkelhahn', 'Diesterweg', 'Eschweiler', 'Hamburger', 'Hamelring', 'Kleininger', 'Petersen']);
+
+function buildEmptyDragDropExampleAssignments() {
+    return Object.fromEntries(
+        days.flatMap((day) => [
+            ...earlySlots.map((slot) => [buildCellKey('early', slot, day), null]),
+            ...lateSlots.map((slot) => [buildCellKey('late', slot, day), null]),
+        ]),
+    );
+}
 
 function buildEmptyAnswerTimes(): BtAnswerTimes {
     return {
@@ -399,10 +449,74 @@ function allowDrop(event: DragEvent) {
     event.preventDefault();
 }
 
+function clearDragDropExampleTimers() {
+    while (dragDropExampleTimers.length) {
+        const timer = dragDropExampleTimers.pop();
+        if (timer) clearTimeout(timer);
+    }
+}
+
+function scheduleDragDropExampleStep(callback: () => void, delay: number) {
+    const timer = setTimeout(() => {
+        const index = dragDropExampleTimers.indexOf(timer);
+        if (index >= 0) dragDropExampleTimers.splice(index, 1);
+        callback();
+    }, delay);
+
+    dragDropExampleTimers.push(timer);
+}
+
+function updateDragDropExampleAnimationCoordinates() {
+    const boardElement = dragDropExampleBoard.value;
+    const board = boardElement?.getBoundingClientRect();
+    const source = boardElement?.querySelector<HTMLElement>('[data-bt-example-auto-source="true"]')?.getBoundingClientRect();
+    const target = boardElement?.querySelector<HTMLElement>('[data-bt-example-auto-target="true"]')?.getBoundingClientRect();
+
+    if (!board || !source || !target) {
+        dragDropExampleAnimationStyle.value = {};
+        return;
+    }
+
+    const startX = source.left - board.left + source.width / 2;
+    const startY = source.top - board.top + source.height / 2;
+    const targetX = target.left - board.left + target.width / 2;
+    const targetY = target.top - board.top + target.height / 2;
+
+    dragDropExampleAnimationStyle.value = {
+        '--bt-example-start-x': `${startX}px`,
+        '--bt-example-start-y': `${startY}px`,
+        '--bt-example-dx': `${targetX - startX}px`,
+        '--bt-example-dy': `${targetY - startY}px`,
+    };
+}
+
+function runDragDropExampleAutoDemo() {
+    dragDropExamplePhase.value = 'auto';
+    dragDropExampleAnimationReady.value = false;
+
+    void nextTick().then(() => {
+        updateDragDropExampleAnimationCoordinates();
+        dragDropExampleAnimationReady.value = true;
+
+        scheduleDragDropExampleStep(() => {
+            dragDropExampleAssignments.value[dragDropExampleAutoTargetKey] = dragDropExampleAutoName;
+            dragDropExampleAnimationReady.value = false;
+            dragDropExamplePhase.value = 'participant';
+        }, 2600);
+    });
+}
+
 function openDragDropExample() {
+    clearDragDropExampleTimers();
     dragDropExampleOpen.value = true;
     dragDropExampleCompleted.value = false;
-    dragDropExampleCell.value = null;
+    dragDropExamplePhase.value = 'idle';
+    dragDropExampleAnimationReady.value = false;
+    dragDropExampleAssignments.value = buildEmptyDragDropExampleAssignments();
+
+    void nextTick().then(() => {
+        scheduleDragDropExampleStep(runDragDropExampleAutoDemo, 350);
+    });
 }
 
 function setDragDropExampleOpen(open: boolean) {
@@ -413,32 +527,39 @@ function setDragDropExampleOpen(open: boolean) {
 
 function closeDragDropExample() {
     if (!dragDropExampleCompleted.value) return;
+    clearDragDropExampleTimers();
     dragDropExampleOpen.value = false;
 }
 
-function handleDragDropExampleStart(event: DragEvent) {
-    event.dataTransfer?.setData('text/plain', dragDropExampleText);
+function handleDragDropExampleStart(event: DragEvent, name: string) {
+    if (dragDropExamplePhase.value !== 'participant' || name !== dragDropExampleParticipantName) {
+        event.preventDefault();
+        return;
+    }
+
+    event.dataTransfer?.setData('text/plain', name);
     event.dataTransfer?.setDragImage((event.target as HTMLElement) ?? document.body, 0, 0);
 }
 
-function handleDragDropExampleDrop(event: DragEvent, row: number, column: number) {
+function handleDragDropExampleDrop(event: DragEvent, key: string) {
     event.preventDefault();
     const payloadText = event.dataTransfer?.getData('text/plain');
-    if (payloadText !== dragDropExampleText) return;
+    if (payloadText !== dragDropExampleParticipantName || key !== dragDropExampleParticipantTargetKey) return;
 
-    if (row === dragDropExampleTarget.row && column === dragDropExampleTarget.column) {
-        dragDropExampleCell.value = { row, column };
-        dragDropExampleCompleted.value = true;
-    }
+    dragDropExampleAssignments.value[key] = dragDropExampleParticipantName;
+    dragDropExamplePhase.value = 'complete';
+    dragDropExampleCompleted.value = true;
 }
 
-function isDragDropExampleTarget(row: number, column: number) {
-    return row === dragDropExampleTarget.row && column === dragDropExampleTarget.column;
+function isDragDropExampleParticipantTarget(key: string) {
+    return key === dragDropExampleParticipantTargetKey;
 }
 
-function hasDragDropExampleText(row: number, column: number) {
-    return dragDropExampleCell.value?.row === row && dragDropExampleCell.value?.column === column;
+function getDragDropExampleCellValue(key: string) {
+    return dragDropExampleAssignments.value[key];
 }
+
+onBeforeUnmount(clearDragDropExampleTimers);
 
 function clearCell(key: string) {
     ensureFirstWindowSnapshotBeforeChange();
@@ -948,53 +1069,152 @@ if (import.meta.env.DEV) {
                 </div>
             </div>
             <Dialog :open="dragDropExampleOpen" @update:open="setDragDropExampleOpen">
-                <DialogContent class="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-3xl" @escape-key-down.prevent @interact-outside.prevent>
+                <DialogContent
+                    class="max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-6xl"
+                    @escape-key-down.prevent
+                    @interact-outside.prevent
+                >
                     <template #top-right>
                         <span />
                     </template>
-                    <DialogHeader>
+                    <DialogHeader class="sr-only">
                         <DialogTitle>Drag&amp;Drop</DialogTitle>
-                        <DialogDescription>Ziehen Sie den Text in die zweite Spalte und dritte Reihe.</DialogDescription>
+                        <DialogDescription>Drag-and-drop example for Aufgabe 1.</DialogDescription>
                     </DialogHeader>
 
-                    <div class="grid gap-5 lg:grid-cols-[180px_1fr]">
-                        <div class="flex items-center justify-center rounded-md border border-dashed border-black/30 bg-gray-50 p-4">
-                            <span
-                                v-if="!dragDropExampleCompleted"
-                                class="cursor-move rounded-md border border-black/30 bg-white px-4 py-2 text-sm font-semibold shadow-sm"
-                                draggable="true"
-                                @dragstart="handleDragDropExampleStart"
-                            >
-                                {{ dragDropExampleText }}
-                            </span>
-                            <span v-else class="text-sm font-semibold text-green-700">Richtig abgelegt</span>
+                    <div
+                        ref="dragDropExampleBoard"
+                        class="bt-drag-drop-example relative mx-auto w-full max-w-[1120px] overflow-hidden bg-white font-serif text-black"
+                        :style="dragDropExampleAnimationStyle"
+                    >
+                        <div class="px-4 pb-2 text-center">
+                            <h2 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 1</h2>
                         </div>
 
-                        <table class="w-full table-fixed border border-black text-center text-sm">
-                            <tbody>
-                                <tr v-for="row in dragDropExampleRows" :key="`example-row-${row}`">
-                                    <td
-                                        v-for="column in dragDropExampleColumns"
-                                        :key="`example-cell-${row}-${column}`"
-                                        :class="[
-                                            'h-16 border border-black p-2 align-middle transition-colors',
-                                            isDragDropExampleTarget(row, column) && dragDropExampleCompleted
-                                                ? 'bg-green-100 ring-2 ring-green-500 ring-inset'
-                                                : isDragDropExampleTarget(row, column)
-                                                  ? 'bt-example-target-blink ring-2 ring-green-400 ring-inset'
-                                                  : 'bg-white',
-                                        ]"
-                                        @dragover="allowDrop"
-                                        @drop="(event) => handleDragDropExampleDrop(event, row, column)"
-                                    >
-                                        <span v-if="hasDragDropExampleText(row, column)" class="font-semibold text-green-800">
-                                            {{ dragDropExampleText }}
-                                        </span>
-                                        <span v-else>&nbsp;</span>
-                                    </td>
+                        <div class="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
+                            <div class="border border-black/20 px-6 py-4">
+                                <div class="bt-example-blurred-copy space-y-4 text-center text-xl leading-relaxed">
+                                    <p>
+                                        Unser Betrieb beschäftigt 25 Lehrlinge. Von diesen sollen jeweils zwei Lehrlinge für den Post-Frühdienst und
+                                        drei Lehrlinge für den Post-Spätdienst eingeteilt werden, so dass in jeder Woche jeder Lehrling einmal
+                                        Postdienst hat. Aus verkehrstechnischen Gründen können acht Lehrlinge keinen Frühdienst und neun Lehrlinge
+                                        keinen Spätdienst machen.
+                                    </p>
+                                    <p class="text-lg">(Siehe Vermerke in der Liste)</p>
+                                    <p>
+                                        Stellen Sie bitte einen Wochenplan auf (Montag bis Freitag), in dem Sie alle Namen der Lehrlinge für den
+                                        Postdienst (Früh oder Spät) unten in die Tabelle eintragen. Gehen Sie hierfür mit der Maus auf den jeweiligen
+                                        Namen und ziehen diesen an die passende Stelle.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="border border-black/20 px-4 py-3">
+                                <div class="mx-auto w-full max-w-[430px] border-2 border-black px-4 py-2 text-xl leading-tight">
+                                    <div class="grid grid-cols-2 gap-x-7">
+                                        <div class="space-y-0">
+                                            <div
+                                                v-for="apprentice in dragDropExampleLeftNames"
+                                                :key="`example-name-${apprentice.id}`"
+                                                class="flex items-center gap-2"
+                                            >
+                                                <span class="w-6 flex-none text-right">{{ apprentice.id }}</span>
+                                                <span
+                                                    :data-bt-example-auto-source="apprentice.id === 1 ? 'true' : undefined"
+                                                    :class="[
+                                                        'flex-1 text-left',
+                                                        apprentice.name === dragDropExampleParticipantName && dragDropExamplePhase === 'participant'
+                                                            ? 'cursor-move font-semibold text-green-900'
+                                                            : '',
+                                                        apprentice.name === dragDropExampleParticipantName && dragDropExamplePhase === 'complete'
+                                                            ? 'text-black/40'
+                                                            : '',
+                                                    ]"
+                                                    :draggable="
+                                                        dragDropExamplePhase === 'participant' && apprentice.name === dragDropExampleParticipantName
+                                                    "
+                                                    @dragstart="(event) => handleDragDropExampleStart(event, apprentice.name)"
+                                                >
+                                                    {{ apprentice.name }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-0">
+                                            <div
+                                                v-for="apprentice in dragDropExampleRightNames"
+                                                :key="`example-name-${apprentice.id}`"
+                                                class="flex items-center gap-2"
+                                            >
+                                                <span class="w-6 flex-none text-right">{{ apprentice.id }}</span>
+                                                <span class="flex-1 text-left">{{ apprentice.name }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-2 border-t border-black" />
+                        <table class="mt-3 w-full table-fixed border border-black text-base">
+                            <thead>
+                                <tr>
+                                    <th class="w-28 border border-black p-1 text-left">Aufgabe 1</th>
+                                    <th v-for="day in days" :key="`example-day-${day}`" class="border border-black p-1 text-center">
+                                        {{ day }}
+                                    </th>
                                 </tr>
+                            </thead>
+                            <tbody>
+                                <template v-for="group in dragDropExampleRows" :key="`example-group-${group.shift}`">
+                                    <tr v-for="(slot, slotIndex) in group.slots" :key="`example-${group.shift}-${slot}`">
+                                        <th v-if="slotIndex === 0" class="border border-black p-1 text-left" :rowspan="group.slots.length">
+                                            {{ group.label }}
+                                        </th>
+                                        <td
+                                            v-for="day in days"
+                                            :key="`example-${group.shift}-${slot}-${day}`"
+                                            :data-bt-example-auto-target="
+                                                buildCellKey(group.shift, slot, day) === dragDropExampleAutoTargetKey ? 'true' : undefined
+                                            "
+                                            :class="[
+                                                'h-11 border border-black p-1 align-middle transition-colors',
+                                                isDragDropExampleParticipantTarget(buildCellKey(group.shift, slot, day)) &&
+                                                dragDropExamplePhase === 'participant'
+                                                    ? 'bt-example-target-blink ring-2 ring-green-500 ring-inset'
+                                                    : '',
+                                                isDragDropExampleParticipantTarget(buildCellKey(group.shift, slot, day)) &&
+                                                dragDropExamplePhase === 'complete'
+                                                    ? 'bg-green-100 ring-2 ring-green-500 ring-inset'
+                                                    : 'bg-white',
+                                            ]"
+                                            @dragover="allowDrop"
+                                            @drop="(event) => handleDragDropExampleDrop(event, buildCellKey(group.shift, slot, day))"
+                                        >
+                                            <div class="flex items-center gap-2">
+                                                <span class="w-4 text-right">{{ slot }}.</span>
+                                                <span
+                                                    v-if="getDragDropExampleCellValue(buildCellKey(group.shift, slot, day))"
+                                                    class="min-w-0 flex-1 font-semibold text-green-900"
+                                                >
+                                                    {{ getDragDropExampleCellValue(buildCellKey(group.shift, slot, day)) }}
+                                                </span>
+                                                <span v-else class="flex-1">&nbsp;</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
                             </tbody>
                         </table>
+
+                        <div
+                            v-if="dragDropExampleAnimationReady"
+                            class="bt-example-demo-chip pointer-events-none absolute z-30 border border-black bg-white px-3 py-1 text-lg font-semibold shadow-sm"
+                        >
+                            {{ dragDropExampleAutoName }}
+                        </div>
+                        <div v-if="dragDropExampleAnimationReady" class="bt-example-demo-cursor pointer-events-none absolute z-40">
+                            <MousePointer2 class="h-8 w-8 fill-white text-black drop-shadow-[0_2px_2px_rgba(0,0,0,0.35)]" />
+                        </div>
                     </div>
 
                     <DialogFooter v-if="dragDropExampleCompleted" class="items-center gap-3 sm:justify-between">
@@ -2090,8 +2310,28 @@ if (import.meta.env.DEV) {
 </template>
 
 <style scoped>
+.bt-example-blurred-copy {
+    color: transparent;
+    opacity: 0.24;
+    filter: blur(4px);
+    text-shadow: 0 0 5px rgb(0 0 0 / 0.62);
+    user-select: none;
+}
+
 .bt-example-target-blink {
     animation: bt-example-green-blink 1s ease-in-out infinite;
+}
+
+.bt-example-demo-chip {
+    left: var(--bt-example-start-x, 50%);
+    top: var(--bt-example-start-y, 50%);
+    animation: bt-example-chip-drag 2.45s cubic-bezier(0.38, 0.04, 0.16, 1) forwards;
+}
+
+.bt-example-demo-cursor {
+    left: var(--bt-example-start-x, 50%);
+    top: var(--bt-example-start-y, 50%);
+    animation: bt-example-cursor-drag 2.45s cubic-bezier(0.38, 0.04, 0.16, 1) forwards;
 }
 
 @keyframes bt-example-green-blink {
@@ -2102,6 +2342,52 @@ if (import.meta.env.DEV) {
 
     50% {
         background-color: rgb(34 197 94 / 0.45);
+    }
+}
+
+@keyframes bt-example-chip-drag {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.96);
+    }
+
+    16% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    72%,
+    100% {
+        opacity: 1;
+        transform: translate(calc(var(--bt-example-dx, 0px) - 50%), calc(var(--bt-example-dy, 0px) - 50%)) scale(0.98);
+    }
+}
+
+@keyframes bt-example-cursor-drag {
+    0% {
+        opacity: 0;
+        transform: translate(10px, 9px) scale(1);
+    }
+
+    10%,
+    20% {
+        opacity: 1;
+        transform: translate(10px, 9px) scale(1);
+    }
+
+    72%,
+    100% {
+        opacity: 1;
+        transform: translate(calc(var(--bt-example-dx, 0px) + 10px), calc(var(--bt-example-dy, 0px) + 9px)) scale(0.98);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bt-example-target-blink,
+    .bt-example-demo-chip,
+    .bt-example-demo-cursor {
+        animation-duration: 0.01ms;
+        animation-iteration-count: 1;
     }
 }
 </style>
