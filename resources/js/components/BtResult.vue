@@ -571,9 +571,11 @@ async function persistQ5AfterWindowManualPoints() {
                                     </tr>
                                 </tbody>
                             </table>
-                            <div>Frühdienst: zweisilbig {{ q1Stats.earlyTwoSyllable }}/9, dreisilbig {{ q1Stats.earlyThreeSyllable }}/1</div>
-                            <div>Spätdienst: einsilbig {{ q1Stats.lateOneSyllable }}/8, dreisilbig {{ q1Stats.lateThreeSyllable }}/7</div>
-                            <div class="mt-1 text-muted-foreground">Abzüge gemäß Soll-Verteilung.</div>
+                            <template v-if="!pdfMode">
+                                <div>Frühdienst: zweisilbig {{ q1Stats.earlyTwoSyllable }}/9, dreisilbig {{ q1Stats.earlyThreeSyllable }}/1</div>
+                                <div>Spätdienst: einsilbig {{ q1Stats.lateOneSyllable }}/8, dreisilbig {{ q1Stats.lateThreeSyllable }}/7</div>
+                                <div class="mt-1 text-muted-foreground">Abzüge gemäß Soll-Verteilung.</div>
+                            </template>
                         </td>
                         <td class="border border-black p-2 text-center font-semibold">{{ firstWindowQ1Stats.points }}</td>
                         <td class="border border-black p-2 text-center font-semibold">{{ q1Stats.points }}</td>
@@ -582,7 +584,7 @@ async function persistQ5AfterWindowManualPoints() {
                     <tr>
                         <td class="border border-black p-2 align-top">
                             <div class="mb-2 font-semibold">Aufgabe 2</div>
-                            <div class="mb-2">Manuelle Bewertung durch Prüfer:in.</div>
+                            <div v-if="!pdfMode" class="mb-2">Manuelle Bewertung durch Prüfer:in.</div>
                             <div v-if="!pdfMode" class="bt-manual-controls flex flex-wrap gap-3">
                                 <label class="bt-manual-label flex flex-col gap-1 text-xs text-muted-foreground">
                                     bis 30 Min.
@@ -645,7 +647,7 @@ async function persistQ5AfterWindowManualPoints() {
                                     </tr>
                                 </tbody>
                             </table>
-                            <div class="mt-1 text-muted-foreground">
+                            <div v-if="!pdfMode" class="mt-1 text-muted-foreground">
                                 Abzüge: {{ q3Score.mistakes.length ? q3Score.mistakes.join(' | ') : 'keine' }}.
                             </div>
                         </td>
@@ -676,7 +678,7 @@ async function persistQ5AfterWindowManualPoints() {
                                     </tr>
                                 </tbody>
                             </table>
-                            <div class="mt-1 text-muted-foreground">
+                            <div v-if="!pdfMode" class="mt-1 text-muted-foreground">
                                 Abzüge: {{ q4Score.mistakes.length ? q4Score.mistakes.join(' | ') : 'keine' }}.
                             </div>
                         </td>
@@ -707,7 +709,7 @@ async function persistQ5AfterWindowManualPoints() {
                                     </tr>
                                 </tbody>
                             </table>
-                            <div class="mt-1 text-muted-foreground">
+                            <div v-if="!pdfMode" class="mt-1 text-muted-foreground">
                                 Abzüge: {{ q5Score.mistakes.length ? q5Score.mistakes.join(' | ') : 'keine' }}.
                             </div>
                             <div v-if="!pdfMode" class="bt-manual-controls mt-3 flex flex-wrap gap-3">
@@ -792,7 +794,7 @@ async function persistQ5AfterWindowManualPoints() {
                                     </tr>
                                 </tbody>
                             </table>
-                            <div class="mt-1 text-muted-foreground">Punkte-Herleitung: {{ q6Score.explanation.join(' | ') }}</div>
+                            <div v-if="!pdfMode" class="mt-1 text-muted-foreground">Punkte-Herleitung: {{ q6Score.explanation.join(' | ') }}</div>
                         </td>
                         <td class="border border-black p-2 text-center font-semibold">{{ firstWindowQ6Score.points }}</td>
                         <td class="border border-black p-2 text-center font-semibold">{{ q6Score.points }}</td>
