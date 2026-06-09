@@ -589,7 +589,7 @@ function clearCell(key: string) {
 
 function handleCashInput(key: string, event: Event) {
     const target = event.target as HTMLInputElement;
-    const cleaned = target.value.replace(/\D/g, '').slice(0, 2);
+    const cleaned = target.value.replace(/\D/g, '').slice(0, 4);
     ensureFirstWindowSnapshotBeforeChange();
     cashAnswers.value[key] = cleaned;
     markAnswerTime('cash_answers', key, cleaned);
@@ -601,7 +601,7 @@ function handleFolderInput(index: number, event: Event) {
     const cleaned = target.value
         .toUpperCase()
         .replace(/[^A-Z]/g, '')
-        .slice(0, 5);
+        .slice(0, 7);
     ensureFirstWindowSnapshotBeforeChange();
     folderAnswers.value[index] = cleaned;
     markAnswerTime('folder_answers', index, cleaned);
@@ -615,21 +615,16 @@ function toggleStampAnswer(day: number) {
 }
 
 function handleRouteDropOnCell(event: DragEvent, key: string) {
-    if (key === 'route-from-1' && routeAssignments.value[key] === 'Eigene Wohnung') return;
+    if (routeAssignments.value[key]) return;
 
     event.preventDefault();
     const payloadText = event.dataTransfer?.getData('text/plain');
     if (!payloadText) return;
 
     const payload = JSON.parse(payloadText) as DragPayload;
-    if (!payload?.name) return;
+    if (!payload?.name || payload.from !== 'pool') return;
 
     ensureFirstWindowSnapshotBeforeChange();
-    if (payload.from === 'cell' && payload.key) {
-        routeAssignments.value[payload.key] = null;
-        clearAnswerTime('route_assignments', payload.key);
-    }
-
     routeAssignments.value[key] = payload.name;
     markAnswerTime('route_assignments', key, payload.name);
 }
@@ -1689,9 +1684,9 @@ if (import.meta.env.DEV) {
                                             :value="cashAnswers[denomination.key]"
                                             type="text"
                                             inputmode="numeric"
-                                            maxlength="2"
+                                            maxlength="4"
                                             :class="[
-                                                'h-6 w-10 border border-black text-center text-base',
+                                                'h-6 w-full max-w-14 border border-black text-center text-base',
                                                 answerTextClass('cash_answers', denomination.key),
                                             ]"
                                             @input="(event) => handleCashInput(denomination.key, event)"
@@ -1881,9 +1876,9 @@ if (import.meta.env.DEV) {
                                             :value="folderAnswers[index]"
                                             type="text"
                                             inputmode="text"
-                                            maxlength="5"
+                                            maxlength="7"
                                             :class="[
-                                                'h-6 w-16 border border-black text-center text-base uppercase',
+                                                'h-6 w-full max-w-20 border border-black text-center text-base uppercase',
                                                 answerTextClass('folder_answers', index),
                                             ]"
                                             @input="(event) => handleFolderInput(index, event)"
@@ -2011,9 +2006,8 @@ if (import.meta.env.DEV) {
                                 </p>
                                 <p>
                                     Geben Sie bitte unten in der Tabelle an, in welcher Reihenfolge Sie Ihre Bekannten
-                                    <span style="letter-spacing: 0.25em; white-space: pre">b e n a c h r i c h t i g e n</span> (Namen mit der Maus in
-                                    das jeweilige Feld hineinziehen) und wie viel Zeit Sie dafür jeweils im Einzelnen und insgesamt (ohne Rückweg)
-                                    brauchen (Zeiten eintragen).
+                                    <span class="tracking-[0.12em]">benachrichtigen</span> (Namen mit der Maus in das jeweilige Feld hineinziehen) und
+                                    wie viel Zeit Sie dafür jeweils im Einzelnen und insgesamt (ohne Rückweg) brauchen (Zeiten eintragen).
                                 </p>
                                 <p>
                                     Für Benachrichtigung sind jeweils (persönlich oder per Telefon) 3 Minuten zu berechnen und in der Tabelle unter
@@ -2160,7 +2154,13 @@ if (import.meta.env.DEV) {
                     <div class="border-t border-black" />
                     <div class="flex-1 overflow-hidden">
                         <div class="mt-0.5 text-left text-sm font-bold">Aufgabe 6</div>
-                        <table class="mt-0.5 w-full table-fixed border-2 border-black text-sm">
+                        <table class="mx-auto mt-0.5 w-full max-w-5xl table-fixed border-2 border-black text-base">
+                            <colgroup>
+                                <col class="w-[28%]" />
+                                <col class="w-[28%]" />
+                                <col class="w-[22%]" />
+                                <col class="w-[22%]" />
+                            </colgroup>
                             <thead>
                                 <tr class="border-b border-black">
                                     <th class="border-r border-black p-1 text-center font-normal">von</th>
@@ -2179,20 +2179,10 @@ if (import.meta.env.DEV) {
                                         <div class="flex items-center gap-2">
                                             <span
                                                 v-if="routeAssignments[`route-from-${row}`]"
-                                                class="min-w-0 flex-1"
                                                 :class="[
-                                                    { 'cursor-move': row !== 1 || routeAssignments[`route-from-${row}`] !== 'Eigene Wohnung' },
+                                                    'min-w-0 flex-1 text-lg font-medium',
                                                     answerTextClass('route_assignments', `route-from-${row}`),
                                                 ]"
-                                                :draggable="row !== 1 || routeAssignments[`route-from-${row}`] !== 'Eigene Wohnung'"
-                                                @dragstart="
-                                                    (event) =>
-                                                        handleDragStart(event, {
-                                                            name: routeAssignments[`route-from-${row}`] ?? '',
-                                                            from: 'cell',
-                                                            key: `route-from-${row}`,
-                                                        })
-                                                "
                                             >
                                                 {{ routeAssignments[`route-from-${row}`] }}
                                             </span>
@@ -2218,16 +2208,10 @@ if (import.meta.env.DEV) {
                                         <div class="flex items-center gap-2">
                                             <span
                                                 v-if="routeAssignments[`route-to-${row}`]"
-                                                :class="['min-w-0 flex-1 cursor-move', answerTextClass('route_assignments', `route-to-${row}`)]"
-                                                draggable="true"
-                                                @dragstart="
-                                                    (event) =>
-                                                        handleDragStart(event, {
-                                                            name: routeAssignments[`route-to-${row}`] ?? '',
-                                                            from: 'cell',
-                                                            key: `route-to-${row}`,
-                                                        })
-                                                "
+                                                :class="[
+                                                    'min-w-0 flex-1 text-lg font-medium',
+                                                    answerTextClass('route_assignments', `route-to-${row}`),
+                                                ]"
                                             >
                                                 {{ routeAssignments[`route-to-${row}`] }}
                                             </span>
