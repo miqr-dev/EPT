@@ -26,6 +26,7 @@ type DragPayload = {
 };
 
 type DragDropExamplePhase = 'idle' | 'auto' | 'participant' | 'complete';
+type DragDropExampleInstructionTone = 'click' | 'drag' | 'release';
 
 type BtAnswerTimes = {
     assignments: Record<string, number>;
@@ -98,6 +99,8 @@ const dragDropExampleOpen = ref(false);
 const dragDropExampleCompleted = ref(false);
 const dragDropExamplePhase = ref<DragDropExamplePhase>('idle');
 const dragDropExampleAnimationReady = ref(false);
+const dragDropExampleInstruction = ref('');
+const dragDropExampleInstructionTone = ref<DragDropExampleInstructionTone>('click');
 const dragDropExampleAssignments = ref<Record<string, string | null>>(buildEmptyDragDropExampleAssignments());
 const dragDropExampleBoard = ref<HTMLElement | null>(null);
 const dragDropExampleAnimationStyle = ref<Record<string, string>>({});
@@ -141,6 +144,7 @@ const dragDropExampleAutoName = dragDropExampleNames[0].name;
 const dragDropExampleParticipantName = dragDropExampleNames[1].name;
 const dragDropExampleAutoTargetKey = 'early-1-Montag';
 const dragDropExampleParticipantTargetKey = 'late-1-Dienstag';
+const dragDropExampleAutoAnimationMs = 6400;
 const dragDropExampleTimers: ReturnType<typeof setTimeout>[] = [];
 const cashDenominations = [
     { label: '100€', key: '100' },
@@ -487,22 +491,36 @@ function updateDragDropExampleAnimationCoordinates() {
         '--bt-example-start-y': `${startY}px`,
         '--bt-example-dx': `${targetX - startX}px`,
         '--bt-example-dy': `${targetY - startY}px`,
+        '--bt-example-auto-duration': `${dragDropExampleAutoAnimationMs}ms`,
     };
 }
 
 function runDragDropExampleAutoDemo() {
     dragDropExamplePhase.value = 'auto';
     dragDropExampleAnimationReady.value = false;
+    dragDropExampleInstruction.value = '1. Klicken Sie auf den Namen.';
+    dragDropExampleInstructionTone.value = 'click';
 
     void nextTick().then(() => {
         updateDragDropExampleAnimationCoordinates();
         dragDropExampleAnimationReady.value = true;
 
         scheduleDragDropExampleStep(() => {
+            dragDropExampleInstruction.value = '2. Halten Sie die Maustaste gedrückt und ziehen Sie den Namen in das markierte Feld.';
+            dragDropExampleInstructionTone.value = 'drag';
+        }, 1400);
+
+        scheduleDragDropExampleStep(() => {
+            dragDropExampleInstruction.value = '3. Lassen Sie die Maustaste im Feld los.';
+            dragDropExampleInstructionTone.value = 'release';
+        }, 5200);
+
+        scheduleDragDropExampleStep(() => {
             dragDropExampleAssignments.value[dragDropExampleAutoTargetKey] = dragDropExampleAutoName;
             dragDropExampleAnimationReady.value = false;
             dragDropExamplePhase.value = 'participant';
-        }, 2600);
+            dragDropExampleInstruction.value = '';
+        }, 6600);
     });
 }
 
@@ -512,6 +530,7 @@ function openDragDropExample() {
     dragDropExampleCompleted.value = false;
     dragDropExamplePhase.value = 'idle';
     dragDropExampleAnimationReady.value = false;
+    dragDropExampleInstruction.value = '';
     dragDropExampleAssignments.value = buildEmptyDragDropExampleAssignments();
 
     void nextTick().then(() => {
@@ -528,6 +547,7 @@ function setDragDropExampleOpen(open: boolean) {
 function closeDragDropExample() {
     if (!dragDropExampleCompleted.value) return;
     clearDragDropExampleTimers();
+    dragDropExampleInstruction.value = '';
     dragDropExampleOpen.value = false;
 }
 
@@ -1088,11 +1108,25 @@ if (import.meta.env.DEV) {
                         :style="dragDropExampleAnimationStyle"
                     >
                         <div class="px-4 pb-2 text-center">
-                            <h2 class="text-xl font-semibold tracking-[0.4em]">Aufgabe 1</h2>
+                            <h2 class="bt-example-blurred-title text-xl font-semibold tracking-[0.4em]">Aufgabe 1</h2>
                         </div>
 
                         <div class="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
-                            <div class="border border-black/20 px-6 py-4">
+                            <div class="relative border border-black/20 px-6 py-4">
+                                <div
+                                    class="pointer-events-none absolute top-4 left-1/2 z-20 flex w-[calc(100%-2rem)] -translate-x-1/2 justify-center"
+                                    aria-live="polite"
+                                >
+                                    <p
+                                        v-if="dragDropExampleInstruction"
+                                        :class="[
+                                            'bt-example-instruction max-w-[640px] px-5 py-2 text-center text-xl font-semibold shadow-sm',
+                                            `bt-example-instruction--${dragDropExampleInstructionTone}`,
+                                        ]"
+                                    >
+                                        {{ dragDropExampleInstruction }}
+                                    </p>
+                                </div>
                                 <div class="bt-example-blurred-copy space-y-4 text-center text-xl leading-relaxed">
                                     <p>
                                         Unser Betrieb beschäftigt 25 Lehrlinge. Von diesen sollen jeweils zwei Lehrlinge für den Post-Frühdienst und
@@ -1124,7 +1158,7 @@ if (import.meta.env.DEV) {
                                                     :class="[
                                                         'flex-1 text-left',
                                                         apprentice.name === dragDropExampleParticipantName && dragDropExamplePhase === 'participant'
-                                                            ? 'cursor-move font-semibold text-green-900'
+                                                            ? 'bt-example-name-blink cursor-move font-semibold'
                                                             : '',
                                                         apprentice.name === dragDropExampleParticipantName && dragDropExamplePhase === 'complete'
                                                             ? 'text-black/40'
@@ -1180,11 +1214,11 @@ if (import.meta.env.DEV) {
                                                 'h-11 border border-black p-1 align-middle transition-colors',
                                                 isDragDropExampleParticipantTarget(buildCellKey(group.shift, slot, day)) &&
                                                 dragDropExamplePhase === 'participant'
-                                                    ? 'bt-example-target-blink ring-2 ring-green-500 ring-inset'
+                                                    ? 'bt-example-target-blink ring-2 ring-sky-500 ring-inset'
                                                     : '',
                                                 isDragDropExampleParticipantTarget(buildCellKey(group.shift, slot, day)) &&
                                                 dragDropExamplePhase === 'complete'
-                                                    ? 'bg-green-100 ring-2 ring-green-500 ring-inset'
+                                                    ? 'bg-sky-100 ring-2 ring-sky-500 ring-inset'
                                                     : 'bg-white',
                                             ]"
                                             @dragover="allowDrop"
@@ -1194,7 +1228,7 @@ if (import.meta.env.DEV) {
                                                 <span class="w-4 text-right">{{ slot }}.</span>
                                                 <span
                                                     v-if="getDragDropExampleCellValue(buildCellKey(group.shift, slot, day))"
-                                                    class="min-w-0 flex-1 font-semibold text-green-900"
+                                                    class="min-w-0 flex-1 font-semibold text-sky-900"
                                                 >
                                                     {{ getDragDropExampleCellValue(buildCellKey(group.shift, slot, day)) }}
                                                 </span>
@@ -1217,11 +1251,7 @@ if (import.meta.env.DEV) {
                         </div>
                     </div>
 
-                    <DialogFooter v-if="dragDropExampleCompleted" class="items-center gap-3 sm:justify-between">
-                        <div>
-                            <p class="text-lg font-semibold text-green-700">Richtig!</p>
-                            <p class="text-sm text-gray-600">Schliessen Sie das Fenster, um den Test zu starten.</p>
-                        </div>
+                    <DialogFooter v-if="dragDropExampleCompleted" class="items-center gap-3 sm:justify-end">
                         <Button @click="closeDragDropExample">Schliessen</Button>
                     </DialogFooter>
                 </DialogContent>
@@ -2310,6 +2340,7 @@ if (import.meta.env.DEV) {
 </template>
 
 <style scoped>
+.bt-example-blurred-title,
 .bt-example-blurred-copy {
     color: transparent;
     opacity: 0.24;
@@ -2319,29 +2350,88 @@ if (import.meta.env.DEV) {
 }
 
 .bt-example-target-blink {
-    animation: bt-example-green-blink 1s ease-in-out infinite;
+    animation: bt-example-sky-cell-blink 1s ease-in-out infinite;
+}
+
+.bt-example-name-blink {
+    border-radius: 4px;
+    animation: bt-example-sky-name-blink 1s ease-in-out infinite;
+}
+
+.bt-example-instruction {
+    border: 1px solid;
+    border-radius: 6px;
+    animation: bt-example-instruction-fade 180ms ease-out;
+}
+
+.bt-example-instruction--click {
+    border-color: rgb(37 99 235 / 0.55);
+    background: rgb(239 246 255);
+    color: rgb(30 64 175);
+    box-shadow: 0 6px 14px rgb(37 99 235 / 0.13);
+}
+
+.bt-example-instruction--drag {
+    border-color: rgb(217 119 6 / 0.58);
+    background: rgb(255 251 235);
+    color: rgb(146 64 14);
+    box-shadow: 0 6px 14px rgb(217 119 6 / 0.13);
+}
+
+.bt-example-instruction--release {
+    border-color: rgb(5 150 105 / 0.58);
+    background: rgb(236 253 245);
+    color: rgb(4 120 87);
+    box-shadow: 0 6px 14px rgb(5 150 105 / 0.13);
 }
 
 .bt-example-demo-chip {
     left: var(--bt-example-start-x, 50%);
     top: var(--bt-example-start-y, 50%);
-    animation: bt-example-chip-drag 2.45s cubic-bezier(0.38, 0.04, 0.16, 1) forwards;
+    animation: bt-example-chip-drag var(--bt-example-auto-duration, 6.4s) cubic-bezier(0.38, 0.04, 0.16, 1) forwards;
 }
 
 .bt-example-demo-cursor {
     left: var(--bt-example-start-x, 50%);
     top: var(--bt-example-start-y, 50%);
-    animation: bt-example-cursor-drag 2.45s cubic-bezier(0.38, 0.04, 0.16, 1) forwards;
+    animation: bt-example-cursor-drag var(--bt-example-auto-duration, 6.4s) cubic-bezier(0.38, 0.04, 0.16, 1) forwards;
 }
 
-@keyframes bt-example-green-blink {
+@keyframes bt-example-sky-cell-blink {
     0%,
     100% {
-        background-color: rgb(220 252 231);
+        background-color: rgb(224 242 254);
     }
 
     50% {
-        background-color: rgb(34 197 94 / 0.45);
+        background-color: rgb(56 189 248 / 0.55);
+    }
+}
+
+@keyframes bt-example-sky-name-blink {
+    0%,
+    100% {
+        background-color: rgb(224 242 254);
+        color: rgb(12 74 110);
+        box-shadow: 0 0 0 1px rgb(14 165 233 / 0.35);
+    }
+
+    50% {
+        background-color: rgb(56 189 248 / 0.42);
+        color: rgb(8 47 73);
+        box-shadow: 0 0 0 2px rgb(14 165 233 / 0.55);
+    }
+}
+
+@keyframes bt-example-instruction-fade {
+    from {
+        opacity: 0;
+        transform: translateY(-3px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
@@ -2351,12 +2441,13 @@ if (import.meta.env.DEV) {
         transform: translate(-50%, -50%) scale(0.96);
     }
 
-    16% {
+    12%,
+    22% {
         opacity: 1;
         transform: translate(-50%, -50%) scale(1);
     }
 
-    72%,
+    82%,
     100% {
         opacity: 1;
         transform: translate(calc(var(--bt-example-dx, 0px) - 50%), calc(var(--bt-example-dy, 0px) - 50%)) scale(0.98);
@@ -2369,13 +2460,13 @@ if (import.meta.env.DEV) {
         transform: translate(10px, 9px) scale(1);
     }
 
-    10%,
-    20% {
+    8%,
+    22% {
         opacity: 1;
         transform: translate(10px, 9px) scale(1);
     }
 
-    72%,
+    82%,
     100% {
         opacity: 1;
         transform: translate(calc(var(--bt-example-dx, 0px) + 10px), calc(var(--bt-example-dy, 0px) + 9px)) scale(0.98);
@@ -2384,6 +2475,8 @@ if (import.meta.env.DEV) {
 
 @media (prefers-reduced-motion: reduce) {
     .bt-example-target-blink,
+    .bt-example-name-blink,
+    .bt-example-instruction,
     .bt-example-demo-chip,
     .bt-example-demo-cursor {
         animation-duration: 0.01ms;
