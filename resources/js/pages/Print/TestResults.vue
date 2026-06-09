@@ -40,26 +40,60 @@ function delay(ms: number) {
     return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 }
 
+function sheetDimensions(sheet: HTMLElement) {
+    const frame = sheet.querySelector<HTMLElement>('[data-print-frame]');
+    const source = sheet.querySelector<HTMLElement>('[data-print-source]');
+
+    if (!frame || !source) {
+        return null;
+    }
+
+    const availableWidth = frame.clientWidth || frame.getBoundingClientRect().width;
+    const availableHeight = frame.clientHeight || frame.getBoundingClientRect().height;
+    const sourceWidth = source.scrollWidth || source.offsetWidth;
+    const sourceHeight = source.scrollHeight || source.offsetHeight;
+
+    if (!availableWidth || !availableHeight || !sourceWidth || !sourceHeight) {
+        return null;
+    }
+
+    return { availableWidth, availableHeight, sourceWidth, sourceHeight };
+}
+
 function fitSheets() {
+    const measurements: string[] = [];
+
     for (const sheet of sheetRefs.value) {
         const frame = sheet.querySelector<HTMLElement>('[data-print-frame]');
-        const source = sheet.querySelector<HTMLElement>('[data-print-source]');
+        const dimensions = sheetDimensions(sheet);
 
-        if (!frame || !source) {
+        if (!frame || !dimensions) {
             continue;
         }
 
-        const availableWidth = frame.clientWidth || frame.getBoundingClientRect().width;
-        const availableHeight = frame.clientHeight || frame.getBoundingClientRect().height;
-        const sourceWidth = source.scrollWidth || source.offsetWidth;
-        const sourceHeight = source.scrollHeight || source.offsetHeight;
-
-        if (!availableWidth || !availableHeight || !sourceWidth || !sourceHeight) {
-            continue;
-        }
-
+        const { availableWidth, availableHeight, sourceWidth, sourceHeight } = dimensions;
         const scale = Math.min(availableWidth / sourceWidth, availableHeight / sourceHeight, 1);
         frame.style.setProperty('--result-scale', String(scale));
+        measurements.push([availableWidth, availableHeight, sourceWidth, sourceHeight, scale].map((value) => value.toFixed(3)).join(':'));
+    }
+
+    return measurements.join('|');
+}
+
+async function fitSheetsUntilStable() {
+    let previousMeasurements = '';
+    let stableFrames = 0;
+
+    for (let attempt = 0; attempt < 30 && stableFrames < 3; attempt += 1) {
+        await nextFrame();
+        const measurements = fitSheets();
+
+        if (measurements && measurements === previousMeasurements) {
+            stableFrames += 1;
+        } else {
+            stableFrames = 0;
+            previousMeasurements = measurements;
+        }
     }
 }
 
@@ -74,8 +108,7 @@ async function prepareForPdf() {
     await nextFrame();
     await nextFrame();
     await delay(350);
-    fitSheets();
-    await nextFrame();
+    await fitSheetsUntilStable();
 
     (window as any).__PDF_READY__ = true;
 
@@ -285,7 +318,7 @@ onUnmounted(() => {
 }
 
 .sheet-frame {
-    --result-scale: 1;
+    --result-scale: 0.611;
     position: relative;
     width: 100%;
     height: 100%;
@@ -303,9 +336,18 @@ onUnmounted(() => {
     width: 760px;
 }
 
+.print-sheet[data-test-name='LPS-B'] .sheet-frame {
+    --result-scale: 0.964;
+}
+
 .print-sheet[data-test-name='BRT-A'] .result-source,
 .print-sheet[data-test-name='BRT-B'] .result-source {
     width: 820px;
+}
+
+.print-sheet[data-test-name='BRT-A'] .sheet-frame,
+.print-sheet[data-test-name='BRT-B'] .sheet-frame {
+    --result-scale: 0.894;
 }
 
 .print-sheet[data-test-name='MRT-A'] .result-source,
@@ -313,8 +355,17 @@ onUnmounted(() => {
     width: 900px;
 }
 
+.print-sheet[data-test-name='MRT-A'] .sheet-frame,
+.print-sheet[data-test-name='MRT-B'] .sheet-frame {
+    --result-scale: 0.814;
+}
+
 .print-sheet[data-test-name='BT'] .result-source {
     width: 920px;
+}
+
+.print-sheet[data-test-name='BT'] .sheet-frame {
+    --result-scale: 0.796;
 }
 
 .print-sheet[data-test-name='FPI-R'] .result-source,
@@ -322,14 +373,29 @@ onUnmounted(() => {
     width: 920px;
 }
 
+.print-sheet[data-test-name='FPI-R'] .sheet-frame,
+.print-sheet[data-test-code='FPI-R'] .sheet-frame {
+    --result-scale: 0.796;
+}
+
 .print-sheet[data-test-name='LMT'] .result-source,
 .print-sheet[data-test-code='LMT'] .result-source {
     width: 820px;
 }
 
+.print-sheet[data-test-name='LMT'] .sheet-frame,
+.print-sheet[data-test-code='LMT'] .sheet-frame {
+    --result-scale: 0.894;
+}
+
 .print-sheet[data-test-name='BIT-2'] .result-source,
 .print-sheet[data-test-code='BIT-2'] .result-source {
     width: 760px;
+}
+
+.print-sheet[data-test-name='BIT-2'] .sheet-frame,
+.print-sheet[data-test-code='BIT-2'] .sheet-frame {
+    --result-scale: 0.964;
 }
 
 .print-sheet[data-test-name='628'] .result-source,
@@ -343,9 +409,25 @@ onUnmounted(() => {
     width: 820px;
 }
 
+.print-sheet[data-test-name='628'] .sheet-frame,
+.print-sheet[data-test-code='628'] .sheet-frame,
+.print-sheet[data-test-name='628 Test'] .sheet-frame,
+.print-sheet[data-test-code='628 Test'] .sheet-frame,
+.print-sheet[data-test-name='628 08.03'] .sheet-frame,
+.print-sheet[data-test-code='628 08.03'] .sheet-frame,
+.print-sheet[data-test-name='Konzentrationstest'] .sheet-frame,
+.print-sheet[data-test-code='Konzentrationstest'] .sheet-frame {
+    --result-scale: 0.894;
+}
+
 .print-sheet[data-test-name='AVEM'] .result-source,
 .print-sheet[data-test-code='AVEM'] .result-source {
     width: 860px;
+}
+
+.print-sheet[data-test-name='AVEM'] .sheet-frame,
+.print-sheet[data-test-code='AVEM'] .sheet-frame {
+    --result-scale: 0.852;
 }
 
 @media print {
