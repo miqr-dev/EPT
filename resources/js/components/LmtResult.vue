@@ -6,10 +6,12 @@ const props = withDefaults(
         results: any;
         showAnswers?: boolean;
         pdfMode?: boolean;
+        answersOnly?: boolean;
     }>(),
     {
         showAnswers: true,
         pdfMode: false,
+        answersOnly: false,
     },
 );
 
@@ -35,7 +37,11 @@ const scales = [
 </script>
 
 <template>
-    <div v-if="props.results" class="lmt-result rounded-lg border bg-background p-6" :class="{ 'lmt-result--pdf': props.pdfMode }">
+    <div
+        v-if="props.results && !props.answersOnly"
+        class="lmt-result rounded-lg border bg-background p-6"
+        :class="{ 'lmt-result--pdf': props.pdfMode }"
+    >
         <h2 v-if="!props.pdfMode" class="mb-4 text-xl font-semibold">Test abgeschlossen!</h2>
 
         <div class="lmt-time-wrap mb-6 w-full max-w-md">
@@ -77,28 +83,30 @@ const scales = [
         </div>
     </div>
 
-    <details v-if="props.showAnswers && !props.pdfMode && props.results?.answers" class="lmt-answer-section mb-6">
+    <details
+        v-if="props.showAnswers && (!props.pdfMode || props.answersOnly) && props.results?.answers"
+        :open="props.answersOnly"
+        class="lmt-answer-section mb-6"
+    >
         <summary class="cursor-pointer rounded bg-muted/40 px-2 py-1 select-none">Antworten</summary>
         <div class="mt-2 overflow-x-auto">
-            <table class="min-w-full rounded border text-sm shadow-sm">
+            <table class="lmt-answer-table min-w-full rounded border text-sm shadow-sm">
                 <thead class="bg-muted/40">
                     <tr>
-                        <th class="p-2 text-left">#</th>
-                        <th class="p-2 text-left">Frage</th>
-                        <th class="p-2 text-left">Antwort</th>
-                        <th class="p-2 text-left">Gruppe</th>
-                        <th class="p-2 text-left">Punkte</th>
-                        <th class="p-2 text-left">Zeit</th>
+                        <th class="lmt-col-number p-2 text-left">#</th>
+                        <th class="lmt-col-question p-2 text-left">Frage</th>
+                        <th class="lmt-col-answer p-2 text-left">Antwort</th>
+                        <th class="lmt-col-group p-2 text-left">Gruppe</th>
+                        <th class="lmt-col-points p-2 text-left">Punkte</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="(ans, idx) in props.results.answers" :key="idx" class="border-t">
-                        <td class="p-2">{{ ans.number }}</td>
-                        <td class="p-2">{{ LMT_QUESTIONS[idx].text }}</td>
-                        <td class="p-2">{{ ans.selected_category ?? '-' }}</td>
-                        <td class="p-2">{{ ans.selected_group ?? '-' }}</td>
-                        <td class="p-2">{{ ans.points ?? '-' }}</td>
-                        <td class="p-2">{{ formatTime(ans.time_seconds) }}</td>
+                        <td class="lmt-col-number p-2">{{ ans.number }}</td>
+                        <td class="lmt-col-question p-2">{{ LMT_QUESTIONS[idx].text }}</td>
+                        <td class="lmt-col-answer p-2">{{ ans.selected_category ?? '-' }}</td>
+                        <td class="lmt-col-group p-2">{{ ans.selected_group ?? '-' }}</td>
+                        <td class="lmt-col-points p-2">{{ ans.points ?? '-' }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -116,6 +124,30 @@ const scales = [
 .lmt-score-table tbody tr:last-child td,
 .lmt-summary-table tr:last-child td {
     border-bottom: 0;
+}
+
+.lmt-answer-table .lmt-col-number {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    max-width: 2.75rem;
+    box-sizing: border-box;
+    border-right: 1px solid #d1d5db;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.lmt-answer-table .lmt-col-question {
+    width: 52%;
+}
+
+.lmt-answer-table .lmt-col-answer {
+    width: 27%;
+}
+
+.lmt-answer-table .lmt-col-group,
+.lmt-answer-table .lmt-col-points {
+    width: 10%;
 }
 
 .lmt-result--pdf {

@@ -38,6 +38,7 @@ const props = defineProps<{
     testResultId?: number | null;
     manualScores?: Record<string, number | string | null>;
     showAnswers?: boolean;
+    answersOnly?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -435,6 +436,34 @@ const lpsbSequenceAnswerRows = computed(() =>
     }),
 );
 
+const lpsbAnswerPageTwoRows = computed(() => {
+    const rowCount = Math.max(
+        lpsbColumn7AnswerRows.value.length,
+        lpsbColumn8AnswerRows.value.length,
+        lpsbColumn9AnswerRows.value.length,
+        lpsbColumn10AnswerRows.value.length,
+        lpsbColumn11AnswerRows.value.length,
+    );
+
+    return Array.from({ length: rowCount }, (_, index) => ({
+        col7: lpsbColumn7AnswerRows.value[index],
+        col8: lpsbColumn8AnswerRows.value[index],
+        col9: lpsbColumn9AnswerRows.value[index],
+        col10: lpsbColumn10AnswerRows.value[index],
+        col11: lpsbColumn11AnswerRows.value[index],
+    }));
+});
+
+const lpsbAnswerPageThreeRows = computed(() => {
+    const rowCount = Math.max(lpsbColumn12AnswerRows.value.length, lpsbSequenceAnswerRows.value.length);
+
+    return Array.from({ length: rowCount }, (_, index) => ({
+        col12: lpsbColumn12AnswerRows.value[index],
+        col13: lpsbSequenceAnswerRows.value[index],
+        col14: lpsbSequenceAnswerRows.value[index],
+    }));
+});
+
 function scorePage11Column(columnKey: keyof LpsPage11Solution) {
     return page11.value.reduce(
         (totals, response, idx) => {
@@ -760,7 +789,7 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
 
 <template>
     <div class="space-y-6">
-        <div v-if="!isLpsB" class="rounded-lg border bg-background">
+        <div v-if="!answersOnly && !isLpsB" class="rounded-lg border bg-background">
             <div class="border-b px-4 py-3 text-base font-semibold">{{ testLabel }} – Seite 1</div>
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[960px] border-collapse text-sm">
@@ -832,12 +861,12 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
             </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+        <div v-if="!answersOnly" class="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             <div>Benötigte Zeit: {{ formatTime(totalTime) }}</div>
         </div>
 
         <div v-if="isLpsB" class="lpsb-export-card space-y-4 rounded-lg border bg-background p-4">
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div v-if="!answersOnly" class="flex flex-wrap items-center justify-between gap-3">
                 <h3 class="text-base font-semibold">LPS-B Auswertung</h3>
                 <div class="text-sm text-muted-foreground">
                     Altersgruppe: <span class="font-semibold text-foreground">{{ ageGroupLabel }}</span>
@@ -845,7 +874,7 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
                 </div>
             </div>
 
-            <div v-if="showManualColumn6Editor" class="flex flex-wrap items-center gap-3 text-sm">
+            <div v-if="!answersOnly && showManualColumn6Editor" class="flex flex-wrap items-center gap-3 text-sm">
                 <label class="flex items-center gap-2">
                     <span class="text-muted-foreground">
                         Spalte 6 (manuell) <span class="lpsb-answer-score">{{ columnScores.col6 }}</span>
@@ -865,7 +894,7 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
                 <span class="text-xs text-muted-foreground"> Tragen Sie den Wert aus der Ergebnisansicht für Spalte 6 ein. </span>
             </div>
 
-            <div class="lpsb-export-layout">
+            <div v-if="!answersOnly" class="lpsb-export-layout">
                 <div class="lpsb-chart-panel overflow-x-auto">
                     <div class="lpsb-top" :style="{ width: `${lpsbTopWidth + 24}px` }">
                         <svg xmlns="http://www.w3.org/2000/svg" class="lpsb-svg" viewBox="0 0 790 332">
@@ -992,13 +1021,20 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
                 </aside>
             </div>
 
-            <details v-if="showAnswers" class="mt-4">
+            <details v-if="showAnswers" :open="answersOnly" class="mt-4">
                 <summary class="cursor-pointer">Antworten anzeigen</summary>
                 <div class="mt-3 space-y-5">
-                    <section class="lpsb-answer-section">
+                    <section
+                        class="lpsb-answer-section"
+                        :class="{ 'lpsb-answer-page lpsb-answer-page--five-columns': answersOnly }"
+                        :data-lpsb-answer-page="answersOnly ? '1-5' : undefined"
+                    >
                         <h4 class="lpsb-answer-heading">Spalten 1-5</h4>
                         <div class="overflow-x-auto">
-                            <table class="w-full min-w-[940px] border-collapse border border-gray-300 text-sm">
+                            <table
+                                class="w-full min-w-[940px] border-collapse border border-gray-300 text-sm"
+                                :class="{ 'lpsb-five-column-table': answersOnly }"
+                            >
                                 <thead>
                                     <tr class="bg-gray-100">
                                         <th class="border border-gray-300 p-2 text-left">
@@ -1106,276 +1142,482 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
                         </div>
                     </section>
 
-                    <section v-if="lpsbColumn7AnswerRows.length" class="lpsb-answer-section">
-                        <h4 class="lpsb-answer-heading">
-                            Spalte 7 <span class="lpsb-answer-score">{{ columnScores.col7 }}</span>
-                        </h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full min-w-[620px] border-collapse border border-gray-300 text-sm">
-                                <thead>
-                                    <tr class="bg-gray-100">
-                                        <th class="border border-gray-300 p-2 text-left">Aufgabe</th>
-                                        <th class="border border-gray-300 p-2 text-left">Antwort</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="row in lpsbColumn7AnswerRows" :key="`lpsb-col7-${row.number}`">
-                                        <td class="border border-gray-300 p-2 align-top">{{ row.number }}</td>
-                                        <td class="border border-gray-300 p-2 align-top">
-                                            <svg
-                                                v-if="row.col7Options.length && row.col7SvgMeta"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                class="lpsb-answer-shapes"
-                                                :viewBox="row.col7SvgMeta.viewBox"
-                                                :aria-label="`Spalte 7 Antwort Aufgabe ${row.number}`"
-                                            >
-                                                <g
-                                                    v-for="(option, optionIdx) in row.col7Options"
-                                                    :key="`${row.number}-col7-${option.id}`"
-                                                    :transform="option.transform"
-                                                >
-                                                    <path
-                                                        v-if="option.pathData"
-                                                        :d="option.pathData"
-                                                        :class="[
-                                                            'lpsb-answer-shape',
-                                                            selectedShapeClass(
-                                                                row.col7Picks?.[optionIdx],
-                                                                row.col7CorrectIndices.includes(optionIdx),
-                                                            ),
-                                                        ]"
-                                                    />
-                                                </g>
-                                            </svg>
-                                            <span v-else class="text-muted-foreground">-</span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
+                    <template v-if="answersOnly">
+                        <section
+                            v-if="lpsbAnswerPageTwoRows.length"
+                            class="lpsb-answer-section lpsb-answer-page lpsb-answer-page--five-columns lpsb-answer-page--compact-svgs"
+                            data-lpsb-answer-page="7-11"
+                        >
+                            <div class="overflow-x-auto">
+                                <table class="lpsb-five-column-table w-full border-collapse border border-gray-300">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 p-2 text-left">
+                                                Spalte 7 <span class="lpsb-answer-score">{{ columnScores.col7 }}</span>
+                                            </th>
+                                            <th class="border border-gray-300 p-2 text-left">
+                                                Spalte 8 <span class="lpsb-answer-score">{{ columnScores.col8 }}</span>
+                                            </th>
+                                            <th class="border border-gray-300 p-2 text-left">
+                                                Spalte 9 <span class="lpsb-answer-score">{{ columnScores.col9 }}</span>
+                                            </th>
+                                            <th class="border border-gray-300 p-2 text-left">
+                                                Spalte 10 <span class="lpsb-answer-score">{{ columnScores.col10 }}</span>
+                                            </th>
+                                            <th class="border border-gray-300 p-2 text-left">
+                                                Spalte 11 <span class="lpsb-answer-score">{{ columnScores.col11 }}</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="(answerRow, rowIndex) in lpsbAnswerPageTwoRows" :key="`lpsb-page-two-${rowIndex}`">
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <template v-if="answerRow.col7">
+                                                    <div class="lpsb-answer-number">{{ answerRow.col7.number }}</div>
+                                                    <svg
+                                                        v-if="answerRow.col7.col7Options.length && answerRow.col7.col7SvgMeta"
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        class="lpsb-answer-shapes"
+                                                        :viewBox="answerRow.col7.col7SvgMeta.viewBox"
+                                                        :aria-label="`Spalte 7 Antwort Aufgabe ${answerRow.col7.number}`"
+                                                    >
+                                                        <g
+                                                            v-for="(option, optionIdx) in answerRow.col7.col7Options"
+                                                            :key="`${answerRow.col7.number}-col7-print-${option.id}`"
+                                                            :transform="option.transform"
+                                                        >
+                                                            <path
+                                                                v-if="option.pathData"
+                                                                :d="option.pathData"
+                                                                :class="[
+                                                                    'lpsb-answer-shape',
+                                                                    selectedShapeClass(
+                                                                        answerRow.col7.col7Picks?.[optionIdx],
+                                                                        answerRow.col7.col7CorrectIndices.includes(optionIdx),
+                                                                    ),
+                                                                ]"
+                                                            />
+                                                        </g>
+                                                    </svg>
+                                                </template>
+                                            </td>
+                                            <td class="lpsb-answer-cell--col8 border border-gray-300 p-2 align-top">
+                                                <template v-if="answerRow.col8">
+                                                    <div class="lpsb-answer-number">{{ answerRow.col8.number }}</div>
+                                                    <div v-if="answerRow.col8.svg" class="lpsb-answer-large-svg" v-html="answerRow.col8.svg"></div>
+                                                    <div class="lpsb-answer-choice-list">
+                                                        <span
+                                                            v-for="(option, optionIdx) in answerRow.col8.options"
+                                                            :key="`col8-print-${answerRow.col8.number}-${optionIdx}`"
+                                                            :class="['lpsb-answer-choice', selectedChoiceClass(option)]"
+                                                            >{{ option.label }}</span
+                                                        >
+                                                    </div>
+                                                </template>
+                                            </td>
+                                            <td class="lpsb-answer-cell--col9 border border-gray-300 p-2 align-top">
+                                                <template v-if="answerRow.col9">
+                                                    <div class="lpsb-answer-number">{{ answerRow.col9.number }}</div>
+                                                    <div
+                                                        v-if="answerRow.col9.promptSvg"
+                                                        class="lpsb-answer-prompt-svg"
+                                                        v-html="answerRow.col9.promptSvg"
+                                                    ></div>
+                                                    <div class="lpsb-answer-choice-list">
+                                                        <span
+                                                            v-for="(option, optionIdx) in answerRow.col9.options"
+                                                            :key="`col9-print-${answerRow.col9.number}-${optionIdx}`"
+                                                            :class="['lpsb-answer-choice', selectedChoiceClass(option)]"
+                                                            >{{ option.label }}</span
+                                                        >
+                                                    </div>
+                                                </template>
+                                            </td>
+                                            <td class="lpsb-answer-cell--col10 border border-gray-300 p-2 align-top">
+                                                <template v-if="answerRow.col10">
+                                                    <div class="lpsb-answer-number">{{ answerRow.col10.number }}</div>
+                                                    <div
+                                                        v-if="answerRow.col10.promptSvg"
+                                                        class="lpsb-answer-prompt-svg"
+                                                        v-html="answerRow.col10.promptSvg"
+                                                    ></div>
+                                                    <div class="lpsb-answer-svg-options">
+                                                        <span
+                                                            v-for="option in answerRow.col10.options"
+                                                            :key="`col10-print-${answerRow.col10.number}-${option.id}`"
+                                                            :class="['lpsb-answer-svg-option', selectedChoiceClass(option)]"
+                                                        >
+                                                            <span v-html="option.svg"></span>
+                                                        </span>
+                                                    </div>
+                                                </template>
+                                            </td>
+                                            <td class="lpsb-answer-cell--col11 border border-gray-300 p-2 align-top">
+                                                <template v-if="answerRow.col11">
+                                                    <div class="lpsb-answer-number">{{ answerRow.col11.number }}</div>
+                                                    <div
+                                                        v-if="answerRow.col11.promptSvg"
+                                                        class="lpsb-answer-prompt-svg"
+                                                        v-html="answerRow.col11.promptSvg"
+                                                    ></div>
+                                                    <div class="lpsb-answer-choice-list">
+                                                        <span
+                                                            v-for="(option, optionIdx) in answerRow.col11.options"
+                                                            :key="`col11-print-${answerRow.col11.number}-${optionIdx}`"
+                                                            :class="['lpsb-answer-choice', selectedChoiceClass(option)]"
+                                                            >{{ option.label }}</span
+                                                        >
+                                                    </div>
+                                                </template>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
 
-                    <section v-if="lpsbColumn8AnswerRows.length" class="lpsb-answer-section">
-                        <h4 class="lpsb-answer-heading">
-                            Spalte 8 <span class="lpsb-answer-score">{{ columnScores.col8 }}</span>
-                        </h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full min-w-[760px] border-collapse border border-gray-300 text-sm">
-                                <thead>
-                                    <tr class="bg-gray-100">
-                                        <th class="border border-gray-300 p-2 text-left">Aufgabe</th>
-                                        <th class="border border-gray-300 p-2 text-left">Vorlage</th>
-                                        <th class="border border-gray-300 p-2 text-left">Auswahl</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="row in lpsbColumn8AnswerRows" :key="`lpsb-col8-${row.number}`">
-                                        <td class="border border-gray-300 p-2 align-top">{{ row.number }}</td>
-                                        <td class="border border-gray-300 p-2 align-top">
-                                            <div v-if="row.svg" class="lpsb-answer-large-svg" v-html="row.svg"></div>
-                                            <span v-else class="text-muted-foreground">-</span>
-                                        </td>
-                                        <td class="border border-gray-300 p-2 align-top">
-                                            <div class="lpsb-answer-choice-list">
-                                                <span
-                                                    v-for="(option, optionIdx) in row.options"
-                                                    :key="`col8-${row.number}-${optionIdx}`"
-                                                    :class="['lpsb-answer-choice', selectedChoiceClass(option)]"
-                                                    >{{ option.label }}</span
-                                                >
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
+                        <section
+                            v-if="lpsbAnswerPageThreeRows.length"
+                            class="lpsb-answer-section lpsb-answer-page lpsb-answer-page--three-columns"
+                            data-lpsb-answer-page="12-14"
+                        >
+                            <div class="overflow-x-auto">
+                                <table class="lpsb-three-column-table w-full border-collapse border border-gray-300">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 p-2 text-left">
+                                                Spalte 12 <span class="lpsb-answer-score">{{ columnScores.col12 }}</span>
+                                            </th>
+                                            <th class="border border-gray-300 p-2 text-left">
+                                                Spalte 13 <span class="lpsb-answer-score">{{ columnScores.col13 }}</span>
+                                                <span class="lpsb-answer-wrong-score">{{ columnScores.col13Wrong }}</span>
+                                            </th>
+                                            <th class="border border-gray-300 p-2 text-left">
+                                                Spalte 14 <span class="lpsb-answer-score">{{ columnScores.col14 }}</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="(answerRow, rowIndex) in lpsbAnswerPageThreeRows" :key="`lpsb-page-three-${rowIndex}`">
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <template v-if="answerRow.col12">
+                                                    <div class="lpsb-answer-number">{{ answerRow.col12.number }}</div>
+                                                    <div class="lpsb-answer-svg-options lpsb-answer-row-content">
+                                                        <span
+                                                            v-for="option in answerRow.col12.options"
+                                                            :key="`col12-print-${answerRow.col12.number}-${option.id}`"
+                                                            :class="['lpsb-answer-svg-option', selectedChoiceClass(option)]"
+                                                        >
+                                                            <span v-html="option.svg"></span>
+                                                        </span>
+                                                    </div>
+                                                </template>
+                                            </td>
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <template v-if="answerRow.col13">
+                                                    <div class="lpsb-answer-number">{{ answerRow.col13.number }}</div>
+                                                    <div class="lpsb-answer-choice-list lpsb-answer-row-content">
+                                                        <span
+                                                            v-for="(token, tokenIdx) in answerRow.col13.col13Tokens"
+                                                            :key="`col13-print-${answerRow.col13.number}-${tokenIdx}`"
+                                                            :class="['lpsb-answer-choice lpsb-answer-choice--mono', selectedChoiceClass(token)]"
+                                                            >{{ token.label }}</span
+                                                        >
+                                                    </div>
+                                                </template>
+                                            </td>
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <template v-if="answerRow.col14">
+                                                    <div class="lpsb-answer-number">{{ answerRow.col14.number }}</div>
+                                                    <div class="lpsb-answer-choice-list lpsb-answer-row-content">
+                                                        <span
+                                                            v-for="(token, tokenIdx) in answerRow.col14.col14Tokens"
+                                                            :key="`col14-print-${answerRow.col14.number}-${tokenIdx}`"
+                                                            :class="['lpsb-answer-choice lpsb-answer-choice--mono', selectedChoiceClass(token)]"
+                                                            >{{ token.label }}</span
+                                                        >
+                                                    </div>
+                                                </template>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </template>
 
-                    <section v-if="lpsbColumn9AnswerRows.length" class="lpsb-answer-section">
-                        <h4 class="lpsb-answer-heading">
-                            Spalte 9 <span class="lpsb-answer-score">{{ columnScores.col9 }}</span>
-                        </h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full min-w-[760px] border-collapse border border-gray-300 text-sm">
-                                <thead>
-                                    <tr class="bg-gray-100">
-                                        <th class="border border-gray-300 p-2 text-left">Aufgabe</th>
-                                        <th class="border border-gray-300 p-2 text-left">Vorlage</th>
-                                        <th class="border border-gray-300 p-2 text-left">Auswahl</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="row in lpsbColumn9AnswerRows" :key="`lpsb-col9-${row.number}`">
-                                        <td class="border border-gray-300 p-2 align-top">{{ row.number }}</td>
-                                        <td class="border border-gray-300 p-2 align-top">
-                                            <div v-if="row.promptSvg" class="lpsb-answer-prompt-svg" v-html="row.promptSvg"></div>
-                                            <span v-else class="text-muted-foreground">-</span>
-                                        </td>
-                                        <td class="border border-gray-300 p-2 align-top">
-                                            <div class="lpsb-answer-choice-list">
-                                                <span
-                                                    v-for="(option, optionIdx) in row.options"
-                                                    :key="`col9-${row.number}-${optionIdx}`"
-                                                    :class="['lpsb-answer-choice', selectedChoiceClass(option)]"
-                                                    >{{ option.label }}</span
+                    <template v-else>
+                        <section v-if="lpsbColumn7AnswerRows.length" class="lpsb-answer-section">
+                            <h4 class="lpsb-answer-heading">
+                                Spalte 7 <span class="lpsb-answer-score">{{ columnScores.col7 }}</span>
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full min-w-[620px] border-collapse border border-gray-300 text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 p-2 text-left">Aufgabe</th>
+                                            <th class="border border-gray-300 p-2 text-left">Antwort</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="row in lpsbColumn7AnswerRows" :key="`lpsb-col7-${row.number}`">
+                                            <td class="border border-gray-300 p-2 align-top">{{ row.number }}</td>
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <svg
+                                                    v-if="row.col7Options.length && row.col7SvgMeta"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    class="lpsb-answer-shapes"
+                                                    :viewBox="row.col7SvgMeta.viewBox"
+                                                    :aria-label="`Spalte 7 Antwort Aufgabe ${row.number}`"
                                                 >
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
+                                                    <g
+                                                        v-for="(option, optionIdx) in row.col7Options"
+                                                        :key="`${row.number}-col7-${option.id}`"
+                                                        :transform="option.transform"
+                                                    >
+                                                        <path
+                                                            v-if="option.pathData"
+                                                            :d="option.pathData"
+                                                            :class="[
+                                                                'lpsb-answer-shape',
+                                                                selectedShapeClass(
+                                                                    row.col7Picks?.[optionIdx],
+                                                                    row.col7CorrectIndices.includes(optionIdx),
+                                                                ),
+                                                            ]"
+                                                        />
+                                                    </g>
+                                                </svg>
+                                                <span v-else class="text-muted-foreground">-</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
 
-                    <section v-if="lpsbColumn10AnswerRows.length" class="lpsb-answer-section">
-                        <h4 class="lpsb-answer-heading">
-                            Spalte 10 <span class="lpsb-answer-score">{{ columnScores.col10 }}</span>
-                        </h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full min-w-[860px] border-collapse border border-gray-300 text-sm">
-                                <thead>
-                                    <tr class="bg-gray-100">
-                                        <th class="border border-gray-300 p-2 text-left">Aufgabe</th>
-                                        <th class="border border-gray-300 p-2 text-left">Vorlage</th>
-                                        <th class="border border-gray-300 p-2 text-left">Auswahl</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="row in lpsbColumn10AnswerRows" :key="`lpsb-col10-${row.number}`">
-                                        <td class="border border-gray-300 p-2 align-top">{{ row.number }}</td>
-                                        <td class="border border-gray-300 p-2 align-top">
-                                            <div v-if="row.promptSvg" class="lpsb-answer-prompt-svg" v-html="row.promptSvg"></div>
-                                            <span v-else class="text-muted-foreground">-</span>
-                                        </td>
-                                        <td class="border border-gray-300 p-2 align-top">
-                                            <div class="lpsb-answer-svg-options">
-                                                <span
-                                                    v-for="option in row.options"
-                                                    :key="`col10-${row.number}-${option.id}`"
-                                                    :class="['lpsb-answer-svg-option', selectedChoiceClass(option)]"
-                                                >
-                                                    <span v-html="option.svg"></span>
-                                                </span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
+                        <section v-if="lpsbColumn8AnswerRows.length" class="lpsb-answer-section">
+                            <h4 class="lpsb-answer-heading">
+                                Spalte 8 <span class="lpsb-answer-score">{{ columnScores.col8 }}</span>
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full min-w-[760px] border-collapse border border-gray-300 text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 p-2 text-left">Aufgabe</th>
+                                            <th class="border border-gray-300 p-2 text-left">Vorlage</th>
+                                            <th class="border border-gray-300 p-2 text-left">Auswahl</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="row in lpsbColumn8AnswerRows" :key="`lpsb-col8-${row.number}`">
+                                            <td class="border border-gray-300 p-2 align-top">{{ row.number }}</td>
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <div v-if="row.svg" class="lpsb-answer-large-svg" v-html="row.svg"></div>
+                                                <span v-else class="text-muted-foreground">-</span>
+                                            </td>
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <div class="lpsb-answer-choice-list">
+                                                    <span
+                                                        v-for="(option, optionIdx) in row.options"
+                                                        :key="`col8-${row.number}-${optionIdx}`"
+                                                        :class="['lpsb-answer-choice', selectedChoiceClass(option)]"
+                                                        >{{ option.label }}</span
+                                                    >
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
 
-                    <section v-if="lpsbColumn11AnswerRows.length" class="lpsb-answer-section">
-                        <h4 class="lpsb-answer-heading">
-                            Spalte 11 <span class="lpsb-answer-score">{{ columnScores.col11 }}</span>
-                        </h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full min-w-[760px] border-collapse border border-gray-300 text-sm">
-                                <thead>
-                                    <tr class="bg-gray-100">
-                                        <th class="border border-gray-300 p-2 text-left">Aufgabe</th>
-                                        <th class="border border-gray-300 p-2 text-left">Vorlage</th>
-                                        <th class="border border-gray-300 p-2 text-left">Auswahl</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="row in lpsbColumn11AnswerRows" :key="`lpsb-col11-${row.number}`">
-                                        <td class="border border-gray-300 p-2 align-top">{{ row.number }}</td>
-                                        <td class="border border-gray-300 p-2 align-top">
-                                            <div v-if="row.promptSvg" class="lpsb-answer-prompt-svg" v-html="row.promptSvg"></div>
-                                            <span v-else class="text-muted-foreground">-</span>
-                                        </td>
-                                        <td class="border border-gray-300 p-2 align-top">
-                                            <div class="lpsb-answer-choice-list">
-                                                <span
-                                                    v-for="(option, optionIdx) in row.options"
-                                                    :key="`col11-${row.number}-${optionIdx}`"
-                                                    :class="['lpsb-answer-choice', selectedChoiceClass(option)]"
-                                                    >{{ option.label }}</span
-                                                >
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
+                        <section v-if="lpsbColumn9AnswerRows.length" class="lpsb-answer-section">
+                            <h4 class="lpsb-answer-heading">
+                                Spalte 9 <span class="lpsb-answer-score">{{ columnScores.col9 }}</span>
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full min-w-[760px] border-collapse border border-gray-300 text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 p-2 text-left">Aufgabe</th>
+                                            <th class="border border-gray-300 p-2 text-left">Vorlage</th>
+                                            <th class="border border-gray-300 p-2 text-left">Auswahl</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="row in lpsbColumn9AnswerRows" :key="`lpsb-col9-${row.number}`">
+                                            <td class="border border-gray-300 p-2 align-top">{{ row.number }}</td>
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <div v-if="row.promptSvg" class="lpsb-answer-prompt-svg" v-html="row.promptSvg"></div>
+                                                <span v-else class="text-muted-foreground">-</span>
+                                            </td>
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <div class="lpsb-answer-choice-list">
+                                                    <span
+                                                        v-for="(option, optionIdx) in row.options"
+                                                        :key="`col9-${row.number}-${optionIdx}`"
+                                                        :class="['lpsb-answer-choice', selectedChoiceClass(option)]"
+                                                        >{{ option.label }}</span
+                                                    >
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
 
-                    <section v-if="lpsbColumn12AnswerRows.length" class="lpsb-answer-section">
-                        <h4 class="lpsb-answer-heading">
-                            Spalte 12 <span class="lpsb-answer-score">{{ columnScores.col12 }}</span>
-                        </h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full min-w-[760px] border-collapse border border-gray-300 text-sm">
-                                <thead>
-                                    <tr class="bg-gray-100">
-                                        <th class="border border-gray-300 p-2 text-left">Aufgabe</th>
-                                        <th class="border border-gray-300 p-2 text-left">Auswahl</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="row in lpsbColumn12AnswerRows" :key="`lpsb-col12-${row.number}`">
-                                        <td class="border border-gray-300 p-2 align-top">{{ row.number }}</td>
-                                        <td class="border border-gray-300 p-2 align-top">
-                                            <div class="lpsb-answer-svg-options">
-                                                <span
-                                                    v-for="option in row.options"
-                                                    :key="`col12-${row.number}-${option.id}`"
-                                                    :class="['lpsb-answer-svg-option', selectedChoiceClass(option)]"
-                                                >
-                                                    <span v-html="option.svg"></span>
-                                                </span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
+                        <section v-if="lpsbColumn10AnswerRows.length" class="lpsb-answer-section">
+                            <h4 class="lpsb-answer-heading">
+                                Spalte 10 <span class="lpsb-answer-score">{{ columnScores.col10 }}</span>
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full min-w-[860px] border-collapse border border-gray-300 text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 p-2 text-left">Aufgabe</th>
+                                            <th class="border border-gray-300 p-2 text-left">Vorlage</th>
+                                            <th class="border border-gray-300 p-2 text-left">Auswahl</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="row in lpsbColumn10AnswerRows" :key="`lpsb-col10-${row.number}`">
+                                            <td class="border border-gray-300 p-2 align-top">{{ row.number }}</td>
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <div v-if="row.promptSvg" class="lpsb-answer-prompt-svg" v-html="row.promptSvg"></div>
+                                                <span v-else class="text-muted-foreground">-</span>
+                                            </td>
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <div class="lpsb-answer-svg-options">
+                                                    <span
+                                                        v-for="option in row.options"
+                                                        :key="`col10-${row.number}-${option.id}`"
+                                                        :class="['lpsb-answer-svg-option', selectedChoiceClass(option)]"
+                                                    >
+                                                        <span v-html="option.svg"></span>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
 
-                    <section v-if="lpsbSequenceAnswerRows.length" class="lpsb-answer-section">
-                        <h4 class="lpsb-answer-heading">Spalten 13-14</h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full min-w-[760px] border-collapse border border-gray-300 text-sm">
-                                <thead>
-                                    <tr class="bg-gray-100">
-                                        <th class="border border-gray-300 p-2 text-left">Aufgabe</th>
-                                        <th class="border border-gray-300 p-2 text-left">
-                                            Spalte 13 <span class="lpsb-answer-score">{{ columnScores.col13 }}</span>
-                                            <span class="lpsb-answer-wrong-score">{{ columnScores.col13Wrong }}</span>
-                                        </th>
-                                        <th class="border border-gray-300 p-2 text-left">
-                                            Spalte 14 <span class="lpsb-answer-score">{{ columnScores.col14 }}</span>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="row in lpsbSequenceAnswerRows" :key="`lpsb-sequence-${row.number}`">
-                                        <td class="border border-gray-300 p-2 align-top">{{ row.number }}</td>
-                                        <td class="border border-gray-300 p-2 align-top">
-                                            <div class="lpsb-answer-choice-list">
-                                                <span
-                                                    v-for="(token, tokenIdx) in row.col13Tokens"
-                                                    :key="`col13-${row.number}-${tokenIdx}`"
-                                                    :class="['lpsb-answer-choice lpsb-answer-choice--mono', selectedChoiceClass(token)]"
-                                                    >{{ token.label }}</span
-                                                >
-                                            </div>
-                                        </td>
-                                        <td class="border border-gray-300 p-2 align-top">
-                                            <div class="lpsb-answer-choice-list">
-                                                <span
-                                                    v-for="(token, tokenIdx) in row.col14Tokens"
-                                                    :key="`col14-${row.number}-${tokenIdx}`"
-                                                    :class="['lpsb-answer-choice lpsb-answer-choice--mono', selectedChoiceClass(token)]"
-                                                    >{{ token.label }}</span
-                                                >
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
+                        <section v-if="lpsbColumn11AnswerRows.length" class="lpsb-answer-section">
+                            <h4 class="lpsb-answer-heading">
+                                Spalte 11 <span class="lpsb-answer-score">{{ columnScores.col11 }}</span>
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full min-w-[760px] border-collapse border border-gray-300 text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 p-2 text-left">Aufgabe</th>
+                                            <th class="border border-gray-300 p-2 text-left">Vorlage</th>
+                                            <th class="border border-gray-300 p-2 text-left">Auswahl</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="row in lpsbColumn11AnswerRows" :key="`lpsb-col11-${row.number}`">
+                                            <td class="border border-gray-300 p-2 align-top">{{ row.number }}</td>
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <div v-if="row.promptSvg" class="lpsb-answer-prompt-svg" v-html="row.promptSvg"></div>
+                                                <span v-else class="text-muted-foreground">-</span>
+                                            </td>
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <div class="lpsb-answer-choice-list">
+                                                    <span
+                                                        v-for="(option, optionIdx) in row.options"
+                                                        :key="`col11-${row.number}-${optionIdx}`"
+                                                        :class="['lpsb-answer-choice', selectedChoiceClass(option)]"
+                                                        >{{ option.label }}</span
+                                                    >
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+
+                        <section v-if="lpsbColumn12AnswerRows.length" class="lpsb-answer-section">
+                            <h4 class="lpsb-answer-heading">
+                                Spalte 12 <span class="lpsb-answer-score">{{ columnScores.col12 }}</span>
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full min-w-[760px] border-collapse border border-gray-300 text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 p-2 text-left">Aufgabe</th>
+                                            <th class="border border-gray-300 p-2 text-left">Auswahl</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="row in lpsbColumn12AnswerRows" :key="`lpsb-col12-${row.number}`">
+                                            <td class="border border-gray-300 p-2 align-top">{{ row.number }}</td>
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <div class="lpsb-answer-svg-options">
+                                                    <span
+                                                        v-for="option in row.options"
+                                                        :key="`col12-${row.number}-${option.id}`"
+                                                        :class="['lpsb-answer-svg-option', selectedChoiceClass(option)]"
+                                                    >
+                                                        <span v-html="option.svg"></span>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+
+                        <section v-if="lpsbSequenceAnswerRows.length" class="lpsb-answer-section">
+                            <h4 class="lpsb-answer-heading">Spalten 13-14</h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full min-w-[760px] border-collapse border border-gray-300 text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 p-2 text-left">Aufgabe</th>
+                                            <th class="border border-gray-300 p-2 text-left">
+                                                Spalte 13 <span class="lpsb-answer-score">{{ columnScores.col13 }}</span>
+                                                <span class="lpsb-answer-wrong-score">{{ columnScores.col13Wrong }}</span>
+                                            </th>
+                                            <th class="border border-gray-300 p-2 text-left">
+                                                Spalte 14 <span class="lpsb-answer-score">{{ columnScores.col14 }}</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="row in lpsbSequenceAnswerRows" :key="`lpsb-sequence-${row.number}`">
+                                            <td class="border border-gray-300 p-2 align-top">{{ row.number }}</td>
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <div class="lpsb-answer-choice-list">
+                                                    <span
+                                                        v-for="(token, tokenIdx) in row.col13Tokens"
+                                                        :key="`col13-${row.number}-${tokenIdx}`"
+                                                        :class="['lpsb-answer-choice lpsb-answer-choice--mono', selectedChoiceClass(token)]"
+                                                        >{{ token.label }}</span
+                                                    >
+                                                </div>
+                                            </td>
+                                            <td class="border border-gray-300 p-2 align-top">
+                                                <div class="lpsb-answer-choice-list">
+                                                    <span
+                                                        v-for="(token, tokenIdx) in row.col14Tokens"
+                                                        :key="`col14-${row.number}-${tokenIdx}`"
+                                                        :class="['lpsb-answer-choice lpsb-answer-choice--mono', selectedChoiceClass(token)]"
+                                                        >{{ token.label }}</span
+                                                    >
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </template>
                 </div>
             </details>
         </div>
@@ -1578,6 +1820,133 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
     font-weight: 700;
 }
 
+.lpsb-five-column-table {
+    width: 100%;
+    table-layout: fixed;
+    font-size: 9px;
+    line-height: 1.15;
+}
+
+.lpsb-five-column-table th,
+.lpsb-five-column-table td {
+    width: 20%;
+    padding: 3px;
+    overflow-wrap: anywhere;
+}
+
+.lpsb-three-column-table {
+    width: 100%;
+    table-layout: fixed;
+    font-size: 9px;
+    line-height: 1.15;
+}
+
+.lpsb-three-column-table th,
+.lpsb-three-column-table td {
+    width: 33.333%;
+    padding: 4px;
+    overflow-wrap: anywhere;
+}
+
+.lpsb-answer-number {
+    margin-bottom: 2px;
+    color: #4b5563;
+    font-size: 8px;
+    font-weight: 700;
+}
+
+.lpsb-five-column-table .lpsb-answer-shapes {
+    width: 100%;
+    max-height: 42px;
+}
+
+.lpsb-five-column-table .lpsb-answer-large-svg,
+.lpsb-five-column-table .lpsb-answer-prompt-svg {
+    width: 100%;
+    max-width: 100%;
+    max-height: 42px;
+}
+
+.lpsb-answer-page--compact-svgs .lpsb-answer-large-svg,
+.lpsb-answer-page--compact-svgs .lpsb-answer-prompt-svg {
+    display: flex;
+    width: 100%;
+    height: 28px;
+    max-height: 28px;
+    align-items: center;
+    justify-content: center;
+}
+
+.lpsb-answer-page--compact-svgs .lpsb-answer-large-svg :deep(svg),
+.lpsb-answer-page--compact-svgs .lpsb-answer-prompt-svg :deep(svg) {
+    display: block;
+    width: auto !important;
+    max-width: 100% !important;
+    height: 26px !important;
+    max-height: 26px !important;
+}
+
+.lpsb-answer-page--compact-svgs .lpsb-five-column-table .lpsb-answer-svg-option {
+    width: 19px;
+    height: 19px;
+    padding: 1px;
+}
+
+.lpsb-answer-page--compact-svgs .lpsb-five-column-table .lpsb-answer-choice {
+    min-width: 14px;
+    min-height: 14px;
+    padding: 0 2px;
+    font-size: 7px;
+}
+
+.lpsb-answer-page--compact-svgs .lpsb-five-column-table .lpsb-answer-choice-list,
+.lpsb-answer-page--compact-svgs .lpsb-five-column-table .lpsb-answer-svg-options {
+    gap: 1px;
+}
+
+.lpsb-five-column-table .lpsb-answer-choice-list,
+.lpsb-five-column-table .lpsb-answer-svg-options {
+    gap: 2px;
+}
+
+.lpsb-five-column-table .lpsb-answer-choice {
+    min-width: 16px;
+    min-height: 16px;
+    border-radius: 2px;
+    padding: 1px 3px;
+    font-size: 8px;
+}
+
+.lpsb-five-column-table .lpsb-answer-svg-option {
+    width: 24px;
+    height: 24px;
+    border-radius: 2px;
+    padding: 2px;
+}
+
+.lpsb-three-column-table .lpsb-answer-row-content {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 2px;
+    white-space: nowrap;
+}
+
+.lpsb-three-column-table .lpsb-answer-choice {
+    min-width: 17px;
+    min-height: 17px;
+    border-radius: 2px;
+    padding: 1px 3px;
+    font-size: 8px;
+}
+
+.lpsb-three-column-table .lpsb-answer-svg-option {
+    width: 25px;
+    height: 25px;
+    flex: 0 0 25px;
+    border-radius: 2px;
+    padding: 2px;
+}
+
 .lpsb-answer-score {
     margin-left: 6px;
     color: #16a34a;
@@ -1734,6 +2103,22 @@ const lpsbDividerKeys = new Set<LpsbRowKey>([
     .lpsb-export-layout {
         flex-wrap: nowrap;
         gap: 10px;
+    }
+
+    .lpsb-answer-page + .lpsb-answer-page {
+        break-before: page;
+        page-break-before: always;
+    }
+
+    .lpsb-five-column-table thead,
+    .lpsb-three-column-table thead {
+        display: table-header-group;
+    }
+
+    .lpsb-five-column-table tr,
+    .lpsb-three-column-table tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
     }
 }
 </style>

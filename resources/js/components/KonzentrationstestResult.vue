@@ -6,10 +6,12 @@ const props = withDefaults(
         results: any;
         showAnswers?: boolean;
         pdfMode?: boolean;
+        answersOnly?: boolean;
     }>(),
     {
         showAnswers: true,
         pdfMode: false,
+        answersOnly: false,
     },
 );
 
@@ -70,8 +72,8 @@ const detailRows = computed(() => {
 
 <template>
     <div class="konz-result rounded-lg border bg-background p-6" :class="{ 'konz-result--pdf': props.pdfMode }">
-        <h2 v-if="!props.pdfMode" class="mb-4 text-xl font-semibold">628 Ergebnisse</h2>
-        <div class="konz-summary mb-6 w-full max-w-md">
+        <h2 v-if="!props.pdfMode && !props.answersOnly" class="mb-4 text-xl font-semibold">628 Ergebnisse</h2>
+        <div v-if="!props.answersOnly" class="konz-summary mb-6 w-full max-w-md">
             <table class="konz-summary-table w-full overflow-hidden rounded-lg border text-sm shadow">
                 <tbody>
                     <tr class="bg-muted/40">
@@ -90,7 +92,7 @@ const detailRows = computed(() => {
             </table>
         </div>
 
-        <div class="konz-page-breakdown mb-6 w-full max-w-4xl">
+        <div v-if="!props.answersOnly" class="konz-page-breakdown mb-6 w-full max-w-4xl">
             <h3 class="mb-2 font-bold">Falsche Antworten pro Seite</h3>
             <div class="overflow-x-auto">
                 <table class="konz-page-table min-w-full rounded-lg border text-sm shadow">
@@ -126,7 +128,7 @@ const detailRows = computed(() => {
             </div>
         </div>
 
-        <details v-if="props.showAnswers && !props.pdfMode && detailRows.length" class="mt-4">
+        <details v-if="props.showAnswers && (!props.pdfMode || props.answersOnly) && detailRows.length" :open="props.answersOnly" class="mt-4">
             <summary class="cursor-pointer">Antworten anzeigen</summary>
             <div class="mt-3 overflow-x-auto">
                 <table class="min-w-full rounded-lg border text-sm shadow">

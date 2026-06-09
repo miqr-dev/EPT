@@ -12,6 +12,7 @@ const props = withDefaults(
         missingAnswerCount?: number | null;
         showAnswers?: boolean;
         pdfMode?: boolean;
+        answersOnly?: boolean;
     }>(),
     {
         stanines: () => [],
@@ -19,6 +20,7 @@ const props = withDefaults(
         answers: () => [],
         showAnswers: true,
         pdfMode: false,
+        answersOnly: false,
     },
 );
 
@@ -210,7 +212,7 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value);
 </script>
 
 <template>
-    <div class="fpi-sheet" :class="{ 'fpi-sheet--pdf': props.pdfMode }">
+    <div v-if="!props.answersOnly" class="fpi-sheet" :class="{ 'fpi-sheet--pdf': props.pdfMode }">
         <div class="main-grid">
             <!-- Grid Headers -->
             <div class="header-cell rohwert-title">Rohwert</div>
@@ -340,21 +342,21 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value);
             <div class="footer-cell standardwert-cell">fehlende Antworten</div>
         </div>
     </div>
-    <details v-if="props.showAnswers && !props.pdfMode" class="mt-4">
+    <details v-if="props.showAnswers && (!props.pdfMode || props.answersOnly)" :open="props.answersOnly" class="mt-4">
         <summary class="cursor-pointer">Antworten anzeigen</summary>
-        <table class="w-full border-collapse border border-gray-300 text-sm">
+        <table class="fpi-answer-table w-full border-collapse border border-gray-300 text-sm">
             <thead>
                 <tr class="bg-gray-100">
-                    <th class="border border-gray-300 p-2">#</th>
-                    <th class="border border-gray-300 p-2">Frage</th>
-                    <th class="border border-gray-300 p-2">Ihre Antwort</th>
+                    <th class="fpi-col-number border border-gray-300 p-2">#</th>
+                    <th class="fpi-col-question border border-gray-300 p-2">Frage</th>
+                    <th class="fpi-col-answer border border-gray-300 p-2">Ihre Antwort</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="(answer, index) in normalizedAnswers" :key="index">
-                    <td class="border border-gray-300 p-2">{{ answer.number }}</td>
-                    <td class="border border-gray-300 p-2">{{ answer.question }}</td>
-                    <td class="border border-gray-300 p-2">{{ answer.user_answer }}</td>
+                    <td class="fpi-col-number border border-gray-300 p-2">{{ answer.number }}</td>
+                    <td class="fpi-col-question border border-gray-300 p-2">{{ answer.question }}</td>
+                    <td class="fpi-col-answer border border-gray-300 p-2">{{ answer.user_answer }}</td>
                 </tr>
             </tbody>
         </table>
@@ -362,6 +364,24 @@ const innerWidth = computed(() => innerRight.value - innerLeft.value);
 </template>
 
 <style scoped>
+.fpi-answer-table .fpi-col-number {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    max-width: 2.75rem;
+    box-sizing: border-box;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.fpi-answer-table .fpi-col-question {
+    width: 72%;
+}
+
+.fpi-answer-table .fpi-col-answer {
+    width: 27%;
+}
+
 /* =========================
    SVG overlay styling
    ========================= */

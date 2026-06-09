@@ -27,10 +27,12 @@ const props = withDefaults(
         participantProfile?: { age: number; sex?: string } | null;
         showAnswers?: boolean;
         pdfMode?: boolean;
+        answersOnly?: boolean;
     }>(),
     {
         showAnswers: true,
         pdfMode: false,
+        answersOnly: false,
     },
 );
 
@@ -143,7 +145,7 @@ const normalizedAnswers = computed(() => {
 </script>
 <template>
     <div v-if="props.results" class="bit2-result" :class="{ 'bit2-result--pdf': props.pdfMode }">
-        <div class="bit2-table-wrap overflow-x-auto">
+        <div v-if="!props.answersOnly" class="bit2-table-wrap overflow-x-auto">
             <!-- <table class="mb-4 w-full overflow-hidden rounded-lg border text-sm shadow">
       <thead class="bg-muted/40 dark:bg-gray-700">
         <tr>
@@ -212,21 +214,21 @@ const normalizedAnswers = computed(() => {
                 </tbody>
             </table>
         </div>
-        <details v-if="props.showAnswers && !props.pdfMode" class="mt-4">
+        <details v-if="props.showAnswers && (!props.pdfMode || props.answersOnly)" :open="props.answersOnly" class="mt-4">
             <summary class="cursor-pointer">Antworten anzeigen</summary>
-            <table class="w-full border-collapse border border-gray-300 text-sm">
+            <table class="bit2-answer-table w-full border-collapse border border-gray-300 text-sm">
                 <thead>
                     <tr class="bg-gray-100">
-                        <th class="border border-gray-300 p-2">#</th>
-                        <th class="border border-gray-300 p-2">Frage</th>
-                        <th class="border border-gray-300 p-2">Ihre Antwort</th>
+                        <th class="bit2-col-number border border-gray-300 p-2">#</th>
+                        <th class="bit2-col-question border border-gray-300 p-2">Frage</th>
+                        <th class="bit2-col-answer border border-gray-300 p-2">Ihre Antwort</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="(answer, index) in normalizedAnswers" :key="index">
-                        <td class="border border-gray-300 p-2">{{ answer.number }}</td>
-                        <td class="border border-gray-300 p-2">{{ answer.question }}</td>
-                        <td class="border border-gray-300 p-2">{{ answer.user_answer }}</td>
+                        <td class="bit2-col-number border border-gray-300 p-2">{{ answer.number }}</td>
+                        <td class="bit2-col-question border border-gray-300 p-2">{{ answer.question }}</td>
+                        <td class="bit2-col-answer border border-gray-300 p-2">{{ answer.user_answer }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -241,6 +243,24 @@ const normalizedAnswers = computed(() => {
 
 .bit2-norm-table {
     border-collapse: collapse;
+}
+
+.bit2-answer-table .bit2-col-number {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    max-width: 2.75rem;
+    box-sizing: border-box;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.bit2-answer-table .bit2-col-question {
+    width: 72%;
+}
+
+.bit2-answer-table .bit2-col-answer {
+    width: 27%;
 }
 
 .bit2-result--pdf .bit2-table-wrap {

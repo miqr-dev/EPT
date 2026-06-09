@@ -24,6 +24,7 @@ const selectedParticipant = ref(null);
 const searchQuery = ref(props.filters.search ?? '');
 const pdfParticipant = ref<any | null>(null);
 const isGeneratingPdf = ref(false);
+const pdfExportMode = ref<'results' | 'answers' | null>(null);
 
 const TEST_PDF_ORDER = [
     ['LPS-B'],
@@ -90,7 +91,7 @@ function sanitizeFilename(value: string) {
         .trim();
 }
 
-async function downloadParticipantAssignmentsPdf(participant: any, assignments: any[], filename: string) {
+async function downloadParticipantAssignmentsPdf(participant: any, assignments: any[], filename: string, includeAnswers = false) {
     const exportableAssignments = assignments.filter((assignment) => (assignment?.results ?? []).length > 0);
 
     if (!participant || exportableAssignments.length === 0 || isGeneratingPdf.value) {
@@ -99,9 +100,14 @@ async function downloadParticipantAssignmentsPdf(participant: any, assignments: 
 
     isGeneratingPdf.value = true;
     pdfParticipant.value = participant;
+    pdfExportMode.value = includeAnswers ? 'answers' : 'results';
 
-    const pdfUrl = route('participants.results.pdf', { participant: participant.id });
-    const printUrl = route('participants.results.print', { participant: participant.id });
+    const routeParameters = {
+        participant: participant.id,
+        ...(includeAnswers ? { include_answers: 1 } : {}),
+    };
+    const pdfUrl = route('participants.results.pdf', routeParameters);
+    const printUrl = route('participants.results.print', routeParameters);
 
     try {
         await downloadPdfOrOpenPrint(pdfUrl, printUrl, filename);
@@ -111,12 +117,18 @@ async function downloadParticipantAssignmentsPdf(participant: any, assignments: 
     } finally {
         isGeneratingPdf.value = false;
         pdfParticipant.value = null;
+        pdfExportMode.value = null;
     }
 }
 
 function downloadFullTestsPdf(participant: any) {
     const participantName = sanitizeFilename(participant?.name ?? 'Teilnehmer');
     downloadParticipantAssignmentsPdf(participant, orderedPdfAssignments(participant), `${participantName}_Alle_Tests.pdf`);
+}
+
+function downloadFullTestsWithAnswersPdf(participant: any) {
+    const participantName = sanitizeFilename(participant?.name ?? 'Teilnehmer');
+    downloadParticipantAssignmentsPdf(participant, orderedPdfAssignments(participant), `${participantName}_Alle_Tests_und_Antworten.pdf`, true);
 }
 
 function updateSearch() {
@@ -191,7 +203,7 @@ function updateSearch() {
                                     <div v-else>Keine Tests zugewiesen.</div>
                                 </TableCell>
                                 <TableCell>
-                                    <div class="flex justify-center">
+                                    <div class="flex flex-wrap justify-center gap-2">
                                         <button
                                             type="button"
                                             class="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-400"
@@ -200,12 +212,27 @@ function updateSearch() {
                                             @click="downloadFullTestsPdf(participant)"
                                         >
                                             <Loader2
-                                                v-if="isGeneratingPdf && pdfParticipant?.id === participant.id"
+                                                v-if="isGeneratingPdf && pdfParticipant?.id === participant.id && pdfExportMode === 'results'"
                                                 class="size-4 animate-spin"
                                                 aria-hidden="true"
                                             />
                                             <FileText v-else class="size-4" aria-hidden="true" />
                                             <span>Alle Tests</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-400"
+                                            :disabled="orderedPdfAssignments(participant).length === 0 || isGeneratingPdf"
+                                            title="Alle Tests mit Antworten als PDF herunterladen"
+                                            @click="downloadFullTestsWithAnswersPdf(participant)"
+                                        >
+                                            <Loader2
+                                                v-if="isGeneratingPdf && pdfParticipant?.id === participant.id && pdfExportMode === 'answers'"
+                                                class="size-4 animate-spin"
+                                                aria-hidden="true"
+                                            />
+                                            <FileText v-else class="size-4" aria-hidden="true" />
+                                            <span>Mit Antworten</span>
                                         </button>
                                     </div>
                                 </TableCell>

@@ -8,9 +8,11 @@ withDefaults(
         teacherName: string;
         showTeacher?: boolean;
         showAnswers?: boolean;
+        answersOnly?: boolean;
     }>(),
     {
         showAnswers: false,
+        answersOnly: false,
     },
 );
 
@@ -88,7 +90,7 @@ function displayDate(assignment: any) {
         <!-- Header -->
         <div class="pdf-header flex items-center justify-between border-b-2 border-gray-200 pb-4">
             <div>
-                <h1 class="text-3xl font-bold">Testergebnis</h1>
+                <h1 class="text-3xl font-bold">{{ answersOnly ? 'Testantworten' : 'Testergebnis' }}</h1>
                 <p class="text-gray-600">{{ assignment.test.name }}</p>
             </div>
             <div class="pdf-date text-right">
@@ -113,7 +115,7 @@ function displayDate(assignment: any) {
 
         <!-- Results -->
         <div class="mt-8">
-            <h2 class="mb-4 text-xl font-semibold">Auswertung</h2>
+            <h2 class="mb-4 text-xl font-semibold">{{ answersOnly ? 'Antworten' : 'Auswertung' }}</h2>
             <div class="result-panel rounded-lg border bg-gray-50 p-4">
                 <TestResultViewer
                     v-if="assignment && assignment.results.length > 0"
@@ -123,6 +125,7 @@ function displayDate(assignment: any) {
                     :manual-scores="assignment.results[0].manual_scores ?? []"
                     :show-answers="showAnswers"
                     :pdf-mode="true"
+                    :answers-only="answersOnly"
                     :force-open-answers="showAnswers && assignment.test.name === 'BT'"
                 />
                 <div v-else class="text-center text-gray-500">

@@ -22,11 +22,20 @@ const form = useForm({
 
 const editable = ref<any | null>(null);
 const viewerRef = ref<any>(null);
-const isGeneratingPdf = ref(false);
+const pdfExportMode = ref<'result' | 'answers' | null>(null);
 
 const dialogTitle = computed(() => props.participant?.name || 'Testergebnis bearbeiten');
 
 const requiresMainSaveButton = computed(() => ['BRT-A', 'BRT-B'].includes(props.assignment?.test?.name));
+const hasSeparateAnswerPdf = computed(
+    () =>
+        ![props.assignment?.test?.name, props.assignment?.test?.code].some(
+            (value) =>
+                String(value ?? '')
+                    .trim()
+                    .toUpperCase() === 'BT',
+        ),
+);
 
 watch(
     () => props.assignment,
@@ -96,18 +105,23 @@ function handleManualScoreUpdated(payload: { key: string; value: number | null }
     result.manual_scores = [...scores];
 }
 
-async function downloadUnifiedPdf() {
+async function downloadUnifiedPdf(includeAnswers = false) {
     const testResultId = props.assignment?.results?.[0]?.id;
 
-    if (!testResultId || isGeneratingPdf.value) {
+    if (!testResultId || pdfExportMode.value) {
         return;
     }
 
-    const filename = `${sanitizeFilename(props.participant?.name ?? 'Teilnehmer')}_${sanitizeFilename(props.assignment?.test?.name ?? 'Test')}_Ergebnis.pdf`;
-    const pdfUrl = route('test-results.pdf', { testResult: testResultId });
-    const printUrl = route('test-results.print', { testResult: testResultId });
+    const routeParameters = {
+        testResult: testResultId,
+        ...(includeAnswers ? { include_answers: 1 } : {}),
+    };
+    const suffix = includeAnswers ? 'Ergebnis_und_Antworten' : 'Ergebnis';
+    const filename = `${sanitizeFilename(props.participant?.name ?? 'Teilnehmer')}_${sanitizeFilename(props.assignment?.test?.name ?? 'Test')}_${suffix}.pdf`;
+    const pdfUrl = route('test-results.pdf', routeParameters);
+    const printUrl = route('test-results.print', routeParameters);
 
-    isGeneratingPdf.value = true;
+    pdfExportMode.value = includeAnswers ? 'answers' : 'result';
 
     try {
         await downloadPdfOrOpenPrint(pdfUrl, printUrl, filename);
@@ -115,7 +129,7 @@ async function downloadUnifiedPdf() {
         console.error('PDF export failed, opening print preview.', error);
         openPrintPreview(printUrl);
     } finally {
-        isGeneratingPdf.value = false;
+        pdfExportMode.value = null;
     }
 }
 
@@ -156,9 +170,18 @@ function sanitizeFilename(value: string) {
 
             <DialogHeader class="items-start pr-12 text-left">
                 <DialogTitle>{{ dialogTitle }}</DialogTitle>
-                <div v-if="assignment" class="flex">
-                    <Button variant="outline" size="sm" @click="downloadUnifiedPdf" :disabled="isGeneratingPdf">
-                        {{ isGeneratingPdf ? 'Generiere PDF...' : 'Ergebnis PDF' }}
+                <div v-if="assignment" class="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" :disabled="Boolean(pdfExportMode)" @click="downloadUnifiedPdf(false)">
+                        {{ pdfExportMode === 'result' ? 'Generiere PDF...' : 'Ergebnis PDF' }}
+                    </Button>
+                    <Button
+                        v-if="hasSeparateAnswerPdf"
+                        variant="outline"
+                        size="sm"
+                        :disabled="Boolean(pdfExportMode)"
+                        @click="downloadUnifiedPdf(true)"
+                    >
+                        {{ pdfExportMode === 'answers' ? 'Generiere PDF...' : 'Ergebnis + Antworten PDF' }}
                     </Button>
                 </div>
             </DialogHeader>

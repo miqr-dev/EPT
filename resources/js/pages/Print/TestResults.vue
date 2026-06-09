@@ -11,11 +11,13 @@ const props = withDefaults(
         autoPrint?: boolean;
         filename?: string;
         pdfUrl?: string | null;
+        includeAnswers?: boolean;
     }>(),
     {
         autoPrint: false,
         filename: 'Testergebnisse.pdf',
         pdfUrl: null,
+        includeAnswers: false,
     },
 );
 
@@ -26,6 +28,15 @@ function setSheetRef(el: Element | ComponentPublicInstance | null) {
     if (el instanceof HTMLElement) {
         sheetRefs.value.push(el);
     }
+}
+
+function hasSeparateAnswerDocument(assignment: any) {
+    return ![assignment?.test?.name, assignment?.test?.code].some(
+        (value) =>
+            String(value ?? '')
+                .trim()
+                .toUpperCase() === 'BT',
+    );
 }
 
 onBeforeUpdate(() => {
@@ -205,20 +216,39 @@ onUnmounted(() => {
 
         <section v-if="assignments.length === 0" class="empty-state">Keine exportierbaren Ergebnisse gefunden.</section>
 
-        <section
-            v-for="assignment in assignments"
-            :key="assignment.id"
-            :ref="setSheetRef"
-            class="print-sheet"
-            :data-test-name="assignment.test?.name"
-            :data-test-code="assignment.test?.code"
-        >
-            <div class="sheet-frame" data-print-frame>
-                <div class="result-source" data-print-source>
-                    <PdfTemplate :assignment="assignment" :participant="participant" teacher-name="" :show-teacher="false" :show-answers="false" />
+        <template v-for="assignment in assignments" :key="assignment.id">
+            <section :ref="setSheetRef" class="print-sheet" :data-test-name="assignment.test?.name" :data-test-code="assignment.test?.code">
+                <div class="sheet-frame" data-print-frame>
+                    <div class="result-source" data-print-source>
+                        <PdfTemplate
+                            :assignment="assignment"
+                            :participant="participant"
+                            teacher-name=""
+                            :show-teacher="false"
+                            :show-answers="false"
+                        />
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
+
+            <section
+                v-if="includeAnswers && hasSeparateAnswerDocument(assignment)"
+                class="answer-document"
+                :data-test-name="assignment.test?.name"
+                :data-test-code="assignment.test?.code"
+            >
+                <div class="answer-source">
+                    <PdfTemplate
+                        :assignment="assignment"
+                        :participant="participant"
+                        teacher-name=""
+                        :show-teacher="false"
+                        :show-answers="true"
+                        :answers-only="true"
+                    />
+                </div>
+            </section>
+        </template>
     </main>
 </template>
 
@@ -233,6 +263,11 @@ onUnmounted(() => {
 @page {
     size: A4;
     margin: 0;
+}
+
+@page answers {
+    size: A4;
+    margin: 8mm;
 }
 
 .print-root {
@@ -289,19 +324,34 @@ onUnmounted(() => {
 }
 
 .print-sheet,
+.answer-document,
 .empty-state {
     width: 210mm;
-    height: 297mm;
     margin: 0 auto 18px;
     background: #ffffff;
     box-shadow: 0 14px 36px rgba(15, 23, 42, 0.16);
 }
 
 .print-sheet {
+    height: 297mm;
     box-sizing: border-box;
     padding: 8mm;
     break-after: page;
     page-break-after: always;
+}
+
+.answer-document {
+    page: answers;
+    box-sizing: border-box;
+    min-height: 297mm;
+    padding: 8mm;
+    break-after: page;
+    page-break-after: always;
+}
+
+.answer-document:last-child {
+    break-after: auto;
+    page-break-after: auto;
 }
 
 .print-sheet:last-child {
@@ -310,6 +360,7 @@ onUnmounted(() => {
 }
 
 .empty-state {
+    height: 297mm;
     display: grid;
     place-items: center;
     padding: 24px;
@@ -330,6 +381,60 @@ onUnmounted(() => {
     transform: scale(var(--result-scale));
     transform-origin: top left;
     background: #ffffff;
+}
+
+.answer-source {
+    width: 100%;
+    background: #ffffff;
+}
+
+.answer-document :deep(details) {
+    margin: 0;
+}
+
+.answer-document :deep(summary) {
+    display: none;
+}
+
+.answer-document :deep(.overflow-x-auto) {
+    overflow: visible;
+}
+
+.answer-document :deep(table) {
+    width: 100%;
+    min-width: 0 !important;
+    table-layout: fixed;
+}
+
+.answer-document :deep(thead) {
+    display: table-header-group;
+}
+
+.answer-document :deep(tr) {
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
+.answer-document :deep(th),
+.answer-document :deep(td) {
+    overflow-wrap: anywhere;
+}
+
+.answer-document :deep(.lpsb-answer-section) {
+    break-inside: auto;
+    page-break-inside: auto;
+}
+
+.answer-document :deep(.lpsb-answer-section h4) {
+    break-after: avoid;
+    page-break-after: avoid;
+}
+
+.answer-document :deep(.brt-answer-section),
+.answer-document :deep(.mrt-result--pdf),
+.answer-document :deep(.avem-result--pdf) {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
 }
 
 .print-sheet[data-test-name='LPS-B'] .result-source {
@@ -451,6 +556,14 @@ onUnmounted(() => {
     .print-sheet,
     .empty-state {
         margin: 0;
+        box-shadow: none;
+    }
+
+    .answer-document {
+        width: auto;
+        min-height: 0;
+        margin: 0;
+        padding: 0;
         box-shadow: none;
     }
 }

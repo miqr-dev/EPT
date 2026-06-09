@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMrtA } from '@/composables/useMrtA';
 import { CategoryScale, Chart, Legend, LineElement, LinearScale, PointElement, Title, Tooltip, registerables } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import { computed, ref } from 'vue';
@@ -10,14 +11,19 @@ Chart.register(...registerables, annotationPlugin);
 const props = withDefaults(
     defineProps<{
         results: any;
+        showAnswers?: boolean;
         pdfMode?: boolean;
+        answersOnly?: boolean;
     }>(),
     {
+        showAnswers: true,
         pdfMode: false,
+        answersOnly: false,
     },
 );
 
 const showDetails = ref(false);
+const { mrtQuestions: mrtOptionQuestions } = useMrtA();
 
 function formatTime(sec: number | null | undefined): string {
     const totalSeconds = Number(sec);
@@ -26,6 +32,19 @@ function formatTime(sec: number | null | undefined): string {
     const min = Math.floor(safeSeconds / 60);
     const seconds = safeSeconds % 60;
     return `${min}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function optionText(questionIndex: number, answer: string | null | undefined): string {
+    const optionIndex = ['A', 'B', 'C', 'D'].indexOf(
+        String(answer ?? '')
+            .trim()
+            .toUpperCase(),
+    );
+    return optionIndex >= 0 ? (mrtOptionQuestions[questionIndex]?.options?.[optionIndex] ?? '-') : '-';
+}
+
+function correctOptionText(questionIndex: number): string {
+    return (mrtQuestions[questionIndex]?.correct ?? []).map((answer) => optionText(questionIndex, answer)).join(', ') || '-';
 }
 
 const groupLabels = ['U1', 'U2', 'U3', 'U4', 'U5', 'U6'];
@@ -247,8 +266,8 @@ const mrtQuestions = [
 
 <template>
     <div class="mrt-result rounded-lg border bg-background p-6" :class="{ 'mrt-result--pdf': pdfMode }">
-        <h2 class="mb-4 text-xl font-semibold">Test abgeschlossen!</h2>
-        <div class="mrt-summary mb-6 w-full max-w-md">
+        <h2 v-if="!answersOnly" class="mb-4 text-xl font-semibold">Test abgeschlossen!</h2>
+        <div v-if="!answersOnly" class="mrt-summary mb-6 w-full max-w-md">
             <table class="w-full overflow-hidden rounded-lg border text-sm shadow">
                 <tbody>
                     <tr class="bg-muted/40">
@@ -271,22 +290,21 @@ const mrtQuestions = [
             </table>
         </div>
 
-        <button v-if="!pdfMode && !showDetails" @click="showDetails = true" class="mb-4 rounded-lg px-4 py-2 font-semibold">
-            Antwort- und Bearbeitungszeit je Aufgabe anzeigen
+        <button v-if="!answersOnly && !pdfMode && !showDetails" @click="showDetails = true" class="mb-4 rounded-lg px-4 py-2 font-semibold">
+            Antworten je Aufgabe anzeigen
         </button>
-        <button v-else-if="!pdfMode" @click="showDetails = false" class="mb-4 rounded-lg px-4 py-2 font-semibold">
-            Antwort- und Bearbeitungszeit je Aufgabe verbergen
+        <button v-else-if="!answersOnly && !pdfMode" @click="showDetails = false" class="mb-4 rounded-lg px-4 py-2 font-semibold">
+            Antworten je Aufgabe verbergen
         </button>
-        <div v-if="!pdfMode && showDetails">
-            <h3 class="mb-2 font-bold">Antwort- und Bearbeitungszeit je Aufgabe</h3>
+        <div v-if="showAnswers && (answersOnly || (!pdfMode && showDetails))">
+            <h3 class="mb-2 font-bold">Antworten je Aufgabe</h3>
             <div class="overflow-x-auto">
-                <table class="min-w-full rounded-lg border text-sm shadow">
+                <table class="mrt-answer-table min-w-full rounded-lg border text-sm shadow">
                     <thead class="bg-muted/40">
                         <tr>
-                            <th class="px-2 py-1 text-left font-semibold">#</th>
+                            <th class="mrt-col-number px-2 py-1 text-left font-semibold">#</th>
                             <th class="px-2 py-1 text-left font-semibold">Ihre Auswahl</th>
                             <th class="px-2 py-1 text-left font-semibold">Richtige Antwort(en)</th>
-                            <th class="px-2 py-1 text-left font-semibold">Bearbeitungszeit</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -295,19 +313,12 @@ const mrtQuestions = [
                             :key="idx"
                             :class="answer.is_correct ? 'bg-green-50 dark:bg-green-900/50' : 'bg-red-50 dark:bg-red-900/50'"
                         >
-                            <td class="px-2 py-1 font-medium text-muted-foreground">{{ answer.number }}</td>
+                            <td class="mrt-col-number px-2 py-1 font-medium text-muted-foreground">{{ answer.number }}</td>
                             <td class="px-2 py-1">
-                                <span class="font-mono">
-                                    {{ answer.user_answer ? answer.user_answer : '–' }}
-                                </span>
+                                {{ optionText(idx, answer.user_answer) }}
                             </td>
                             <td class="px-2 py-1">
-                                <span class="font-mono">
-                                    {{ mrtQuestions[idx].correct.join(', ') }}
-                                </span>
-                            </td>
-                            <td class="min-w-[60px] px-2 py-1 text-right font-mono text-gray-500 dark:text-gray-400">
-                                {{ formatTime(answer.time_seconds) }}
+                                {{ correctOptionText(idx) }}
                             </td>
                         </tr>
                     </tbody>
@@ -315,7 +326,7 @@ const mrtQuestions = [
             </div>
         </div>
 
-        <div>
+        <div v-if="!answersOnly">
             <div class="mrt-chart-section my-10 flex w-full flex-col items-center justify-center">
                 <!-- <div class="flex flex-row items-center gap-3 mb-8">
           <span class="font-bold text-base mr-3">RW</span>
@@ -474,6 +485,17 @@ const mrtQuestions = [
     margin-left: 2px;
     margin-right: 8px;
     color: #6b7280;
+}
+
+.mrt-answer-table .mrt-col-number {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    max-width: 2.75rem;
+    box-sizing: border-box;
+    border-right: 1px solid #d1d5db;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 @media print {

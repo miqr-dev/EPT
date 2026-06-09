@@ -11,6 +11,7 @@ const props = withDefaults(
         showAnswers?: boolean;
         forceOpenAnswers?: boolean;
         pdfMode?: boolean;
+        answersOnly?: boolean;
     }>(),
     {
         manualScores: () => ({}),
@@ -18,6 +19,7 @@ const props = withDefaults(
         showAnswers: true,
         forceOpenAnswers: false,
         pdfMode: false,
+        answersOnly: false,
     },
 );
 
@@ -475,7 +477,7 @@ async function persistQ5AfterWindowManualPoints() {
 <template>
     <div :class="['bt-result w-full space-y-3', { 'bt-result--pdf': pdfMode }, !forceOpenAnswers && !pdfMode ? 'lg:w-1/2' : '']">
         <div class="bt-evaluation-card rounded-lg border-2 border-black bg-white p-3 text-sm">
-            <div class="bt-summary-header mb-3 flex items-center justify-between border-b border-black pb-2">
+            <div v-if="!answersOnly" class="bt-summary-header mb-3 flex items-center justify-between border-b border-black pb-2">
                 <div class="font-semibold">BT – Auswertung Form A</div>
                 <div class="text-right">
                     <div class="text-sm">

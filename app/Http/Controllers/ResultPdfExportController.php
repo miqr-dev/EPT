@@ -50,13 +50,18 @@ class ResultPdfExportController extends Controller
 
     $assignment = $testResult->assignment;
     $assignment->setRelation('results', new EloquentCollection([$testResult]));
+    $includeAnswers = $request->boolean('include_answers');
 
     return Inertia::render('Print/TestResults', [
       'participant' => $participant,
       'assignments' => [$assignment],
       'autoPrint' => $request->boolean('auto_print'),
-      'filename' => $this->filename($participant->name, '_' . ($assignment->test?->name ?? 'Test') . '_Ergebnis.pdf'),
-      'pdfUrl' => URL::route('test-results.pdf', ['testResult' => $testResult->id], false),
+      'filename' => $this->testResultFilename($testResult, $includeAnswers),
+      'pdfUrl' => URL::route('test-results.pdf', array_filter([
+        'testResult' => $testResult->id,
+        'include_answers' => $includeAnswers ? 1 : null,
+      ]), false),
+      'includeAnswers' => $includeAnswers,
     ]);
   }
 
@@ -68,8 +73,12 @@ class ResultPdfExportController extends Controller
 
     $this->authorizeResultExport($request, $participant);
 
-    $filename = $this->filename($participant->name, '_' . ($testResult->assignment?->test?->name ?? 'Test') . '_Ergebnis.pdf');
-    $printUrl = $this->signedPrintUrl($request, 'test-results.print-signed', ['testResult' => $testResult->id]);
+    $includeAnswers = $request->boolean('include_answers');
+    $filename = $this->testResultFilename($testResult, $includeAnswers);
+    $printUrl = $this->signedPrintUrl($request, 'test-results.print-signed', array_filter([
+      'testResult' => $testResult->id,
+      'include_answers' => $includeAnswers ? 1 : null,
+    ]));
 
     return $this->pdfResponse($request, $printUrl, $filename);
   }
@@ -79,13 +88,18 @@ class ResultPdfExportController extends Controller
     $this->authorizeResultExport($request, $participant);
 
     $participant->load('participantProfile');
+    $includeAnswers = $request->boolean('include_answers');
 
     return Inertia::render('Print/TestResults', [
       'participant' => $participant,
       'assignments' => $this->orderedAssignments($participant),
       'autoPrint' => $request->boolean('auto_print'),
-      'filename' => $this->filename($participant->name, '_Alle_Tests.pdf'),
-      'pdfUrl' => URL::route('participants.results.pdf', ['participant' => $participant->id], false),
+      'filename' => $this->participantResultsFilename($participant, $includeAnswers),
+      'pdfUrl' => URL::route('participants.results.pdf', array_filter([
+        'participant' => $participant->id,
+        'include_answers' => $includeAnswers ? 1 : null,
+      ]), false),
+      'includeAnswers' => $includeAnswers,
     ]);
   }
 
@@ -93,8 +107,12 @@ class ResultPdfExportController extends Controller
   {
     $this->authorizeResultExport($request, $participant);
 
-    $filename = $this->filename($participant->name, '_Alle_Tests.pdf');
-    $printUrl = $this->signedPrintUrl($request, 'participants.results.print-signed', ['participant' => $participant->id]);
+    $includeAnswers = $request->boolean('include_answers');
+    $filename = $this->participantResultsFilename($participant, $includeAnswers);
+    $printUrl = $this->signedPrintUrl($request, 'participants.results.print-signed', array_filter([
+      'participant' => $participant->id,
+      'include_answers' => $includeAnswers ? 1 : null,
+    ]));
 
     return $this->pdfResponse($request, $printUrl, $filename);
   }
@@ -326,5 +344,22 @@ class ResultPdfExportController extends Controller
     $safeName = trim($safeName, '._-');
 
     return $safeName ?: 'Teilnehmer.pdf';
+  }
+
+  private function participantResultsFilename(User $participant, bool $includeAnswers): string
+  {
+    return $this->filename(
+      $participant->name,
+      $includeAnswers ? '_Alle_Tests_und_Antworten.pdf' : '_Alle_Tests.pdf',
+    );
+  }
+
+  private function testResultFilename(TestResult $testResult, bool $includeAnswers): string
+  {
+    return $this->filename(
+      $testResult->assignment?->participant?->name,
+      '_' . ($testResult->assignment?->test?->name ?? 'Test')
+        . ($includeAnswers ? '_Ergebnis_und_Antworten.pdf' : '_Ergebnis.pdf'),
+    );
   }
 }

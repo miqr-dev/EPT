@@ -25,11 +25,13 @@ const props = withDefaults(
         showAnswers?: boolean;
         editableAnswers?: boolean;
         pdfMode?: boolean;
+        answersOnly?: boolean;
     }>(),
     {
         showAnswers: true,
         editableAnswers: false,
         pdfMode: false,
+        answersOnly: false,
     },
 );
 
@@ -63,7 +65,7 @@ function resultLabel(isCorrect?: boolean) {
 
 <template>
     <div v-if="results" class="brt-result" :class="{ 'brt-result--pdf': pdfMode }">
-        <div class="brt-summary-wrap mb-5 w-full max-w-lg">
+        <div v-if="!answersOnly" class="brt-summary-wrap mb-5 w-full max-w-lg">
             <table class="brt-summary-table w-full border-collapse overflow-hidden rounded-lg border text-sm shadow-sm">
                 <tbody>
                     <tr class="bg-muted/40">
@@ -86,25 +88,24 @@ function resultLabel(isCorrect?: boolean) {
             </table>
         </div>
 
-        <details v-if="showAnswers && answerRows.length" class="brt-answer-section mt-4">
+        <details v-if="showAnswers && answerRows.length" :open="answersOnly" class="brt-answer-section mt-4">
             <summary class="cursor-pointer rounded bg-muted/40 px-2 py-1 font-semibold select-none">Antworten</summary>
             <div class="overflow-x-auto">
                 <table class="brt-answer-table min-w-full border-collapse rounded-lg border text-sm shadow-sm">
                     <thead class="bg-muted/40">
                         <tr>
-                            <th class="px-2 py-1 text-left font-semibold">#</th>
-                            <th class="px-2 py-1 text-left font-semibold">Aufgabe</th>
-                            <th class="px-2 py-1 text-left font-semibold">Antwort</th>
-                            <th class="px-2 py-1 text-left font-semibold">Richtige Antwort</th>
-                            <th class="px-2 py-1 text-left font-semibold">Zeit</th>
-                            <th class="px-2 py-1 text-left font-semibold">Ergebnis</th>
+                            <th class="brt-col-number px-2 py-1 text-left font-semibold">#</th>
+                            <th class="brt-col-question px-2 py-1 text-left font-semibold">Aufgabe</th>
+                            <th class="brt-col-answer px-2 py-1 text-left font-semibold">Antwort</th>
+                            <th class="brt-col-correct px-2 py-1 text-left font-semibold">Richtige Antwort</th>
+                            <th class="brt-col-result px-2 py-1 text-left font-semibold">Ergebnis</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="(answer, index) in answerRows" :key="index" :class="answer.is_correct ? 'bg-green-50' : 'bg-red-50'">
-                            <td class="px-2 py-1 align-top font-medium text-muted-foreground">{{ index + 1 }}</td>
-                            <td class="px-2 py-1 align-top">{{ answer.question || '-' }}</td>
-                            <td class="px-2 py-1 align-top">
+                            <td class="brt-col-number px-2 py-1 align-top font-medium text-muted-foreground">{{ index + 1 }}</td>
+                            <td class="brt-col-question px-2 py-1 align-top">{{ answer.question || '-' }}</td>
+                            <td class="brt-col-answer px-2 py-1 align-top">
                                 <Input
                                     v-if="editableAnswers"
                                     :model-value="answer.user_answer ?? ''"
@@ -113,9 +114,11 @@ function resultLabel(isCorrect?: boolean) {
                                 />
                                 <span v-else>{{ answer.user_answer || '-' }}</span>
                             </td>
-                            <td class="px-2 py-1 align-top font-mono">{{ formatAnswers(answer.correct_answers) }}</td>
-                            <td class="px-2 py-1 text-right align-top font-mono">{{ formatTime(answer.time_seconds) }}</td>
-                            <td class="px-2 py-1 align-top font-semibold" :class="answer.is_correct ? 'text-green-700' : 'text-red-700'">
+                            <td class="brt-col-correct px-2 py-1 align-top font-mono">{{ formatAnswers(answer.correct_answers) }}</td>
+                            <td
+                                class="brt-col-result px-2 py-1 align-top font-semibold"
+                                :class="answer.is_correct ? 'text-green-700' : 'text-red-700'"
+                            >
                                 {{ resultLabel(answer.is_correct) }}
                             </td>
                         </tr>
@@ -134,6 +137,30 @@ function resultLabel(isCorrect?: boolean) {
 
 .brt-answer-table tbody tr:last-child td {
     border-bottom: 0;
+}
+
+.brt-answer-table .brt-col-number {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    max-width: 2.75rem;
+    box-sizing: border-box;
+    border-right: 1px solid #d1d5db;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.brt-answer-table .brt-col-question {
+    width: 46%;
+}
+
+.brt-answer-table .brt-col-answer,
+.brt-answer-table .brt-col-correct {
+    width: 19%;
+}
+
+.brt-answer-table .brt-col-result {
+    width: 15%;
 }
 
 .brt-result--pdf {

@@ -49,6 +49,7 @@ const props = withDefaults(
         participantProfile?: { age: number; sex?: string } | null;
         showAnswers?: boolean;
         pdfMode?: boolean;
+        answersOnly?: boolean;
         forceOpenAnswers?: boolean;
         testResultId?: number | null;
         manualScores?: Array<{ key: string; value: number | string | null }> | Record<string, any>;
@@ -56,6 +57,7 @@ const props = withDefaults(
     {
         showAnswers: true,
         pdfMode: false,
+        answersOnly: false,
     },
 );
 
@@ -307,17 +309,24 @@ const fpiRohwerte = computed(() => {
 
 <template>
     <div v-if="local" v-bind="$attrs">
-        <MrtAResult v-if="test.name === 'MRT-A'" :results="local" :pdf-mode="pdfMode" />
-        <MrtBResult v-else-if="test.name === 'MRT-B'" :results="local" :pdf-mode="pdfMode" />
+        <MrtAResult v-if="test.name === 'MRT-A'" :results="local" :show-answers="showAnswers" :pdf-mode="pdfMode" :answers-only="answersOnly" />
+        <MrtBResult v-else-if="test.name === 'MRT-B'" :results="local" :show-answers="showAnswers" :pdf-mode="pdfMode" :answers-only="answersOnly" />
         <BrtResult
             v-else-if="isBrtTest"
             :results="local"
             :show-answers="showAnswers"
             :editable-answers="showAnswers && !pdfMode"
             :pdf-mode="pdfMode"
+            :answers-only="answersOnly"
         />
-        <KonzentrationstestResult v-else-if="isKonzentrationstest" :results="local" :show-answers="showAnswers" :pdf-mode="pdfMode" />
-        <LmtResult v-else-if="isLmtTest" :results="local" :show-answers="showAnswers" :pdf-mode="pdfMode" />
+        <KonzentrationstestResult
+            v-else-if="isKonzentrationstest"
+            :results="local"
+            :show-answers="showAnswers"
+            :pdf-mode="pdfMode"
+            :answers-only="answersOnly"
+        />
+        <LmtResult v-else-if="isLmtTest" :results="local" :show-answers="showAnswers" :pdf-mode="pdfMode" :answers-only="answersOnly" />
         <FpiResult
             v-else-if="isFpiRTest"
             :stanines="fpiStanines"
@@ -326,6 +335,7 @@ const fpiRohwerte = computed(() => {
             :missing-answer-count="fpiMissingAnswerCount"
             :show-answers="showAnswers"
             :pdf-mode="pdfMode"
+            :answers-only="answersOnly"
         />
         <BIT2Result
             v-else-if="isBit2Test"
@@ -333,6 +343,7 @@ const fpiRohwerte = computed(() => {
             :participantProfile="participantProfile"
             :show-answers="showAnswers"
             :pdf-mode="pdfMode"
+            :answers-only="answersOnly"
         />
         <LpsResult
             v-else-if="['LPS', 'LPS-A', 'LPS-B'].includes(test.name)"
@@ -342,6 +353,7 @@ const fpiRohwerte = computed(() => {
             :test-result-id="testResultId"
             :manual-scores="manualScoreMap"
             :show-answers="showAnswers"
+            :answers-only="answersOnly"
             @manual-score-updated="handleManualScoreUpdated"
         />
         <BtResult
@@ -351,10 +363,11 @@ const fpiRohwerte = computed(() => {
             :results="local"
             :show-answers="showAnswers"
             :pdf-mode="pdfMode"
+            :answers-only="answersOnly"
             :force-open-answers="forceOpenAnswers"
             @manual-score-updated="handleManualScoreUpdated"
         />
-        <AvemResult v-else-if="isAvemTest" :results="local" :show-answers="showAnswers" :pdf-mode="pdfMode" />
+        <AvemResult v-else-if="isAvemTest" :results="local" :show-answers="showAnswers" :pdf-mode="pdfMode" :answers-only="answersOnly" />
         <template v-else>
             <table class="mb-4 w-full overflow-hidden rounded-lg border text-sm shadow">
                 <tbody>

@@ -12,10 +12,12 @@ const props = withDefaults(
         results: any;
         showAnswers?: boolean;
         pdfMode?: boolean;
+        answersOnly?: boolean;
     }>(),
     {
         showAnswers: true,
         pdfMode: false,
+        answersOnly: false,
     },
 );
 
@@ -363,28 +365,28 @@ const detailRows = computed(() => {
 
 <template>
     <div class="avem-result rounded-lg bg-background p-6" :class="{ 'avem-result--pdf': props.pdfMode }">
-        <div class="avem-chart-shell mb-6 rounded-md bg-white p-4">
+        <div v-if="!props.answersOnly" class="avem-chart-shell mb-6 rounded-md bg-white p-4">
             <div class="avem-chart-panel">
                 <Line :data="chartData" :options="chartOptions" :plugins="localPlugins" />
             </div>
         </div>
 
-        <details v-if="props.showAnswers && !props.pdfMode && detailRows.length" class="mt-4">
+        <details v-if="props.showAnswers && (!props.pdfMode || props.answersOnly) && detailRows.length" :open="props.answersOnly" class="mt-4">
             <summary class="cursor-pointer">Antworten anzeigen</summary>
             <div class="mt-3 overflow-x-auto">
-                <table class="w-full border-collapse border border-gray-300 text-sm">
+                <table class="avem-answer-table w-full border-collapse border border-gray-300 text-sm">
                     <thead>
                         <tr class="bg-gray-100">
-                            <th class="border border-gray-300 p-2">#</th>
-                            <th class="border border-gray-300 p-2">Frage</th>
-                            <th class="border border-gray-300 p-2">Ihre Antwort</th>
+                            <th class="avem-col-number border border-gray-300 p-2">#</th>
+                            <th class="avem-col-question border border-gray-300 p-2">Frage</th>
+                            <th class="avem-col-answer border border-gray-300 p-2">Ihre Antwort</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="answer in detailRows" :key="answer.number">
-                            <td class="border border-gray-300 p-2">{{ answer.number }}</td>
-                            <td class="border border-gray-300 p-2">{{ answer.question }}</td>
-                            <td class="border border-gray-300 p-2">{{ answer.user_answer }}</td>
+                            <td class="avem-col-number border border-gray-300 p-2">{{ answer.number }}</td>
+                            <td class="avem-col-question border border-gray-300 p-2">{{ answer.question }}</td>
+                            <td class="avem-col-answer border border-gray-300 p-2">{{ answer.user_answer }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -398,6 +400,24 @@ const detailRows = computed(() => {
     color: #111827;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+}
+
+.avem-answer-table .avem-col-number {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    max-width: 2.75rem;
+    box-sizing: border-box;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.avem-answer-table .avem-col-question {
+    width: 72%;
+}
+
+.avem-answer-table .avem-col-answer {
+    width: 27%;
 }
 
 .avem-chart-panel {
