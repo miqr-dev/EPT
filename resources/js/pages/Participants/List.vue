@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { downloadPdfOrOpenPrint, openPrintPreview } from '@/lib/pdf-export';
 import { Link, router } from '@inertiajs/vue3';
-import { FileText, Loader2 } from 'lucide-vue-next';
+import { FileText, Loader2, Search } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 const props = defineProps<{
@@ -46,8 +46,6 @@ const dateFormatter = computed(
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
         }),
 );
 
@@ -146,53 +144,62 @@ function updateSearch() {
 
 <template>
     <AppLayout>
-        <div class="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-            <Card>
-                <CardHeader>
-                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <CardTitle>Teilnehmer</CardTitle>
-                        <div class="w-full sm:w-72">
+        <div class="container mx-auto px-4 py-5 sm:px-6 lg:px-8">
+            <Card class="gap-0 overflow-hidden py-0">
+                <CardHeader class="border-b bg-slate-50/70 px-4 py-3 sm:px-5 dark:bg-slate-900/40">
+                    <div class="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <CardTitle class="text-base">Teilnehmer</CardTitle>
+                            <p class="mt-0.5 text-xs text-muted-foreground">Prüfungsergebnisse und PDF-Exporte</p>
+                        </div>
+                        <div class="relative w-full sm:w-64">
                             <label class="sr-only" for="participant-search">Teilnehmer suchen</label>
+                            <Search
+                                class="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
+                                aria-hidden="true"
+                            />
                             <input
                                 id="participant-search"
                                 v-model="searchQuery"
                                 type="search"
                                 placeholder="Teilnehmer suchen"
-                                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                                class="h-8 w-full rounded-md border border-input bg-background pr-3 pl-8 text-xs shadow-sm transition-colors placeholder:text-muted-foreground focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                                 @input="updateSearch"
                             />
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
+                <CardContent class="px-0">
+                    <Table class="text-[13px]">
+                        <TableHeader class="bg-slate-50/80 dark:bg-slate-900/30">
                             <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Prüfung erstellt am</TableHead>
-                                <TableHead>Tests</TableHead>
-                                <TableHead class="text-center">PDF</TableHead>
+                                <TableHead class="h-9 w-[18%] px-4 text-xs font-semibold">Name</TableHead>
+                                <TableHead class="h-9 w-[15%] px-3 text-xs font-semibold whitespace-nowrap">Prüfung erstellt am</TableHead>
+                                <TableHead class="h-9 px-3 text-xs font-semibold">Tests</TableHead>
+                                <TableHead class="h-9 w-[270px] min-w-[270px] px-4 text-center text-xs font-semibold">PDF</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             <TableRow v-if="participants.data.length === 0">
-                                <TableCell colspan="4" class="py-4 text-center text-gray-500">Keine Teilnehmer:innen gefunden.</TableCell>
+                                <TableCell colspan="4" class="py-8 text-center text-sm text-muted-foreground"
+                                    >Keine Teilnehmer:innen gefunden.</TableCell
+                                >
                             </TableRow>
                             <TableRow v-for="participant in participants.data" :key="participant.id">
-                                <TableCell>{{ participant.name }}</TableCell>
-                                <TableCell>
+                                <TableCell class="px-4 py-2.5 align-top font-medium text-foreground">{{ participant.name }}</TableCell>
+                                <TableCell class="px-3 py-2.5 align-top whitespace-nowrap text-muted-foreground">
                                     <span v-if="participant.latest_exam_created_at">
                                         {{ dateFormatter.format(new Date(participant.latest_exam_created_at)) }}
                                     </span>
                                     <span v-else>–</span>
                                 </TableCell>
-                                <TableCell>
+                                <TableCell class="px-3 py-2.5 align-top">
                                     <div v-if="participant.test_assignments.length > 0">
-                                        <div class="flex flex-wrap gap-3">
+                                        <div class="flex flex-wrap gap-1.5">
                                             <button
                                                 v-for="assignment in participant.test_assignments"
                                                 :key="assignment.id"
-                                                class="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-400"
+                                                class="rounded-md border border-blue-200 bg-blue-50/60 px-2 py-1 text-xs font-medium text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 disabled:cursor-not-allowed disabled:border-border disabled:bg-muted/40 disabled:text-muted-foreground dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/50"
                                                 :disabled="assignment.results.length === 0"
                                                 @click="assignment.results.length > 0 && viewTestResult(assignment, participant)"
                                             >
@@ -200,13 +207,13 @@ function updateSearch() {
                                             </button>
                                         </div>
                                     </div>
-                                    <div v-else>Keine Tests zugewiesen.</div>
+                                    <div v-else class="py-1 text-xs text-muted-foreground">Keine Tests zugewiesen.</div>
                                 </TableCell>
-                                <TableCell>
-                                    <div class="flex flex-wrap justify-center gap-2">
+                                <TableCell class="px-4 py-2.5 align-top">
+                                    <div class="flex flex-nowrap justify-center gap-1.5">
                                         <button
                                             type="button"
-                                            class="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-400"
+                                            class="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-xs font-medium whitespace-nowrap text-foreground shadow-xs transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:bg-muted/40 disabled:text-muted-foreground dark:hover:bg-blue-950/40 dark:hover:text-blue-300"
                                             :disabled="orderedPdfAssignments(participant).length === 0 || isGeneratingPdf"
                                             title="Alle Tests als PDF herunterladen"
                                             @click="downloadFullTestsPdf(participant)"
@@ -221,7 +228,7 @@ function updateSearch() {
                                         </button>
                                         <button
                                             type="button"
-                                            class="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-gray-100 disabled:text-gray-400"
+                                            class="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-xs font-medium whitespace-nowrap text-foreground shadow-xs transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 disabled:cursor-not-allowed disabled:bg-muted/40 disabled:text-muted-foreground dark:hover:bg-blue-950/40 dark:hover:text-blue-300"
                                             :disabled="orderedPdfAssignments(participant).length === 0 || isGeneratingPdf"
                                             title="Alle Tests mit Antworten als PDF herunterladen"
                                             @click="downloadFullTestsWithAnswersPdf(participant)"
@@ -240,16 +247,16 @@ function updateSearch() {
                         </TableBody>
                     </Table>
 
-                    <div v-if="participants.links.length > 3" class="mt-6 flex justify-center">
-                        <nav class="relative z-0 inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                    <div v-if="participants.links.length > 3" class="flex justify-center border-t bg-slate-50/50 px-4 py-3 dark:bg-slate-900/20">
+                        <nav class="relative z-0 inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">
                             <template v-for="(link, key) in participants.links" :key="key">
                                 <component
                                     :is="link.url ? Link : 'span'"
                                     v-bind="link.url ? { href: link.url } : {}"
-                                    class="relative inline-flex items-center border px-4 py-2 text-sm font-medium"
+                                    class="relative inline-flex h-8 items-center border px-3 text-xs font-medium"
                                     :class="{
-                                        'z-10 border-indigo-500 bg-indigo-50 text-indigo-600': link.active,
-                                        'border-gray-300 bg-white text-gray-500 hover:bg-gray-50': !link.active,
+                                        'z-10 border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300': link.active,
+                                        'border-border bg-background text-muted-foreground hover:bg-muted': !link.active,
                                         'rounded-l-md': key === 0,
                                         'rounded-r-md': key === participants.links.length - 1,
                                         'hidden md:inline-flex': !(
@@ -259,7 +266,7 @@ function updateSearch() {
                                             link.label.includes('Previous') ||
                                             link.label.includes('Next')
                                         ),
-                                        'cursor-default text-gray-400': !link.url,
+                                        'cursor-default opacity-50': !link.url,
                                     }"
                                     :aria-disabled="!link.url"
                                 >
