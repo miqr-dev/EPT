@@ -1044,7 +1044,7 @@ if (import.meta.env.DEV) {
 <template>
     <Head title="BT" />
     <div class="relative h-screen overflow-hidden bg-background text-black">
-        <div v-if="showTest" class="absolute top-4 right-6 flex items-center gap-2">
+        <div v-if="showTest" class="absolute right-6 bottom-4 left-6 z-50 flex items-center justify-between">
             <Button variant="outline" @click="prevPage" :disabled="page === 1">Zurück</Button>
             <Button v-if="page < maxPage" @click="nextPage">Weiter</Button>
             <Button v-else @click="completeBtTest">Test beenden</Button>
