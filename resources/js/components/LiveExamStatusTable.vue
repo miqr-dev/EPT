@@ -35,6 +35,13 @@ const formatTime = (seconds?: number) => {
 // We need a local copy of the exam to update the timer
 const localExam = ref(JSON.parse(JSON.stringify(props.exam)))
 
+const totalTestDuration = computed(() => {
+  const durationMinutes = Number(localExam.value?.current_step?.test?.duration)
+  return Number.isFinite(durationMinutes) && durationMinutes >= 0
+    ? durationMinutes * 60
+    : undefined
+})
+
 const stepRows = computed(() => {
   const steps = Array.isArray(localExam.value?.steps) ? localExam.value.steps : []
   const rows: any[][] = []
@@ -428,6 +435,10 @@ const canForceFinishParticipant = (participant: any) => {
             </th>
           <th scope="col"
             class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+            Gesamtzeit
+          </th>
+          <th scope="col"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
             Verbleibende Zeit
           </th>
           <th scope="col"
@@ -460,6 +471,9 @@ const canForceFinishParticipant = (participant: any) => {
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                 –
               </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+              {{ formatTime(totalTestDuration) }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
               {{ formatTime(getParticipantStatus(participant)?.time_remaining) }}
