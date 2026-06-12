@@ -601,7 +601,7 @@ function handleFolderInput(index: number, event: Event) {
     const cleaned = target.value
         .toUpperCase()
         .replace(/[^A-Z]/g, '')
-        .slice(0, 7);
+        .slice(0, 6);
     ensureFirstWindowSnapshotBeforeChange();
     folderAnswers.value[index] = cleaned;
     markAnswerTime('folder_answers', index, cleaned);
@@ -1876,7 +1876,7 @@ if (import.meta.env.DEV) {
                                             :value="folderAnswers[index]"
                                             type="text"
                                             inputmode="text"
-                                            maxlength="7"
+                                            maxlength="6"
                                             :class="[
                                                 'h-6 w-full max-w-20 border border-black text-center text-base uppercase',
                                                 answerTextClass('folder_answers', index),

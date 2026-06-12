@@ -84,6 +84,8 @@ class RedirectBasedOnRole
         'logout',
         'avem',
         'konzentrationstest',
+        'instructions.index',
+        'instructions.show',
         'collaboration.index',
         'collaboration.news.store',
         'collaboration.news.update',

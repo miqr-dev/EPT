@@ -6,7 +6,7 @@ import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { AVEM_QUESTIONS } from '@/pages/Questions/AVEMQuestions';
 import { Head } from '@inertiajs/vue3';
 import { Info } from 'lucide-vue-next';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps<{
     pausedTestResult?: {
@@ -71,6 +71,7 @@ const LABELS: Record<number, string> = {
 
 const PARTNER_INFO_TEXT = 'bzw. die Person, zu der die engste persönliche Beziehung besteht.';
 const PARTNER_INFO_QUESTION_NUMBERS = new Set([11, 33]);
+const allQuestionsAnswered = computed(() => AVEM_QUESTIONS.every((q) => answers.value[q.number] !== null));
 
 const LEGEND_TOP = [
     { val: 5, text: 'völlig zu', heightClass: 'h-6' },
@@ -85,6 +86,10 @@ function startTest() {
     showTest.value = true;
 }
 function finishTest() {
+    if (!allQuestionsAnswered.value) {
+        return;
+    }
+
     window.dispatchEvent(new Event('start-finish'));
     endConfirmOpen.value = true;
 }
@@ -115,7 +120,7 @@ const borderClass = (qnum: number) => (isAnswered(qnum) ? 'border-slate-100 dark
             <h1 class="text-2xl font-bold">AVEM</h1>
         </div>
         <div class="mb-4"></div>
-        
+
         <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4">
             <div class="flex flex-1 flex-col gap-4">
                 <!-- Intro + legend -->
@@ -314,7 +319,7 @@ const borderClass = (qnum: number) => (isAnswered(qnum) ? 'border-slate-100 dark
                     </table>
 
                     <div class="mt-4 flex justify-end">
-                        <Button variant="destructive" @click="finishTest">Test beenden</Button>
+                        <Button variant="destructive" @click="finishTest" :disabled="!allQuestionsAnswered">Test beenden</Button>
                     </div>
                 </div>
             </div>

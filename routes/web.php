@@ -31,6 +31,14 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     Route::get('lps-b', fn () => Inertia::render('LPS', ['testName' => 'LPS-B']))->name('lps-b');
     Route::get('lps', fn () => Inertia::render('LPS'))->name('lps');
     Route::get('konzentrationstest', fn () => Inertia::render('Konzentrationstest'))->name('konzentrationstest');
+    Route::redirect('anleitungen', '/anleitungen/allgemein')->name('instructions.index');
+    Route::get('anleitungen/{test}', function (string $test) {
+        abort_unless(in_array($test, ['allgemein', 'brt', 'mrt', 'fpi-r', 'lmt', 'lps', 'bit-2', 'bt', 'avem', '628'], true), 404);
+
+        return Inertia::render('Instructions/Show', [
+            'test' => $test,
+        ]);
+    })->name('instructions.show');
     Route::get('/kollaboration', [CollaborationCenterController::class, 'index'])->name('collaboration.index');
     Route::post('/kollaboration/news', [CollaborationCenterController::class, 'storeNews'])->name('collaboration.news.store');
     Route::patch('/kollaboration/news/{news}', [CollaborationCenterController::class, 'updateNews'])->name('collaboration.news.update');

@@ -69,6 +69,7 @@ watch(
 const firstPageQuestions = computed(() => BIT2_QUESTIONS.slice(0, 27));
 const secondPageLeft = computed(() => BIT2_QUESTIONS.slice(27, 54));
 const secondPageRight = computed(() => BIT2_QUESTIONS.slice(54));
+const allQuestionsAnswered = computed(() => BIT2_QUESTIONS.every((q) => answers.value[q.number] !== null));
 
 function startTest() {
     emit('started');
@@ -82,6 +83,10 @@ function prevPage() {
     pageIndex.value--;
 }
 function finishTest() {
+    if (!allQuestionsAnswered.value) {
+        return;
+    }
+
     window.dispatchEvent(new Event('start-finish'));
     endConfirmOpen.value = true;
 }
@@ -107,7 +112,7 @@ function confirmEnd() {
             <h1 class="text-2xl font-bold">BIT-2</h1>
         </div>
         <div class="mb-4"></div>
-                <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4">
+        <div class="flex min-h-[600px] flex-1 gap-4 rounded-xl bg-muted/20 p-4">
             <div class="flex flex-1 flex-col gap-4">
                 <div v-if="!showTest" class="flex h-full flex-col items-center justify-center">
                     <h2 class="mb-4 text-2xl font-bold">B – I – T. II</h2>
@@ -318,7 +323,7 @@ function confirmEnd() {
                     </div>
                     <div class="mt-4 flex justify-between">
                         <Button variant="outline" @click="prevPage">Zurück</Button>
-                        <Button variant="destructive" @click="finishTest">Test beenden</Button>
+                        <Button variant="destructive" @click="finishTest" :disabled="!allQuestionsAnswered">Test beenden</Button>
                     </div>
                 </div>
 

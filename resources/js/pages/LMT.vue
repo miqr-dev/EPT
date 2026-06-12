@@ -98,6 +98,7 @@ const completedAtPerf = ref<number | null>(null);
 const elapsedBeforeResumeSeconds = ref(0);
 
 const totalPages = computed(() => Math.ceil(questions.value.length / questionsPerPage));
+const allQuestionsAnswered = computed(() => userAnswers.value.every((answer) => answer !== null));
 
 const isTestComplete = ref(false);
 
@@ -188,11 +189,7 @@ function emitProgress() {
     });
 }
 
-watch(
-    [userAnswers, questionTimes, currentPage],
-    () => emitProgress(),
-    { deep: true, immediate: true },
-);
+watch([userAnswers, questionTimes, currentPage], () => emitProgress(), { deep: true, immediate: true });
 
 let progressEmitInterval: number | null = null;
 
@@ -285,6 +282,10 @@ function completeTest() {
 }
 
 function finishTest() {
+    if (!allQuestionsAnswered.value) {
+        return;
+    }
+
     window.dispatchEvent(new Event('start-finish'));
     endConfirmOpen.value = true;
 }
@@ -355,7 +356,7 @@ const totalTimeTaken = computed(() => {
             <h1 class="text-2xl font-bold">L-M-T</h1>
         </div>
         <div class="mb-4"></div>
-                <div class="mx-auto max-w-5xl space-y-8 rounded border border-border bg-background p-6 text-foreground shadow">
+        <div class="mx-auto max-w-5xl space-y-8 rounded border border-border bg-background p-6 text-foreground shadow">
             <!-- Start Screen -->
             <div v-if="!showTest && !isTestComplete" class="space-y-6 text-center">
                 <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-200">Willkommen zum L-M-T</h2>
@@ -411,7 +412,7 @@ const totalTimeTaken = computed(() => {
                     <Button @click="handlePrevPage" variant="outline" :disabled="currentPage === 1"> Zurück </Button>
 
                     <Button v-if="currentPage < totalPages" @click="handleNextPage"> Weiter </Button>
-                    <Button v-else @click="finishTest" variant="destructive"> Test beenden </Button>
+                    <Button v-else @click="finishTest" variant="destructive" :disabled="!allQuestionsAnswered"> Test beenden </Button>
                 </div>
             </div>
 

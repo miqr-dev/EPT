@@ -1,12 +1,11 @@
 <!-- resources/js/Pages/Konzentrationstest.vue -->
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { KONZ_PAGE2_SVG_ROWS } from '@/pages/Questions/konzPage2SvgRows';
 import { Head } from '@inertiajs/vue3';
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const props = defineProps<{
     pausedTestResult?: {
@@ -47,17 +46,7 @@ const prevPage = () => {
     if (page.value > 1) page.value--;
 };
 
-const showUnansweredDialog = ref(false);
 const hasCompleted = ref(false);
-
-type UnansweredItem = {
-    id: string;
-    page: number;
-    label: string;
-    target: string;
-};
-
-const unansweredItems = ref<UnansweredItem[]>([]);
 
 const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
     isActive: () => !hasCompleted.value,
@@ -68,9 +57,6 @@ const { isForcedFinish, clearForcedFinish } = useTeacherForceFinish({
         forceFinish();
     },
     onCancel: () => {
-        if (showUnansweredDialog.value) {
-            showUnansweredDialog.value = false;
-        }
         window.dispatchEvent(new Event('cancel-finish'));
     },
 });
@@ -88,37 +74,8 @@ const buildResults = () => ({
 
 const isEmptyAnswer = (answer: string | number | null | undefined) => String(answer ?? '').trim() === '';
 
-const collectUnansweredItems = (
-    answers: Array<string | number | null | undefined>,
-    pageNumber: number,
-    targetPrefix: string,
-    labelForIndex: (index: number) => string,
-) =>
-    answers
-        .map((answer, index) =>
-            isEmptyAnswer(answer)
-                ? {
-                      id: `${targetPrefix}-${index}`,
-                      page: pageNumber,
-                      label: labelForIndex(index),
-                      target: `${targetPrefix}-${index}`,
-                  }
-                : null,
-        )
-        .filter((item): item is UnansweredItem => item !== null);
-
-const getUnansweredItems = () => [
-    ...collectUnansweredItems(page1Inputs.value, 1, 'page-1-answer', (index) => `Aufgabe 1, Frage ${index + 1} (Zahlenreihen)`),
-    ...collectUnansweredItems(page2Answers.value, 2, 'page-2-answer', (index) => `Aufgabe 2, Frage ${index + 1} (Zuordnung)`),
-    ...collectUnansweredItems(copyCounts.value, 3, 'page-3-answer', (index) => `Aufgabe 3, Zeile ${String.fromCharCode(97 + index)}) (Abschrift)`),
-    ...collectUnansweredItems(page4Answers.value, 4, 'page-4-answer', (index) => `Aufgabe 4, Zeile ${index + 1} (Ziffern zählen)`),
-    ...collectUnansweredItems(
-        page5TickSums.value,
-        5,
-        'page-5-answer',
-        (index) => `Aufgabe 5, Zeile ${String.fromCharCode(97 + index)}) (Zeichen zählen)`,
-    ),
-];
+const hasUnansweredAnswers = () =>
+    [page1Inputs.value, page2Answers.value, copyCounts.value, page4Answers.value, page5TickSums.value].some((answers) => answers.some(isEmptyAnswer));
 
 const submitResults = () => {
     clearForcedFinish(false);
@@ -127,55 +84,19 @@ const submitResults = () => {
 };
 
 const forceFinish = () => {
-    showUnansweredDialog.value = false;
     submitResults();
 };
 
 const finishTest = () => {
+    if (hasUnansweredAnswers()) {
+        return;
+    }
+
     window.dispatchEvent(new Event('start-finish'));
-
-    const items = getUnansweredItems();
-    if (items.length) {
-        unansweredItems.value = items;
-        showUnansweredDialog.value = true;
-        return;
-    }
-
     submitResults();
 };
 
-const confirmFinishDespiteUnanswered = () => {
-    showUnansweredDialog.value = false;
-    submitResults();
-};
 const emit = defineEmits(['complete', 'started', 'update:answers']);
-
-const cancelFinishDialog = () => {
-    showUnansweredDialog.value = false;
-    window.dispatchEvent(new Event('cancel-finish'));
-};
-
-const setUnansweredDialogOpen = (open: boolean) => {
-    if (open) {
-        showUnansweredDialog.value = true;
-        return;
-    }
-
-    if (showUnansweredDialog.value) {
-        cancelFinishDialog();
-    }
-};
-
-const goToUnansweredItem = async (item: UnansweredItem) => {
-    cancelFinishDialog();
-    page.value = item.page;
-
-    await nextTick();
-
-    const target = document.querySelector<HTMLElement>(`[data-unanswered-target="${item.target}"]`);
-    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    target?.focus();
-};
 
 let progressEmitInterval: number | null = null;
 
@@ -739,6 +660,7 @@ const toggleTick = (r: number, i: number) => (page5TickMarks.value[r][i] = !page
 
 /** per-row totals input */
 const page5TickSums = ref<string[]>(Array(page5TickRows.length).fill(''));
+const allQuestionsAnswered = computed(() => !hasUnansweredAnswers());
 
 const rowLabel = (i: number) => String.fromCharCode(97 + i); // a..j
 
@@ -833,12 +755,7 @@ onUnmounted(() => {
                 <li v-for="(row, i) in page1Series" :key="i" class="flex items-center gap-2">
                     <span class="text-[18px] whitespace-pre">{{ row.join(' . ') }} . ?</span>
 
-                    <input
-                        v-model="page1Inputs[i]"
-                        class="answer-box h-8 w-12 text-[18px]"
-                        inputmode="numeric"
-                        :data-unanswered-target="`page-1-answer-${i}`"
-                    />
+                    <input v-model="page1Inputs[i]" class="answer-box h-8 w-12 text-[18px]" inputmode="numeric" />
                 </li>
             </ul>
         </div>
@@ -865,13 +782,7 @@ onUnmounted(() => {
                     <template v-for="(row, i) in page2Rows" :key="`page2-row-${i}`">
                         <div class="page2-row page2-left-row">
                             <div class="page2-svg page2-question-svg" v-html="row.questionSvg"></div>
-                            <input
-                                v-model="page2Answers[i]"
-                                class="answer-box page2-answer-input text-[18px]"
-                                inputmode="numeric"
-                                maxlength="1"
-                                :data-unanswered-target="`page-2-answer-${i}`"
-                            />
+                            <input v-model="page2Answers[i]" class="answer-box page2-answer-input text-[18px]" inputmode="numeric" maxlength="1" />
                         </div>
                         <div class="hidden self-stretch bg-black/60 lg:block"></div>
                         <div class="page2-row">
@@ -1029,7 +940,6 @@ onUnmounted(() => {
                                     class="answer-box count-box row-span-2 self-center justify-self-center"
                                     inputmode="numeric"
                                     maxlength="2"
-                                    :data-unanswered-target="`page-3-answer-${rIdx}`"
                                 />
 
                                 <!-- Row 2 -->
@@ -1080,7 +990,7 @@ onUnmounted(() => {
                         >{{ ch }}</span
                     >
                 </div>
-                <Input v-model="page4Answers[i]" class="inline h-9 w-16 text-[18px]" :data-unanswered-target="`page-4-answer-${i}`" />
+                <Input v-model="page4Answers[i]" class="inline h-9 w-16 text-[18px]" />
             </div>
         </div>
 
@@ -1130,12 +1040,7 @@ onUnmounted(() => {
                         </span>
                     </div>
                     <!-- right input -->
-                    <Input
-                        v-model="page5TickSums[r]"
-                        class="inline h-9 w-16 border border-gray-400 bg-white text-[18px]"
-                        placeholder=""
-                        :data-unanswered-target="`page-5-answer-${r}`"
-                    />
+                    <Input v-model="page5TickSums[r]" class="inline h-9 w-16 border border-gray-400 bg-white text-[18px]" placeholder="" />
                 </div>
             </div>
         </div>
@@ -1144,35 +1049,8 @@ onUnmounted(() => {
         <div class="my-8 flex gap-3">
             <Button @click="prevPage" v-if="page > 1">Zurück</Button>
             <Button @click="nextPage" v-if="page < MAX_PAGE">Weiter</Button>
-            <Button variant="destructive" @click="finishTest" v-if="page === MAX_PAGE">Test beenden</Button>
+            <Button variant="destructive" @click="finishTest" v-if="page === MAX_PAGE" :disabled="!allQuestionsAnswered">Test beenden</Button>
         </div>
-
-        <Dialog :open="showUnansweredDialog" @update:open="setUnansweredDialogOpen">
-            <DialogContent class="max-w-lg">
-                <DialogHeader>
-                    <DialogTitle>Nicht alle Antworten sind ausgefüllt</DialogTitle>
-                    <DialogDescription> Bitte prüfen Sie die offenen Felder. Leere Eingaben werden als unbeantwortet gespeichert. </DialogDescription>
-                </DialogHeader>
-                <div class="space-y-3">
-                    <p class="text-base">Offene Antworten:</p>
-                    <ul class="max-h-[50vh] space-y-2 overflow-y-auto pr-1 text-base">
-                        <li v-for="item in unansweredItems" :key="item.id">
-                            <button
-                                type="button"
-                                class="w-full rounded-md border border-gray-200 px-3 py-2 text-left transition hover:border-gray-400 hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:outline-none dark:border-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-800 dark:focus-visible:ring-gray-100"
-                                @click="goToUnansweredItem(item)"
-                            >
-                                {{ item.label }}
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-                <DialogFooter class="gap-2">
-                    <Button variant="outline" @click="cancelFinishDialog">Zurück zum Test</Button>
-                    <Button variant="destructive" @click="confirmFinishDespiteUnanswered">Trotzdem beenden</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
     </div>
 </template>
 

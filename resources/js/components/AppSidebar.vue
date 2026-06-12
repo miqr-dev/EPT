@@ -5,134 +5,174 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
+import { BookOpen, BookOpenCheck, ClipboardList, LayoutGrid, MessageSquareText, TabletSmartphone, Users } from 'lucide-vue-next';
 import { computed } from 'vue';
-import { LayoutGrid, Users, MessageSquareText, BookOpenCheck, TabletSmartphone, ClipboardList } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const page = usePage();
 
+const testNavItems: NavItem[] = [
+    {
+        title: 'BRT-A',
+        href: '/brt-a',
+    },
+    {
+        title: 'BRT-B',
+        href: '/brt-b',
+    },
+    {
+        title: 'MRT-A',
+        href: '/mrt-a',
+    },
+    {
+        title: 'MRT-B',
+        href: '/mrt-b',
+    },
+    {
+        title: 'FPI-R',
+        href: '/fpi-r',
+    },
+    {
+        title: 'LMT',
+        href: '/lmt',
+    },
+    {
+        title: 'LPS-B',
+        href: '/lps-b',
+    },
+    {
+        title: 'BIT-2',
+        href: '/bit-2',
+    },
+    {
+        title: 'BT',
+        href: '/bt',
+    },
+    {
+        title: 'AVEM',
+        href: '/avem',
+    },
+    {
+        title: '628',
+        href: '/konzentrationstest',
+    },
+];
+
+const instructionNavItems: NavItem[] = [
+    {
+        title: 'Allgemeine Informationen',
+        href: '/anleitungen/allgemein',
+    },
+    {
+        title: 'BRT',
+        href: '/anleitungen/brt',
+    },
+    {
+        title: 'MRT',
+        href: '/anleitungen/mrt',
+    },
+    {
+        title: 'FPI-R',
+        href: '/anleitungen/fpi-r',
+    },
+    {
+        title: 'LMT',
+        href: '/anleitungen/lmt',
+    },
+    {
+        title: 'LPS',
+        href: '/anleitungen/lps',
+    },
+    {
+        title: 'BIT-2',
+        href: '/anleitungen/bit-2',
+    },
+    {
+        title: 'BT',
+        href: '/anleitungen/bt',
+    },
+    {
+        title: 'AVEM',
+        href: '/anleitungen/avem',
+    },
+    {
+        title: '628',
+        href: '/anleitungen/628',
+    },
+];
+
 const mainNavItems = computed<NavItem[]>(() => {
-  const items: NavItem[] = [
-  {
-    title: 'Dashboard',
-    href: '/dashboard',
-    icon: TabletSmartphone,
-  },
-  {
-    title: 'Prüfungsergebnisse',
-    href: '/participants',
-    icon: BookOpenCheck,
-  },
-  {
-    title: 'Benutzer importieren',
-    href: '/participants/import',
-    icon: Users,
-  },
-  {
-    title: 'Kollaboration',
-    href: '/kollaboration',
-    icon: MessageSquareText,
-  },
-  {
-    title: 'BRT-A',
-    href: '/brt-a', // The new route for the Tests page
-    icon: LayoutGrid, // Placeholder icon, can be changed later
-  },
-  {
-    title: 'BRT-B',
-    href: '/brt-b', // The new route for the Tests page
-    icon: LayoutGrid, // Placeholder icon, can be changed later
-  },
-  {
-    title: 'MRT-A',
-    href: '/mrt-a', // The new route for the Tests page
-    icon: LayoutGrid, // Placeholder icon, can be changed later
-  },
-  {
-    title: 'MRT-B',
-    href: '/mrt-b', // The new route for the Tests page
-    icon: LayoutGrid, // Placeholder icon, can be changed later
-  },
-  {
-    title: 'FPI-R',
-    href: '/fpi-r', // The new route for the Tests page
-    icon: LayoutGrid, // Placeholder icon, can be changed later
-  },
-  {
-    title: 'LMT',
-    href: '/lmt', // The new route for the Tests page
-    icon: LayoutGrid, // Placeholder icon, can be changed later
-  },
-  // {
-  //     title: 'LPS-A',
-  //     href: '/lps-a',
-  //     icon: LayoutGrid,
-  // },
-  {
-    title: 'LPS-B',
-    href: '/lps-b',
-    icon: LayoutGrid ,
-  },
-  {
-    title: 'BIT-2',
-    href: '/bit-2', // The new route for the Tests page
-    icon: LayoutGrid, // Placeholder icon, can be changed later
-  },
-  {
-    title: 'BT',
-    href: '/bt',
-    icon: LayoutGrid,
-  },
-  {
-    title: 'AVEM',
-    href: '/avem', // The new route for the Tests page
-    icon: LayoutGrid, // Placeholder icon, can be changed later
-  },
-  {
-    title: '628',
-    href: '/konzentrationstest',
-    icon: LayoutGrid,
-  },
+    const items: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: '/dashboard',
+            icon: TabletSmartphone,
+        },
+        {
+            title: 'Prüfungsergebnisse',
+            href: '/participants',
+            icon: BookOpenCheck,
+        },
+        {
+            title: 'Benutzer importieren',
+            href: '/participants/import',
+            icon: Users,
+        },
+        {
+            title: 'Kollaboration',
+            href: '/kollaboration',
+            icon: MessageSquareText,
+        },
+        {
+            title: 'Tests',
+            href: '/tests',
+            icon: LayoutGrid,
+            items: testNavItems,
+        },
+        {
+            title: 'Anleitungen',
+            href: '/anleitungen/allgemein',
+            icon: BookOpen,
+            items: instructionNavItems,
+        },
+    ];
 
-  ];
+    if (page.props.auth.user?.role === 'admin') {
+        items.splice(1, 0, {
+            title: 'Standort-Prüfungen',
+            href: '/admin/pruefungen',
+            icon: ClipboardList,
+        });
+    }
 
-  if (page.props.auth.user?.role === 'admin') {
-    items.splice(1, 0, {
-      title: 'Standort-Prüfungen',
-      href: '/admin/pruefungen',
-      icon: ClipboardList,
-    });
-  }
-
-  return items;
+    return items;
 });
 
 const footerNavItems: NavItem[] = [];
-
 </script>
 
 <template>
-  <Sidebar collapsible="icon" variant="inset">
-    <SidebarHeader>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton size="lg" as-child>
-            <Link :href="route('dashboard')">
-              <AppLogo />
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    </SidebarHeader>
+    <Sidebar collapsible="icon" variant="inset">
+        <SidebarHeader>
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton size="lg" as-child>
+                        <Link :href="route('dashboard')">
+                            <AppLogo />
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarHeader>
 
-    <SidebarContent>
-      <NavMain :items="mainNavItems"/>
-    </SidebarContent>
+        <SidebarContent>
+            <NavMain :items="mainNavItems" />
+        </SidebarContent>
 
-    <SidebarFooter>
-      <NavFooter :items="footerNavItems" />
-      <NavUser />
-    </SidebarFooter>
-  </Sidebar>
-  <slot />
+        <SidebarFooter>
+            <NavFooter :items="footerNavItems" />
+            <NavUser />
+        </SidebarFooter>
+    </Sidebar>
+    <slot />
 </template>
