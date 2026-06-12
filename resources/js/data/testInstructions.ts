@@ -67,7 +67,7 @@ export const testInstructions: Record<string, TestInstruction> = {
                         description: 'Damit eine Anmeldung möglich ist, müssen die Teilnehmenden zuerst in das EPT importiert werden.',
                         steps: [
                             'Navigieren Sie zu „Benutzer importieren“.',
-                            'Tragen Sie den Benutzernamen ein oder kopieren Sie ihn aus der Teilnehmerliste in VerBIS/ServSmt.',
+                            'Tragen Sie den Benutzernamen ein oder kopieren Sie ihn aus der Teilnehmerliste in ServSmt.',
                             'Die Rolle „Teilnehmer“ und die Option „Login erlauben“ sind standardmäßig ausgewählt.',
                             'Klicken Sie auf den blauen Button „Importieren“.',
                         ],
