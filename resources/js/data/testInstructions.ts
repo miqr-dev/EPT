@@ -204,7 +204,7 @@ export const testInstructions: Record<string, TestInstruction> = {
                         title: 'Ein Ergebnis öffnen',
                         steps: [
                             'Klicken Sie auf den Testnamen, um die Ergebnisseite zu öffnen.',
-                            'Öffnen Sie den zunächst eingeklappten Bereich „Antworten“, um die abgegebenen Antworten anzuzeigen.',
+                            'Bei Bedarf öffnen Sie den eingeklappten Bereich „Antworten“, um die abgegebenen Antworten anzuzeigen.',
                             'Laden Sie oben links entweder nur das Ergebnis oder das Ergebnis einschließlich Antworten herunter.',
                             'Schließen Sie die Ergebnisansicht über das rote „X“ oben rechts.',
                         ],
