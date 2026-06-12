@@ -9,6 +9,25 @@ export interface InstructionSection {
     items: string[];
 }
 
+export interface InstructionGuideItem {
+    label?: string;
+    text: string;
+}
+
+export interface InstructionGuideBlock {
+    title?: string;
+    description?: string;
+    steps?: string[];
+    items?: InstructionGuideItem[];
+    note?: string;
+}
+
+export interface InstructionGuideSection {
+    title: string;
+    description?: string;
+    blocks: InstructionGuideBlock[];
+}
+
 export interface TestInstruction {
     name: string;
     fullName: string;
@@ -18,6 +37,7 @@ export interface TestInstruction {
     beforeTest: string[];
     duringTest: string[];
     afterTest: string[];
+    guideSections?: InstructionGuideSection[];
     sections?: InstructionSection[];
     resultImage?: {
         src: string;
@@ -31,27 +51,181 @@ export const testInstructions: Record<string, TestInstruction> = {
         name: 'Allgemeine Informationen',
         fullName: 'Leitfaden für Lehrkräfte und Prüfende',
         summary:
-            'Diese Anleitungen beschreiben, wie Teilnehmende die einzelnen Tests bearbeiten und welche Hinweise vor, während und nach der Durchführung wichtig sind.',
+            'Dieser Leitfaden beschreibt den vollständigen organisatorischen Ablauf: Teilnehmende importieren, Prüfungen vorbereiten, Verträge freigeben, laufende Tests steuern und Ergebnisse abrufen.',
         variants: [],
-        features: [
-            { label: 'Zielgruppe', value: 'Lehrkräfte und Prüfende' },
-            { label: 'Aufbau', value: 'Vor, während und nach dem Test' },
-            { label: 'Ergänzung', value: 'Testspezifische Hinweise beachten' },
-        ],
-        beforeTest: [
-            'Öffnen Sie die Anleitung des vorgesehenen Tests und erklären Sie den Teilnehmenden die dort genannten Bedienhinweise, bevor der Test gestartet wird.',
-            'Stellen Sie benötigte Hilfsmittel bereit. Bei Tests mit Papieraufgaben müssen Papier und Schreibmaterial vor Beginn verfügbar sein.',
-            'Weisen Sie die Teilnehmenden darauf hin, erst nach Ihrer Freigabe auf „Test starten“ beziehungsweise auf den nächsten Start-Button zu klicken.',
-        ],
-        duringTest: [
-            'Achten Sie darauf, dass der richtige Test geöffnet ist und die Teilnehmenden die beschriebenen Eingabe- und Navigationsregeln einhalten.',
-            'Eine Pause ist nur bei den Tests möglich, die in der jeweiligen Anleitung als „pausierbar“ gekennzeichnet sind.',
-            'Der Hell- oder Dunkelmodus kann nur genutzt werden, wenn beide Darstellungen für den jeweiligen Test ausgewiesen sind.',
-        ],
-        afterTest: [
-            'Prüfen Sie bei Tests mit manuellen Bewertungen oder Korrekturmöglichkeiten die Ergebnisse direkt in der Browseransicht.',
-            'Speichern Sie manuelle Einträge und Korrekturen, bevor Sie die Auswertung oder den PDF-Export verwenden.',
-            'Beachten Sie testspezifische Kontrollhinweise, insbesondere bei BRT, LPS-B und BT.',
+        features: [],
+        beforeTest: [],
+        duringTest: [],
+        afterTest: [],
+        guideSections: [
+            {
+                title: 'Prüfungsvorbereitung',
+                description: 'Teilnehmende importieren, eine Prüfung zusammenstellen und den Prüfungsraum vorbereiten.',
+                blocks: [
+                    {
+                        title: 'Teilnehmende importieren',
+                        description: 'Damit eine Anmeldung möglich ist, müssen die Teilnehmenden zuerst in das EPT importiert werden.',
+                        steps: [
+                            'Navigieren Sie zu „Benutzer importieren“.',
+                            'Tragen Sie den Benutzernamen ein oder kopieren Sie ihn aus der Teilnehmerliste in VerBIS/ServSmt.',
+                            'Die Rolle „Teilnehmer“ und die Option „Login erlauben“ sind standardmäßig ausgewählt.',
+                            'Klicken Sie auf den blauen Button „Importieren“.',
+                        ],
+                        note: 'Alle neu importierten Personen erscheinen anschließend in der Tabelle „Importierte Benutzer“. Danach können Sie zum Dashboard wechseln und die Prüfung vorbereiten.',
+                    },
+                    {
+                        title: 'Neue Prüfung erstellen',
+                        steps: [
+                            'Klicken Sie auf „+ Neue Prüfung erstellen“.',
+                            'Vergeben Sie einen eindeutigen Namen, zum Beispiel „24.02.2026 Gruppe A“.',
+                            'Wählen Sie die Teilnehmenden aus „Aktuelle Benutzer“ oder „Importierte Benutzer“. Über das Kontrollkästchen neben „Name“ können alle Personen ausgewählt werden.',
+                            'Übernehmen Sie die ausgewählten Personen mit dem Pfeil-Button in die Prüfungsliste.',
+                            'Wählen Sie unter „Prüfungsschritte“ die Tests aus, die zugewiesen werden sollen.',
+                            'Klicken Sie auf „Prüfung speichern“.',
+                        ],
+                    },
+                    {
+                        title: 'Prüfung starten',
+                        steps: [
+                            'Nach dem Speichern erscheint die Prüfung rechts in der Tabelle „Alle Prüfungen“.',
+                            'Öffnen Sie „Details“ und kontrollieren Sie die Teilnehmenden sowie die zugewiesenen Tests.',
+                            'Vor dem Prüfungsstart können Teilnehmende und Tests noch hinzugefügt oder entfernt werden. Angemeldete Personen werden grün, nicht angemeldete Personen rot angezeigt.',
+                            'Speichern Sie Änderungen über „Änderungen speichern“.',
+                            'Klicken Sie auf „Prüfung starten“.',
+                        ],
+                    },
+                ],
+            },
+            {
+                title: 'Vertrag anzeigen',
+                description: 'Den Maßnahmevertrag kontrollieren, für Teilnehmende freigeben und anschließend wieder sperren.',
+                blocks: [
+                    {
+                        title: 'Vertrag vorab kontrollieren',
+                        description:
+                            'Nachdem der Maßnahmevertrag im vorgesehenen Ordner gespeichert wurde, kontrollieren Sie über das Augen-Symbol neben dem Namen, ob die Datei vorhanden und für die teilnehmende Person lesbar ist.',
+                    },
+                    {
+                        title: 'Vertrag freigeben',
+                        items: [
+                            {
+                                label: 'Vor dem Prüfungsstart',
+                                text: 'Geben Sie den Vertrag für einzelne Personen über „Vertrag freigeben“ neben dem jeweiligen Namen frei.',
+                            },
+                            {
+                                label: 'Während der laufenden Prüfung',
+                                text: 'In der Tabelle „Laufende Prüfungen“ können Sie den Vertrag oberhalb der Testnamen gleichzeitig für alle Teilnehmenden freigeben.',
+                            },
+                            {
+                                label: 'Nach der Einsicht',
+                                text: 'Klicken Sie auf „Vertragsansicht sperren“, sobald alle Teilnehmenden die Prüfung des Vertrags abgeschlossen haben.',
+                            },
+                        ],
+                    },
+                ],
+            },
+            {
+                title: 'Während der Prüfung',
+                description: 'Tests freischalten, Bearbeitungsstände beobachten und bei Bedarf eingreifen.',
+                blocks: [
+                    {
+                        title: 'Tabelle „Laufende Prüfungen“',
+                        description:
+                            'Sobald die Prüfung gestartet wurde, erscheint auf dem Dashboard die Tabelle „Laufende Prüfungen“. Ein Klick auf einen Testnamen aktiviert den Button „Test starten“ auf den Rechnern der Teilnehmenden.',
+                        items: [
+                            { label: 'Aktueller Test', text: 'Name des derzeit freigeschalteten Tests.' },
+                            {
+                                label: 'Status',
+                                text: 'Mögliche Zustände sind „Nicht gestartet“, „In Bearbeitung“, „Pausiert“ und „Abgeschlossen“.',
+                            },
+                            { label: 'Gesamtzeit', text: 'Die für den Test standardmäßig hinterlegte Bearbeitungszeit.' },
+                            {
+                                label: 'Verbleibende Zeit',
+                                text: 'Individueller Countdown. Er startet erst, wenn die teilnehmende Person nach dem Lesen der Anleitung auf „Test starten“ klickt.',
+                            },
+                        ],
+                    },
+                    {
+                        title: 'Zeit, Pause und Testende steuern',
+                        items: [
+                            {
+                                label: 'Zusatzzeit',
+                                text: 'Fügen Sie Zusatzzeit vor Ablauf des Countdowns hinzu. Pro Vorgang sind maximal 30 Minuten möglich; der Vorgang kann mehrfach wiederholt werden.',
+                            },
+                            {
+                                label: 'Pausierbare Tests',
+                                text: 'Ein pausierter Test kann später wieder aufgerufen und fortgesetzt werden. Vor dem Beenden der gesamten Prüfung müssen alle pausierten Tests aller Teilnehmenden abgeschlossen werden, sonst gehen sie verloren.',
+                            },
+                            {
+                                label: 'Test beenden',
+                                text: 'Der rote Button „Test beenden“ startet einen Countdown von zehn Sekunden. Danach wird der Test beendet und geschlossen.',
+                            },
+                            {
+                                label: 'Nächster Test',
+                                text: 'Wenn alle Teilnehmenden den aktuellen Test beendet haben, schalten Sie den nächsten Test durch Anklicken seines Namens frei.',
+                            },
+                        ],
+                    },
+                    {
+                        title: 'Farben der Testnamen',
+                        items: [
+                            { label: 'Blau', text: 'Der Test wurde noch nicht gestartet.' },
+                            { label: 'Grün', text: 'Der Test ist aktuell freigeschaltet beziehungsweise läuft.' },
+                            { label: 'Schwarz', text: 'Der Test ist abgeschlossen.' },
+                        ],
+                    },
+                    {
+                        title: 'Prüfung abschließen',
+                        description:
+                            'Nachdem alle Tests beendet wurden, kann die Prüfung nach zwei Tagen über den schwarzen Button „Prüfung beenden“ oben rechts in der Tabelle geschlossen werden.',
+                    },
+                ],
+            },
+            {
+                title: 'Prüfungsergebnisse',
+                description: 'Einzelergebnisse kontrollieren, Antworten einsehen und PDF-Dateien herunterladen.',
+                blocks: [
+                    {
+                        title: 'Übersicht',
+                        description:
+                            'Die Seite „Prüfungsergebnisse“ zeigt den Namen der teilnehmenden Person, das Vorbereitungsdatum der Prüfung, die abgeschlossenen Tests und die verfügbaren PDF-Downloads.',
+                        items: [
+                            {
+                                label: 'Suche',
+                                text: 'Über das Suchfeld oben rechts kann nach Vor- oder Nachname gesucht werden.',
+                            },
+                            {
+                                label: 'Verfügbarkeit',
+                                text: 'Abgeschlossene Tests erscheinen sofort auf der Ergebnisseite. Die gesamte Prüfung muss dafür nicht beendet sein.',
+                            },
+                        ],
+                    },
+                    {
+                        title: 'Ein Ergebnis öffnen',
+                        steps: [
+                            'Klicken Sie auf den Testnamen, um die Ergebnisseite zu öffnen.',
+                            'Öffnen Sie den zunächst eingeklappten Bereich „Antworten“, um die abgegebenen Antworten anzuzeigen.',
+                            'Laden Sie oben links entweder nur das Ergebnis oder das Ergebnis einschließlich Antworten herunter.',
+                            'Schließen Sie die Ergebnisansicht über das rote „X“ oben rechts.',
+                        ],
+                    },
+                    {
+                        title: 'Alle Ergebnisse herunterladen',
+                        items: [
+                            { label: 'Alle Tests', text: 'Lädt alle vorhandenen Testergebnisse ohne Antworten als PDF herunter.' },
+                            {
+                                label: 'Mit Antworten',
+                                text: 'Lädt alle vorhandenen Testergebnisse einschließlich Antworten als PDF herunter.',
+                            },
+                        ],
+                    },
+                ],
+            },
+            {
+                title: 'Kollaboration',
+                description: 'Informationen zu den Kollaborationsfunktionen werden in Kürze ergänzt.',
+                blocks: [],
+            },
         ],
     },
     brt: {
@@ -64,6 +238,7 @@ export const testInstructions: Record<string, TestInstruction> = {
             { label: 'Darstellung', value: 'Hell- und Dunkelmodus' },
             { label: 'Pause', value: 'Pausierbar' },
             { label: 'Eingabe', value: 'Max. 6 Ziffern und 3 weitere Zeichen' },
+            { label: 'Zeitlimit', value: '35 Minuten' },
         ],
         beforeTest: [
             'Informieren Sie die Teilnehmenden, dass sie über die linke Seitenleiste frei zwischen den Aufgaben navigieren können.',
@@ -88,6 +263,7 @@ export const testInstructions: Record<string, TestInstruction> = {
             { label: 'Darstellung', value: 'Hell- und Dunkelmodus' },
             { label: 'Pause', value: 'Pausierbar' },
             { label: 'Antwortpflicht', value: 'Alle Fragen' },
+            { label: 'Zeitlimit', value: '30 Minuten' },
         ],
         beforeTest: [
             'Informieren Sie die Teilnehmenden ausdrücklich über die Bedienung per Doppelklick beziehungsweise zweimaligem Anklicken.',
@@ -111,6 +287,7 @@ export const testInstructions: Record<string, TestInstruction> = {
             { label: 'Darstellung', value: 'Hell- und Dunkelmodus' },
             { label: 'Pause', value: 'Pausierbar' },
             { label: 'Antwortpflicht', value: 'Alle außer Frage 131' },
+            { label: 'Zeitlimit', value: '60 Minuten' },
         ],
         beforeTest: [
             'Die teilnehmende Person muss der Erklärung zustimmen, um den Test fortsetzen zu können.',
@@ -133,12 +310,10 @@ export const testInstructions: Record<string, TestInstruction> = {
             { label: 'Darstellung', value: 'Hell- und Dunkelmodus' },
             { label: 'Pause', value: 'Pausierbar' },
             { label: 'Antwortpflicht', value: 'Alle Fragen' },
+            { label: 'Zeitlimit', value: '60 Minuten' },
         ],
-        beforeTest: ['Weisen Sie die Teilnehmenden darauf hin, dass jede Frage beantwortet werden muss.'],
-        duringTest: [
-            'Kontrollieren Sie bei Rückfragen, ob eine Antwort ausgewählt wurde.',
-            'Der Test kann bei Bedarf pausiert und anschließend fortgesetzt werden.',
-        ],
+        beforeTest: [],
+        duringTest: [],
         afterTest: [],
     },
     lps: {
@@ -151,6 +326,7 @@ export const testInstructions: Record<string, TestInstruction> = {
             { label: 'Darstellung', value: 'Nur Hellmodus' },
             { label: 'Pause', value: 'Nicht pausierbar' },
             { label: 'Start', value: 'Spalten einzeln starten' },
+            { label: 'Zeitlimit', value: '180 Minuten' },
         ],
         beforeTest: [
             'Erklären Sie vor jeder Spalte genau, was die Teilnehmenden bearbeiten sollen.',
@@ -181,9 +357,10 @@ export const testInstructions: Record<string, TestInstruction> = {
             { label: 'Darstellung', value: 'Hell- und Dunkelmodus' },
             { label: 'Pause', value: 'Pausierbar' },
             { label: 'Antwortpflicht', value: 'Alle Aufgaben' },
+            { label: 'Zeitlimit', value: '60 Minuten' },
         ],
-        beforeTest: ['Weisen Sie die Teilnehmenden darauf hin, dass alle Aufgaben beantwortet werden müssen.'],
-        duringTest: ['Der Test kann bei Bedarf pausiert und anschließend fortgesetzt werden.'],
+        beforeTest: [],
+        duringTest: [],
         afterTest: [],
     },
     bt: {
@@ -196,6 +373,7 @@ export const testInstructions: Record<string, TestInstruction> = {
             { label: 'Darstellung', value: 'Hell- und Dunkelmodus' },
             { label: 'Pause', value: 'Pausierbar' },
             { label: 'Auswertung', value: 'Teilweise manuell' },
+            { label: 'Zeitlimit', value: '60 Minuten' },
         ],
         beforeTest: [
             'Stellen Sie Papier und Schreibmaterial für Aufgabe 2 bereit.',
@@ -257,9 +435,10 @@ export const testInstructions: Record<string, TestInstruction> = {
             { label: 'Darstellung', value: 'Hell- und Dunkelmodus' },
             { label: 'Pause', value: 'Pausierbar' },
             { label: 'Antwortpflicht', value: 'Alle Fragen' },
+            { label: 'Zeitlimit', value: '60 Minuten' },
         ],
-        beforeTest: ['Weisen Sie die Teilnehmenden darauf hin, dass alle Fragen beantwortet werden müssen.'],
-        duringTest: ['Der Test kann bei Bedarf pausiert und anschließend fortgesetzt werden.'],
+        beforeTest: [],
+        duringTest: [],
         afterTest: [],
     },
     '628': {
@@ -271,9 +450,10 @@ export const testInstructions: Record<string, TestInstruction> = {
             { label: 'Darstellung', value: 'Hell- und Dunkelmodus' },
             { label: 'Pause', value: 'Pausierbar' },
             { label: 'Antwortpflicht', value: 'Alle Aufgaben' },
+            { label: 'Zeitlimit', value: '60 Minuten' },
         ],
-        beforeTest: ['Weisen Sie die Teilnehmenden darauf hin, dass alle Aufgaben beantwortet werden müssen.'],
-        duringTest: ['Der Test kann bei Bedarf pausiert und anschließend fortgesetzt werden.'],
+        beforeTest: [],
+        duringTest: [],
         afterTest: [],
     },
 };
