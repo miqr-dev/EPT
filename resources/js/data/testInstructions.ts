@@ -334,12 +334,12 @@ export const testInstructions: Record<string, TestInstruction> = {
             'Stellen Sie für Spalte 6 Papier und Schreibmaterial bereit.',
         ],
         duringTest: [
-            'Die Teilnehmenden starten die einzelnen Spalten selbst über den jeweiligen Start-Button.',
+            'Die Teilnehmenden starten die einzelnen Spalten selbst über den jeweiligen Start-Button. (nachdem Ihre Erklärung beendet ist) ',
             'Beim Start von Spalte 2 werden Spalte 1 und Spalte 2 gemeinsam aktiviert.',
             'Spalte 6 wird auf Papier bearbeitet und nicht direkt im Test eingegeben.',
         ],
         afterTest: [
-            'Tragen Sie die erreichte Punktzahl für Spalte 6 auf der LPS-B-Ergebnisseite in das Feld „Spalte 6 (manuell)“ ein.',
+            'Tragen Sie die erreichte Punktzahl für Spalte 6 auf der LPS-B-Ergebnisseite des jeweiligen Teilnehmenden in das Feld „Spalte 6 (manuell)“ ein.',
             'Klicken Sie anschließend auf „Speichern“. Das Auswertungsdiagramm wird automatisch mit dem neuen Wert aktualisiert.',
         ],
         resultImage: {

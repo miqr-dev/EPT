@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import EntranceAnalysisModal from '@/components/EntranceAnalysisModal.vue';
 import TestResultModal from '@/components/TestResultModal.vue';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { downloadPdfOrOpenPrint, openPrintPreview } from '@/lib/pdf-export';
 import { Link, router } from '@inertiajs/vue3';
-import { FileText, Loader2, Search } from 'lucide-vue-next';
+import { ChartNoAxesCombined, FileText, Loader2, Search } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 const props = defineProps<{
@@ -25,6 +28,8 @@ const searchQuery = ref(props.filters.search ?? '');
 const pdfParticipant = ref<any | null>(null);
 const isGeneratingPdf = ref(false);
 const pdfExportMode = ref<'results' | 'answers' | null>(null);
+const isEntranceAnalysisOpen = ref(false);
+const entranceAnalysisParticipant = ref<any | null>(null);
 
 const TEST_PDF_ORDER = [
     ['LPS-B'],
@@ -49,7 +54,7 @@ const dateFormatter = computed(
         }),
 );
 
-function viewTestResult(assignment, participant) {
+function viewTestResult(assignment: any, participant: any) {
     selectedAssignment.value = assignment;
     selectedParticipant.value = participant;
     isModalOpen.value = true;
@@ -59,6 +64,20 @@ function closeModal() {
     isModalOpen.value = false;
     selectedAssignment.value = null;
     selectedParticipant.value = null;
+}
+
+function openEntranceAnalysis(participant: any) {
+    entranceAnalysisParticipant.value = participant;
+    isEntranceAnalysisOpen.value = true;
+}
+
+function closeEntranceAnalysis() {
+    isEntranceAnalysisOpen.value = false;
+    entranceAnalysisParticipant.value = null;
+}
+
+function testDisplayName(assignment: any) {
+    return assignment?.test?.name === 'Konzentrationstest' ? '628' : assignment?.test?.name;
 }
 
 function completedAssignments(participant: any) {
@@ -77,9 +96,9 @@ function orderedPdfAssignments(participant: any) {
             assignment,
             order: testOrderIndex(assignment),
         }))
-        .filter(({ order }) => order !== -1)
-        .sort((a, b) => a.order - b.order)
-        .map(({ assignment }) => assignment);
+        .filter(({ order }: { order: number }) => order !== -1)
+        .sort((a: { order: number }, b: { order: number }) => a.order - b.order)
+        .map(({ assignment }: { assignment: any }) => assignment);
 }
 
 function sanitizeFilename(value: string) {
@@ -173,15 +192,18 @@ function updateSearch() {
                     <Table class="text-sm">
                         <TableHeader class="bg-slate-50/80 dark:bg-slate-900/30">
                             <TableRow>
-                                <TableHead class="h-11 w-[18%] px-5 text-sm font-semibold">Name</TableHead>
-                                <TableHead class="h-11 w-[15%] px-4 text-sm font-semibold whitespace-nowrap">Prüfung erstellt am</TableHead>
+                                <TableHead class="h-11 w-[220px] min-w-[220px] px-5 text-sm font-semibold">Name</TableHead>
+                                <TableHead class="h-11 w-[180px] min-w-[180px] px-4 text-sm font-semibold whitespace-nowrap"
+                                    >Prüfung erstellt am</TableHead
+                                >
                                 <TableHead class="h-11 px-4 text-sm font-semibold">Tests</TableHead>
+                                <TableHead class="h-11 w-[130px] min-w-[130px] px-3 text-center text-sm font-semibold">Eingangsanalyse</TableHead>
                                 <TableHead class="h-11 w-[290px] min-w-[290px] px-5 text-center text-sm font-semibold">PDF</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             <TableRow v-if="participants.data.length === 0">
-                                <TableCell colspan="4" class="py-8 text-center text-sm text-muted-foreground"
+                                <TableCell colspan="5" class="py-8 text-center text-sm text-muted-foreground"
                                     >Keine Teilnehmer:innen gefunden.</TableCell
                                 >
                             </TableRow>
@@ -209,11 +231,30 @@ function updateSearch() {
                                                 :disabled="assignment.results.length === 0"
                                                 @click="assignment.results.length > 0 && viewTestResult(assignment, participant)"
                                             >
-                                                {{ assignment.test.name }}
+                                                {{ testDisplayName(assignment) }}
                                             </button>
                                         </div>
                                     </div>
                                     <div v-else class="py-1.5 text-sm text-muted-foreground">Keine Tests zugewiesen.</div>
+                                </TableCell>
+                                <TableCell class="px-3 py-2.5 text-center align-middle">
+                                    <TooltipProvider :delay-duration="0">
+                                        <Tooltip>
+                                            <TooltipTrigger as-child>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    class="size-8 border-blue-200 bg-blue-50/60 text-blue-700 hover:border-blue-300 hover:bg-blue-100 hover:text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/50 dark:hover:text-blue-300"
+                                                    aria-label="Eingangsanalyse öffnen"
+                                                    @click="openEntranceAnalysis(participant)"
+                                                >
+                                                    <ChartNoAxesCombined class="size-4" aria-hidden="true" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Eingangsanalyse öffnen</TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
                                 </TableCell>
                                 <TableCell class="px-5 py-2.5 align-middle">
                                     <div class="flex flex-nowrap justify-center gap-2">
@@ -285,5 +326,6 @@ function updateSearch() {
             </Card>
         </div>
         <TestResultModal :isOpen="isModalOpen" :assignment="selectedAssignment" :participant="selectedParticipant" @close="closeModal" />
+        <EntranceAnalysisModal :is-open="isEntranceAnalysisOpen" :participant="entranceAnalysisParticipant" @close="closeEntranceAnalysis" />
     </AppLayout>
 </template>

@@ -26,6 +26,7 @@ class RedirectBasedOnRole
         'participant.onboarding.save',
         'test-results.print-signed',
         'participants.results.print-signed',
+        'participants.entrance-analysis.print-signed',
         // ...any other auth routes
       ])
     ) {
@@ -114,6 +115,9 @@ class RedirectBasedOnRole
         'test-results.pdf',
         'participants.results.print',
         'participants.results.pdf',
+        'participants.entrance-analysis.update',
+        'participants.entrance-analysis.print',
+        'participants.entrance-analysis.pdf',
         'exam-step-status.add-time',
       ];
 

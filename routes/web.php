@@ -11,6 +11,7 @@ use App\Http\Controllers\ResultPdfExportController;
 use App\Http\Controllers\AdminExamOverviewController;
 use App\Http\Controllers\ExamStepStatusController;
 use App\Http\Controllers\CollaborationCenterController;
+use App\Http\Controllers\EntranceAnalysisController;
 
 Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     // All role-protected pages
@@ -106,6 +107,12 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
         ->name('participants.results.print');
     Route::get('/participants/{participant}/results/pdf', [ResultPdfExportController::class, 'downloadParticipantResults'])
         ->name('participants.results.pdf');
+    Route::put('/participants/{participant}/entrance-analysis', [EntranceAnalysisController::class, 'update'])
+        ->name('participants.entrance-analysis.update');
+    Route::get('/participants/{participant}/entrance-analysis/print', [ResultPdfExportController::class, 'showEntranceAnalysis'])
+        ->name('participants.entrance-analysis.print');
+    Route::get('/participants/{participant}/entrance-analysis/pdf', [ResultPdfExportController::class, 'downloadEntranceAnalysis'])
+        ->name('participants.entrance-analysis.pdf');
 
 
     //!PDF
@@ -122,6 +129,8 @@ Route::middleware(['signed:relative'])->group(function () {
         ->name('test-results.print-signed');
     Route::get('/signed/participants/{participant}/results/print', [ResultPdfExportController::class, 'showParticipantResults'])
         ->name('participants.results.print-signed');
+    Route::get('/signed/participants/{participant}/entrance-analysis/print', [ResultPdfExportController::class, 'showEntranceAnalysis'])
+        ->name('participants.entrance-analysis.print-signed');
 });
 
 Route::get('/login', function () {

@@ -9,6 +9,7 @@ use LdapRecord\Laravel\Auth\LdapAuthenticatable;
 use LdapRecord\Laravel\Auth\AuthenticatesWithLdap;
 use Illuminate\Notifications\Notifiable;
 use App\Models\ExamParticipant;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable implements LdapAuthenticatable
 {
@@ -45,6 +46,11 @@ class User extends Authenticatable implements LdapAuthenticatable
   public function participantProfile()
   {
     return $this->hasOne(ParticipantProfile::class);
+  }
+
+  public function entranceAnalysis(): HasOne
+  {
+    return $this->hasOne(EntranceAnalysis::class, 'participant_id');
   }
   public function city()
   {

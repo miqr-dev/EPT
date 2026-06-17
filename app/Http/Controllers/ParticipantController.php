@@ -361,6 +361,7 @@ class ParticipantController extends Controller
       })
       ->with([
         'participantProfile',
+        'entranceAnalysis.teacher',
         'testAssignments.test',
         'testAssignments.results' => function ($query) {
           $query->with(['teacher', 'manualScores'])->orderBy('created_at', 'desc');

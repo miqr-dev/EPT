@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ExamParticipant;
+use App\Models\Exam;
 use App\Models\TestAssignment;
 use App\Models\TestResult;
 use App\Models\User;
@@ -117,6 +118,43 @@ class ResultPdfExportController extends Controller
     return $this->pdfResponse($request, $printUrl, $filename);
   }
 
+  public function showEntranceAnalysis(Request $request, User $participant)
+  {
+    $this->authorizeResultExport($request, $participant);
+
+    $participant->load([
+      'participantProfile',
+      'entranceAnalysis.teacher',
+    ]);
+    $metadata = $this->entranceAnalysisMetadata($participant);
+
+    return Inertia::render('Print/EntranceAnalysis', [
+      'participant' => $participant,
+      'assignments' => $this->orderedAssignments($participant),
+      'analysis' => $participant->entranceAnalysis,
+      'teacherName' => $participant->entranceAnalysis?->teacher
+        ? $this->userDisplayName($participant->entranceAnalysis->teacher)
+        : $metadata['teacherName'],
+      'conductedAt' => $metadata['conductedAt'],
+      'autoPrint' => $request->boolean('auto_print'),
+      'filename' => $this->entranceAnalysisFilename($participant),
+      'pdfUrl' => URL::route('participants.entrance-analysis.pdf', [
+        'participant' => $participant->id,
+      ], false),
+    ]);
+  }
+
+  public function downloadEntranceAnalysis(Request $request, User $participant)
+  {
+    $this->authorizeResultExport($request, $participant);
+
+    $printUrl = $this->signedPrintUrl($request, 'participants.entrance-analysis.print-signed', [
+      'participant' => $participant->id,
+    ]);
+
+    return $this->pdfResponse($request, $printUrl, $this->entranceAnalysisFilename($participant));
+  }
+
   private function pdfResponse(Request $request, string $printUrl, string $filename)
   {
     try {
@@ -203,6 +241,7 @@ class ResultPdfExportController extends Controller
       '--run-all-compositor-stages-before-draw',
       '--print-to-pdf=' . $pdfPath,
       '--print-to-pdf-no-header',
+      '--no-pdf-header-footer',
       '--virtual-time-budget=10000',
       '--window-size=1280,900',
       '--user-data-dir=' . $profileDir,
@@ -361,5 +400,30 @@ class ResultPdfExportController extends Controller
       '_' . ($testResult->assignment?->test?->name ?? 'Test')
         . ($includeAnswers ? '_Ergebnis_und_Antworten.pdf' : '_Ergebnis.pdf'),
     );
+  }
+
+  private function entranceAnalysisMetadata(User $participant): array
+  {
+    $exam = Exam::query()
+      ->whereHas('participants', fn($query) => $query->where('participant_id', $participant->id))
+      ->with('teacher')
+      ->latest('created_at')
+      ->first();
+    $date = $exam?->completed_at ?? $exam?->started_at ?? $exam?->created_at;
+
+    return [
+      'teacherName' => $exam?->teacher ? $this->userDisplayName($exam->teacher) : '',
+      'conductedAt' => $date?->toDateString(),
+    ];
+  }
+
+  private function userDisplayName(User $user): string
+  {
+    return trim(collect([$user->firstname, $user->name])->filter()->implode(' '));
+  }
+
+  private function entranceAnalysisFilename(User $participant): string
+  {
+    return $this->filename($participant->name, '_Eingangsanalyse.pdf');
   }
 }
