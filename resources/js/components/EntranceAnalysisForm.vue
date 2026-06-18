@@ -177,6 +177,7 @@ function concentrationBand(value?: number | null) {
                     <tr class="summary-row">
                         <td>
                             <span>GI</span>
+                            <span class="value-cell gi-total-value">{{ values.lps?.totalRaw ?? '' }}</span>
                             <em>T-Wert</em>
                         </td>
                         <td class="value-cell">{{ values.lps?.totalT ?? '' }}</td>
@@ -938,6 +939,12 @@ h1 {
     font-size: 8.5pt;
     font-weight: 700 !important;
     text-align: center;
+}
+
+.gi-total-value {
+    display: inline-block;
+    margin-left: 1.5mm;
+    min-width: 9mm;
 }
 
 .summary-row td {

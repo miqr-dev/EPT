@@ -65,6 +65,10 @@ test('teacher cannot edit an entrance analysis from another city', function () {
 test('entrance analysis print page contains saved observations and latest test data', function () {
     $city = City::create(['name' => 'Berlin']);
     $teacher = entranceAnalysisUser($city, 'teacher', 'teacher.print');
+        $teacher->forceFill([
+        'firstname' => 'Tina',
+        'name' => 'Tina Muster',
+    ])->save();
     $participant = entranceAnalysisUser($city, 'participant', 'participant.print');
 
     ParticipantProfile::create([

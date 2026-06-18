@@ -419,7 +419,25 @@ class ResultPdfExportController extends Controller
 
   private function userDisplayName(User $user): string
   {
-    return trim(collect([$user->firstname, $user->name])->filter()->implode(' '));
+        $firstName = trim((string) $user->firstname);
+    $name = trim((string) $user->name);
+
+    if ($firstName === '') {
+      return $name;
+    }
+
+    if ($name === '') {
+      return $firstName;
+    }
+
+    $normalizedFirstName = Str::lower($firstName);
+    $normalizedName = Str::lower($name);
+
+    if ($normalizedName === $normalizedFirstName || Str::startsWith($normalizedName, $normalizedFirstName . ' ')) {
+      return $name;
+    }
+
+    return trim($firstName . ' ' . $name);
   }
 
   private function entranceAnalysisFilename(User $participant): string

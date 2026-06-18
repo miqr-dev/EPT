@@ -255,6 +255,7 @@ function lpsAnalysis(entry: ReturnType<typeof latestResult>, age?: number | null
 
     return {
         rows: rows.map((row) => ({ ...row, value: lookupLpsColumn(ageKey, row.key, raw[row.key]) })),
+        totalRaw,
         totalT: total?.t ?? null,
         percentile: total?.pr ?? null,
         iq,

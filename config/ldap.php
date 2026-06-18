@@ -12,6 +12,11 @@ return [
       'use_ssl' => true, // true for LDAPS
       'use_tls' => false, // true for LDAPS
       'use_sasl' => false,
+      'options' => [
+        LDAP_OPT_X_TLS_REQUIRE_CERT => env('LDAP_TLS_VERIFY', true)
+          ? LDAP_OPT_X_TLS_DEMAND
+          : LDAP_OPT_X_TLS_NEVER,
+      ],
     ],
   ],
 
@@ -25,9 +30,6 @@ return [
     'enabled' => env('LDAP_CACHE', false),
     'driver' => env('CACHE_DRIVER', 'file'),
   ],
-  'options' => [
-    // Accept self-signed certs (for testing only)
-    // LDAP_OPT_X_TLS_REQUIRE_CERT => LDAP_OPT_X_TLS_NEVER,
-  ],
+
 
 ];

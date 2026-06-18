@@ -24,9 +24,26 @@ const assignments = computed(() => props.participant?.test_assignments ?? []);
 const analysis = computed(() => props.participant?.entrance_analysis ?? null);
 const teacherName = computed(() => {
     const teacher = analysis.value?.teacher ?? page.props.auth?.user;
-    return [teacher?.firstname, teacher?.name].filter(Boolean).join(' ').trim();
+    return displayName(teacher);
 });
 const filename = computed(() => `${sanitizeFilename(props.participant?.name ?? 'Teilnehmer')}_Eingangsanalyse.pdf`);
+
+function displayName(user?: { firstname?: string | null; name?: string | null } | null) {
+    const firstName = String(user?.firstname ?? '').trim();
+    const name = String(user?.name ?? '').trim();
+
+    if (!firstName) return name;
+    if (!name) return firstName;
+
+    const normalizedFirstName = firstName.toLocaleLowerCase('de-DE');
+    const normalizedName = name.toLocaleLowerCase('de-DE');
+
+    if (normalizedName === normalizedFirstName || normalizedName.startsWith(`${normalizedFirstName} `)) {
+        return name;
+    }
+
+    return `${firstName} ${name}`.trim();
+}
 
 watch(
     () => props.participant,
