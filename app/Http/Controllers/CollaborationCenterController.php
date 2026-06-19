@@ -22,6 +22,7 @@ class CollaborationCenterController extends Controller
             'todos' => CollaborationTodo::with('author:id,name,city_id', 'author.city:id,name')->latest()->get(),
             'suggestions' => CollaborationSuggestion::with(['author:id,name,city_id', 'author.city:id,name', 'votes.user:id,name,city_id', 'votes.user.city:id,name'])
                 ->where('is_hidden', false)
+                ->where('status', 'open')
                 ->latest()
                 ->get(),
         ]);
@@ -32,6 +33,7 @@ class CollaborationCenterController extends Controller
         abort_unless($request->user()?->role === 'admin', 403);
         $data = $request->validate(['title' => 'required|string|max:255', 'content' => 'required|string']);
         CollaborationNews::create($data + ['created_by' => $request->user()->id]);
+
         return back();
     }
 
@@ -40,6 +42,7 @@ class CollaborationCenterController extends Controller
         abort_unless($request->user()?->role === 'admin', 403);
         $data = $request->validate(['title' => 'required|string|max:255', 'content' => 'required|string']);
         $news->update($data);
+
         return back();
     }
 
@@ -47,6 +50,7 @@ class CollaborationCenterController extends Controller
     {
         abort_unless($request->user()?->role === 'admin', 403);
         $news->delete();
+
         return back();
     }
 
@@ -55,6 +59,7 @@ class CollaborationCenterController extends Controller
         abort_unless($request->user()?->role === 'admin', 403);
         $data = $request->validate(['task' => 'required|string']);
         CollaborationTodo::create($data + ['created_by' => $request->user()->id]);
+
         return back();
     }
 
@@ -63,6 +68,7 @@ class CollaborationCenterController extends Controller
         abort_unless($request->user()?->role === 'admin', 403);
         $data = $request->validate(['task' => 'sometimes|string', 'is_completed' => 'sometimes|boolean']);
         $todo->update($data);
+
         return back();
     }
 
@@ -70,6 +76,7 @@ class CollaborationCenterController extends Controller
     {
         abort_unless($request->user()?->role === 'admin', 403);
         $todo->delete();
+
         return back();
     }
 
@@ -78,6 +85,7 @@ class CollaborationCenterController extends Controller
         abort_unless(in_array($request->user()?->role, ['admin', 'teacher'], true), 403);
         $data = $request->validate(['content' => 'required|string']);
         CollaborationSuggestion::create(['title' => 'Vorschlag', 'content' => $data['content'], 'created_by' => $request->user()->id]);
+
         return back();
     }
 
@@ -92,6 +100,7 @@ class CollaborationCenterController extends Controller
 
         if (empty($data['vote'])) {
             CollaborationSuggestionVote::where('suggestion_id', $suggestion->id)->where('user_id', $request->user()->id)->delete();
+
             return back();
         }
 
@@ -127,13 +136,16 @@ class CollaborationCenterController extends Controller
 
         CollaborationTodo::firstOrCreate(
             ['suggestion_id' => $suggestion->id],
-            ['task' => $suggestion->title . ': ' . $suggestion->content, 'created_by' => $request->user()->id]
+            ['task' => $suggestion->title.': '.$suggestion->content, 'created_by' => $request->user()->id]
         );
 
-        $suggestion->update(['status' => 'promoted']);
+        $suggestion->update([
+            'status' => 'promoted',
+            'is_hidden' => true,
+        ]);
+
         return back();
     }
-
 
     public function deleteSuggestion(Request $request, CollaborationSuggestion $suggestion): RedirectResponse
     {
@@ -141,7 +153,7 @@ class CollaborationCenterController extends Controller
         abort_unless($suggestion->created_by === $request->user()->id, 403);
 
         $suggestion->delete();
+
         return back();
     }
-
 }

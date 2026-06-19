@@ -35,6 +35,10 @@ const highlightedSuggestionId = ref<number | null>(null);
 
 const recentSuggestions = computed(() => [...props.suggestions].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 3));
 const recentTodos = computed(() => [...props.todos].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 3));
+const summaryTodoStateClasses = (completed: boolean) =>
+  completed
+    ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/70 dark:bg-emerald-950/30 dark:text-emerald-200'
+    : 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/70 dark:bg-amber-950/30 dark:text-amber-200';
 
 const formatter = new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium' });
 const authorWithCity = (author: any) => {
@@ -163,12 +167,12 @@ const promoteSuggestion = (id: number) => {
           <CardContent class="space-y-4 p-4">
             <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-100">Zusammenfassung neuer Vorschläge & Todos</h2>
             <div class="space-y-4">
-              <div class="space-y-2 rounded-lg border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
-                <p class="font-medium text-slate-800 dark:text-slate-100">Neueste Vorschläge</p>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Gesamt: {{ suggestions.length }}</p>
+              <div class="space-y-2 rounded-lg border border-sky-200 bg-sky-50 p-3 dark:border-sky-800/70 dark:bg-sky-950/30">
+                <p class="font-medium text-sky-900 dark:text-sky-100">Neueste Vorschläge</p>
+                <p class="text-sm text-sky-700 dark:text-sky-300">Gesamt: {{ suggestions.length }}</p>
                 <div v-if="recentSuggestions.length" class="space-y-2">
-                  <div v-for="item in recentSuggestions" :key="`summary-s-${item.id}`" class="rounded-md border border-slate-200 p-2 text-sm dark:border-slate-600">
-                    <p>{{ item.content }}</p>
+                  <div v-for="item in recentSuggestions" :key="`summary-s-${item.id}`" class="rounded-md border border-sky-100 bg-white p-2 text-sm dark:border-sky-800/60 dark:bg-slate-900/70">
+                    <p class="text-slate-900 dark:text-slate-100">{{ item.content }}</p>
                     <div class="mt-2 flex items-center justify-between gap-2">
                       <Button size="sm" variant="outline" class="h-8 px-3" @click="goToSuggestionVote(item.id)">Vote</Button>
                       <p class="text-right text-xs text-slate-500 dark:text-slate-400">{{ formatter.format(new Date(item.created_at)) }}</p>
@@ -177,12 +181,17 @@ const promoteSuggestion = (id: number) => {
                 </div>
                 <p v-else class="text-sm text-slate-500 dark:text-slate-400">Noch keine Vorschläge vorhanden.</p>
               </div>
-              <div class="space-y-2 rounded-lg border border-slate-300 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
-                <p class="font-medium text-slate-800 dark:text-slate-100">Neueste Todos</p>
-                <p class="text-sm text-slate-600 dark:text-slate-400">Gesamt: {{ todos.length }}</p>
+              <div class="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800/70 dark:bg-emerald-950/30">
+                <p class="font-medium text-emerald-900 dark:text-emerald-100">Neueste Todos</p>
+                <p class="text-sm text-emerald-700 dark:text-emerald-300">Gesamt: {{ todos.length }}</p>
                 <div v-if="recentTodos.length" class="space-y-2">
-                  <div v-for="item in recentTodos" :key="`summary-t-${item.id}`" class="rounded-md border border-slate-200 p-2 text-sm dark:border-slate-600">
-                    <p>{{ item.task }}</p>
+                  <div v-for="item in recentTodos" :key="`summary-t-${item.id}`" class="rounded-md border border-emerald-100 bg-white p-2 text-sm dark:border-emerald-800/60 dark:bg-slate-900/70">
+                    <div class="flex items-start justify-between gap-2">
+                      <p class="min-w-0 flex-1 text-slate-900 dark:text-slate-100" :class="{ 'line-through text-slate-500 dark:text-slate-400': item.is_completed }">{{ item.task }}</p>
+                      <Badge variant="outline" class="shrink-0 border px-2 py-0.5 text-xs" :class="summaryTodoStateClasses(item.is_completed)">
+                        {{ item.is_completed ? 'Erledigt' : 'Aktiv' }}
+                      </Badge>
+                    </div>
                     <p class="mt-1 text-right text-xs text-slate-500 dark:text-slate-400">{{ formatter.format(new Date(item.created_at)) }}</p>
                   </div>
                 </div>
@@ -195,14 +204,14 @@ const promoteSuggestion = (id: number) => {
 
       <section v-if="activeTab === 'suggestions'">
         <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-semibold text-slate-800 dark:text-slate-100">Vorschläge</h2><Dialog :open="showSuggestionDialog" @update:open="(val) => showSuggestionDialog = val"><DialogTrigger as-child><Button size="icon" variant="outline"><Plus class="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Vorschlag erstellen</DialogTitle><DialogDescription>Ohne Titel, kurz und konkret.</DialogDescription></DialogHeader><Textarea v-model="suggestionForm.content" placeholder="Dein Vorschlag" /><DialogFooter><Button @click="postSuggestion">Senden</Button></DialogFooter></DialogContent></Dialog></div>
-        <Card class="border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
+        <Card class="border-sky-200 bg-sky-50 dark:border-sky-800/70 dark:bg-sky-950/30">
           <CardContent class="space-y-3">
             <div
               v-for="s in suggestions"
               :id="`suggestion-${s.id}`"
               :key="s.id"
               class="scroll-mt-24 rounded-lg border p-3 transition-colors"
-              :class="highlightedSuggestionId === s.id ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200 dark:border-blue-400 dark:bg-blue-950/30 dark:ring-blue-500/40' : 'border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800'"
+              :class="highlightedSuggestionId === s.id ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200 dark:border-blue-400 dark:bg-blue-950/30 dark:ring-blue-500/40' : 'border-sky-200 bg-white dark:border-sky-800/60 dark:bg-slate-900/70'"
             >
               <p class="text-base text-slate-800 dark:text-slate-200">{{ s.content }}</p>
               <p class="mt-2 text-right text-xs text-slate-500 dark:text-slate-400">{{ formatter.format(new Date(s.created_at)) }} · {{ authorWithCity(s.author) }}</p>
@@ -240,9 +249,9 @@ const promoteSuggestion = (id: number) => {
 
       <section v-if="activeTab === 'todos'">
         <div class="mb-3 flex items-center justify-between"><h2 class="text-lg font-semibold text-slate-800 dark:text-slate-100">Todos</h2><Dialog v-if="canManageTodos" :open="showTodoDialog" @update:open="(val) => showTodoDialog = val"><DialogTrigger as-child><Button size="icon" variant="outline"><Plus class="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Todo anlegen</DialogTitle><DialogDescription>Für alle sichtbar.</DialogDescription></DialogHeader><Textarea v-model="todoForm.task" placeholder="Aufgabe" /><DialogFooter><Button @click="postTodo">Speichern</Button></DialogFooter></DialogContent></Dialog></div>
-        <Card class="border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
+        <Card class="border-emerald-200 bg-emerald-50 dark:border-emerald-800/70 dark:bg-emerald-950/30">
           <CardContent class="space-y-3">
-            <div v-for="todo in todos" :key="todo.id" class="rounded-lg border border-slate-300 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div v-for="todo in todos" :key="todo.id" class="rounded-lg border border-emerald-200 bg-white px-4 py-3 shadow-sm dark:border-emerald-800/60 dark:bg-slate-900/70">
               <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex min-w-0 flex-1 items-center gap-3">
                   <Button
