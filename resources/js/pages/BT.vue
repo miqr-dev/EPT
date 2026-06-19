@@ -1072,7 +1072,7 @@ if (import.meta.env.DEV) {
                     <p class="text-lg">
                         Sollten Sie einmal bei einer Aufgabe nicht zurechtkommen, so versuchen Sie wenigstens, einen Ansatz zu finden und einzutragen.
                         Versäumen Sie bei den leichten Aufgaben am Anfang nicht zu viel Zeit, da Ihnen dann nachher bei den umfangreicheren Aufgaben
-                        4-6 Zeit fehlen muss. Halten Sie sich nicht zu lange bei einer Aufgabe auf. Sie haben 60 Minuten Zeit für sechs Aufgaben.
+                        4-6 Zeit fehlen muss. Halten Sie sich nicht zu lange bei einer Aufgabe auf. Sie haben 30 Minuten Zeit für sechs Aufgaben.
                     </p>
                     <div class="pt-2 text-center">
                         <Button v-if="!dragDropExampleCompleted" class="px-8" @click="openDragDropExample">Drag & Drop Beispiel</Button>

@@ -27,8 +27,8 @@ const props = defineProps<{
 const emit = defineEmits(['complete', 'started', 'update:answers']);
 
 const questions = ref<Question[]>([
-    { text: '619020 – 541600 = ?', answers: ['77420'] },
-    { text: '619020 = 174309 + ?', answers: ['444711'] },
+    { text: '619020 – 541600 = ?', answers: ['77420','77,420','77.420',] },
+    { text: '619020 = 174309 + ?', answers: ['444711','444.711','444,711'] },
     { text: '4 : 80 = ?', answers: ['0,05'] },
     { text: '0,2 · ____ = 0,1', answers: ['0,5', '1/2'] },
     { text: '1/3 : 1/2 = ?', answers: ['2/3'] },
