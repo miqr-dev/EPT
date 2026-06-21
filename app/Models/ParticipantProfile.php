@@ -7,6 +7,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ParticipantProfile extends Model
 {
+
+  protected $casts = [
+    'birthday' => 'date',
+    'measure_start' => 'date',
+    'measure_end' => 'date',
+    'contract_imported_at' => 'datetime',
+  ];
   protected $fillable = [
     'user_id',
     'firstname',
@@ -20,6 +27,17 @@ class ParticipantProfile extends Model
     'household',
     'employed_id',
     'profession_group_id',
+    'course',
+    'location',
+    'measure_start',
+    'measure_end',
+    'measure_time',
+    'street',
+    'zip',
+    'city_name',
+    'telephone',
+    'cost_bearer',
+    'contract_imported_at',
   ];
 
   // Belongs to user
