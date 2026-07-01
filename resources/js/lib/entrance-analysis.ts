@@ -265,20 +265,48 @@ function lpsAnalysis(entry: ReturnType<typeof latestResult>, age?: number | null
 function btTotal(entry: ReturnType<typeof latestResult>) {
     const result = entry?.result?.result_json;
     if (!result) return null;
-    if (numberValue(result.total_score) !== null) return numberValue(result.total_score);
 
     const scoring = result.scoring?.total ?? result.scoring ?? {};
+    const firstWindowScoring = result.scoring?.first_30_minutes ?? {};
     const manual = manualScoreMap(entry.result);
-    const q2First = numberValue(manual.bt_q2_first_30_manual_points);
-    const q2After = numberValue(manual.bt_q2_after_30_manual_points);
-    const q2Legacy = numberValue(manual.bt_q2_manual_points);
-    const q2 = q2First !== null || q2After !== null ? (q2First ?? 0) + (q2After ?? 0) : (q2Legacy ?? 0);
-    const q5First = numberValue(manual.bt_q5_first_30_manual_points);
-    const q5After = numberValue(manual.bt_q5_after_30_manual_points);
-    const q5Legacy = numberValue(manual.bt_q5_manual_points);
-    const q5 = q5First !== null || q5After !== null ? (q5First ?? 0) + (q5After ?? 0) : (q5Legacy ?? numberValue(scoring.q5?.points) ?? 0);
+    const hasStoredManualScore = (key: string) => {
+        const raw = manual[key];
+        return raw !== null && raw !== undefined && String(raw).trim() !== '';
+    };
+    const hasAnyBtManualScore = [1, 2, 3, 4, 5, 6].some((task) =>
+        [`bt_q${task}_manual_points`, `bt_q${task}_first_30_manual_points`, `bt_q${task}_after_30_manual_points`].some(hasStoredManualScore),
+    );
+    const hasBtScoring = ['q1', 'q3', 'q4', 'q5', 'q6'].some((key) => numberValue(scoring[key]?.points) !== null);
+    const directTotal = numberValue(result.total_score);
 
-    return ['q1', 'q3', 'q4', 'q6'].reduce((total, key) => total + (numberValue(scoring[key]?.points) ?? 0), q2 + q5);
+    if ((!hasAnyBtManualScore || !hasBtScoring) && directTotal !== null) return directTotal;
+
+    const taskTotal = (task: number, scoringKey: string, useAutoFallback = true) => {
+        const firstKey = `bt_q${task}_first_30_manual_points`;
+        const afterKey = `bt_q${task}_after_30_manual_points`;
+        const legacyKey = `bt_q${task}_manual_points`;
+        const hasFirst = hasStoredManualScore(firstKey);
+        const hasAfter = hasStoredManualScore(afterKey);
+        const firstManual = numberValue(manual[firstKey]);
+        const afterManual = numberValue(manual[afterKey]);
+        const legacyManual = numberValue(manual[legacyKey]);
+
+        if (!useAutoFallback) {
+            return hasFirst || hasAfter ? (firstManual ?? 0) + (afterManual ?? 0) : (legacyManual ?? 0);
+        }
+
+        const totalAuto = numberValue(scoring[scoringKey]?.points) ?? 0;
+        const firstAuto = numberValue(firstWindowScoring[scoringKey]?.points) ?? 0;
+        const afterAuto = Math.max(0, totalAuto - firstAuto);
+
+        if (hasFirst || hasAfter) {
+            return (hasFirst ? (firstManual ?? 0) : firstAuto) + (hasAfter ? (afterManual ?? 0) : afterAuto);
+        }
+
+        return legacyManual ?? totalAuto;
+    };
+
+    return taskTotal(1, 'q1') + taskTotal(2, 'q2', false) + taskTotal(3, 'q3') + taskTotal(4, 'q4') + taskTotal(5, 'q5') + taskTotal(6, 'q6');
 }
 
 function lmtInterpretation(group: string, value: number | null) {
