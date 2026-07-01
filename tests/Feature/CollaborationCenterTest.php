@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\CollaborationNews;
 use App\Models\CollaborationSuggestion;
 use App\Models\CollaborationTodo;
 use App\Models\User;
@@ -71,4 +72,37 @@ test('completed todos are sent to the collaboration summary as completed', funct
             ->component('CollaborationCenter')
             ->where('todos.0.id', $todo->id)
             ->where('todos.0.is_completed', true));
+});
+
+test('collaboration sidebar notifications count visible suggestions and news', function () {
+    $admin = createCollaborationUser('admin');
+    $teacher = createCollaborationUser('teacher');
+
+    CollaborationNews::create([
+        'title' => 'Update',
+        'content' => 'New collaboration update',
+        'created_by' => $admin->id,
+    ]);
+
+    CollaborationSuggestion::create([
+        'title' => 'Vorschlag',
+        'content' => 'Visible idea',
+        'created_by' => $teacher->id,
+    ]);
+
+    CollaborationSuggestion::create([
+        'title' => 'Vorschlag',
+        'content' => 'Hidden idea',
+        'created_by' => $teacher->id,
+        'status' => 'promoted',
+        'is_hidden' => true,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('collaboration.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('collaborationNotifications.news', 1)
+            ->where('collaborationNotifications.suggestions', 1)
+            ->where('collaborationNotifications.total', 2));
 });

@@ -16,6 +16,13 @@ export interface NavItem {
     icon?: LucideIcon;
     isActive?: boolean;
     items?: NavItem[];
+    badges?: NavItemBadge[];
+}
+
+export interface NavItemBadge {
+    title: string;
+    count: number;
+    class?: string;
 }
 
 export type AppPageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {
@@ -23,6 +30,11 @@ export type AppPageProps<T extends Record<string, unknown> = Record<string, unkn
     quote: { message: string; author: string };
     auth: Auth;
     ziggy: Config & { location: string };
+    collaborationNotifications: {
+        news: number;
+        suggestions: number;
+        total: number;
+    };
     sidebarOpen: boolean;
 };
 

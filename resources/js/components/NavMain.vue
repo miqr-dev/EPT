@@ -4,6 +4,7 @@ import {
     SidebarGroup,
     SidebarGroupLabel,
     SidebarMenu,
+    SidebarMenuBadge,
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarMenuSub,
@@ -33,12 +34,21 @@ const isActive = (item: NavItem): boolean => {
                 <Collapsible v-if="item.items?.length" as-child :default-open="isActive(item)" class="group/collapsible">
                     <SidebarMenuItem>
                         <CollapsibleTrigger as-child>
-                            <SidebarMenuButton :is-active="isActive(item)" :tooltip="item.title">
+                            <SidebarMenuButton :is-active="isActive(item)" :tooltip="item.title" :class="item.badges?.length ? 'pr-16' : undefined">
                                 <component :is="item.icon" />
                                 <span>{{ item.title }}</span>
                                 <ChevronRight class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                             </SidebarMenuButton>
                         </CollapsibleTrigger>
+                        <SidebarMenuBadge v-if="item.badges?.length" class="right-2 gap-1 bg-transparent px-0">
+                            <span
+                                v-for="badge in item.badges"
+                                :key="badge.title"
+                                :class="['flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-xs font-semibold tabular-nums', badge.class]"
+                            >
+                                {{ badge.count }}
+                            </span>
+                        </SidebarMenuBadge>
                         <CollapsibleContent>
                             <SidebarMenuSub>
                                 <SidebarMenuSubItem v-for="subItem in item.items" :key="subItem.title">
@@ -54,12 +64,21 @@ const isActive = (item: NavItem): boolean => {
                 </Collapsible>
 
                 <SidebarMenuItem v-else>
-                    <SidebarMenuButton as-child :is-active="isActive(item)" :tooltip="item.title">
+                    <SidebarMenuButton as-child :is-active="isActive(item)" :tooltip="item.title" :class="item.badges?.length ? 'pr-16' : undefined">
                         <Link :href="item.href">
                             <component :is="item.icon" />
                             <span>{{ item.title }}</span>
                         </Link>
                     </SidebarMenuButton>
+                    <SidebarMenuBadge v-if="item.badges?.length" class="right-2 gap-1 bg-transparent px-0">
+                        <span
+                            v-for="badge in item.badges"
+                            :key="badge.title"
+                            :class="['flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-xs font-semibold tabular-nums', badge.class]"
+                        >
+                            {{ badge.count }}
+                        </span>
+                    </SidebarMenuBadge>
                 </SidebarMenuItem>
             </template>
         </SidebarMenu>

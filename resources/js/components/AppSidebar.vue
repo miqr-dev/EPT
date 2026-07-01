@@ -10,6 +10,21 @@ import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
 const page = usePage();
+const collaborationNotifications = computed(() => page.props.collaborationNotifications);
+const collaborationBadges = computed(() =>
+    [
+        {
+            title: 'Neue Vorschläge',
+            count: collaborationNotifications.value?.suggestions ?? 0,
+            class: 'bg-sky-50 text-sky-700 ring-1 ring-sky-200 dark:bg-sky-950/70 dark:text-sky-200 dark:ring-sky-800/70',
+        },
+        {
+            title: 'Neuigkeiten & Updates',
+            count: collaborationNotifications.value?.news ?? 0,
+            class: 'bg-[#661421] text-white',
+        },
+    ].filter((badge) => badge.count > 0),
+);
 
 const testNavItems: NavItem[] = [
     {
@@ -122,6 +137,7 @@ const mainNavItems = computed<NavItem[]>(() => {
             title: 'Kollaboration',
             href: '/kollaboration',
             icon: MessageSquareText,
+            badges: collaborationBadges.value,
         },
         {
             title: 'Tests',

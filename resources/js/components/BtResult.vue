@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Input } from '@/components/ui/input';
 import axios from 'axios';
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, type ComputedRef, type Ref } from 'vue';
 
 const props = withDefaults(
     defineProps<{
@@ -27,16 +27,31 @@ const emit = defineEmits<{
     'manual-score-updated': [{ key: string; value: number | null }];
 }>();
 
-const q2ManualScoreKey = 'bt_q2_manual_points';
-const q2FirstWindowManualScoreKey = 'bt_q2_first_30_manual_points';
-const q2AfterWindowManualScoreKey = 'bt_q2_after_30_manual_points';
-const q5ManualScoreKey = 'bt_q5_manual_points';
-const q5FirstWindowManualScoreKey = 'bt_q5_first_30_manual_points';
-const q5AfterWindowManualScoreKey = 'bt_q5_after_30_manual_points';
-const q2FirstWindowManualPointsInput = ref('');
-const q2AfterWindowManualPointsInput = ref('');
-const q5FirstWindowManualPointsInput = ref('');
-const q5AfterWindowManualPointsInput = ref('');
+type ManualScorePdfEntry = {
+    label: string;
+    value: string;
+    tone: 'regular' | 'late';
+};
+
+type ManualScoreControl = {
+    taskNumber: number;
+    firstInput: Ref<string>;
+    afterInput: Ref<string>;
+    firstManualPoints: ComputedRef<number | null>;
+    afterManualPoints: ComputedRef<number | null>;
+    totalManualPoints: ComputedRef<number | null>;
+    firstAutoPoints: ComputedRef<number>;
+    afterAutoPoints: ComputedRef<number>;
+    firstEffectivePoints: ComputedRef<number>;
+    totalEffectivePoints: ComputedRef<number>;
+    pdfEntries: ComputedRef<ManualScorePdfEntry[]>;
+    refresh: (next?: Record<string, number | string | null>) => void;
+    sanitizeFirst: (event: Event) => void;
+    sanitizeAfter: (event: Event) => void;
+    persistFirst: () => Promise<void>;
+    persistAfter: () => Promise<void>;
+};
+
 const days = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'];
 const q3Denominations = [
     { key: '100', label: '100€', expected: 64 },
@@ -71,10 +86,6 @@ function addManualParts(first: number | null, after: number | null) {
     if (first == null && after == null) return null;
     return (first ?? 0) + (after ?? 0);
 }
-
-const q2FirstWindowManualPoints = computed(() => parseManualPointsInput(q2FirstWindowManualPointsInput.value));
-const q2AfterWindowManualPoints = computed(() => parseManualPointsInput(q2AfterWindowManualPointsInput.value));
-const q2TotalManualPoints = computed(() => addManualParts(q2FirstWindowManualPoints.value, q2AfterWindowManualPoints.value));
 
 const oneSyllableNames = new Set(['Fuchs', 'Hans', 'Kurz', 'Mann', 'Pahl', 'Paul', 'Pees', 'Roth']);
 const twoSyllableNames = new Set(['Basten', 'Bauer', 'Bertram', 'Bolte', 'Krämer', 'Kühne', 'Müller', 'Schneider', 'Schuster']);
@@ -260,57 +271,14 @@ function calculateQ5Score(source: Record<string, any> | null | undefined) {
 const q5Score = computed(() => calculateQ5Score(props.results));
 const firstWindowQ5Score = computed(() => calculateQ5Score(firstWindowResults.value));
 
-const q5AfterAutoPoints = computed(() => Math.max(0, q5Score.value.points - firstWindowQ5Score.value.points));
-const q5FirstWindowManualPoints = computed(() => parseManualPointsInput(q5FirstWindowManualPointsInput.value));
-const q5AfterWindowManualPoints = computed(() => parseManualPointsInput(q5AfterWindowManualPointsInput.value));
-const q5FirstWindowEffectivePoints = computed(() => q5FirstWindowManualPoints.value ?? firstWindowQ5Score.value.points);
-const q5AfterWindowEffectivePoints = computed(() => q5AfterWindowManualPoints.value ?? q5AfterAutoPoints.value);
-const q5EffectivePoints = computed(() => q5FirstWindowEffectivePoints.value + q5AfterWindowEffectivePoints.value);
-
 function hasStoredManualScore(key: string) {
     const raw = props.manualScores?.[key];
     return raw !== null && raw !== undefined && String(raw).trim() !== '';
 }
 
-function manualEntry(label: string, value: string, tone: 'regular' | 'late' = 'regular') {
+function manualEntry(label: string, value: string, tone: 'regular' | 'late' = 'regular'): ManualScorePdfEntry {
     return { label, value, tone };
 }
-
-const q2PdfManualEntries = computed(() => {
-    const entries = [];
-
-    if (hasStoredManualScore(q2FirstWindowManualScoreKey)) {
-        entries.push(manualEntry('bis 30 Min.', q2FirstWindowManualPointsInput.value));
-    }
-
-    if (hasStoredManualScore(q2AfterWindowManualScoreKey)) {
-        entries.push(manualEntry('nach 30 Min.', q2AfterWindowManualPointsInput.value, 'late'));
-    }
-
-    if (entries.length === 0 && hasStoredManualScore(q2ManualScoreKey)) {
-        entries.push(manualEntry('gesamt', q2AfterWindowManualPointsInput.value || q2FirstWindowManualPointsInput.value, 'late'));
-    }
-
-    return entries.filter((entry) => entry.value.trim() !== '');
-});
-
-const q5PdfManualEntries = computed(() => {
-    const entries = [];
-
-    if (hasStoredManualScore(q5FirstWindowManualScoreKey)) {
-        entries.push(manualEntry('bis 30 Min.', q5FirstWindowManualPointsInput.value));
-    }
-
-    if (hasStoredManualScore(q5AfterWindowManualScoreKey)) {
-        entries.push(manualEntry('nach 30 Min.', q5AfterWindowManualPointsInput.value, 'late'));
-    }
-
-    if (entries.length === 0 && hasStoredManualScore(q5ManualScoreKey)) {
-        entries.push(manualEntry('gesamt', String(q5EffectivePoints.value), 'late'));
-    }
-
-    return entries.filter((entry) => entry.value.trim() !== '');
-});
 
 function hasQ6TableInput(source: Record<string, any> | null | undefined) {
     const routeAssignments = (source?.route_assignments ?? {}) as Record<string, string | null>;
@@ -333,40 +301,6 @@ function formatManualInputValue(value: unknown) {
     const parsed = toNumber(value);
     return parsed == null ? '' : `${parsed}`;
 }
-
-function refreshManualScoreInputs(next: Record<string, number | string | null> = props.manualScores) {
-    const q2FirstRaw = next?.[q2FirstWindowManualScoreKey];
-    const q2AfterRaw = next?.[q2AfterWindowManualScoreKey];
-    const q2LegacyRaw = next?.[q2ManualScoreKey];
-
-    q2FirstWindowManualPointsInput.value = formatManualInputValue(q2FirstRaw);
-    q2AfterWindowManualPointsInput.value = formatManualInputValue(q2AfterRaw);
-
-    if (q2AfterWindowManualPointsInput.value === '' && q2FirstWindowManualPointsInput.value === '') {
-        q2AfterWindowManualPointsInput.value = formatManualInputValue(q2LegacyRaw);
-    }
-
-    const q5FirstRaw = next?.[q5FirstWindowManualScoreKey];
-    const q5AfterRaw = next?.[q5AfterWindowManualScoreKey];
-    const q5LegacyTotal = toNumber(next?.[q5ManualScoreKey]);
-
-    q5FirstWindowManualPointsInput.value = formatManualInputValue(q5FirstRaw) || `${firstWindowQ5Score.value.points}`;
-    q5AfterWindowManualPointsInput.value = formatManualInputValue(q5AfterRaw);
-
-    if (q5AfterWindowManualPointsInput.value === '') {
-        if (q5LegacyTotal != null && (q5FirstRaw == null || q5FirstRaw === '')) {
-            q5AfterWindowManualPointsInput.value = `${Math.max(0, q5LegacyTotal - firstWindowQ5Score.value.points)}`;
-        } else {
-            q5AfterWindowManualPointsInput.value = `${q5AfterAutoPoints.value}`;
-        }
-    }
-}
-
-watch(
-    () => [props.manualScores, firstWindowQ5Score.value.points, q5AfterAutoPoints.value] as const,
-    ([next]) => refreshManualScoreInputs(next),
-    { immediate: true, deep: true },
-);
 
 function buildQ6Score(scoring: any, hasTableInput = true) {
     let points = toNumber(scoring?.points) ?? 0;
@@ -396,23 +330,174 @@ function buildQ6Score(scoring: any, hasTableInput = true) {
 const q6Score = computed(() => buildQ6Score(q6Scoring.value, hasQ6TableInput(props.results)));
 const firstWindowQ6Score = computed(() => buildQ6Score(firstWindowQ6Scoring.value ?? q6Scoring.value, hasQ6TableInput(firstWindowResults.value)));
 
+function buildManualScoreTask(
+    taskNumber: number,
+    firstAutoPointsValue: () => number,
+    totalAutoPointsValue: () => number,
+    useAutoFallback = true,
+): ManualScoreControl {
+    const totalKey = `bt_q${taskNumber}_manual_points`;
+    const firstKey = `bt_q${taskNumber}_first_30_manual_points`;
+    const afterKey = `bt_q${taskNumber}_after_30_manual_points`;
+    const firstInput = ref('');
+    const afterInput = ref('');
+    const firstManualPoints = computed(() => parseManualPointsInput(firstInput.value));
+    const afterManualPoints = computed(() => parseManualPointsInput(afterInput.value));
+    const totalManualPoints = computed(() => addManualParts(firstManualPoints.value, afterManualPoints.value));
+    const firstAutoPoints = computed(() => Math.max(0, firstAutoPointsValue()));
+    const afterAutoPoints = computed(() => Math.max(0, totalAutoPointsValue() - firstAutoPoints.value));
+    const firstEffectivePoints = computed(() =>
+        useAutoFallback ? (firstManualPoints.value ?? firstAutoPoints.value) : (firstManualPoints.value ?? 0),
+    );
+    const afterEffectivePoints = computed(() =>
+        useAutoFallback ? (afterManualPoints.value ?? afterAutoPoints.value) : (afterManualPoints.value ?? 0),
+    );
+    const totalEffectivePoints = computed(() => firstEffectivePoints.value + afterEffectivePoints.value);
+    const pdfEntries = computed(() => {
+        const entries: ManualScorePdfEntry[] = [];
+
+        if (hasStoredManualScore(firstKey)) {
+            entries.push(manualEntry('bis 30 Min.', firstInput.value));
+        }
+
+        if (hasStoredManualScore(afterKey)) {
+            entries.push(manualEntry('nach 30 Min.', afterInput.value, 'late'));
+        }
+
+        if (entries.length === 0 && hasStoredManualScore(totalKey)) {
+            const totalValue = useAutoFallback ? String(totalEffectivePoints.value) : String(totalManualPoints.value ?? '');
+            entries.push(manualEntry('gesamt', totalValue, 'late'));
+        }
+
+        return entries.filter((entry) => entry.value.trim() !== '');
+    });
+
+    function refresh(next: Record<string, number | string | null> = props.manualScores) {
+        const firstRaw = next?.[firstKey];
+        const afterRaw = next?.[afterKey];
+        const legacyTotal = toNumber(next?.[totalKey]);
+
+        firstInput.value = formatManualInputValue(firstRaw);
+        afterInput.value = formatManualInputValue(afterRaw);
+
+        if (!useAutoFallback) {
+            if (afterInput.value === '' && firstInput.value === '') {
+                afterInput.value = formatManualInputValue(legacyTotal);
+            }
+            return;
+        }
+
+        if (firstInput.value === '') {
+            firstInput.value = `${firstAutoPoints.value}`;
+        }
+
+        if (afterInput.value === '') {
+            afterInput.value =
+                legacyTotal != null && (firstRaw == null || firstRaw === '')
+                    ? `${Math.max(0, legacyTotal - firstAutoPoints.value)}`
+                    : `${afterAutoPoints.value}`;
+        }
+    }
+
+    function sanitizeFirst(event: Event) {
+        sanitizeManualPointsInput(event, (value) => {
+            firstInput.value = value;
+        });
+    }
+
+    function sanitizeAfter(event: Event) {
+        sanitizeManualPointsInput(event, (value) => {
+            afterInput.value = value;
+        });
+    }
+
+    async function persistFirst() {
+        await persistManualPoints(firstKey, firstManualPoints.value);
+    }
+
+    async function persistAfter() {
+        await persistManualPoints(afterKey, afterManualPoints.value);
+    }
+
+    return {
+        taskNumber,
+        firstInput,
+        afterInput,
+        firstManualPoints,
+        afterManualPoints,
+        totalManualPoints,
+        firstAutoPoints,
+        afterAutoPoints,
+        firstEffectivePoints,
+        totalEffectivePoints,
+        pdfEntries,
+        refresh,
+        sanitizeFirst,
+        sanitizeAfter,
+        persistFirst,
+        persistAfter,
+    };
+}
+
+const q1ManualScore = buildManualScoreTask(
+    1,
+    () => firstWindowQ1Stats.value.points,
+    () => q1Stats.value.points,
+);
+const q2ManualScore = buildManualScoreTask(
+    2,
+    () => 0,
+    () => 0,
+    false,
+);
+const q3ManualScore = buildManualScoreTask(
+    3,
+    () => firstWindowQ3Score.value.points,
+    () => q3Score.value.points,
+);
+const q4ManualScore = buildManualScoreTask(
+    4,
+    () => firstWindowQ4Score.value.points,
+    () => q4Score.value.points,
+);
+const q5ManualScore = buildManualScoreTask(
+    5,
+    () => firstWindowQ5Score.value.points,
+    () => q5Score.value.points,
+);
+const q6ManualScore = buildManualScoreTask(
+    6,
+    () => firstWindowQ6Score.value.points,
+    () => q6Score.value.points,
+);
+const manualScoreTasks: ManualScoreControl[] = [q1ManualScore, q2ManualScore, q3ManualScore, q4ManualScore, q5ManualScore, q6ManualScore];
+
+watch(
+    () => [props.manualScores, ...manualScoreTasks.flatMap((task) => [task.firstAutoPoints.value, task.afterAutoPoints.value])] as const,
+    ([next]) => {
+        const manualScores = next as Record<string, number | string | null>;
+        manualScoreTasks.forEach((task) => task.refresh(manualScores));
+    },
+    { immediate: true, deep: true },
+);
+
 const totalPoints = computed(
     () =>
-        q1Stats.value.points +
-        (q2TotalManualPoints.value ?? 0) +
-        q3Score.value.points +
-        q4Score.value.points +
-        q5EffectivePoints.value +
-        q6Score.value.points,
+        q1ManualScore.totalEffectivePoints.value +
+        (q2ManualScore.totalManualPoints.value ?? 0) +
+        q3ManualScore.totalEffectivePoints.value +
+        q4ManualScore.totalEffectivePoints.value +
+        q5ManualScore.totalEffectivePoints.value +
+        q6ManualScore.totalEffectivePoints.value,
 );
 const firstWindowTotalPoints = computed(
     () =>
-        firstWindowQ1Stats.value.points +
-        (q2FirstWindowManualPoints.value ?? 0) +
-        firstWindowQ3Score.value.points +
-        firstWindowQ4Score.value.points +
-        q5FirstWindowEffectivePoints.value +
-        firstWindowQ6Score.value.points,
+        q1ManualScore.firstEffectivePoints.value +
+        (q2ManualScore.firstManualPoints.value ?? 0) +
+        q3ManualScore.firstEffectivePoints.value +
+        q4ManualScore.firstEffectivePoints.value +
+        q5ManualScore.firstEffectivePoints.value +
+        q6ManualScore.firstEffectivePoints.value,
 );
 const totalTime = computed(() => formatTime(toNumber(props.results?.total_time_seconds)));
 
@@ -431,46 +516,6 @@ async function persistManualPoints(key: string, value: number | null) {
         key,
         value,
     });
-}
-
-function sanitizeQ2FirstWindowManualPoints(event: Event) {
-    sanitizeManualPointsInput(event, (value) => {
-        q2FirstWindowManualPointsInput.value = value;
-    });
-}
-
-function sanitizeQ2AfterWindowManualPoints(event: Event) {
-    sanitizeManualPointsInput(event, (value) => {
-        q2AfterWindowManualPointsInput.value = value;
-    });
-}
-
-function sanitizeQ5FirstWindowManualPoints(event: Event) {
-    sanitizeManualPointsInput(event, (value) => {
-        q5FirstWindowManualPointsInput.value = value;
-    });
-}
-
-function sanitizeQ5AfterWindowManualPoints(event: Event) {
-    sanitizeManualPointsInput(event, (value) => {
-        q5AfterWindowManualPointsInput.value = value;
-    });
-}
-
-async function persistQ2FirstWindowManualPoints() {
-    await persistManualPoints(q2FirstWindowManualScoreKey, q2FirstWindowManualPoints.value);
-}
-
-async function persistQ2AfterWindowManualPoints() {
-    await persistManualPoints(q2AfterWindowManualScoreKey, q2AfterWindowManualPoints.value);
-}
-
-async function persistQ5FirstWindowManualPoints() {
-    await persistManualPoints(q5FirstWindowManualScoreKey, q5FirstWindowManualPoints.value);
-}
-
-async function persistQ5AfterWindowManualPoints() {
-    await persistManualPoints(q5AfterWindowManualScoreKey, q5AfterWindowManualPoints.value);
 }
 </script>
 
@@ -578,9 +623,41 @@ async function persistQ5AfterWindowManualPoints() {
                                 <div>Spätdienst: einsilbig {{ q1Stats.lateOneSyllable }}/8, dreisilbig {{ q1Stats.lateThreeSyllable }}/7</div>
                                 <div class="mt-1 text-muted-foreground">Abzüge gemäß Soll-Verteilung.</div>
                             </template>
+                            <div v-if="!pdfMode" class="bt-manual-controls mt-3 flex flex-wrap gap-3">
+                                <label class="bt-manual-label flex flex-col gap-1 text-xs text-muted-foreground">
+                                    bis 30 Min.
+                                    <Input
+                                        :model-value="q1ManualScore.firstInput.value"
+                                        class="w-24 text-center"
+                                        inputmode="numeric"
+                                        @input="q1ManualScore.sanitizeFirst"
+                                        @blur="q1ManualScore.persistFirst"
+                                    />
+                                </label>
+                                <label class="bt-manual-label flex flex-col gap-1 text-xs text-blue-700">
+                                    nach 30 Min.
+                                    <Input
+                                        :model-value="q1ManualScore.afterInput.value"
+                                        class="w-24 text-center text-foreground"
+                                        inputmode="numeric"
+                                        @input="q1ManualScore.sanitizeAfter"
+                                        @blur="q1ManualScore.persistAfter"
+                                    />
+                                </label>
+                            </div>
+                            <div v-else-if="q1ManualScore.pdfEntries.value.length" class="bt-pdf-manual-values">
+                                <div
+                                    v-for="entry in q1ManualScore.pdfEntries.value"
+                                    :key="`q1-${entry.label}`"
+                                    :class="['bt-pdf-manual-value', { 'bt-pdf-manual-value--late': entry.tone === 'late' }]"
+                                >
+                                    <span>{{ entry.label }}</span>
+                                    <strong>{{ entry.value }}</strong>
+                                </div>
+                            </div>
                         </td>
-                        <td class="border border-black p-2 text-center font-semibold">{{ firstWindowQ1Stats.points }}</td>
-                        <td class="border border-black p-2 text-center font-semibold">{{ q1Stats.points }}</td>
+                        <td class="border border-black p-2 text-center font-semibold">{{ q1ManualScore.firstEffectivePoints.value }}</td>
+                        <td class="border border-black p-2 text-center font-semibold">{{ q1ManualScore.totalEffectivePoints.value }}</td>
                     </tr>
 
                     <tr>
@@ -591,27 +668,27 @@ async function persistQ5AfterWindowManualPoints() {
                                 <label class="bt-manual-label flex flex-col gap-1 text-xs text-muted-foreground">
                                     bis 30 Min.
                                     <Input
-                                        :model-value="q2FirstWindowManualPointsInput"
+                                        :model-value="q2ManualScore.firstInput.value"
                                         class="w-24 text-center"
                                         inputmode="numeric"
-                                        @input="sanitizeQ2FirstWindowManualPoints"
-                                        @blur="persistQ2FirstWindowManualPoints"
+                                        @input="q2ManualScore.sanitizeFirst"
+                                        @blur="q2ManualScore.persistFirst"
                                     />
                                 </label>
                                 <label class="bt-manual-label flex flex-col gap-1 text-xs text-blue-700">
                                     nach 30 Min.
                                     <Input
-                                        :model-value="q2AfterWindowManualPointsInput"
+                                        :model-value="q2ManualScore.afterInput.value"
                                         class="w-24 text-center text-foreground"
                                         inputmode="numeric"
-                                        @input="sanitizeQ2AfterWindowManualPoints"
-                                        @blur="persistQ2AfterWindowManualPoints"
+                                        @input="q2ManualScore.sanitizeAfter"
+                                        @blur="q2ManualScore.persistAfter"
                                     />
                                 </label>
                             </div>
-                            <div v-else-if="q2PdfManualEntries.length" class="bt-pdf-manual-values">
+                            <div v-else-if="q2ManualScore.pdfEntries.value.length" class="bt-pdf-manual-values">
                                 <div
-                                    v-for="entry in q2PdfManualEntries"
+                                    v-for="entry in q2ManualScore.pdfEntries.value"
                                     :key="`q2-${entry.label}`"
                                     :class="['bt-pdf-manual-value', { 'bt-pdf-manual-value--late': entry.tone === 'late' }]"
                                 >
@@ -620,8 +697,8 @@ async function persistQ5AfterWindowManualPoints() {
                                 </div>
                             </div>
                         </td>
-                        <td class="border border-black p-2 text-center font-semibold">{{ q2FirstWindowManualPoints ?? '—' }}</td>
-                        <td class="border border-black p-2 text-center font-semibold">{{ q2TotalManualPoints ?? '—' }}</td>
+                        <td class="border border-black p-2 text-center font-semibold">{{ q2ManualScore.firstManualPoints.value ?? '—' }}</td>
+                        <td class="border border-black p-2 text-center font-semibold">{{ q2ManualScore.totalManualPoints.value ?? '—' }}</td>
                     </tr>
 
                     <tr>
@@ -652,9 +729,41 @@ async function persistQ5AfterWindowManualPoints() {
                             <div v-if="!pdfMode" class="mt-1 text-muted-foreground">
                                 Abzüge: {{ q3Score.mistakes.length ? q3Score.mistakes.join(' | ') : 'keine' }}.
                             </div>
+                            <div v-if="!pdfMode" class="bt-manual-controls mt-3 flex flex-wrap gap-3">
+                                <label class="bt-manual-label flex flex-col gap-1 text-xs text-muted-foreground">
+                                    bis 30 Min.
+                                    <Input
+                                        :model-value="q3ManualScore.firstInput.value"
+                                        class="w-24 text-center"
+                                        inputmode="numeric"
+                                        @input="q3ManualScore.sanitizeFirst"
+                                        @blur="q3ManualScore.persistFirst"
+                                    />
+                                </label>
+                                <label class="bt-manual-label flex flex-col gap-1 text-xs text-blue-700">
+                                    nach 30 Min.
+                                    <Input
+                                        :model-value="q3ManualScore.afterInput.value"
+                                        class="w-24 text-center text-foreground"
+                                        inputmode="numeric"
+                                        @input="q3ManualScore.sanitizeAfter"
+                                        @blur="q3ManualScore.persistAfter"
+                                    />
+                                </label>
+                            </div>
+                            <div v-else-if="q3ManualScore.pdfEntries.value.length" class="bt-pdf-manual-values">
+                                <div
+                                    v-for="entry in q3ManualScore.pdfEntries.value"
+                                    :key="`q3-${entry.label}`"
+                                    :class="['bt-pdf-manual-value', { 'bt-pdf-manual-value--late': entry.tone === 'late' }]"
+                                >
+                                    <span>{{ entry.label }}</span>
+                                    <strong>{{ entry.value }}</strong>
+                                </div>
+                            </div>
                         </td>
-                        <td class="border border-black p-2 text-center font-semibold">{{ firstWindowQ3Score.points }}</td>
-                        <td class="border border-black p-2 text-center font-semibold">{{ q3Score.points }}</td>
+                        <td class="border border-black p-2 text-center font-semibold">{{ q3ManualScore.firstEffectivePoints.value }}</td>
+                        <td class="border border-black p-2 text-center font-semibold">{{ q3ManualScore.totalEffectivePoints.value }}</td>
                     </tr>
 
                     <tr>
@@ -683,9 +792,41 @@ async function persistQ5AfterWindowManualPoints() {
                             <div v-if="!pdfMode" class="mt-1 text-muted-foreground">
                                 Abzüge: {{ q4Score.mistakes.length ? q4Score.mistakes.join(' | ') : 'keine' }}.
                             </div>
+                            <div v-if="!pdfMode" class="bt-manual-controls mt-3 flex flex-wrap gap-3">
+                                <label class="bt-manual-label flex flex-col gap-1 text-xs text-muted-foreground">
+                                    bis 30 Min.
+                                    <Input
+                                        :model-value="q4ManualScore.firstInput.value"
+                                        class="w-24 text-center"
+                                        inputmode="numeric"
+                                        @input="q4ManualScore.sanitizeFirst"
+                                        @blur="q4ManualScore.persistFirst"
+                                    />
+                                </label>
+                                <label class="bt-manual-label flex flex-col gap-1 text-xs text-blue-700">
+                                    nach 30 Min.
+                                    <Input
+                                        :model-value="q4ManualScore.afterInput.value"
+                                        class="w-24 text-center text-foreground"
+                                        inputmode="numeric"
+                                        @input="q4ManualScore.sanitizeAfter"
+                                        @blur="q4ManualScore.persistAfter"
+                                    />
+                                </label>
+                            </div>
+                            <div v-else-if="q4ManualScore.pdfEntries.value.length" class="bt-pdf-manual-values">
+                                <div
+                                    v-for="entry in q4ManualScore.pdfEntries.value"
+                                    :key="`q4-${entry.label}`"
+                                    :class="['bt-pdf-manual-value', { 'bt-pdf-manual-value--late': entry.tone === 'late' }]"
+                                >
+                                    <span>{{ entry.label }}</span>
+                                    <strong>{{ entry.value }}</strong>
+                                </div>
+                            </div>
                         </td>
-                        <td class="border border-black p-2 text-center font-semibold">{{ firstWindowQ4Score.points }}</td>
-                        <td class="border border-black p-2 text-center font-semibold">{{ q4Score.points }}</td>
+                        <td class="border border-black p-2 text-center font-semibold">{{ q4ManualScore.firstEffectivePoints.value }}</td>
+                        <td class="border border-black p-2 text-center font-semibold">{{ q4ManualScore.totalEffectivePoints.value }}</td>
                     </tr>
 
                     <tr>
@@ -718,27 +859,27 @@ async function persistQ5AfterWindowManualPoints() {
                                 <label class="bt-manual-label flex flex-col gap-1 text-xs text-muted-foreground">
                                     bis 30 Min.
                                     <Input
-                                        :model-value="q5FirstWindowManualPointsInput"
+                                        :model-value="q5ManualScore.firstInput.value"
                                         class="w-24 text-center"
                                         inputmode="numeric"
-                                        @input="sanitizeQ5FirstWindowManualPoints"
-                                        @blur="persistQ5FirstWindowManualPoints"
+                                        @input="q5ManualScore.sanitizeFirst"
+                                        @blur="q5ManualScore.persistFirst"
                                     />
                                 </label>
                                 <label class="bt-manual-label flex flex-col gap-1 text-xs text-blue-700">
                                     nach 30 Min.
                                     <Input
-                                        :model-value="q5AfterWindowManualPointsInput"
+                                        :model-value="q5ManualScore.afterInput.value"
                                         class="w-24 text-center text-foreground"
                                         inputmode="numeric"
-                                        @input="sanitizeQ5AfterWindowManualPoints"
-                                        @blur="persistQ5AfterWindowManualPoints"
+                                        @input="q5ManualScore.sanitizeAfter"
+                                        @blur="q5ManualScore.persistAfter"
                                     />
                                 </label>
                             </div>
-                            <div v-else-if="q5PdfManualEntries.length" class="bt-pdf-manual-values mt-3">
+                            <div v-else-if="q5ManualScore.pdfEntries.value.length" class="bt-pdf-manual-values mt-3">
                                 <div
-                                    v-for="entry in q5PdfManualEntries"
+                                    v-for="entry in q5ManualScore.pdfEntries.value"
                                     :key="`q5-${entry.label}`"
                                     :class="['bt-pdf-manual-value', { 'bt-pdf-manual-value--late': entry.tone === 'late' }]"
                                 >
@@ -747,8 +888,8 @@ async function persistQ5AfterWindowManualPoints() {
                                 </div>
                             </div>
                         </td>
-                        <td class="border border-black p-2 text-center font-semibold">{{ q5FirstWindowEffectivePoints }}</td>
-                        <td class="border border-black p-2 text-center font-semibold">{{ q5EffectivePoints }}</td>
+                        <td class="border border-black p-2 text-center font-semibold">{{ q5ManualScore.firstEffectivePoints.value }}</td>
+                        <td class="border border-black p-2 text-center font-semibold">{{ q5ManualScore.totalEffectivePoints.value }}</td>
                     </tr>
 
                     <tr>
@@ -797,9 +938,41 @@ async function persistQ5AfterWindowManualPoints() {
                                 </tbody>
                             </table>
                             <div v-if="!pdfMode" class="mt-1 text-muted-foreground">Punkte-Herleitung: {{ q6Score.explanation.join(' | ') }}</div>
+                            <div v-if="!pdfMode" class="bt-manual-controls mt-3 flex flex-wrap gap-3">
+                                <label class="bt-manual-label flex flex-col gap-1 text-xs text-muted-foreground">
+                                    bis 30 Min.
+                                    <Input
+                                        :model-value="q6ManualScore.firstInput.value"
+                                        class="w-24 text-center"
+                                        inputmode="numeric"
+                                        @input="q6ManualScore.sanitizeFirst"
+                                        @blur="q6ManualScore.persistFirst"
+                                    />
+                                </label>
+                                <label class="bt-manual-label flex flex-col gap-1 text-xs text-blue-700">
+                                    nach 30 Min.
+                                    <Input
+                                        :model-value="q6ManualScore.afterInput.value"
+                                        class="w-24 text-center text-foreground"
+                                        inputmode="numeric"
+                                        @input="q6ManualScore.sanitizeAfter"
+                                        @blur="q6ManualScore.persistAfter"
+                                    />
+                                </label>
+                            </div>
+                            <div v-else-if="q6ManualScore.pdfEntries.value.length" class="bt-pdf-manual-values">
+                                <div
+                                    v-for="entry in q6ManualScore.pdfEntries.value"
+                                    :key="`q6-${entry.label}`"
+                                    :class="['bt-pdf-manual-value', { 'bt-pdf-manual-value--late': entry.tone === 'late' }]"
+                                >
+                                    <span>{{ entry.label }}</span>
+                                    <strong>{{ entry.value }}</strong>
+                                </div>
+                            </div>
                         </td>
-                        <td class="border border-black p-2 text-center font-semibold">{{ firstWindowQ6Score.points }}</td>
-                        <td class="border border-black p-2 text-center font-semibold">{{ q6Score.points }}</td>
+                        <td class="border border-black p-2 text-center font-semibold">{{ q6ManualScore.firstEffectivePoints.value }}</td>
+                        <td class="border border-black p-2 text-center font-semibold">{{ q6ManualScore.totalEffectivePoints.value }}</td>
                     </tr>
 
                     <tr>

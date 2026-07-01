@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\CollaborationNews;
+use App\Models\CollaborationSuggestion;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -50,7 +52,34 @@ class HandleInertiaRequests extends Middleware
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
+            'collaborationNotifications' => $this->collaborationNotifications($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+        ];
+    }
+
+    /**
+     * @return array{news: int, suggestions: int, total: int}
+     */
+    private function collaborationNotifications(Request $request): array
+    {
+        if (! in_array($request->user()?->role, ['admin', 'teacher'], true)) {
+            return [
+                'news' => 0,
+                'suggestions' => 0,
+                'total' => 0,
+            ];
+        }
+
+        $news = CollaborationNews::count();
+        $suggestions = CollaborationSuggestion::query()
+            ->where('is_hidden', false)
+            ->where('status', 'open')
+            ->count();
+
+        return [
+            'news' => $news,
+            'suggestions' => $suggestions,
+            'total' => $news + $suggestions,
         ];
     }
 }
