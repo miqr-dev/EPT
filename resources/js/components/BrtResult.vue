@@ -35,8 +35,16 @@ const props = withDefaults(
     },
 );
 
+const emit = defineEmits<{
+    (e: 'answer-updated', index: number, value: string): void;
+}>();
+
 const answerRows = computed(() => props.results?.answers ?? []);
 const totalQuestions = computed(() => answerRows.value.length || 16);
+
+function updateAnswer(index: number, value: string | number) {
+    emit('answer-updated', index, String(value ?? ''));
+}
 
 function formatTime(seconds?: number | null) {
     if (seconds == null) return '-';
@@ -110,7 +118,7 @@ function resultLabel(isCorrect?: boolean) {
                                     v-if="editableAnswers"
                                     :model-value="answer.user_answer ?? ''"
                                     class="w-28"
-                                    @update:model-value="(value) => (answer.user_answer = String(value ?? ''))"
+                                    @update:model-value="(value) => updateAnswer(index, value)"
                                 />
                                 <span v-else>{{ answer.user_answer || '-' }}</span>
                             </td>

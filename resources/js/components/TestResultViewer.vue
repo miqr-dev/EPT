@@ -100,12 +100,16 @@ const isAvemTest = computed(() => [props.test?.name, props.test?.code].some((val
 const fpiStanineKeys = ['LEB', 'SOZ', 'LEI', 'GEH', 'ERR', 'AGGR', 'BEAN', 'KORP', 'GES', 'OFF', 'EXTR', 'EMOT'];
 const fpiScoreKeys: (number | string)[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'E', 'N'];
 
+function cloneResult(value: ResultJson | null) {
+    return value ? JSON.parse(JSON.stringify(value)) : null;
+}
+
 watch(
     () => props.modelValue,
     (val) => {
-        local.value = val ? JSON.parse(JSON.stringify(val)) : null;
+        local.value = cloneResult(val);
     },
-    { immediate: true, deep: true },
+    { immediate: true },
 );
 
 watch(
@@ -116,13 +120,17 @@ watch(
     { immediate: true, deep: true },
 );
 
-watch(
-    local,
-    (val) => {
-        emit('update:modelValue', val as any);
-    },
-    { deep: true },
-);
+function emitLocalUpdate() {
+    emit('update:modelValue', cloneResult(local.value) as any);
+}
+
+function handleBrtAnswerUpdated(index: number, value: string) {
+    const answer = local.value?.answers?.[index];
+    if (!answer) return;
+
+    answer.user_answer = value;
+    emitLocalUpdate();
+}
 
 function formatTime(seconds?: number | null) {
     if (seconds == null) return '–';
@@ -318,6 +326,7 @@ const fpiRohwerte = computed(() => {
             :editable-answers="showAnswers && !pdfMode"
             :pdf-mode="pdfMode"
             :answers-only="answersOnly"
+            @answer-updated="handleBrtAnswerUpdated"
         />
         <KonzentrationstestResult
             v-else-if="isKonzentrationstest"
