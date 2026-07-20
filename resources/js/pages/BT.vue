@@ -1044,7 +1044,7 @@ if (import.meta.env.DEV) {
 <template>
     <Head title="BT" />
     <div class="relative h-screen overflow-hidden bg-background text-black">
-        <div v-if="showTest" class="absolute right-6 bottom-4 left-6 z-50 flex items-center justify-between">
+        <div v-if="showTest" class="bt-page-nav absolute right-6 bottom-4 left-6 z-50 flex items-center justify-between">
             <Button variant="outline" @click="prevPage" :disabled="page === 1">Zurück</Button>
             <Button v-if="page < maxPage" @click="nextPage">Weiter</Button>
             <Button v-else @click="completeBtTest">Test beenden</Button>
@@ -2324,6 +2324,14 @@ if (import.meta.env.DEV) {
 </template>
 
 <style scoped>
+.bt-page-nav {
+    pointer-events: none;
+}
+
+.bt-page-nav > * {
+    pointer-events: auto;
+}
+
 .bt-example-blurred-title,
 .bt-example-blurred-copy {
     color: transparent;
