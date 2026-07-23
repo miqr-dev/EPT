@@ -56,9 +56,23 @@ const fpiDescriptions = [
 ];
 
 const participantName = computed(() => {
-    const surname = String(props.participant?.name ?? '').trim();
     const firstName = String(props.participant?.firstname ?? props.participant?.participant_profile?.firstname ?? '').trim();
-    if (!firstName || surname.toLocaleLowerCase('de-DE').includes(firstName.toLocaleLowerCase('de-DE'))) return surname;
+    const profileSurname = String(props.participant?.participant_profile?.name ?? '').trim();
+    const storedName = String(props.participant?.name ?? '').trim();
+    const surname = profileSurname || storedName;
+
+    if (!firstName) return surname;
+
+    const normalizedFirstName = firstName.toLocaleLowerCase('de-DE');
+    const normalizedSurname = surname.toLocaleLowerCase('de-DE');
+
+    if (normalizedSurname === normalizedFirstName) return surname;
+
+    if (normalizedSurname.startsWith(`${normalizedFirstName} `)) {
+        const surnameWithoutFirstName = surname.slice(firstName.length).trim();
+        return surnameWithoutFirstName ? `${surnameWithoutFirstName}, ${firstName}` : surname;
+    }
+
     return `${surname}, ${firstName}`;
 });
 
