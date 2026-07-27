@@ -78,6 +78,11 @@ function prToX(pr: number | null | undefined): number | null {
     return null;
 }
 
+const normalPercentRange = {
+    min: prToX(16) ?? 1,
+    max: prToX(84) ?? 9,
+};
+
 const labelsWithSpacer = computed(() => [...groupLabels, '']); // U1..U6 + blank row
 
 const chartData = computed(() => {
@@ -131,13 +136,13 @@ const chartOptions: any = {
         title: { display: false },
         annotation: {
             annotations: {
-                // Green band for SN 4..6 across all rows including the PR spacer row
+                // Green band for PR 16..84 across all rows including the PR spacer row
                 rangeBox: {
                     type: 'box',
-                    xScaleID: 'x', // bind to TOP axis (1..9)
+                    xScaleID: 'xPercent',
                     yScaleID: 'y', // bind to Y rows
-                    xMin: 4,
-                    xMax: 6,
+                    xMin: normalPercentRange.min,
+                    xMax: normalPercentRange.max,
                     yMin: -0.5, // start above U1
                     yMax: 6.5, // include spacer row (U6 is index 5; spacer is 6)
                     backgroundColor: 'rgba(34,197,94,0.18)', // soft green
