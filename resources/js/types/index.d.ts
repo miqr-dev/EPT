@@ -25,8 +25,19 @@ export interface NavItemBadge {
     class?: string;
 }
 
+export interface AppBrand {
+    key: string;
+    name: string;
+    entranceAnalysis: {
+        logoSrc: string;
+        logoAlt: string;
+        logoClass: string;
+    };
+}
+
 export type AppPageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {
     name: string;
+    brand: AppBrand;
     quote: { message: string; author: string };
     auth: Auth;
     ziggy: Config & { location: string };

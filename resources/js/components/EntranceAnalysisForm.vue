@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { buildEntranceAnalysis, type ObservationFields } from '@/lib/entrance-analysis';
+import type { AppPageProps } from '@/types';
+import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 const props = withDefaults(
@@ -18,7 +20,9 @@ const props = withDefaults(
 );
 
 const observations = defineModel<ObservationFields>({ required: true });
+const page = usePage<AppPageProps>();
 const values = computed(() => buildEntranceAnalysis(props.assignments, props.participant?.participant_profile));
+const entranceAnalysisBrand = computed(() => page.props.brand.entranceAnalysis);
 const lpsScale = [30, 35, 40, 45, 50, 55, 60, 65, 70];
 
 function columnWidths(widths: number[]) {
@@ -111,7 +115,12 @@ function concentrationBand(value?: number | null) {
     <div class="analysis-document">
         <section class="analysis-sheet analysis-page-one">
             <header class="document-header">
-                <img src="/images/miqr-logo-grey.jpg" alt="Mitteldeutsches Institut" />
+                <img
+                    class="document-logo"
+                    :class="entranceAnalysisBrand.logoClass"
+                    :src="entranceAnalysisBrand.logoSrc"
+                    :alt="entranceAnalysisBrand.logoAlt"
+                />
                 <div class="document-code">
                     <div>FB_bbU_BPW_E-Com_FOSI_Gruko_IBO</div>
                     <div>_IK_ISO_ISOk_K E-Com_KBM_KGA_KbQ_KbQ-M_KiG_KMQ_KMQ DRV_KQ_</div>
@@ -397,7 +406,12 @@ function concentrationBand(value?: number | null) {
 
         <section class="analysis-sheet analysis-page-two">
             <header class="document-header">
-                <img src="/images/miqr-logo-grey.jpg" alt="Mitteldeutsches Institut" />
+                <img
+                    class="document-logo"
+                    :class="entranceAnalysisBrand.logoClass"
+                    :src="entranceAnalysisBrand.logoSrc"
+                    :alt="entranceAnalysisBrand.logoAlt"
+                />
                 <div class="document-code">
                     <div>FB_bbU_BPW_E-Com_FOSI_Gruko_IBO</div>
                     <div>_IK_ISO_ISOk_K E-Com_KBM_KGA_KbQ_KbQ-M_KiG_KMQ_KMQ DRV_KQ_</div>
@@ -654,10 +668,19 @@ function concentrationBand(value?: number | null) {
     justify-content: space-between;
 }
 
-.document-header img {
-    width: 67mm;
+.document-logo {
+    display: block;
     height: auto;
+}
+
+.document-logo--miqr {
+    width: 67mm;
     margin-left: 15mm;
+}
+
+.document-logo--gbbr {
+    width: 86mm;
+    margin-top: 1mm;
 }
 
 .document-code {

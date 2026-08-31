@@ -44,6 +44,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'brand' => $this->brand(),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user()?->load('participantProfile'),
@@ -55,6 +56,22 @@ class HandleInertiaRequests extends Middleware
             'collaborationNotifications' => $this->collaborationNotifications($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function brand(): array
+    {
+        $fallback = config('branding.profiles.miqr');
+
+        if (! is_array($fallback)) {
+            return [];
+        }
+
+        $brand = config('branding.profiles.'.config('branding.active'), $fallback);
+
+        return is_array($brand) ? $brand : $fallback;
     }
 
     /**
