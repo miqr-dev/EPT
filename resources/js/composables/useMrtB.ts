@@ -1,4 +1,7 @@
 // --- Static Data ---
+// NOTE: Some words in these spelling tests might trigger aggressive profanity filters
+// or automatic translation tools in the browser.
+// Ensure the UI uses translate="no" and class="notranslate" on these options.
 const mrtBQuestions = [
     { number: 1, options: ['Dezimahlwaage', 'Dezimahlwage', 'Dezimalwaage', 'Dezimalwage'], correct: ['C'] },
     { number: 2, options: ['trübselig', 'trühbseelig', 'trübseelig', 'trübsehlig'], correct: ['A'] },

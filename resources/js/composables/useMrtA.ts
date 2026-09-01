@@ -1,6 +1,9 @@
 import { computed } from 'vue';
 
 // --- Static Data ---
+// NOTE: Some words here (like "Heerschar" containing "rsch" or "Appetitt" containing "tit")
+// might trigger aggressive profanity filters or automatic translation tools in the browser.
+// Ensure the UI uses translate="no" and class="notranslate" on these options.
 const mrtQuestions = [
     { number: 1, options: ["Drehohrgel", "Dreohrgel", "Dreorgel", "Drehorgel"], correct: ["D"] },
   { number: 2, options: ["Spülmaschine", "Spühlmaschiene", "Spülmaschiene", "Spühlmaschine"], correct: ["A"] },
