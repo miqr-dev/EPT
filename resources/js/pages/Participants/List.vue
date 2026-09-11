@@ -9,7 +9,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { downloadPdfOrOpenPrint, openPrintPreview } from '@/lib/pdf-export';
 import { Link, router } from '@inertiajs/vue3';
 import { ChartNoAxesCombined, Eye, FileText, Loader2, Search, X } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 type ParticipantSuggestion = {
     id: number;
@@ -48,6 +48,7 @@ const pdfExportMode = ref<'results' | 'answers' | null>(null);
 const isEntranceAnalysisOpen = ref(false);
 const entranceAnalysisParticipant = ref<any | null>(null);
 const isSearching = ref(false);
+const hasModalHistoryEntry = ref(false);
 let searchTimer: number | null = null;
 
 const TEST_PDF_ORDER = [
@@ -84,6 +85,61 @@ const showNoSuggestions = computed(
     () => canShowSuggestions.value && hasSyncedTabletSearch.value && participantSuggestions.value.length === 0 && !isSearching.value,
 );
 
+function resetTestResultModal() {
+    isModalOpen.value = false;
+    selectedAssignment.value = null;
+    selectedParticipant.value = null;
+}
+
+function resetEntranceAnalysisModal() {
+    isEntranceAnalysisOpen.value = false;
+    entranceAnalysisParticipant.value = null;
+}
+
+function pushModalHistoryEntry() {
+    if (typeof window === 'undefined' || hasModalHistoryEntry.value) {
+        return;
+    }
+
+    window.history.pushState(
+        {
+            ...(window.history.state ?? {}),
+            participantResultsModalOpen: true,
+        },
+        '',
+        window.location.href,
+    );
+
+    hasModalHistoryEntry.value = true;
+}
+
+function closeModalHistoryEntry() {
+    if (typeof window === 'undefined' || !hasModalHistoryEntry.value) {
+        return;
+    }
+
+    hasModalHistoryEntry.value = false;
+    window.history.back();
+}
+
+function handleHistoryBack() {
+    if (!isModalOpen.value && !isEntranceAnalysisOpen.value) {
+        return;
+    }
+
+    hasModalHistoryEntry.value = false;
+    resetTestResultModal();
+    resetEntranceAnalysisModal();
+}
+
+onMounted(() => {
+    window.addEventListener('popstate', handleHistoryBack);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('popstate', handleHistoryBack);
+});
+
 watch(
     () => props.filters.search,
     (value) => {
@@ -107,25 +163,26 @@ watch(
 );
 
 function viewTestResult(assignment: any, participant: any) {
+    pushModalHistoryEntry();
     selectedAssignment.value = assignment;
     selectedParticipant.value = participant;
     isModalOpen.value = true;
 }
 
 function closeModal() {
-    isModalOpen.value = false;
-    selectedAssignment.value = null;
-    selectedParticipant.value = null;
+    resetTestResultModal();
+    closeModalHistoryEntry();
 }
 
 function openEntranceAnalysis(participant: any) {
+    pushModalHistoryEntry();
     entranceAnalysisParticipant.value = participant;
     isEntranceAnalysisOpen.value = true;
 }
 
 function closeEntranceAnalysis() {
-    isEntranceAnalysisOpen.value = false;
-    entranceAnalysisParticipant.value = null;
+    resetEntranceAnalysisModal();
+    closeModalHistoryEntry();
 }
 
 function testDisplayName(assignment: any) {
