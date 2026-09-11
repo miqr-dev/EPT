@@ -296,7 +296,7 @@ function clearTabletSearch() {
 
 <template>
     <AppLayout>
-        <div class="hidden w-full px-4 py-6 sm:px-6 lg:block lg:px-8">
+        <div class="participant-results-desktop w-full px-4 py-6 sm:px-6">
             <Card class="gap-0 overflow-hidden border-slate-200 py-0 shadow-sm dark:border-slate-700">
                 <CardHeader class="border-b bg-slate-50/70 px-5 py-4 sm:px-6 dark:bg-slate-900/40">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -459,7 +459,7 @@ function clearTabletSearch() {
             </Card>
         </div>
 
-        <div class="w-full px-4 py-6 sm:px-6 lg:hidden">
+        <div class="participant-results-tablet w-full px-4 py-6 sm:px-6">
             <Card class="gap-0 border-slate-200 py-0 shadow-sm dark:border-slate-700">
                 <CardHeader class="border-b bg-slate-50/70 px-5 py-4 sm:px-6 dark:bg-slate-900/40">
                     <div class="flex flex-col gap-4">
@@ -570,3 +570,25 @@ function clearTabletSearch() {
         <EntranceAnalysisModal :is-open="isEntranceAnalysisOpen" :participant="entranceAnalysisParticipant" @close="closeEntranceAnalysis" />
     </AppLayout>
 </template>
+
+<style scoped>
+.participant-results-desktop {
+    display: none;
+}
+
+.participant-results-tablet {
+    display: block;
+}
+
+@media (min-width: 40.01cm) {
+    .participant-results-desktop {
+        display: block;
+        padding-right: 2rem;
+        padding-left: 2rem;
+    }
+
+    .participant-results-tablet {
+        display: none;
+    }
+}
+</style>
