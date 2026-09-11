@@ -22,7 +22,12 @@ const props = withDefaults(
 const observations = defineModel<ObservationFields>({ required: true });
 const page = usePage<AppPageProps>();
 const values = computed(() => buildEntranceAnalysis(props.assignments, props.participant?.participant_profile));
-const entranceAnalysisBrand = computed(() => page.props.brand.entranceAnalysis);
+const defaultEntranceAnalysisBrand = {
+    logoSrc: '/images/miqr-logo-grey.jpg',
+    logoAlt: 'Mitteldeutsches Institut',
+    logoClass: 'document-logo--miqr',
+};
+const entranceAnalysisBrand = computed(() => page.props.brand?.entranceAnalysis ?? defaultEntranceAnalysisBrand);
 const lpsScale = [30, 35, 40, 45, 50, 55, 60, 65, 70];
 
 function columnWidths(widths: number[]) {

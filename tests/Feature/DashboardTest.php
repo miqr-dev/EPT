@@ -42,3 +42,19 @@ test('shared props expose the active brand profile', function () {
             ->where('brand.entranceAnalysis.logoSrc', '/images/gbbr-logo.svg')
         );
 });
+
+test('shared props fall back to miqr brand when branding config is missing', function () {
+    config([
+        'branding.active' => null,
+        'branding.profiles.miqr' => null,
+    ]);
+
+    $user = dashboardUser('dashboard.brand-fallback');
+    $this->actingAs($user)
+        ->get('/dashboard')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('brand.key', 'miqr')
+            ->where('brand.entranceAnalysis.logoSrc', '/images/miqr-logo-grey.jpg')
+        );
+});

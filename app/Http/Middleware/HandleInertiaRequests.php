@@ -63,15 +63,31 @@ class HandleInertiaRequests extends Middleware
      */
     private function brand(): array
     {
-        $fallback = config('branding.profiles.miqr');
+        $fallback = config('branding.profiles.miqr', $this->defaultBrand());
 
         if (! is_array($fallback)) {
-            return [];
+            $fallback = $this->defaultBrand();
         }
 
         $brand = config('branding.profiles.'.config('branding.active'), $fallback);
 
         return is_array($brand) ? $brand : $fallback;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function defaultBrand(): array
+    {
+        return [
+            'key' => 'miqr',
+            'name' => 'MIQR',
+            'entranceAnalysis' => [
+                'logoSrc' => '/images/miqr-logo-grey.jpg',
+                'logoAlt' => 'Mitteldeutsches Institut',
+                'logoClass' => 'document-logo--miqr',
+            ],
+        ];
     }
 
     /**
