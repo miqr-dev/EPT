@@ -20,13 +20,19 @@ class EntranceAnalysisController extends Controller
             'remarks' => ['nullable', 'string', 'max:5000'],
         ]);
 
-        EntranceAnalysis::updateOrCreate(
+        $analysis = EntranceAnalysis::updateOrCreate(
             ['participant_id' => $participant->id],
             [
                 ...$data,
                 'teacher_id' => $request->user()->id,
             ],
         );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'analysis' => $analysis->load('teacher'),
+            ]);
+        }
 
         return back(303);
     }

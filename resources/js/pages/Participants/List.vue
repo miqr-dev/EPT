@@ -47,6 +47,7 @@ const isGeneratingPdf = ref(false);
 const pdfExportMode = ref<'results' | 'answers' | null>(null);
 const isEntranceAnalysisOpen = ref(false);
 const entranceAnalysisParticipant = ref<any | null>(null);
+const entranceAnalysisOverrides = ref<Record<number, any>>({});
 const isSearching = ref(false);
 const hasModalHistoryEntry = ref(false);
 let searchTimer: number | null = null;
@@ -162,6 +163,39 @@ watch(
     },
 );
 
+watch(
+    () => [props.participants.data, props.selectedParticipants],
+    () => {
+        if (!entranceAnalysisParticipant.value) return;
+
+        const updatedParticipant = findVisibleParticipant(entranceAnalysisParticipant.value.id);
+
+        if (updatedParticipant) {
+            entranceAnalysisParticipant.value = updatedParticipant;
+        }
+    },
+);
+
+function findVisibleParticipant(participantId: number) {
+    const participant = [...desktopParticipants.value, ...tabletSelectedParticipants.value].find((item) => item.id === participantId);
+
+    return participant ? participantWithEntranceAnalysisOverride(participant) : null;
+}
+
+function participantWithEntranceAnalysisOverride(participant: any) {
+    const override = entranceAnalysisOverrides.value[participant.id];
+
+    if (!override) return participant;
+
+    return {
+        ...participant,
+        entrance_analysis: {
+            ...(participant.entrance_analysis ?? {}),
+            ...override,
+        },
+    };
+}
+
 function viewTestResult(assignment: any, participant: any) {
     pushModalHistoryEntry();
     selectedAssignment.value = assignment;
@@ -175,14 +209,26 @@ function closeModal() {
 }
 
 function openEntranceAnalysis(participant: any) {
-    pushModalHistoryEntry();
-    entranceAnalysisParticipant.value = participant;
+    entranceAnalysisParticipant.value = participantWithEntranceAnalysisOverride(participant);
     isEntranceAnalysisOpen.value = true;
 }
 
 function closeEntranceAnalysis() {
     resetEntranceAnalysisModal();
-    closeModalHistoryEntry();
+}
+
+function handleEntranceAnalysisSaved(payload: { participantId: number; analysis: any }) {
+    entranceAnalysisOverrides.value = {
+        ...entranceAnalysisOverrides.value,
+        [payload.participantId]: payload.analysis,
+    };
+
+    if (entranceAnalysisParticipant.value?.id === payload.participantId) {
+        entranceAnalysisParticipant.value = participantWithEntranceAnalysisOverride({
+            ...entranceAnalysisParticipant.value,
+            entrance_analysis: payload.analysis,
+        });
+    }
 }
 
 function testDisplayName(assignment: any) {
@@ -624,7 +670,12 @@ function clearTabletSearch() {
         </div>
 
         <TestResultModal :isOpen="isModalOpen" :assignment="selectedAssignment" :participant="selectedParticipant" @close="closeModal" />
-        <EntranceAnalysisModal :is-open="isEntranceAnalysisOpen" :participant="entranceAnalysisParticipant" @close="closeEntranceAnalysis" />
+        <EntranceAnalysisModal
+            :is-open="isEntranceAnalysisOpen"
+            :participant="entranceAnalysisParticipant"
+            @close="closeEntranceAnalysis"
+            @saved="handleEntranceAnalysisSaved"
+        />
     </AppLayout>
 </template>
 

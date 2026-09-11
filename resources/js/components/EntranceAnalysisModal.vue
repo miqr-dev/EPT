@@ -5,7 +5,7 @@ import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@
 import { emptyObservations, type ObservationFields } from '@/lib/entrance-analysis';
 import { downloadPdfOrOpenPrint, openPrintPreview } from '@/lib/pdf-export';
 import type { AppPageProps } from '@/types';
-import { router, usePage } from '@inertiajs/vue3';
+import { usePage } from '@inertiajs/vue3';
 import { FileDown, Loader2, Save, X } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
@@ -14,7 +14,7 @@ const props = defineProps<{
     participant: any;
 }>();
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'saved']);
 const page = usePage<AppPageProps>();
 const observations = ref<ObservationFields>(emptyObservations());
 const isSaving = ref(false);
@@ -71,17 +71,38 @@ function closeModal() {
     emit('close');
 }
 
-function saveAnalysis() {
+async function saveAnalysis() {
     if (!props.participant || isSaving.value) return;
     isSaving.value = true;
 
-    router.put(route('participants.entrance-analysis.update', { participant: props.participant.id }), observations.value, {
-        preserveScroll: true,
-        preserveState: true,
-        onFinish: () => {
-            isSaving.value = false;
-        },
-    });
+    try {
+        const response = await fetch(route('participants.entrance-analysis.update', { participant: props.participant.id }), {
+            method: 'PUT',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '',
+            },
+            body: JSON.stringify(observations.value),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Entrance analysis save failed with status ${response.status}`);
+        }
+
+        const payload = await response.json();
+
+        emit('saved', {
+            participantId: props.participant.id,
+            analysis: payload.analysis,
+        });
+    } catch (error) {
+        console.error('Eingangsanalyse save failed.', error);
+        window.alert('Beobachtungen konnten nicht gespeichert werden. Bitte erneut versuchen.');
+    } finally {
+        isSaving.value = false;
+    }
 }
 
 async function downloadPdf() {

@@ -49,6 +49,33 @@ test('teacher can save participant entrance analysis observations', function () 
     ]);
 });
 
+test('teacher can save participant entrance analysis observations as json', function () {
+    $city = City::create(['name' => 'Berlin']);
+    $teacher = entranceAnalysisUser($city, 'teacher', 'teacher.entrance-json');
+    $participant = entranceAnalysisUser($city, 'participant', 'participant.entrance-json');
+
+    $this->actingAs($teacher)
+        ->putJson(route('participants.entrance-analysis.update', $participant), [
+            'instruction_understanding' => 'Gelöscht und neu geschrieben.',
+            'work_method' => '',
+            'work_speed' => 'Ruhig.',
+            'group_behavior' => null,
+            'remarks' => 'Direkter JSON-Speicherpfad.',
+        ])
+        ->assertOk()
+        ->assertJsonPath('analysis.participant_id', $participant->id)
+        ->assertJsonPath('analysis.teacher_id', $teacher->id)
+        ->assertJsonPath('analysis.instruction_understanding', 'Gelöscht und neu geschrieben.')
+        ->assertJsonPath('analysis.work_method', null);
+
+    $this->assertDatabaseHas('entrance_analyses', [
+        'participant_id' => $participant->id,
+        'teacher_id' => $teacher->id,
+        'instruction_understanding' => 'Gelöscht und neu geschrieben.',
+        'work_method' => null,
+    ]);
+});
+
 test('teacher cannot edit an entrance analysis from another city', function () {
     $berlin = City::create(['name' => 'Berlin']);
     $hamburg = City::create(['name' => 'Hamburg']);
@@ -65,7 +92,7 @@ test('teacher cannot edit an entrance analysis from another city', function () {
 test('entrance analysis print page contains saved observations and latest test data', function () {
     $city = City::create(['name' => 'Berlin']);
     $teacher = entranceAnalysisUser($city, 'teacher', 'teacher.print');
-        $teacher->forceFill([
+    $teacher->forceFill([
         'firstname' => 'Tina',
         'name' => 'Tina Muster',
     ])->save();
