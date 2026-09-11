@@ -183,16 +183,16 @@ export const testInstructions: Record<string, TestInstruction> = {
             },
             {
                 title: 'Prüfungsergebnisse',
-                description: 'Einzelergebnisse kontrollieren, Antworten einsehen und PDF-Dateien herunterladen.',
+                description: 'Einzelergebnisse kontrollieren und Antworten einsehen.',
                 blocks: [
                     {
                         title: 'Übersicht',
                         description:
-                            'Die Seite „Prüfungsergebnisse“ zeigt den Namen der teilnehmenden Person, das Vorbereitungsdatum der Prüfung, die abgeschlossenen Tests und die verfügbaren PDF-Downloads.',
+                            'Die Seite „Prüfungsergebnisse“ zeigt nach der Suche genau eine ausgewählte teilnehmende Person und deren abgeschlossene Tests.',
                         items: [
                             {
                                 label: 'Suche',
-                                text: 'Über das Suchfeld oben rechts kann nach Vor- oder Nachname gesucht werden.',
+                                text: 'Nach drei eingegebenen Zeichen erscheinen bis zu fünf Vorschläge. Nach der Auswahl bleibt nur diese Person in der Tabelle sichtbar.',
                             },
                             {
                                 label: 'Verfügbarkeit',
@@ -207,16 +207,6 @@ export const testInstructions: Record<string, TestInstruction> = {
                             'Bei Bedarf öffnen Sie den eingeklappten Bereich „Antworten“, um die abgegebenen Antworten anzuzeigen.',
                             'Laden Sie oben links entweder nur das Ergebnis oder das Ergebnis einschließlich Antworten herunter.',
                             'Schließen Sie die Ergebnisansicht über das rote „X“ oben rechts.',
-                        ],
-                    },
-                    {
-                        title: 'Alle Ergebnisse herunterladen',
-                        items: [
-                            { label: 'Alle Tests', text: 'Lädt alle vorhandenen Testergebnisse ohne Antworten als PDF herunter.' },
-                            {
-                                label: 'Mit Antworten',
-                                text: 'Lädt alle vorhandenen Testergebnisse einschließlich Antworten als PDF herunter.',
-                            },
                         ],
                     },
                 ],

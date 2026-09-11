@@ -349,16 +349,37 @@ class ParticipantController extends Controller
     $user = Auth::user();
     $cityId = $user->city_id;
     $search = trim($request->input('search', ''));
+    $selectedParticipantId = $request->filled('participant_id') ? $request->integer('participant_id') : null;
 
-    $participants = \App\Models\User::where('role', 'participant')
+    $participantBaseQuery = User::query()
       ->where('city_id', $cityId)
-      ->when($search !== '', function ($query) use ($search) {
-        $query->where(function ($subQuery) use ($search) {
+      ->where('role', 'participant');
+
+    $suggestions = [];
+
+    if ($selectedParticipantId === null && mb_strlen($search) >= 3) {
+      $suggestions = (clone $participantBaseQuery)
+        ->where(function ($subQuery) use ($search) {
           $subQuery->where('name', 'like', "%{$search}%")
             ->orWhere('firstname', 'like', "%{$search}%")
             ->orWhere('username', 'like', "%{$search}%");
-        });
-      })
+        })
+        ->orderBy('name')
+        ->orderBy('firstname')
+        ->limit(5)
+        ->get(['id', 'name', 'firstname', 'username'])
+        ->map(fn (User $participant) => [
+          'id' => $participant->id,
+          'name' => $participant->name,
+          'firstname' => $participant->firstname,
+          'username' => $participant->username,
+        ])
+        ->values();
+    }
+
+    $participants = (clone $participantBaseQuery)
+      ->when($selectedParticipantId === null, fn ($query) => $query->whereRaw('1 = 0'))
+      ->when($selectedParticipantId !== null, fn ($query) => $query->whereKey($selectedParticipantId))
       ->with([
         'participantProfile',
         'entranceAnalysis.teacher',
@@ -399,8 +420,10 @@ class ParticipantController extends Controller
 
     return Inertia::render('Participants/List', [
       'participants' => $participants,
+      'suggestions' => $suggestions,
       'filters' => [
         'search' => $search,
+        'participant_id' => $selectedParticipantId,
       ],
     ]);
   }
