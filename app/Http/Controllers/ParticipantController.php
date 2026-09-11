@@ -355,15 +355,62 @@ class ParticipantController extends Controller
       ->where('city_id', $cityId)
       ->where('role', 'participant');
 
+    $participantRelations = [
+      'participantProfile',
+      'entranceAnalysis.teacher',
+      'testAssignments.test',
+      'testAssignments.results' => function ($query) {
+        $query->with(['teacher', 'manualScores'])->orderBy('created_at', 'desc');
+      },
+      'tests',
+    ];
+
+    $latestExamCreatedAtSelect = [
+      'latest_exam_created_at' => Exam::select('exams.created_at')
+        ->join('exam_participants', 'exams.id', '=', 'exam_participants.exam_id')
+        ->whereColumn('exam_participants.participant_id', 'users.id')
+        ->latest('exams.created_at')
+        ->limit(1),
+    ];
+
+    $applySearch = function ($query) use ($search) {
+      $query->where(function ($subQuery) use ($search) {
+        $subQuery->where('name', 'like', "%{$search}%")
+          ->orWhere('firstname', 'like', "%{$search}%")
+          ->orWhere('username', 'like', "%{$search}%");
+      });
+    };
+
+    $filterAssignmentsToExamTests = function ($participantCollection) {
+      if ($participantCollection->isEmpty()) {
+        return $participantCollection;
+      }
+
+      $examTestIdsByParticipant = ExamParticipant::whereIn('participant_id', $participantCollection->pluck('id'))
+        ->join('exam_steps', 'exam_participants.exam_id', '=', 'exam_steps.exam_id')
+        ->select('exam_participants.participant_id', 'exam_steps.test_id')
+        ->get()
+        ->groupBy('participant_id')
+        ->map(function ($rows) {
+          return $rows->pluck('test_id')->filter()->unique();
+        });
+
+      return $participantCollection->transform(function ($participant) use ($examTestIdsByParticipant) {
+        $allowedTestIds = $examTestIdsByParticipant->get($participant->id, collect());
+        $filteredAssignments = $participant->testAssignments->whereIn('test_id', $allowedTestIds);
+        $participant->setRelation('testAssignments', $filteredAssignments->values());
+        $filteredTests = $participant->tests->whereIn('id', $allowedTestIds);
+        $participant->setRelation('tests', $filteredTests->values());
+
+        return $participant;
+      });
+    };
+
     $suggestions = [];
 
     if ($selectedParticipantId === null && mb_strlen($search) >= 3) {
       $suggestions = (clone $participantBaseQuery)
-        ->where(function ($subQuery) use ($search) {
-          $subQuery->where('name', 'like', "%{$search}%")
-            ->orWhere('firstname', 'like', "%{$search}%")
-            ->orWhere('username', 'like', "%{$search}%");
-        })
+        ->where($applySearch)
         ->orderBy('name')
         ->orderBy('firstname')
         ->limit(5)
@@ -378,48 +425,30 @@ class ParticipantController extends Controller
     }
 
     $participants = (clone $participantBaseQuery)
-      ->when($selectedParticipantId === null, fn ($query) => $query->whereRaw('1 = 0'))
-      ->when($selectedParticipantId !== null, fn ($query) => $query->whereKey($selectedParticipantId))
-      ->with([
-        'participantProfile',
-        'entranceAnalysis.teacher',
-        'testAssignments.test',
-        'testAssignments.results' => function ($query) {
-          $query->with(['teacher', 'manualScores'])->orderBy('created_at', 'desc');
-        },
-        'tests',
-      ])
-      ->addSelect([
-        'latest_exam_created_at' => Exam::select('exams.created_at')
-          ->join('exam_participants', 'exams.id', '=', 'exam_participants.exam_id')
-          ->whereColumn('exam_participants.participant_id', 'users.id')
-          ->latest('exams.created_at')
-          ->limit(1),
-      ])
+      ->when($search !== '', $applySearch)
+      ->with($participantRelations)
+      ->addSelect($latestExamCreatedAtSelect)
       ->orderByDesc('latest_exam_created_at')
       ->paginate(15)
       ->withQueryString();
 
-    $examTestIdsByParticipant = ExamParticipant::whereIn('participant_id', $participants->pluck('id'))
-      ->join('exam_steps', 'exam_participants.exam_id', '=', 'exam_steps.exam_id')
-      ->select('exam_participants.participant_id', 'exam_steps.test_id')
-      ->get()
-      ->groupBy('participant_id')
-      ->map(function ($rows) {
-        return $rows->pluck('test_id')->filter()->unique();
-      });
+    $participants->setCollection($filterAssignmentsToExamTests($participants->getCollection()));
 
-    $participants->getCollection()->transform(function ($participant) use ($examTestIdsByParticipant) {
-      $allowedTestIds = $examTestIdsByParticipant->get($participant->id, collect());
-      $filteredAssignments = $participant->testAssignments->whereIn('test_id', $allowedTestIds);
-      $participant->setRelation('testAssignments', $filteredAssignments->values());
-      $filteredTests = $participant->tests->whereIn('id', $allowedTestIds);
-      $participant->setRelation('tests', $filteredTests->values());
-      return $participant;
-    });
+    $selectedParticipants = collect();
+
+    if ($selectedParticipantId !== null) {
+      $selectedParticipants = (clone $participantBaseQuery)
+        ->whereKey($selectedParticipantId)
+        ->with($participantRelations)
+        ->addSelect($latestExamCreatedAtSelect)
+        ->get();
+
+      $filterAssignmentsToExamTests($selectedParticipants);
+    }
 
     return Inertia::render('Participants/List', [
       'participants' => $participants,
+      'selectedParticipants' => $selectedParticipants,
       'suggestions' => $suggestions,
       'filters' => [
         'search' => $search,

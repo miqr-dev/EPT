@@ -25,7 +25,9 @@ function createParticipantResultsListUser(array $attributes): User
     ]);
 }
 
-test('participant results list starts empty and suggests five names after three letters', function () {
+test('participant results list keeps desktop rows while tablet selection starts empty', function () {
+    $this->withoutVite();
+
     $city = City::create(['name' => 'Berlin']);
     $otherCity = City::create(['name' => 'Hamburg']);
     $teacher = createParticipantResultsListUser([
@@ -57,7 +59,8 @@ test('participant results list starts empty and suggests five names after three 
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Participants/List')
-            ->has('participants.data', 0)
+            ->has('participants.data', 6)
+            ->has('selectedParticipants', 0)
             ->has('suggestions', 0)
         );
 
@@ -66,7 +69,8 @@ test('participant results list starts empty and suggests five names after three 
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Participants/List')
-            ->has('participants.data', 0)
+            ->has('participants.data', 6)
+            ->has('selectedParticipants', 0)
             ->has('suggestions', 0)
         );
 
@@ -75,12 +79,15 @@ test('participant results list starts empty and suggests five names after three 
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Participants/List')
-            ->has('participants.data', 0)
+            ->has('participants.data', 6)
+            ->has('selectedParticipants', 0)
             ->has('suggestions', 5)
         );
 });
 
 test('participant results list shows only the selected participant and their exam results', function () {
+    $this->withoutVite();
+
     $city = City::create(['name' => 'Berlin']);
     $teacher = createParticipantResultsListUser([
         'name' => 'Teacher',
@@ -171,8 +178,11 @@ test('participant results list shows only the selected participant and their exa
             ->has('participants.data', 1)
             ->where('participants.data.0.id', $participant->id)
             ->where('participants.data.0.name', 'Marter Selected')
-            ->has('participants.data.0.test_assignments', 1)
-            ->where('participants.data.0.test_assignments.0.test.name', 'BRT-A')
-            ->has('participants.data.0.test_assignments.0.results', 1)
+            ->has('selectedParticipants', 1)
+            ->where('selectedParticipants.0.id', $participant->id)
+            ->where('selectedParticipants.0.name', 'Marter Selected')
+            ->has('selectedParticipants.0.test_assignments', 1)
+            ->where('selectedParticipants.0.test_assignments.0.test.name', 'BRT-A')
+            ->has('selectedParticipants.0.test_assignments.0.results', 1)
         );
 });
