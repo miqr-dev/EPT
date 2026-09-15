@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { buildEntranceAnalysis } from '@/lib/entrance-analysis';
 import { downloadPdfOrOpenPrint, openPrintPreview } from '@/lib/pdf-export';
 import { Link, router } from '@inertiajs/vue3';
-import { ChartNoAxesCombined, Eye, FileText, Loader2, Search, X } from 'lucide-vue-next';
+import { ChartNoAxesCombined, Eye, FileDown, FileJson, FileText, Loader2, Search, X } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 type ParticipantSuggestion = {
@@ -48,6 +49,8 @@ const pdfExportMode = ref<'results' | 'answers' | null>(null);
 const isEntranceAnalysisOpen = ref(false);
 const entranceAnalysisParticipant = ref<any | null>(null);
 const entranceAnalysisOverrides = ref<Record<number, any>>({});
+const isGeneratingEntranceAnalysisPdf = ref(false);
+const entranceAnalysisPdfParticipant = ref<any | null>(null);
 const isSearching = ref(false);
 const hasModalHistoryEntry = ref(false);
 let searchTimer: number | null = null;
@@ -319,6 +322,104 @@ function downloadFullTestsWithAnswersPdf(participant: any) {
     downloadParticipantAssignmentsPdf(participant, orderedPdfAssignments(participant), `${participantName}_Alle_Tests_und_Antworten.pdf`, true);
 }
 
+function compactDate(value?: string | null) {
+    const raw = String(value ?? '').trim();
+    return raw.match(/^\d{4}-\d{2}-\d{2}/)?.[0] ?? null;
+}
+
+function participantBirthYear(participant: any) {
+    const directYear = String(participant?.participant_profile?.birth_year ?? '').trim();
+
+    if (/^\d{4}$/.test(directYear)) return directYear;
+
+    const birthday = String(participant?.participant_profile?.birthday ?? '').trim();
+    return birthday.match(/^\d{4}/)?.[0] ?? null;
+}
+
+function anonymousEntranceAnalysisFilename(participant: any, extension: 'pdf' | 'json') {
+    const year = participantBirthYear(participant);
+    const suffix = year ? `_${year}` : '';
+
+    return `Eingangsanalyse${suffix}_anonym.${extension}`;
+}
+
+function entranceAnalysisObservations(participant: any) {
+    const analysis = participant?.entrance_analysis ?? {};
+
+    return {
+        instruction_understanding: analysis.instruction_understanding ?? null,
+        work_method: analysis.work_method ?? null,
+        work_speed: analysis.work_speed ?? null,
+        group_behavior: analysis.group_behavior ?? null,
+        remarks: analysis.remarks ?? null,
+    };
+}
+
+function anonymousEntranceAnalysisPayload(participant: any) {
+    const assignments = orderedPdfAssignments(participant);
+
+    return {
+        schema_version: 1,
+        format: 'anonymous_entrance_analysis',
+        document_type: 'Eingangsanalyse/Lehr-, Lern- und Foerderbedarf',
+        anonymized: true,
+        participant: {
+            birth_year: participantBirthYear(participant),
+        },
+        conducted_at: compactDate(participant?.latest_exam_created_at),
+        completed_tests: assignments.map((assignment: any) => ({
+            test: testDisplayName(assignment),
+            result_created_at: compactDate(assignment?.results?.[0]?.created_at),
+        })),
+        scores: buildEntranceAnalysis(assignments, participant?.participant_profile),
+        observations: entranceAnalysisObservations(participant),
+    };
+}
+
+function downloadJsonFile(filename: string, payload: Record<string, any>) {
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+}
+
+async function downloadAnonymousEntranceAnalysisPdf(participant: any) {
+    if (!participant || isGeneratingEntranceAnalysisPdf.value) return;
+
+    isGeneratingEntranceAnalysisPdf.value = true;
+    entranceAnalysisPdfParticipant.value = participant;
+
+    const routeParameters = {
+        participant: participant.id,
+        anonymous: 1,
+    };
+    const pdfUrl = route('participants.entrance-analysis.pdf', routeParameters);
+    const printUrl = route('participants.entrance-analysis.print', routeParameters);
+
+    try {
+        await downloadPdfOrOpenPrint(pdfUrl, printUrl, anonymousEntranceAnalysisFilename(participant, 'pdf'));
+    } catch (error) {
+        console.error('Anonymous entrance analysis PDF export failed, opening print preview.', error);
+        openPrintPreview(printUrl);
+    } finally {
+        isGeneratingEntranceAnalysisPdf.value = false;
+        entranceAnalysisPdfParticipant.value = null;
+    }
+}
+
+function downloadAnonymousEntranceAnalysisJson(participant: any) {
+    if (!participant) return;
+
+    downloadJsonFile(anonymousEntranceAnalysisFilename(participant, 'json'), anonymousEntranceAnalysisPayload(participant));
+}
+
 function updateDesktopSearch() {
     router.get(
         route('participants.list'),
@@ -433,7 +534,7 @@ function clearTabletSearch() {
                                     Pr&uuml;fung erstellt am
                                 </TableHead>
                                 <TableHead class="h-11 px-4 text-sm font-semibold">Tests</TableHead>
-                                <TableHead class="h-11 w-[130px] min-w-[130px] px-3 text-center text-sm font-semibold"> Eingangsanalyse </TableHead>
+                                <TableHead class="h-11 w-[150px] min-w-[150px] px-3 text-center text-sm font-semibold"> Eingangsanalyse </TableHead>
                                 <TableHead class="h-11 w-[290px] min-w-[290px] px-5 text-center text-sm font-semibold">PDF</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -475,21 +576,62 @@ function clearTabletSearch() {
                                 </TableCell>
                                 <TableCell class="px-3 py-2.5 text-center align-middle">
                                     <TooltipProvider :delay-duration="0">
-                                        <Tooltip>
-                                            <TooltipTrigger as-child>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="icon"
-                                                    class="size-8 border-blue-200 bg-blue-50/60 text-blue-700 hover:border-blue-300 hover:bg-blue-100 hover:text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/50 dark:hover:text-blue-300"
-                                                    aria-label="Eingangsanalyse &ouml;ffnen"
-                                                    @click="openEntranceAnalysis(participant)"
-                                                >
-                                                    <ChartNoAxesCombined class="size-4" aria-hidden="true" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>Eingangsanalyse &ouml;ffnen</TooltipContent>
-                                        </Tooltip>
+                                        <div class="flex justify-center gap-1.5">
+                                            <Tooltip>
+                                                <TooltipTrigger as-child>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="icon"
+                                                        class="size-8 border-blue-200 bg-blue-50/60 text-blue-700 hover:border-blue-300 hover:bg-blue-100 hover:text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/50 dark:hover:text-blue-300"
+                                                        aria-label="Eingangsanalyse &ouml;ffnen"
+                                                        @click="openEntranceAnalysis(participant)"
+                                                    >
+                                                        <ChartNoAxesCombined class="size-4" aria-hidden="true" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Eingangsanalyse &ouml;ffnen</TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger as-child>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="icon"
+                                                        class="size-8 border-emerald-200 bg-emerald-50/70 text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100 hover:text-emerald-700 disabled:cursor-not-allowed disabled:bg-muted/40 disabled:text-muted-foreground dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50 dark:hover:text-emerald-300"
+                                                        :disabled="isGeneratingEntranceAnalysisPdf"
+                                                        aria-label="Anonyme Eingangsanalyse als PDF herunterladen"
+                                                        @click="downloadAnonymousEntranceAnalysisPdf(participant)"
+                                                    >
+                                                        <Loader2
+                                                            v-if="
+                                                                isGeneratingEntranceAnalysisPdf &&
+                                                                entranceAnalysisPdfParticipant?.id === participant.id
+                                                            "
+                                                            class="size-4 animate-spin"
+                                                            aria-hidden="true"
+                                                        />
+                                                        <FileDown v-else class="size-4" aria-hidden="true" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Anonyme Eingangsanalyse als PDF</TooltipContent>
+                                            </Tooltip>
+                                            <Tooltip>
+                                                <TooltipTrigger as-child>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="icon"
+                                                        class="size-8 border-violet-200 bg-violet-50/70 text-violet-700 hover:border-violet-300 hover:bg-violet-100 hover:text-violet-700 dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-300 dark:hover:bg-violet-900/50 dark:hover:text-violet-300"
+                                                        aria-label="Anonyme Eingangsanalyse als JSON herunterladen"
+                                                        @click="downloadAnonymousEntranceAnalysisJson(participant)"
+                                                    >
+                                                        <FileJson class="size-4" aria-hidden="true" />
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>Anonyme Eingangsanalyse als JSON</TooltipContent>
+                                            </Tooltip>
+                                        </div>
                                     </TooltipProvider>
                                 </TableCell>
                                 <TableCell class="px-5 py-2.5 align-middle">

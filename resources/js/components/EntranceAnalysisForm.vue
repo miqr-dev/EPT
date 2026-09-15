@@ -11,11 +11,13 @@ const props = withDefaults(
         teacherName?: string;
         conductedAt?: string | null;
         editable?: boolean;
+        anonymous?: boolean;
     }>(),
     {
         teacherName: '',
         conductedAt: null,
         editable: false,
+        anonymous: false,
     },
 );
 
@@ -85,6 +87,15 @@ const participantName = computed(() => {
     return `${surname}, ${firstName}`;
 });
 
+const participantBirthYear = computed(() => {
+    const directYear = String(props.participant?.participant_profile?.birth_year ?? '').trim();
+
+    if (/^\d{4}$/.test(directYear)) return directYear;
+
+    const birthday = String(props.participant?.participant_profile?.birthday ?? '').trim();
+    return birthday.match(/^\d{4}/)?.[0] ?? '';
+});
+
 function formatDate(value?: string | null) {
     if (!value) return '';
     const date = new Date(value);
@@ -140,15 +151,15 @@ function concentrationBand(value?: number | null) {
                     <col v-for="(width, index) in metaWidths" :key="index" :style="{ width }" />
                 </colgroup>
                 <tbody>
-                    <tr>
+                    <tr v-if="!anonymous">
                         <th>Name, Vorname:</th>
                         <td>{{ participantName }}</td>
                         <th>Anleiter:</th>
                         <td>{{ teacherName }}</td>
                     </tr>
                     <tr>
-                        <th>Geburtsdatum:</th>
-                        <td>{{ formatDate(participant?.participant_profile?.birthday) }}</td>
+                        <th>{{ anonymous ? 'Geburtsjahr:' : 'Geburtsdatum:' }}</th>
+                        <td>{{ anonymous ? participantBirthYear : formatDate(participant?.participant_profile?.birthday) }}</td>
                         <th>Durchführungsdatum:</th>
                         <td>{{ formatDate(conductedAt) }}</td>
                     </tr>
@@ -596,7 +607,7 @@ function concentrationBand(value?: number | null) {
                 </colgroup>
                 <thead>
                     <tr class="section-row">
-                        <th colspan="2">Beobachtungen der Anleiter</th>
+                        <th colspan="2">{{ anonymous ? 'Beobachtungen' : 'Beobachtungen der Anleiter' }}</th>
                     </tr>
                 </thead>
                 <tbody>

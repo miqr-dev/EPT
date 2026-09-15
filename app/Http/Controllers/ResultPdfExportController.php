@@ -122,25 +122,39 @@ class ResultPdfExportController extends Controller
   {
     $this->authorizeResultExport($request, $participant);
 
-    $participant->load([
-      'participantProfile',
-      'entranceAnalysis.teacher',
-    ]);
+    $anonymous = $request->boolean('anonymous');
+
+    $participant->load(
+      $anonymous
+        ? [
+          'participantProfile',
+          'entranceAnalysis',
+        ]
+        : [
+          'participantProfile',
+          'entranceAnalysis.teacher',
+        ],
+    );
     $metadata = $this->entranceAnalysisMetadata($participant);
+    $assignments = $this->orderedAssignments($participant, ! $anonymous);
 
     return Inertia::render('Print/EntranceAnalysis', [
-      'participant' => $participant,
-      'assignments' => $this->orderedAssignments($participant),
-      'analysis' => $participant->entranceAnalysis,
-      'teacherName' => $participant->entranceAnalysis?->teacher
-        ? $this->userDisplayName($participant->entranceAnalysis->teacher)
-        : $metadata['teacherName'],
+      'participant' => $anonymous ? $this->anonymousParticipantPayload($participant) : $participant,
+      'assignments' => $anonymous ? $this->anonymousAssignmentsPayload($assignments) : $assignments,
+      'analysis' => $anonymous ? $this->anonymousAnalysisPayload($participant->entranceAnalysis) : $participant->entranceAnalysis,
+      'teacherName' => $anonymous
+        ? ''
+        : ($participant->entranceAnalysis?->teacher
+          ? $this->userDisplayName($participant->entranceAnalysis->teacher)
+          : $metadata['teacherName']),
       'conductedAt' => $metadata['conductedAt'],
+      'anonymous' => $anonymous,
       'autoPrint' => $request->boolean('auto_print'),
-      'filename' => $this->entranceAnalysisFilename($participant),
-      'pdfUrl' => URL::route('participants.entrance-analysis.pdf', [
+      'filename' => $this->entranceAnalysisFilename($participant, $anonymous),
+      'pdfUrl' => URL::route('participants.entrance-analysis.pdf', array_filter([
         'participant' => $participant->id,
-      ], false),
+        'anonymous' => $anonymous ? 1 : null,
+      ]), false),
     ]);
   }
 
@@ -148,11 +162,13 @@ class ResultPdfExportController extends Controller
   {
     $this->authorizeResultExport($request, $participant);
 
-    $printUrl = $this->signedPrintUrl($request, 'participants.entrance-analysis.print-signed', [
+    $anonymous = $request->boolean('anonymous');
+    $printUrl = $this->signedPrintUrl($request, 'participants.entrance-analysis.print-signed', array_filter([
       'participant' => $participant->id,
-    ]);
+      'anonymous' => $anonymous ? 1 : null,
+    ]));
 
-    return $this->pdfResponse($request, $printUrl, $this->entranceAnalysisFilename($participant));
+    return $this->pdfResponse($request, $printUrl, $this->entranceAnalysisFilename($participant, $anonymous));
   }
 
   private function pdfResponse(Request $request, string $printUrl, string $filename)
@@ -302,7 +318,7 @@ class ResultPdfExportController extends Controller
     throw new RuntimeException('No Chrome or Edge executable was found for PDF export.');
   }
 
-  private function orderedAssignments(User $participant): Collection
+  private function orderedAssignments(User $participant, bool $includeResultTeacher = true): Collection
   {
     $allowedTestIds = ExamParticipant::where('participant_id', $participant->id)
       ->join('exam_steps', 'exam_participants.exam_id', '=', 'exam_steps.exam_id')
@@ -321,7 +337,15 @@ class ResultPdfExportController extends Controller
       ->whereHas('results')
       ->with([
         'test',
-        'results' => fn($query) => $query->with(['teacher', 'manualScores'])->orderByDesc('created_at'),
+        'results' => function ($query) use ($includeResultTeacher) {
+          $relations = ['manualScores'];
+
+          if ($includeResultTeacher) {
+            $relations[] = 'teacher';
+          }
+
+          $query->with($relations)->orderByDesc('created_at');
+        },
       ])
       ->get()
       ->map(fn(TestAssignment $assignment) => [
@@ -440,8 +464,80 @@ class ResultPdfExportController extends Controller
     return trim($firstName . ' ' . $name);
   }
 
-  private function entranceAnalysisFilename(User $participant): string
+  private function birthYear(mixed $birthday): ?string
   {
+    $value = trim((string) $birthday);
+
+    if ($value === '') {
+      return null;
+    }
+
+    if (preg_match('/^\d{4}/', $value, $matches)) {
+      return $matches[0];
+    }
+
+    return null;
+  }
+
+  private function anonymousParticipantPayload(User $participant): array
+  {
+    $profile = $participant->participantProfile;
+
+    return [
+      'role' => 'participant',
+      'participant_profile' => [
+        'birth_year' => $this->birthYear($profile?->birthday),
+        'age' => $profile?->age !== null ? (int) $profile->age : null,
+      ],
+    ];
+  }
+
+  private function anonymousAnalysisPayload(mixed $analysis): ?array
+  {
+    if (!$analysis) {
+      return null;
+    }
+
+    return [
+      'instruction_understanding' => $analysis->instruction_understanding,
+      'work_method' => $analysis->work_method,
+      'work_speed' => $analysis->work_speed,
+      'group_behavior' => $analysis->group_behavior,
+      'remarks' => $analysis->remarks,
+    ];
+  }
+
+  private function anonymousAssignmentsPayload(Collection $assignments): array
+  {
+    return $assignments
+      ->map(fn(TestAssignment $assignment) => [
+        'test' => [
+          'name' => $assignment->test?->name,
+          'code' => $assignment->test?->code,
+        ],
+        'results' => $assignment->results
+          ->map(fn(TestResult $result) => [
+            'result_json' => $result->result_json,
+            'manual_scores' => $result->manualScores
+              ->map(fn($score) => [
+                'key' => $score->key,
+                'value' => $score->value,
+              ])
+              ->values(),
+            'created_at' => $result->created_at?->toJSON(),
+          ])
+          ->values(),
+      ])
+      ->values()
+      ->all();
+  }
+
+  private function entranceAnalysisFilename(User $participant, bool $anonymous = false): string
+  {
+    if ($anonymous) {
+      return $this->filename('Eingangsanalyse', '_anonym.pdf');
+    }
+
     return $this->filename($participant->name, '_Eingangsanalyse.pdf');
   }
 }

@@ -11,6 +11,7 @@ const props = withDefaults(
         analysis?: any | null;
         teacherName?: string;
         conductedAt?: string | null;
+        anonymous?: boolean;
         autoPrint?: boolean;
         filename?: string;
         pdfUrl?: string | null;
@@ -19,6 +20,7 @@ const props = withDefaults(
         analysis: null,
         teacherName: '',
         conductedAt: null,
+        anonymous: false,
         autoPrint: false,
         filename: 'Eingangsanalyse.pdf',
         pdfUrl: null,
@@ -121,6 +123,7 @@ onMounted(prepareForPdf);
             :assignments="assignments"
             :teacher-name="teacherName"
             :conducted-at="conductedAt"
+            :anonymous="anonymous"
         />
     </main>
 </template>

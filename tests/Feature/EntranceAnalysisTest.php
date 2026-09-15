@@ -161,4 +161,31 @@ test('entrance analysis print page contains saved observations and latest test d
             ->where('assignments.0.test.name', 'BRT-A')
             ->where('assignments.0.results.0.result_json.twert', 56)
         );
+
+    $this->actingAs($teacher)
+        ->get(route('participants.entrance-analysis.print', [
+            'participant' => $participant,
+            'anonymous' => 1,
+        ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Print/EntranceAnalysis')
+            ->where('anonymous', true)
+            ->where('filename', 'Eingangsanalyse_anonym.pdf')
+            ->where('teacherName', '')
+            ->where('participant.participant_profile.birth_year', '1990')
+            ->where('participant.participant_profile.age', 36)
+            ->missing('participant.name')
+            ->missing('participant.firstname')
+            ->missing('participant.participant_profile.birthday')
+            ->missing('participant.participant_profile.sex')
+            ->where('analysis.instruction_understanding', 'Sicher')
+            ->missing('analysis.teacher_id')
+            ->where('assignments.0.test.name', 'BRT-A')
+            ->where('assignments.0.results.0.result_json.twert', 56)
+            ->missing('assignments.0.id')
+            ->missing('assignments.0.results.0.teacher')
+            ->missing('assignments.0.results.0.teacher_id')
+            ->where('pdfUrl', fn (string $url) => str_contains($url, 'anonymous=1'))
+        );
 });
