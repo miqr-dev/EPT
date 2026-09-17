@@ -24,12 +24,17 @@ function createCollaborationUser(string $role): User
 test('promoted suggestions are turned into todos and removed from the suggestions feed', function () {
     $admin = createCollaborationUser('admin');
     $teacher = createCollaborationUser('teacher');
+    $suggestedAt = now()->subDays(3)->setTime(9, 30);
 
     $promotedSuggestion = CollaborationSuggestion::create([
         'title' => 'Vorschlag',
         'content' => 'Promote this idea',
         'created_by' => $teacher->id,
     ]);
+    $promotedSuggestion->forceFill([
+        'created_at' => $suggestedAt,
+        'updated_at' => $suggestedAt,
+    ])->save();
 
     $openSuggestion = CollaborationSuggestion::create([
         'title' => 'Vorschlag',
@@ -47,6 +52,11 @@ test('promoted suggestions are turned into todos and removed from the suggestion
         ->and($promotedSuggestion->is_hidden)->toBeTrue()
         ->and(CollaborationTodo::where('suggestion_id', $promotedSuggestion->id)->exists())->toBeTrue();
 
+    $todo = CollaborationTodo::where('suggestion_id', $promotedSuggestion->id)->firstOrFail();
+
+    expect($todo->created_by)->toBe($teacher->id)
+        ->and($todo->created_at->toDateTimeString())->toBe($suggestedAt->toDateTimeString());
+
     $this->actingAs($admin)
         ->get(route('collaboration.index'))
         ->assertOk()
@@ -54,6 +64,26 @@ test('promoted suggestions are turned into todos and removed from the suggestion
             ->component('CollaborationCenter')
             ->has('suggestions', 1)
             ->where('suggestions.0.id', $openSuggestion->id));
+});
+
+test('teachers cannot promote suggestions into todos', function () {
+    $teacher = createCollaborationUser('teacher');
+
+    $suggestion = CollaborationSuggestion::create([
+        'title' => 'Vorschlag',
+        'content' => 'Teacher should not promote this idea',
+        'created_by' => $teacher->id,
+    ]);
+
+    $this->actingAs($teacher)
+        ->post(route('collaboration.suggestions.promote', $suggestion))
+        ->assertForbidden();
+
+    $suggestion->refresh();
+
+    expect(CollaborationTodo::where('suggestion_id', $suggestion->id)->exists())->toBeFalse()
+        ->and($suggestion->status)->toBe('open')
+        ->and($suggestion->is_hidden)->toBeFalse();
 });
 
 test('completed todos are sent to the collaboration summary as completed', function () {

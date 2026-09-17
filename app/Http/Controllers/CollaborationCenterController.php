@@ -134,10 +134,16 @@ class CollaborationCenterController extends Controller
     {
         abort_unless($request->user()?->role === 'admin', 403);
 
-        CollaborationTodo::firstOrCreate(
-            ['suggestion_id' => $suggestion->id],
-            ['task' => $suggestion->title.': '.$suggestion->content, 'created_by' => $request->user()->id]
-        );
+        $todo = CollaborationTodo::firstOrNew(['suggestion_id' => $suggestion->id]);
+
+        if (! $todo->exists) {
+            $todo->forceFill([
+                'task' => $suggestion->title.': '.$suggestion->content,
+                'created_by' => $suggestion->created_by,
+                'created_at' => $suggestion->created_at,
+                'updated_at' => $suggestion->updated_at,
+            ])->save();
+        }
 
         $suggestion->update([
             'status' => 'promoted',
