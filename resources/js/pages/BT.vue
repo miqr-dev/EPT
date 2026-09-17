@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useTeacherForceFinish } from '@/composables/useTeacherForceFinish';
 import { Head } from '@inertiajs/vue3';
 import { MousePointer2 } from 'lucide-vue-next';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
@@ -107,6 +108,18 @@ const dragDropExampleAnimationStyle = ref<Record<string, string>>({});
 const startedAtMs = ref<number | null>(null);
 const startTimeRemainingSeconds = ref<number | null>(null);
 const latestTimeRemainingSeconds = ref<number | null>(null);
+const { clearForcedFinish } = useTeacherForceFinish({
+    isActive: () => showTest.value,
+    onStart: () => {
+        window.dispatchEvent(new Event('start-finish'));
+    },
+    onCountdownFinished: () => {
+        completeBtTest();
+    },
+    onCancel: () => {
+        window.dispatchEvent(new Event('cancel-finish'));
+    },
+});
 const dragDropExampleNames: Apprentice[] = [
     { id: 1, name: 'Albrecht', restriction: null },
     { id: 2, name: 'Becker', restriction: null },
@@ -1031,6 +1044,7 @@ watch(
 );
 
 function completeBtTest() {
+    clearForcedFinish(false);
     if (hasReachedFirstWindow()) {
         ensureFirstWindowSnapshot();
     }

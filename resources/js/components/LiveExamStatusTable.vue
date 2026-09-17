@@ -36,7 +36,7 @@ const formatTime = (seconds?: number) => {
 const localExam = ref(JSON.parse(JSON.stringify(props.exam)))
 
 const totalTestDuration = computed(() => {
-  const durationMinutes = Number(localExam.value?.current_step?.test?.duration)
+  const durationMinutes = Number(localExam.value?.current_step?.duration ?? localExam.value?.current_step?.test?.duration)
   return Number.isFinite(durationMinutes) && durationMinutes >= 0
     ? durationMinutes * 60
     : undefined

@@ -304,6 +304,7 @@ function openTestInterface(step: ExamStepInfo) {
                     dispatchForceFinish(pending);
                 }, 0);
             }
+            requestAutoForceFinishIfNeeded();
         });
     };
 
@@ -389,6 +390,8 @@ function startCountdownIfNeeded() {
         return;
     }
 
+    requestAutoForceFinishIfNeeded();
+
     if (countdownInterval) return;
 
     countdownInterval = setInterval(() => {
@@ -432,29 +435,34 @@ watch(
 
 watch(
     () => activeTimeRemainingSeconds.value,
-    (seconds) => {
-        if (!isTestDialogOpen.value || typeof activeStepId.value !== 'number') {
-            return;
-        }
-
-        const stepId = activeStepId.value;
-        if (stepStatuses.value[stepId]?.status !== 'in_progress') {
-            return;
-        }
-
-        if (typeof seconds === 'number' && seconds <= 0 && !hasRequestedAutoForceFinish.value) {
-            hasRequestedAutoForceFinish.value = true;
-            const now = Date.now();
-            const detail: ForceFinishDetail = {
-                stepId,
-                requestedAt: new Date(now).toISOString(),
-                deadline: new Date(now + 10_000).toISOString(),
-            };
-            pendingForceFinishRequests.set(stepId, detail);
-            dispatchForceFinish(detail);
-        }
+    () => {
+        requestAutoForceFinishIfNeeded();
     },
 );
+
+function requestAutoForceFinishIfNeeded() {
+    if (!isTestDialogOpen.value || typeof activeStepId.value !== 'number') {
+        return;
+    }
+
+    const stepId = activeStepId.value;
+    if (stepStatuses.value[stepId]?.status !== 'in_progress') {
+        return;
+    }
+
+    const seconds = activeTimeRemainingSeconds.value;
+    if (typeof seconds === 'number' && seconds <= 0 && !hasRequestedAutoForceFinish.value) {
+        hasRequestedAutoForceFinish.value = true;
+        const now = Date.now();
+        const detail: ForceFinishDetail = {
+            stepId,
+            requestedAt: new Date(now).toISOString(),
+            deadline: new Date(now + 10_000).toISOString(),
+        };
+        pendingForceFinishRequests.set(stepId, detail);
+        dispatchForceFinish(detail);
+    }
+}
 
 function completeTest(results: any) {
     if (typeof activeStepId.value !== 'number') return;
