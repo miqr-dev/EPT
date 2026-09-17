@@ -2,9 +2,9 @@
 import { cn } from '@/lib/utils'
 import { badgeVariants, type BadgeVariants } from './badgeVariants'
 
-const { variant } = withDefaults(defineProps<{
+const { variant = 'default' } = defineProps<{
   variant?: BadgeVariants['variant']
-}>(), { variant: 'default' })
+}>()
 </script>
 
 <template>
