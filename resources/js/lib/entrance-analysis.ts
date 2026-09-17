@@ -24,6 +24,12 @@ export type ObservationFields = {
     remarks: string;
 };
 
+export type MarkOverrides = Record<string, boolean>;
+
+export type EntranceAnalysisFields = ObservationFields & {
+    mark_overrides: MarkOverrides;
+};
+
 type AssignmentResult = {
     result_json?: Record<string, any> | null;
     manual_scores?: Array<{ key: string; value: number | string | null }> | Record<string, number | string | null>;
@@ -458,5 +464,12 @@ export function emptyObservations(): ObservationFields {
         work_speed: '',
         group_behavior: '',
         remarks: '',
+    };
+}
+
+export function emptyEntranceAnalysisFields(): EntranceAnalysisFields {
+    return {
+        ...emptyObservations(),
+        mark_overrides: {},
     };
 }

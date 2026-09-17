@@ -35,7 +35,7 @@ const isActive = (item: NavItem): boolean => {
                     <SidebarMenuItem>
                         <CollapsibleTrigger as-child>
                             <SidebarMenuButton :is-active="isActive(item)" :tooltip="item.title" :class="item.badges?.length ? 'pr-16' : undefined">
-                                <component :is="item.icon" />
+                                <component :is="item.icon" :class="item.iconClass" />
                                 <span>{{ item.title }}</span>
                                 <ChevronRight class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                             </SidebarMenuButton>
@@ -44,7 +44,10 @@ const isActive = (item: NavItem): boolean => {
                             <span
                                 v-for="badge in item.badges"
                                 :key="badge.title"
-                                :class="['flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-xs font-semibold tabular-nums', badge.class]"
+                                :class="[
+                                    'flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-xs font-semibold tabular-nums',
+                                    badge.class,
+                                ]"
                             >
                                 {{ badge.count }}
                             </span>
@@ -66,7 +69,7 @@ const isActive = (item: NavItem): boolean => {
                 <SidebarMenuItem v-else>
                     <SidebarMenuButton as-child :is-active="isActive(item)" :tooltip="item.title" :class="item.badges?.length ? 'pr-16' : undefined">
                         <Link :href="item.href">
-                            <component :is="item.icon" />
+                            <component :is="item.icon" :class="item.iconClass" />
                             <span>{{ item.title }}</span>
                         </Link>
                     </SidebarMenuButton>

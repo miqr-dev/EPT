@@ -504,6 +504,7 @@ class ResultPdfExportController extends Controller
       'work_speed' => $analysis->work_speed,
       'group_behavior' => $analysis->group_behavior,
       'remarks' => $analysis->remarks,
+      'mark_overrides' => $analysis->mark_overrides ?? [],
     ];
   }
 

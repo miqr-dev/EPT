@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { buildEntranceAnalysis, type ObservationFields } from '@/lib/entrance-analysis';
+import EntranceAnalysisMark from '@/components/EntranceAnalysisMark.vue';
+import { buildEntranceAnalysis, type EntranceAnalysisFields } from '@/lib/entrance-analysis';
 import type { AppPageProps } from '@/types';
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -21,7 +22,7 @@ const props = withDefaults(
     },
 );
 
-const observations = defineModel<ObservationFields>({ required: true });
+const observations = defineModel<EntranceAnalysisFields>({ required: true });
 const page = usePage<AppPageProps>();
 const values = computed(() => buildEntranceAnalysis(props.assignments, props.participant?.participant_profile));
 const defaultEntranceAnalysisBrand = {
@@ -51,6 +52,48 @@ const concentrationPerformanceWidths = columnWidths([3498, 924, 925, 1389, 1389,
 const avemWidths = columnWidths([3498, 924, 925, 555, 556, 555, 556, 556, 926, 930, 1020]);
 const observationWidths = columnWidths([3498, 7416]);
 
+type BandDefinition = {
+    key: string;
+    minimum: number | null;
+    maximum: number | null;
+};
+
+const fpiScale = [9, 8, 7, 6, 5, 4, 3, 2, 1];
+const avemScale = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+const brtBands: BandDefinition[] = [
+    { key: 'lte_34', minimum: null, maximum: 34 },
+    { key: '35_39', minimum: 35, maximum: 39 },
+    { key: '40_45', minimum: 40, maximum: 45 },
+    { key: '46_54', minimum: 46, maximum: 54 },
+    { key: '55_60', minimum: 55, maximum: 60 },
+    { key: '61_66', minimum: 61, maximum: 66 },
+    { key: 'gte_67', minimum: 67, maximum: null },
+];
+const mrtBands: BandDefinition[] = [
+    { key: 'lte_5', minimum: null, maximum: 5 },
+    { key: '6_15', minimum: 6, maximum: 15 },
+    { key: '16_30', minimum: 16, maximum: 30 },
+    { key: '31_68', minimum: 31, maximum: 68 },
+    { key: '69_84', minimum: 69, maximum: 84 },
+    { key: '85_94', minimum: 85, maximum: 94 },
+    { key: 'gte_95', minimum: 95, maximum: null },
+];
+const btBands: BandDefinition[] = [
+    { key: 'lte_24', minimum: null, maximum: 24 },
+    { key: '25_33', minimum: 25, maximum: 33 },
+    { key: '34_40', minimum: 34, maximum: 40 },
+    { key: '41_45', minimum: 41, maximum: 45 },
+    { key: 'gte_46', minimum: 46, maximum: null },
+];
+const bitBands: BandDefinition[] = [
+    { key: 'lte_5', minimum: null, maximum: 5 },
+    { key: '6_15', minimum: 6, maximum: 15 },
+    { key: '20_30', minimum: 20, maximum: 30 },
+    { key: '35_65', minimum: 35, maximum: 65 },
+    { key: '70_80', minimum: 70, maximum: 80 },
+    { key: '85_94', minimum: 85, maximum: 94 },
+    { key: 'gte_95', minimum: 95, maximum: null },
+];
 const fpiDescriptions = [
     ['lebenszufrieden, zuversichtlich', 'unzufrieden, bedrückt'],
     ['hilfsbereit, mitmenschlich', 'selbstbezogen, unsolidarisch'],
@@ -125,6 +168,87 @@ function concentrationBand(value?: number | null) {
     if (value >= 6) return 4;
     return 5;
 }
+
+function markKey(...parts: Array<string | number>) {
+    return parts.join(':');
+}
+
+function bandMarkKey(section: string, bandKey: string) {
+    return markKey(section, 'band', bandKey);
+}
+
+function bandMarkKeys(section: string, bands: BandDefinition[]) {
+    return bands.map((band) => bandMarkKey(section, band.key));
+}
+
+function lpsMarkKey(rowKey: string, value: number) {
+    return markKey('lps', rowKey, value);
+}
+
+function lpsMarkKeys(rowKey: string) {
+    return lpsScale.map((value) => lpsMarkKey(rowKey, value));
+}
+
+function lpsSupportKey(rowKey: string) {
+    return markKey('lps', rowKey, 'support');
+}
+
+function rowValueMarkKey(section: string, rowKey: string | number, value: string | number) {
+    return markKey(section, rowKey, value);
+}
+
+function rowValueMarkKeys(section: string, rowKey: string | number, scale: Array<string | number>) {
+    return scale.map((value) => rowValueMarkKey(section, rowKey, value));
+}
+
+function supportMarkKey(section: string, rowKey: string | number) {
+    return markKey(section, rowKey, 'support');
+}
+
+function concentrationMarkKey(index: number) {
+    return markKey('concentration', 'performance', index);
+}
+
+function concentrationMarkKeys() {
+    return Array.from({ length: 6 }, (_, index) => concentrationMarkKey(index));
+}
+
+function overrideValue(key: string) {
+    const value = observations.value.mark_overrides?.[key];
+    return typeof value === 'boolean' ? value : null;
+}
+
+function isManualMark(key: string) {
+    return overrideValue(key) !== null;
+}
+
+function isMarked(key: string, automatic: boolean) {
+    return overrideValue(key) ?? automatic;
+}
+
+function updateMarkOverrides(updates: Record<string, boolean>) {
+    observations.value = {
+        ...observations.value,
+        mark_overrides: {
+            ...(observations.value.mark_overrides ?? {}),
+            ...updates,
+        },
+    };
+}
+
+function toggleMark(key: string, automatic: boolean) {
+    if (!props.editable) return;
+    updateMarkOverrides({ [key]: !isMarked(key, automatic) });
+}
+
+function selectMark(key: string, groupKeys: string[], automatic: boolean) {
+    if (!props.editable) return;
+
+    updateMarkOverrides({
+        ...Object.fromEntries(groupKeys.map((groupKey) => [groupKey, false])),
+        [key]: !isMarked(key, automatic),
+    });
+}
 </script>
 
 <template>
@@ -192,8 +316,24 @@ function concentrationBand(value?: number | null) {
                 <tbody>
                     <tr v-for="row in values.lps?.rows ?? []" :key="row.key">
                         <td colspan="2">{{ row.label }}</td>
-                        <td v-for="value in lpsScale" :key="value" class="mark-cell">{{ hasMark(row.value, value) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ needsSupport(row.value, 40) ? 'X' : '' }}</td>
+                        <td v-for="value in lpsScale" :key="value" class="mark-cell">
+                            <EntranceAnalysisMark
+                                :checked="isMarked(lpsMarkKey(row.key, value), hasMark(row.value, value))"
+                                :editable="editable"
+                                :manual="isManualMark(lpsMarkKey(row.key, value))"
+                                :label="`${row.label} ${value}`"
+                                @toggle="selectMark(lpsMarkKey(row.key, value), lpsMarkKeys(row.key), hasMark(row.value, value))"
+                            />
+                        </td>
+                        <td class="mark-cell">
+                            <EntranceAnalysisMark
+                                :checked="isMarked(lpsSupportKey(row.key), needsSupport(row.value, 40))"
+                                :editable="editable"
+                                :manual="isManualMark(lpsSupportKey(row.key))"
+                                :label="`${row.label} Foerderbedarf`"
+                                @toggle="toggleMark(lpsSupportKey(row.key), needsSupport(row.value, 40))"
+                            />
+                        </td>
                     </tr>
                     <template v-if="!values.lps">
                         <tr
@@ -210,7 +350,24 @@ function concentrationBand(value?: number | null) {
                             :key="label"
                         >
                             <td colspan="2">{{ label }}</td>
-                            <td v-for="number in 10" :key="number"></td>
+                            <td v-for="value in lpsScale" :key="value" class="mark-cell">
+                                <EntranceAnalysisMark
+                                    :checked="isMarked(lpsMarkKey(label, value), false)"
+                                    :editable="editable"
+                                    :manual="isManualMark(lpsMarkKey(label, value))"
+                                    :label="`${label} ${value}`"
+                                    @toggle="selectMark(lpsMarkKey(label, value), lpsMarkKeys(label), false)"
+                                />
+                            </td>
+                            <td class="mark-cell">
+                                <EntranceAnalysisMark
+                                    :checked="isMarked(lpsSupportKey(label), false)"
+                                    :editable="editable"
+                                    :manual="isManualMark(lpsSupportKey(label))"
+                                    :label="`${label} Foerderbedarf`"
+                                    @toggle="toggleMark(lpsSupportKey(label), false)"
+                                />
+                            </td>
                         </tr>
                     </template>
                     <tr class="summary-row">
@@ -266,14 +423,30 @@ function concentrationBand(value?: number | null) {
                     <tr>
                         <td>BRT</td>
                         <td class="value-cell">{{ values.brtT ?? '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.brtT, null, 34) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.brtT, 35, 39) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.brtT, 40, 45) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.brtT, 46, 54) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.brtT, 55, 60) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.brtT, 61, 66) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.brtT, 67, null) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ needsSupport(values.brtT, 40) ? 'X' : '' }}</td>
+                        <td v-for="band in brtBands" :key="band.key" class="mark-cell">
+                            <EntranceAnalysisMark
+                                :checked="isMarked(bandMarkKey('brt', band.key), isInRange(values.brtT, band.minimum, band.maximum))"
+                                :editable="editable"
+                                :manual="isManualMark(bandMarkKey('brt', band.key))"
+                                label="BRT"
+                                @toggle="
+                                    selectMark(
+                                        bandMarkKey('brt', band.key),
+                                        bandMarkKeys('brt', brtBands),
+                                        isInRange(values.brtT, band.minimum, band.maximum),
+                                    )
+                                "
+                            />
+                        </td>
+                        <td class="mark-cell">
+                            <EntranceAnalysisMark
+                                :checked="isMarked(supportMarkKey('brt', 'total'), needsSupport(values.brtT, 40))"
+                                :editable="editable"
+                                :manual="isManualMark(supportMarkKey('brt', 'total'))"
+                                label="BRT Foerderbedarf"
+                                @toggle="toggleMark(supportMarkKey('brt', 'total'), needsSupport(values.brtT, 40))"
+                            />
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -309,14 +482,30 @@ function concentrationBand(value?: number | null) {
                     <tr>
                         <td>MRT</td>
                         <td class="value-cell">{{ values.mrtPercentile ?? '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.mrtPercentile, null, 5) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.mrtPercentile, 6, 15) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.mrtPercentile, 16, 30) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.mrtPercentile, 31, 68) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.mrtPercentile, 69, 84) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.mrtPercentile, 85, 94) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.mrtPercentile, 95, null) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ needsSupport(values.mrtPercentile, 16) ? 'X' : '' }}</td>
+                        <td v-for="band in mrtBands" :key="band.key" class="mark-cell">
+                            <EntranceAnalysisMark
+                                :checked="isMarked(bandMarkKey('mrt', band.key), isInRange(values.mrtPercentile, band.minimum, band.maximum))"
+                                :editable="editable"
+                                :manual="isManualMark(bandMarkKey('mrt', band.key))"
+                                label="MRT"
+                                @toggle="
+                                    selectMark(
+                                        bandMarkKey('mrt', band.key),
+                                        bandMarkKeys('mrt', mrtBands),
+                                        isInRange(values.mrtPercentile, band.minimum, band.maximum),
+                                    )
+                                "
+                            />
+                        </td>
+                        <td class="mark-cell">
+                            <EntranceAnalysisMark
+                                :checked="isMarked(supportMarkKey('mrt', 'total'), needsSupport(values.mrtPercentile, 16))"
+                                :editable="editable"
+                                :manual="isManualMark(supportMarkKey('mrt', 'total'))"
+                                label="MRT Foerderbedarf"
+                                @toggle="toggleMark(supportMarkKey('mrt', 'total'), needsSupport(values.mrtPercentile, 16))"
+                            />
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -348,12 +537,30 @@ function concentrationBand(value?: number | null) {
                     <tr>
                         <td>Bürotest</td>
                         <td class="value-cell">{{ values.btRaw ?? '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.btRaw, null, 24) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.btRaw, 25, 33) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.btRaw, 34, 40) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.btRaw, 41, 45) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(values.btRaw, 46, null) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ needsSupport(values.btRaw, 34) ? 'X' : '' }}</td>
+                        <td v-for="band in btBands" :key="band.key" class="mark-cell">
+                            <EntranceAnalysisMark
+                                :checked="isMarked(bandMarkKey('bt', band.key), isInRange(values.btRaw, band.minimum, band.maximum))"
+                                :editable="editable"
+                                :manual="isManualMark(bandMarkKey('bt', band.key))"
+                                label="Buerotest"
+                                @toggle="
+                                    selectMark(
+                                        bandMarkKey('bt', band.key),
+                                        bandMarkKeys('bt', btBands),
+                                        isInRange(values.btRaw, band.minimum, band.maximum),
+                                    )
+                                "
+                            />
+                        </td>
+                        <td class="mark-cell">
+                            <EntranceAnalysisMark
+                                :checked="isMarked(supportMarkKey('bt', 'total'), needsSupport(values.btRaw, 34))"
+                                :editable="editable"
+                                :manual="isManualMark(supportMarkKey('bt', 'total'))"
+                                label="Buerotest Foerderbedarf"
+                                @toggle="toggleMark(supportMarkKey('bt', 'total'), needsSupport(values.btRaw, 34))"
+                            />
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -372,7 +579,7 @@ function concentrationBand(value?: number | null) {
                     </tr>
                     <tr class="subheader-row">
                         <th colspan="2">Stanine-Wert</th>
-                        <th v-for="value in [9, 8, 7, 6, 5, 4, 3, 2, 1]" :key="value">{{ value }}</th>
+                        <th v-for="value in fpiScale" :key="value">{{ value }}</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -380,8 +587,14 @@ function concentrationBand(value?: number | null) {
                     <tr v-for="(row, index) in values.fpi" :key="row.label">
                         <td>{{ index < 10 ? `${index + 1}.` : index === 10 ? 'E.' : 'N.' }} {{ row.label }}</td>
                         <td class="description-cell">{{ fpiDescriptions[index][0] }}</td>
-                        <td v-for="value in [9, 8, 7, 6, 5, 4, 3, 2, 1]" :key="value" class="mark-cell">
-                            {{ hasMark(row.value, value) ? 'X' : '' }}
+                        <td v-for="value in fpiScale" :key="value" class="mark-cell">
+                            <EntranceAnalysisMark
+                                :checked="isMarked(rowValueMarkKey('fpi', index, value), hasMark(row.value, value))"
+                                :editable="editable"
+                                :manual="isManualMark(rowValueMarkKey('fpi', index, value))"
+                                :label="`${row.label} ${value}`"
+                                @toggle="selectMark(rowValueMarkKey('fpi', index, value), rowValueMarkKeys('fpi', index, fpiScale), hasMark(row.value, value))"
+                            />
                         </td>
                         <td class="description-cell">{{ fpiDescriptions[index][1] }}</td>
                     </tr>
@@ -409,7 +622,15 @@ function concentrationBand(value?: number | null) {
                         </td>
                         <td class="value-cell">{{ row.value ?? '' }}</td>
                         <td>{{ row.interpretation }}</td>
-                        <td></td>
+                        <td class="mark-cell">
+                            <EntranceAnalysisMark
+                                :checked="isMarked(supportMarkKey('lmt', row.key), false)"
+                                :editable="editable"
+                                :manual="isManualMark(supportMarkKey('lmt', row.key))"
+                                :label="`${row.label} Foerderbedarf`"
+                                @toggle="toggleMark(supportMarkKey('lmt', row.key), false)"
+                            />
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -464,14 +685,34 @@ function concentrationBand(value?: number | null) {
                             <strong>{{ row.key }}</strong
                             >&nbsp;&nbsp; {{ row.label }}
                         </td>
-                        <td class="mark-cell">{{ isInRange(row.value, null, 5) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(row.value, 6, 15) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(row.value, 20, 30) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(row.value, 35, 65) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(row.value, 70, 80) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(row.value, 85, 94) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ isInRange(row.value, 95, null) ? 'X' : '' }}</td>
-                        <td class="mark-cell">{{ needsSupport(row.value, 20) ? 'X' : '' }}</td>
+                        <td v-for="band in bitBands" :key="band.key" class="mark-cell">
+                            <EntranceAnalysisMark
+                                :checked="isMarked(rowValueMarkKey('bit', row.key, band.key), isInRange(row.value, band.minimum, band.maximum))"
+                                :editable="editable"
+                                :manual="isManualMark(rowValueMarkKey('bit', row.key, band.key))"
+                                :label="`${row.key} ${band.key}`"
+                                @toggle="
+                                    selectMark(
+                                        rowValueMarkKey('bit', row.key, band.key),
+                                        rowValueMarkKeys(
+                                            'bit',
+                                            row.key,
+                                            bitBands.map((item) => item.key),
+                                        ),
+                                        isInRange(row.value, band.minimum, band.maximum),
+                                    )
+                                "
+                            />
+                        </td>
+                        <td class="mark-cell">
+                            <EntranceAnalysisMark
+                                :checked="isMarked(supportMarkKey('bit', row.key), needsSupport(row.value, 20))"
+                                :editable="editable"
+                                :manual="isManualMark(supportMarkKey('bit', row.key))"
+                                :label="`${row.key} Foerderbedarf`"
+                                @toggle="toggleMark(supportMarkKey('bit', row.key), needsSupport(row.value, 20))"
+                            />
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -565,7 +806,19 @@ function concentrationBand(value?: number | null) {
                         <tr>
                             <td></td>
                             <td v-for="index in 6" :key="index" class="mark-cell">
-                                {{ concentrationBand(values.concentration?.total) === index - 1 ? 'X' : '' }}
+                                <EntranceAnalysisMark
+                                    :checked="isMarked(concentrationMarkKey(index - 1), concentrationBand(values.concentration?.total) === index - 1)"
+                                    :editable="editable"
+                                    :manual="isManualMark(concentrationMarkKey(index - 1))"
+                                    :label="`628 Leistungsbereich ${index}`"
+                                    @toggle="
+                                        selectMark(
+                                            concentrationMarkKey(index - 1),
+                                            concentrationMarkKeys(),
+                                            concentrationBand(values.concentration?.total) === index - 1,
+                                        )
+                                    "
+                                />
                             </td>
                             <td></td>
                         </tr>
@@ -587,16 +840,32 @@ function concentrationBand(value?: number | null) {
                     </tr>
                     <tr class="subheader-row">
                         <th>Stanine-Wert</th>
-                        <th v-for="value in [1, 2, 3, 4, 5, 6, 7, 8, 9]" :key="value">{{ value }}</th>
+                        <th v-for="value in avemScale" :key="value">{{ value }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="row in values.avem" :key="row.label">
                         <td>{{ row.label }}</td>
-                        <td v-for="value in [1, 2, 3, 4, 5, 6, 7, 8, 9]" :key="value" class="mark-cell">
-                            {{ hasMark(row.value, value) ? 'X' : '' }}
+                        <td v-for="value in avemScale" :key="value" class="mark-cell">
+                            <EntranceAnalysisMark
+                                :checked="isMarked(rowValueMarkKey('avem', row.label, value), hasMark(row.value, value))"
+                                :editable="editable"
+                                :manual="isManualMark(rowValueMarkKey('avem', row.label, value))"
+                                :label="`${row.label} ${value}`"
+                                @toggle="
+                                    selectMark(rowValueMarkKey('avem', row.label, value), rowValueMarkKeys('avem', row.label, avemScale), hasMark(row.value, value))
+                                "
+                            />
                         </td>
-                        <td></td>
+                        <td class="mark-cell">
+                            <EntranceAnalysisMark
+                                :checked="isMarked(supportMarkKey('avem', row.label), false)"
+                                :editable="editable"
+                                :manual="isManualMark(supportMarkKey('avem', row.label))"
+                                :label="`${row.label} Foerderbedarf`"
+                                @toggle="toggleMark(supportMarkKey('avem', row.label), false)"
+                            />
+                        </td>
                     </tr>
                 </tbody>
             </table>

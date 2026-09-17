@@ -18,14 +18,24 @@ class EntranceAnalysisController extends Controller
             'work_speed' => ['nullable', 'string', 'max:1000'],
             'group_behavior' => ['nullable', 'string', 'max:1000'],
             'remarks' => ['nullable', 'string', 'max:5000'],
+            'mark_overrides' => ['nullable', 'array', 'max:500'],
+            'mark_overrides.*' => ['boolean'],
         ]);
+
+        $updates = [
+            ...collect($data)->except('mark_overrides')->all(),
+            'teacher_id' => $request->user()->id,
+        ];
+
+        if (array_key_exists('mark_overrides', $data)) {
+            $updates['mark_overrides'] = collect($data['mark_overrides'] ?? [])
+                ->map(fn ($value) => filter_var($value, FILTER_VALIDATE_BOOLEAN))
+                ->all();
+        }
 
         $analysis = EntranceAnalysis::updateOrCreate(
             ['participant_id' => $participant->id],
-            [
-                ...$data,
-                'teacher_id' => $request->user()->id,
-            ],
+            $updates,
         );
 
         if ($request->expectsJson()) {

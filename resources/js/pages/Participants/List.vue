@@ -352,6 +352,7 @@ function entranceAnalysisObservations(participant: any) {
         work_speed: analysis.work_speed ?? null,
         group_behavior: analysis.group_behavior ?? null,
         remarks: analysis.remarks ?? null,
+        mark_overrides: analysis.mark_overrides ?? {},
     };
 }
 

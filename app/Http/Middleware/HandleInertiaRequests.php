@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\CollaborationNews;
 use App\Models\CollaborationSuggestion;
+use App\Models\CollaborationTodo;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -91,7 +92,7 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * @return array{news: int, suggestions: int, total: int}
+     * @return array{news: int, suggestions: int, todos: int, total: int}
      */
     private function collaborationNotifications(Request $request): array
     {
@@ -99,20 +100,26 @@ class HandleInertiaRequests extends Middleware
             return [
                 'news' => 0,
                 'suggestions' => 0,
+                'todos' => 0,
                 'total' => 0,
             ];
         }
 
-        $news = CollaborationNews::count();
+        $newSince = now()->subDays(14);
+
+        $news = CollaborationNews::where('created_at', '>=', $newSince)->count();
         $suggestions = CollaborationSuggestion::query()
             ->where('is_hidden', false)
             ->where('status', 'open')
+            ->where('created_at', '>=', $newSince)
             ->count();
+        $todos = CollaborationTodo::where('created_at', '>=', $newSince)->count();
 
         return [
             'news' => $news,
             'suggestions' => $suggestions,
-            'total' => $news + $suggestions,
+            'todos' => $todos,
+            'total' => $news + $suggestions + $todos,
         ];
     }
 }

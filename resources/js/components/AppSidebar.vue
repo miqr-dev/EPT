@@ -12,19 +12,17 @@ import AppLogo from './AppLogo.vue';
 const page = usePage();
 const collaborationNotifications = computed(() => page.props.collaborationNotifications);
 const collaborationBadges = computed(() =>
-    [
-        {
-            title: 'Neue Vorschläge',
-            count: collaborationNotifications.value?.suggestions ?? 0,
-            class: 'bg-sky-50 text-sky-700 ring-1 ring-sky-200 dark:bg-sky-950/70 dark:text-sky-200 dark:ring-sky-800/70',
-        },
-        {
-            title: 'Neuigkeiten & Updates',
-            count: collaborationNotifications.value?.news ?? 0,
-            class: 'bg-[#661421] text-white',
-        },
-    ].filter((badge) => badge.count > 0),
+    collaborationNotifications.value?.total
+        ? [
+              {
+                  title: 'Neue Kollaborationseinträge',
+                  count: collaborationNotifications.value.total,
+                  class: 'bg-emerald-600 text-white ring-1 ring-emerald-500/30 shadow-sm dark:bg-emerald-500 dark:text-emerald-950',
+              },
+          ]
+        : [],
 );
+const collaborationIconClass = computed(() => (collaborationNotifications.value?.total ? 'text-emerald-600 dark:text-emerald-400' : undefined));
 
 const testNavItems: NavItem[] = [
     {
@@ -137,6 +135,7 @@ const mainNavItems = computed<NavItem[]>(() => {
             title: 'Kollaboration',
             href: '/kollaboration',
             icon: MessageSquareText,
+            iconClass: collaborationIconClass.value,
             badges: collaborationBadges.value,
         },
         {

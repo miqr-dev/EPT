@@ -2,11 +2,11 @@
 import EntranceAnalysisForm from '@/components/EntranceAnalysisForm.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { emptyObservations, type ObservationFields } from '@/lib/entrance-analysis';
+import { emptyEntranceAnalysisFields, type EntranceAnalysisFields } from '@/lib/entrance-analysis';
 import { downloadPdfOrOpenPrint, openPrintPreview } from '@/lib/pdf-export';
 import type { AppPageProps } from '@/types';
 import { usePage } from '@inertiajs/vue3';
-import { FileDown, Loader2, Save, X } from 'lucide-vue-next';
+import { FileDown, Loader2, Pencil, Save, X } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
 const props = defineProps<{
@@ -16,7 +16,8 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'saved']);
 const page = usePage<AppPageProps>();
-const observations = ref<ObservationFields>(emptyObservations());
+const analysisFields = ref<EntranceAnalysisFields>(emptyEntranceAnalysisFields());
+const isEditing = ref(false);
 const isSaving = ref(false);
 const isGeneratingPdf = ref(false);
 
@@ -49,13 +50,15 @@ watch(
     () => props.participant,
     (participant) => {
         const current = participant?.entrance_analysis ?? {};
-        observations.value = {
+        analysisFields.value = {
             instruction_understanding: current.instruction_understanding ?? '',
             work_method: current.work_method ?? '',
             work_speed: current.work_speed ?? '',
             group_behavior: current.group_behavior ?? '',
             remarks: current.remarks ?? '',
+            mark_overrides: current.mark_overrides ?? {},
         };
+        isEditing.value = false;
     },
     { immediate: true },
 );
@@ -71,8 +74,12 @@ function closeModal() {
     emit('close');
 }
 
+function startEditing() {
+    isEditing.value = true;
+}
+
 async function saveAnalysis() {
-    if (!props.participant || isSaving.value) return;
+    if (!props.participant || isSaving.value || !isEditing.value) return;
     isSaving.value = true;
 
     try {
@@ -84,7 +91,7 @@ async function saveAnalysis() {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content ?? '',
             },
-            body: JSON.stringify(observations.value),
+            body: JSON.stringify(analysisFields.value),
         });
 
         if (!response.ok) {
@@ -97,9 +104,10 @@ async function saveAnalysis() {
             participantId: props.participant.id,
             analysis: payload.analysis,
         });
+        isEditing.value = false;
     } catch (error) {
         console.error('Eingangsanalyse save failed.', error);
-        window.alert('Beobachtungen konnten nicht gespeichert werden. Bitte erneut versuchen.');
+        window.alert('Eingangsanalyse konnte nicht gespeichert werden. Bitte erneut versuchen.');
     } finally {
         isSaving.value = false;
     }
@@ -145,10 +153,14 @@ async function downloadPdf() {
             <DialogHeader class="sticky top-0 z-10 flex-row items-center justify-between border-b bg-background px-5 py-3 pr-16 text-left shadow-sm">
                 <DialogTitle>Eingangsanalyse: {{ participant?.name }}</DialogTitle>
                 <div class="flex items-center gap-2">
-                    <Button type="button" variant="outline" :disabled="isSaving" @click="saveAnalysis">
+                    <Button v-if="!isEditing" type="button" variant="outline" @click="startEditing">
+                        <Pencil class="size-4" />
+                        Bearbeiten
+                    </Button>
+                    <Button v-else type="button" variant="outline" :disabled="isSaving" @click="saveAnalysis">
                         <Loader2 v-if="isSaving" class="size-4 animate-spin" />
                         <Save v-else class="size-4" />
-                        {{ isSaving ? 'Speichere...' : 'Beobachtungen speichern' }}
+                        {{ isSaving ? 'Speichere...' : 'Eingangsanalyse speichern' }}
                     </Button>
                     <Button type="button" :disabled="isGeneratingPdf" @click="downloadPdf">
                         <Loader2 v-if="isGeneratingPdf" class="size-4 animate-spin" />
@@ -161,12 +173,12 @@ async function downloadPdf() {
             <div class="min-h-0 flex-1 overflow-auto bg-slate-200 px-4 py-6 dark:bg-slate-950">
                 <EntranceAnalysisForm
                     v-if="participant"
-                    v-model="observations"
+                    v-model="analysisFields"
                     :participant="participant"
                     :assignments="assignments"
                     :teacher-name="teacherName"
                     :conducted-at="participant.latest_exam_created_at"
-                    :editable="true"
+                    :editable="isEditing"
                 />
             </div>
         </DialogContent>

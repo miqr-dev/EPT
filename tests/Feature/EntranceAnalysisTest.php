@@ -38,6 +38,11 @@ test('teacher can save participant entrance analysis observations', function () 
             'work_method' => 'Arbeitet strukturiert.',
             'work_speed' => 'Angemessen.',
             'group_behavior' => 'Kooperativ.',
+            'mark_overrides' => [
+                'brt:band:55_60' => true,
+                'brt:band:46_54' => false,
+                'lmt:L1:support' => true,
+            ],
             'remarks' => 'Benötigt bei neuen Aufgaben kurze Rückfragen.',
         ])
         ->assertRedirect();
@@ -47,6 +52,14 @@ test('teacher can save participant entrance analysis observations', function () 
         'teacher_id' => $teacher->id,
         'work_method' => 'Arbeitet strukturiert.',
     ]);
+
+    $analysis = EntranceAnalysis::firstWhere('participant_id', $participant->id);
+
+    $this->assertSame([
+        'brt:band:55_60' => true,
+        'brt:band:46_54' => false,
+        'lmt:L1:support' => true,
+    ], $analysis->mark_overrides);
 });
 
 test('teacher can save participant entrance analysis observations as json', function () {
@@ -60,13 +73,19 @@ test('teacher can save participant entrance analysis observations as json', func
             'work_method' => '',
             'work_speed' => 'Ruhig.',
             'group_behavior' => null,
+            'mark_overrides' => [
+                'mrt:total:support' => true,
+                'mrt:band:31_68' => false,
+            ],
             'remarks' => 'Direkter JSON-Speicherpfad.',
         ])
         ->assertOk()
         ->assertJsonPath('analysis.participant_id', $participant->id)
         ->assertJsonPath('analysis.teacher_id', $teacher->id)
         ->assertJsonPath('analysis.instruction_understanding', 'Gelöscht und neu geschrieben.')
-        ->assertJsonPath('analysis.work_method', null);
+        ->assertJsonPath('analysis.work_method', null)
+        ->assertJsonPath('analysis.mark_overrides.mrt:total:support', true)
+        ->assertJsonPath('analysis.mark_overrides.mrt:band:31_68', false);
 
     $this->assertDatabaseHas('entrance_analyses', [
         'participant_id' => $participant->id,
@@ -74,6 +93,13 @@ test('teacher can save participant entrance analysis observations as json', func
         'instruction_understanding' => 'Gelöscht und neu geschrieben.',
         'work_method' => null,
     ]);
+
+    $analysis = EntranceAnalysis::firstWhere('participant_id', $participant->id);
+
+    $this->assertSame([
+        'mrt:total:support' => true,
+        'mrt:band:31_68' => false,
+    ], $analysis->mark_overrides);
 });
 
 test('teacher cannot edit an entrance analysis from another city', function () {
@@ -147,6 +173,10 @@ test('entrance analysis print page contains saved observations and latest test d
         'teacher_id' => $teacher->id,
         'instruction_understanding' => 'Sicher',
         'remarks' => 'Beobachtung',
+        'mark_overrides' => [
+            'brt:band:46_54' => false,
+            'brt:band:55_60' => true,
+        ],
     ]);
 
     $this->actingAs($teacher)
@@ -158,6 +188,10 @@ test('entrance analysis print page contains saved observations and latest test d
             ->where('teacherName', 'Tina Muster')
             ->where('conductedAt', '2026-06-01')
             ->where('analysis.instruction_understanding', 'Sicher')
+            ->where('analysis.mark_overrides', [
+                'brt:band:46_54' => false,
+                'brt:band:55_60' => true,
+            ])
             ->where('assignments.0.test.name', 'BRT-A')
             ->where('assignments.0.results.0.result_json.twert', 56)
         );
@@ -180,6 +214,10 @@ test('entrance analysis print page contains saved observations and latest test d
             ->missing('participant.participant_profile.birthday')
             ->missing('participant.participant_profile.sex')
             ->where('analysis.instruction_understanding', 'Sicher')
+            ->where('analysis.mark_overrides', [
+                'brt:band:46_54' => false,
+                'brt:band:55_60' => true,
+            ])
             ->missing('analysis.teacher_id')
             ->where('assignments.0.test.name', 'BRT-A')
             ->where('assignments.0.results.0.result_json.twert', 56)

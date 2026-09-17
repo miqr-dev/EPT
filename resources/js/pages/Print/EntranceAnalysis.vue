@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import EntranceAnalysisForm from '@/components/EntranceAnalysisForm.vue';
-import { emptyObservations, type ObservationFields } from '@/lib/entrance-analysis';
+import { emptyEntranceAnalysisFields, type EntranceAnalysisFields } from '@/lib/entrance-analysis';
 import { Head } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
 
@@ -27,13 +27,14 @@ const props = withDefaults(
     },
 );
 
-const observations = ref<ObservationFields>({
-    ...emptyObservations(),
+const analysisFields = ref<EntranceAnalysisFields>({
+    ...emptyEntranceAnalysisFields(),
     instruction_understanding: props.analysis?.instruction_understanding ?? '',
     work_method: props.analysis?.work_method ?? '',
     work_speed: props.analysis?.work_speed ?? '',
     group_behavior: props.analysis?.group_behavior ?? '',
     remarks: props.analysis?.remarks ?? '',
+    mark_overrides: props.analysis?.mark_overrides ?? {},
 });
 const isSavingPdf = ref(false);
 
@@ -118,7 +119,7 @@ onMounted(prepareForPdf);
         </div>
 
         <EntranceAnalysisForm
-            v-model="observations"
+            v-model="analysisFields"
             :participant="participant"
             :assignments="assignments"
             :teacher-name="teacherName"

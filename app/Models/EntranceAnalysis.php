@@ -15,7 +15,15 @@ class EntranceAnalysis extends Model
         'work_speed',
         'group_behavior',
         'remarks',
+        'mark_overrides',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'mark_overrides' => 'array',
+        ];
+    }
 
     public function participant(): BelongsTo
     {

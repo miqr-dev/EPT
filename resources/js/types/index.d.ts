@@ -14,6 +14,7 @@ export interface NavItem {
     title: string;
     href: string;
     icon?: LucideIcon;
+    iconClass?: string;
     isActive?: boolean;
     items?: NavItem[];
     badges?: NavItemBadge[];
@@ -44,6 +45,7 @@ export type AppPageProps<T extends Record<string, unknown> = Record<string, unkn
     collaborationNotifications: {
         news: number;
         suggestions: number;
+        todos: number;
         total: number;
     };
     sidebarOpen: boolean;

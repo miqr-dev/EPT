@@ -86,7 +86,7 @@ test('teachers cannot promote suggestions into todos', function () {
         ->and($suggestion->is_hidden)->toBeFalse();
 });
 
-test('completed todos are sent to the collaboration summary as completed', function () {
+test('completed todos are sent to the collaboration page as completed', function () {
     $admin = createCollaborationUser('admin');
 
     $todo = CollaborationTodo::create([
@@ -104,17 +104,17 @@ test('completed todos are sent to the collaboration summary as completed', funct
             ->where('todos.0.is_completed', true));
 });
 
-test('collaboration sidebar notifications count visible suggestions and news', function () {
+test('collaboration sidebar notifications count recent visible news suggestions and todos', function () {
     $admin = createCollaborationUser('admin');
     $teacher = createCollaborationUser('teacher');
 
-    CollaborationNews::create([
+    $recentNews = CollaborationNews::create([
         'title' => 'Update',
         'content' => 'New collaboration update',
         'created_by' => $admin->id,
     ]);
 
-    CollaborationSuggestion::create([
+    $recentSuggestion = CollaborationSuggestion::create([
         'title' => 'Vorschlag',
         'content' => 'Visible idea',
         'created_by' => $teacher->id,
@@ -128,11 +128,70 @@ test('collaboration sidebar notifications count visible suggestions and news', f
         'is_hidden' => true,
     ]);
 
+    $recentTodo = CollaborationTodo::create([
+        'task' => 'Recent todo',
+        'created_by' => $admin->id,
+    ]);
+
+    foreach ([$recentNews, $recentSuggestion, $recentTodo] as $model) {
+        $model->forceFill([
+            'created_at' => now()->subDays(13),
+            'updated_at' => now()->subDays(13),
+        ])->save();
+    }
+
+    $oldNews = CollaborationNews::create([
+        'title' => 'Old update',
+        'content' => 'Older collaboration update',
+        'created_by' => $admin->id,
+    ]);
+
+    $oldSuggestion = CollaborationSuggestion::create([
+        'title' => 'Vorschlag',
+        'content' => 'Old visible idea',
+        'created_by' => $teacher->id,
+    ]);
+
+    $oldTodo = CollaborationTodo::create([
+        'task' => 'Old todo',
+        'created_by' => $admin->id,
+    ]);
+
+    foreach ([$oldNews, $oldSuggestion, $oldTodo] as $model) {
+        $model->forceFill([
+            'created_at' => now()->subDays(15),
+            'updated_at' => now()->subDays(15),
+        ])->save();
+    }
+
     $this->actingAs($admin)
         ->get(route('collaboration.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('collaborationNotifications.news', 1)
             ->where('collaborationNotifications.suggestions', 1)
-            ->where('collaborationNotifications.total', 2));
+            ->where('collaborationNotifications.todos', 1)
+            ->where('collaborationNotifications.total', 3));
+});
+
+test('admins can publish sanitized rich news updates', function () {
+    $admin = createCollaborationUser('admin');
+
+    $this->actingAs($admin)
+        ->post(route('collaboration.news.store'), [
+            'title' => 'Rich update',
+            'content' => '<p><strong>Important</strong> <span style="color: #ef4444; font-size: 20px; position: absolute; background-image: url(javascript:alert(1))">notice</span><script>alert("x")</script><img src=x onerror=alert(1)></p>',
+        ])
+        ->assertRedirect();
+
+    $news = CollaborationNews::firstOrFail();
+
+    expect($news->content)
+        ->toContain('<strong>Important</strong>')
+        ->toContain('style="color: #ef4444; font-size: 20px"')
+        ->not->toContain('<script')
+        ->not->toContain('<img')
+        ->not->toContain('onerror')
+        ->not->toContain('position')
+        ->not->toContain('url(');
 });
