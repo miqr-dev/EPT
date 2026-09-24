@@ -353,6 +353,7 @@ function entranceAnalysisObservations(participant: any) {
         group_behavior: analysis.group_behavior ?? null,
         remarks: analysis.remarks ?? null,
         mark_overrides: analysis.mark_overrides ?? {},
+        value_overrides: analysis.value_overrides ?? {},
     };
 }
 

@@ -20,16 +20,32 @@ class EntranceAnalysisController extends Controller
             'remarks' => ['nullable', 'string', 'max:5000'],
             'mark_overrides' => ['nullable', 'array', 'max:500'],
             'mark_overrides.*' => ['boolean'],
+            'value_overrides' => ['nullable', 'array', 'max:500'],
+            'value_overrides.*' => ['nullable', 'numeric'],
         ]);
 
         $updates = [
-            ...collect($data)->except('mark_overrides')->all(),
+            ...collect($data)->except('mark_overrides', 'value_overrides')->all(),
             'teacher_id' => $request->user()->id,
         ];
 
         if (array_key_exists('mark_overrides', $data)) {
             $updates['mark_overrides'] = collect($data['mark_overrides'] ?? [])
                 ->map(fn ($value) => filter_var($value, FILTER_VALIDATE_BOOLEAN))
+                ->all();
+        }
+
+        if (array_key_exists('value_overrides', $data)) {
+            $updates['value_overrides'] = collect($data['value_overrides'] ?? [])
+                ->map(function ($value) {
+                    if ($value === null) {
+                        return null;
+                    }
+
+                    $number = (float) $value;
+
+                    return floor($number) === $number ? (int) $number : $number;
+                })
                 ->all();
         }
 

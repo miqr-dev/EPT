@@ -77,6 +77,14 @@ test('teacher can save participant entrance analysis observations as json', func
                 'mrt:total:support' => true,
                 'mrt:band:31_68' => false,
             ],
+            'value_overrides' => [
+                'lps:1-2 Allgemeinbildung:value' => 45,
+                'lps:totalRaw' => 82,
+                'lps:totalT' => 51,
+                'lps:percentile' => 54,
+                'lps:iq' => 101,
+                'brt:t' => 42,
+            ],
             'remarks' => 'Direkter JSON-Speicherpfad.',
         ])
         ->assertOk()
@@ -85,7 +93,9 @@ test('teacher can save participant entrance analysis observations as json', func
         ->assertJsonPath('analysis.instruction_understanding', 'Gelöscht und neu geschrieben.')
         ->assertJsonPath('analysis.work_method', null)
         ->assertJsonPath('analysis.mark_overrides.mrt:total:support', true)
-        ->assertJsonPath('analysis.mark_overrides.mrt:band:31_68', false);
+        ->assertJsonPath('analysis.mark_overrides.mrt:band:31_68', false)
+        ->assertJsonPath('analysis.value_overrides.lps:totalT', 51)
+        ->assertJsonPath('analysis.value_overrides.brt:t', 42);
 
     $this->assertDatabaseHas('entrance_analyses', [
         'participant_id' => $participant->id,
@@ -100,6 +110,14 @@ test('teacher can save participant entrance analysis observations as json', func
         'mrt:total:support' => true,
         'mrt:band:31_68' => false,
     ], $analysis->mark_overrides);
+    $this->assertSame([
+        'lps:1-2 Allgemeinbildung:value' => 45,
+        'lps:totalRaw' => 82,
+        'lps:totalT' => 51,
+        'lps:percentile' => 54,
+        'lps:iq' => 101,
+        'brt:t' => 42,
+    ], $analysis->value_overrides);
 });
 
 test('teacher cannot edit an entrance analysis from another city', function () {
@@ -177,6 +195,10 @@ test('entrance analysis print page contains saved observations and latest test d
             'brt:band:46_54' => false,
             'brt:band:55_60' => true,
         ],
+        'value_overrides' => [
+            'lps:totalT' => 51,
+            'brt:t' => 56,
+        ],
     ]);
 
     $this->actingAs($teacher)
@@ -191,6 +213,10 @@ test('entrance analysis print page contains saved observations and latest test d
             ->where('analysis.mark_overrides', [
                 'brt:band:46_54' => false,
                 'brt:band:55_60' => true,
+            ])
+            ->where('analysis.value_overrides', [
+                'lps:totalT' => 51,
+                'brt:t' => 56,
             ])
             ->where('assignments.0.test.name', 'BRT-A')
             ->where('assignments.0.results.0.result_json.twert', 56)
@@ -217,6 +243,10 @@ test('entrance analysis print page contains saved observations and latest test d
             ->where('analysis.mark_overrides', [
                 'brt:band:46_54' => false,
                 'brt:band:55_60' => true,
+            ])
+            ->where('analysis.value_overrides', [
+                'lps:totalT' => 51,
+                'brt:t' => 56,
             ])
             ->missing('analysis.teacher_id')
             ->where('assignments.0.test.name', 'BRT-A')

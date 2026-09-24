@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import EntranceAnalysisMark from '@/components/EntranceAnalysisMark.vue';
-import { buildEntranceAnalysis, type EntranceAnalysisFields } from '@/lib/entrance-analysis';
+import { buildEntranceAnalysis, LPS_SCORE_ROWS, lmtInterpretation, type EntranceAnalysisFields } from '@/lib/entrance-analysis';
 import type { AppPageProps } from '@/types';
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -24,7 +24,8 @@ const props = withDefaults(
 
 const observations = defineModel<EntranceAnalysisFields>({ required: true });
 const page = usePage<AppPageProps>();
-const values = computed(() => buildEntranceAnalysis(props.assignments, props.participant?.participant_profile));
+const baseValues = computed(() => buildEntranceAnalysis(props.assignments, props.participant?.participant_profile));
+const values = computed(() => applyValueOverrides(baseValues.value));
 const defaultEntranceAnalysisBrand = {
     logoSrc: '/images/miqr-logo-grey.jpg',
     logoAlt: 'Mitteldeutsches Institut',
@@ -32,6 +33,7 @@ const defaultEntranceAnalysisBrand = {
 };
 const entranceAnalysisBrand = computed(() => page.props.brand?.entranceAnalysis ?? defaultEntranceAnalysisBrand);
 const lpsScale = [30, 35, 40, 45, 50, 55, 60, 65, 70];
+const lpsFallbackRows = LPS_SCORE_ROWS.map((row) => ({ ...row, key: row.label, value: null }));
 
 function columnWidths(widths: number[]) {
     const total = widths.reduce((sum, width) => sum + width, 0);
@@ -213,6 +215,92 @@ function concentrationMarkKeys() {
     return Array.from({ length: 6 }, (_, index) => concentrationMarkKey(index));
 }
 
+function hasValueOverride(key: string) {
+    return Object.prototype.hasOwnProperty.call(observations.value.value_overrides ?? {}, key);
+}
+
+function valueOverride(key: string) {
+    const value = observations.value.value_overrides?.[key];
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function displayValue(key: string, automatic: number | null | undefined) {
+    return hasValueOverride(key) ? valueOverride(key) : (automatic ?? null);
+}
+
+function paperInputValue(key: string, automatic: number | null | undefined) {
+    return displayValue(key, automatic) ?? '';
+}
+
+function updateValueOverride(key: string, event: Event) {
+    if (!props.editable) return;
+
+    const raw = (event.target as HTMLInputElement).value.trim();
+    const parsed = raw === '' ? null : Number(raw);
+
+    if (parsed !== null && !Number.isFinite(parsed)) return;
+
+    observations.value = {
+        ...observations.value,
+        value_overrides: {
+            ...(observations.value.value_overrides ?? {}),
+            [key]: parsed,
+        },
+    };
+}
+
+function lpsValueKey(rowKey: string) {
+    return markKey('lps', rowKey, 'value');
+}
+
+function lpsSummaryValueKey(summaryKey: string) {
+    return markKey('lps', summaryKey);
+}
+
+function simpleValueKey(section: string, valueKey: string) {
+    return markKey(section, valueKey);
+}
+
+function lmtValueKey(rowKey: string) {
+    return markKey('lmt', rowKey, 'value');
+}
+
+function applyValueOverrides(automaticValues: ReturnType<typeof buildEntranceAnalysis>) {
+    const lpsRows = automaticValues.lps?.rows ?? lpsFallbackRows;
+    const hasLpsValues =
+        Boolean(automaticValues.lps) ||
+        lpsRows.some((row) => hasValueOverride(lpsValueKey(row.key))) ||
+        ['totalRaw', 'totalT', 'percentile', 'iq'].some((key) => hasValueOverride(lpsSummaryValueKey(key)));
+
+    return {
+        ...automaticValues,
+        lps: hasLpsValues
+            ? {
+                  rows: lpsRows.map((row) => ({
+                      ...row,
+                      value: displayValue(lpsValueKey(row.key), row.value),
+                  })),
+                  totalRaw: displayValue(lpsSummaryValueKey('totalRaw'), automaticValues.lps?.totalRaw),
+                  totalT: displayValue(lpsSummaryValueKey('totalT'), automaticValues.lps?.totalT),
+                  percentile: displayValue(lpsSummaryValueKey('percentile'), automaticValues.lps?.percentile),
+                  iq: displayValue(lpsSummaryValueKey('iq'), automaticValues.lps?.iq),
+              }
+            : null,
+        brtT: displayValue(simpleValueKey('brt', 't'), automaticValues.brtT),
+        mrtPercentile: displayValue(simpleValueKey('mrt', 'percentile'), automaticValues.mrtPercentile),
+        btRaw: displayValue(simpleValueKey('bt', 'raw'), automaticValues.btRaw),
+        lmt: automaticValues.lmt.map((row) => {
+            const value = displayValue(lmtValueKey(row.key), row.value);
+
+            return {
+                ...row,
+                value,
+                interpretation: lmtInterpretation(row.key, value),
+            };
+        }),
+    };
+}
+
 function overrideValue(key: string) {
     const value = observations.value.mark_overrides?.[key];
     return typeof value === 'boolean' ? value : null;
@@ -314,8 +402,19 @@ function selectMark(key: string, groupKeys: string[], automatic: boolean) {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="row in values.lps?.rows ?? []" :key="row.key">
-                        <td colspan="2">{{ row.label }}</td>
+                    <tr v-for="row in values.lps?.rows ?? lpsFallbackRows" :key="row.key">
+                        <td>{{ row.label }}</td>
+                        <td class="value-cell">
+                            <input
+                                v-if="editable"
+                                class="paper-value-input"
+                                type="number"
+                                step="1"
+                                :value="paperInputValue(lpsValueKey(row.key), row.value)"
+                                @input="updateValueOverride(lpsValueKey(row.key), $event)"
+                            />
+                            <span v-else>{{ row.value ?? '' }}</span>
+                        </td>
                         <td v-for="value in lpsScale" :key="value" class="mark-cell">
                             <EntranceAnalysisMark
                                 :checked="isMarked(lpsMarkKey(row.key, value), hasMark(row.value, value))"
@@ -335,58 +434,63 @@ function selectMark(key: string, groupKeys: string[], automatic: boolean) {
                             />
                         </td>
                     </tr>
-                    <template v-if="!values.lps">
-                        <tr
-                            v-for="label in [
-                                '1-2 Allgemeinbildung',
-                                '3-4 logisch-schlussfolgerndes Denken',
-                                '5-6 Sprachproduktion/-verständnis',
-                                '7-10 technische Begabung',
-                                '11-12 grafisch-gestalterische Fähigkeit',
-                                '13 kurzzeitige Konzentration',
-                                '14 Arbeitstempo',
-                                '−13 Arbeitssorgfalt',
-                            ]"
-                            :key="label"
-                        >
-                            <td colspan="2">{{ label }}</td>
-                            <td v-for="value in lpsScale" :key="value" class="mark-cell">
-                                <EntranceAnalysisMark
-                                    :checked="isMarked(lpsMarkKey(label, value), false)"
-                                    :editable="editable"
-                                    :manual="isManualMark(lpsMarkKey(label, value))"
-                                    :label="`${label} ${value}`"
-                                    @toggle="selectMark(lpsMarkKey(label, value), lpsMarkKeys(label), false)"
-                                />
-                            </td>
-                            <td class="mark-cell">
-                                <EntranceAnalysisMark
-                                    :checked="isMarked(lpsSupportKey(label), false)"
-                                    :editable="editable"
-                                    :manual="isManualMark(lpsSupportKey(label))"
-                                    :label="`${label} Foerderbedarf`"
-                                    @toggle="toggleMark(lpsSupportKey(label), false)"
-                                />
-                            </td>
-                        </tr>
-                    </template>
                     <tr class="summary-row">
                         <td>
                             <span>GI</span>
-                            <span class="value-cell gi-total-value">{{ values.lps?.totalRaw ?? '' }}</span>
+                            <span class="value-cell gi-total-value">
+                                <input
+                                    v-if="editable"
+                                    class="paper-value-input"
+                                    type="number"
+                                    step="1"
+                                    :value="paperInputValue(lpsSummaryValueKey('totalRaw'), values.lps?.totalRaw)"
+                                    @input="updateValueOverride(lpsSummaryValueKey('totalRaw'), $event)"
+                                />
+                                <span v-else>{{ values.lps?.totalRaw ?? '' }}</span>
+                            </span>
                             <em>T-Wert</em>
                         </td>
-                        <td class="value-cell">{{ values.lps?.totalT ?? '' }}</td>
+                        <td class="value-cell">
+                            <input
+                                v-if="editable"
+                                class="paper-value-input"
+                                type="number"
+                                step="1"
+                                :value="paperInputValue(lpsSummaryValueKey('totalT'), values.lps?.totalT)"
+                                @input="updateValueOverride(lpsSummaryValueKey('totalT'), $event)"
+                            />
+                            <span v-else>{{ values.lps?.totalT ?? '' }}</span>
+                        </td>
                         <td colspan="10" class="blocked-cell"></td>
                     </tr>
                     <tr class="summary-row">
                         <td><em>Prozentrang</em></td>
-                        <td class="value-cell">{{ values.lps?.percentile ?? '' }}</td>
+                        <td class="value-cell">
+                            <input
+                                v-if="editable"
+                                class="paper-value-input"
+                                type="number"
+                                step="1"
+                                :value="paperInputValue(lpsSummaryValueKey('percentile'), values.lps?.percentile)"
+                                @input="updateValueOverride(lpsSummaryValueKey('percentile'), $event)"
+                            />
+                            <span v-else>{{ values.lps?.percentile ?? '' }}</span>
+                        </td>
                         <td colspan="10" class="blocked-cell"></td>
                     </tr>
                     <tr class="summary-row">
                         <td><em>IQ</em></td>
-                        <td class="value-cell">{{ values.lps?.iq ?? '' }}</td>
+                        <td class="value-cell">
+                            <input
+                                v-if="editable"
+                                class="paper-value-input"
+                                type="number"
+                                step="1"
+                                :value="paperInputValue(lpsSummaryValueKey('iq'), values.lps?.iq)"
+                                @input="updateValueOverride(lpsSummaryValueKey('iq'), $event)"
+                            />
+                            <span v-else>{{ values.lps?.iq ?? '' }}</span>
+                        </td>
                         <td colspan="10" class="blocked-cell"></td>
                     </tr>
                 </tbody>
@@ -422,7 +526,17 @@ function selectMark(key: string, groupKeys: string[], automatic: boolean) {
                 <tbody>
                     <tr>
                         <td>BRT</td>
-                        <td class="value-cell">{{ values.brtT ?? '' }}</td>
+                        <td class="value-cell">
+                            <input
+                                v-if="editable"
+                                class="paper-value-input"
+                                type="number"
+                                step="1"
+                                :value="paperInputValue(simpleValueKey('brt', 't'), values.brtT)"
+                                @input="updateValueOverride(simpleValueKey('brt', 't'), $event)"
+                            />
+                            <span v-else>{{ values.brtT ?? '' }}</span>
+                        </td>
                         <td v-for="band in brtBands" :key="band.key" class="mark-cell">
                             <EntranceAnalysisMark
                                 :checked="isMarked(bandMarkKey('brt', band.key), isInRange(values.brtT, band.minimum, band.maximum))"
@@ -481,7 +595,17 @@ function selectMark(key: string, groupKeys: string[], automatic: boolean) {
                 <tbody>
                     <tr>
                         <td>MRT</td>
-                        <td class="value-cell">{{ values.mrtPercentile ?? '' }}</td>
+                        <td class="value-cell">
+                            <input
+                                v-if="editable"
+                                class="paper-value-input"
+                                type="number"
+                                step="1"
+                                :value="paperInputValue(simpleValueKey('mrt', 'percentile'), values.mrtPercentile)"
+                                @input="updateValueOverride(simpleValueKey('mrt', 'percentile'), $event)"
+                            />
+                            <span v-else>{{ values.mrtPercentile ?? '' }}</span>
+                        </td>
                         <td v-for="band in mrtBands" :key="band.key" class="mark-cell">
                             <EntranceAnalysisMark
                                 :checked="isMarked(bandMarkKey('mrt', band.key), isInRange(values.mrtPercentile, band.minimum, band.maximum))"
@@ -536,7 +660,17 @@ function selectMark(key: string, groupKeys: string[], automatic: boolean) {
                 <tbody>
                     <tr>
                         <td>Bürotest</td>
-                        <td class="value-cell">{{ values.btRaw ?? '' }}</td>
+                        <td class="value-cell">
+                            <input
+                                v-if="editable"
+                                class="paper-value-input"
+                                type="number"
+                                step="1"
+                                :value="paperInputValue(simpleValueKey('bt', 'raw'), values.btRaw)"
+                                @input="updateValueOverride(simpleValueKey('bt', 'raw'), $event)"
+                            />
+                            <span v-else>{{ values.btRaw ?? '' }}</span>
+                        </td>
                         <td v-for="band in btBands" :key="band.key" class="mark-cell">
                             <EntranceAnalysisMark
                                 :checked="isMarked(bandMarkKey('bt', band.key), isInRange(values.btRaw, band.minimum, band.maximum))"
@@ -620,7 +754,17 @@ function selectMark(key: string, groupKeys: string[], automatic: boolean) {
                         <td>
                             <strong>{{ row.key }}</strong> {{ row.label }}
                         </td>
-                        <td class="value-cell">{{ row.value ?? '' }}</td>
+                        <td class="value-cell">
+                            <input
+                                v-if="editable"
+                                class="paper-value-input"
+                                type="number"
+                                step="1"
+                                :value="paperInputValue(lmtValueKey(row.key), row.value)"
+                                @input="updateValueOverride(lmtValueKey(row.key), $event)"
+                            />
+                            <span v-else>{{ row.value ?? '' }}</span>
+                        </td>
                         <td>{{ row.interpretation }}</td>
                         <td class="mark-cell">
                             <EntranceAnalysisMark
@@ -1267,6 +1411,29 @@ h1 {
     display: inline-block;
     margin-left: 1.5mm;
     min-width: 9mm;
+}
+
+.paper-value-input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: inherit;
+    text-align: center;
+    outline: 0;
+}
+
+.paper-value-input:focus {
+    background: #eff6ff;
+    box-shadow: inset 0 0 0 1px #3b82f6;
+}
+
+.paper-value-input::-webkit-inner-spin-button,
+.paper-value-input::-webkit-outer-spin-button {
+    margin: 0;
+    appearance: none;
 }
 
 .summary-row td {

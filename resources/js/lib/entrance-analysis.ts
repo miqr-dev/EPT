@@ -25,9 +25,11 @@ export type ObservationFields = {
 };
 
 export type MarkOverrides = Record<string, boolean>;
+export type ValueOverrides = Record<string, number | null>;
 
 export type EntranceAnalysisFields = ObservationFields & {
     mark_overrides: MarkOverrides;
+    value_overrides: ValueOverrides;
 };
 
 type AssignmentResult = {
@@ -81,6 +83,17 @@ const BIT_ROWS = [
     ['LG', 'literarisch-geisteswissenschaftlich'],
     ['SE', 'sozial-erzieherisch'],
 ] as const;
+
+export const LPS_SCORE_ROWS: Array<{ key: LpsBScoreKey; label: string }> = [
+    { key: 'test_1_2', label: '1-2 Allgemeinbildung' },
+    { key: 'test_3_4', label: '3-4 logisch-schlussfolgerndes Denken' },
+    { key: 'test_5_6', label: '5-6 Sprachproduktion/-verständnis' },
+    { key: 'test_7_10', label: '7-10 technische Begabung' },
+    { key: 'test_11_12', label: '11-12 grafisch-gestalterische Fähigkeit' },
+    { key: 'test_13', label: '13 kurzzeitige Konzentration' },
+    { key: 'test_14', label: '14 Arbeitstempo' },
+    { key: 'test_14_wrong', label: '−13 Arbeitssorgfalt' },
+];
 
 function normalizedIdentifiers(assignment: Assignment) {
     return [assignment?.test?.name, assignment?.test?.code].filter(Boolean).map((value) => String(value).trim().toUpperCase());
@@ -248,19 +261,8 @@ function lpsAnalysis(entry: ReturnType<typeof latestResult>, age?: number | null
             ? null
             : (LPS_B_IQ_BY_T_RANGES.find((range) => total.t >= range.minT && total.t <= range.maxT)?.iq ?? null);
 
-    const rows: Array<{ key: LpsBScoreKey; label: string }> = [
-        { key: 'test_1_2', label: '1-2 Allgemeinbildung' },
-        { key: 'test_3_4', label: '3-4 logisch-schlussfolgerndes Denken' },
-        { key: 'test_5_6', label: '5-6 Sprachproduktion/-verständnis' },
-        { key: 'test_7_10', label: '7-10 technische Begabung' },
-        { key: 'test_11_12', label: '11-12 grafisch-gestalterische Fähigkeit' },
-        { key: 'test_13', label: '13 kurzzeitige Konzentration' },
-        { key: 'test_14', label: '14 Arbeitstempo' },
-        { key: 'test_14_wrong', label: '−13 Arbeitssorgfalt' },
-    ];
-
     return {
-        rows: rows.map((row) => ({ ...row, value: lookupLpsColumn(ageKey, row.key, raw[row.key]) })),
+        rows: LPS_SCORE_ROWS.map((row) => ({ ...row, value: lookupLpsColumn(ageKey, row.key, raw[row.key]) })),
         totalRaw,
         totalT: total?.t ?? null,
         percentile: total?.pr ?? null,
@@ -315,7 +317,7 @@ function btTotal(entry: ReturnType<typeof latestResult>) {
     return taskTotal(1, 'q1') + taskTotal(2, 'q2', false) + taskTotal(3, 'q3') + taskTotal(4, 'q4') + taskTotal(5, 'q5') + taskTotal(6, 'q6');
 }
 
-function lmtInterpretation(group: string, value: number | null) {
+export function lmtInterpretation(group: string, value: number | null) {
     if (value === null) return '';
     if (group === 'L1') {
         if (value <= 30) return 'nicht motiviert, unwillig';
@@ -471,5 +473,6 @@ export function emptyEntranceAnalysisFields(): EntranceAnalysisFields {
     return {
         ...emptyObservations(),
         mark_overrides: {},
+        value_overrides: {},
     };
 }

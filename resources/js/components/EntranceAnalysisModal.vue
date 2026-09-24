@@ -57,6 +57,7 @@ watch(
             group_behavior: current.group_behavior ?? '',
             remarks: current.remarks ?? '',
             mark_overrides: current.mark_overrides ?? {},
+            value_overrides: current.value_overrides ?? {},
         };
         isEditing.value = false;
     },

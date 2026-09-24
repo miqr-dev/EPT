@@ -35,6 +35,7 @@ const analysisFields = ref<EntranceAnalysisFields>({
     group_behavior: props.analysis?.group_behavior ?? '',
     remarks: props.analysis?.remarks ?? '',
     mark_overrides: props.analysis?.mark_overrides ?? {},
+    value_overrides: props.analysis?.value_overrides ?? {},
 });
 const isSavingPdf = ref(false);
 

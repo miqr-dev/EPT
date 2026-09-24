@@ -16,12 +16,14 @@ class EntranceAnalysis extends Model
         'group_behavior',
         'remarks',
         'mark_overrides',
+        'value_overrides',
     ];
 
     protected function casts(): array
     {
         return [
             'mark_overrides' => 'array',
+            'value_overrides' => 'array',
         ];
     }
 

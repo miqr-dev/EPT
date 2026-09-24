@@ -505,6 +505,7 @@ class ResultPdfExportController extends Controller
       'group_behavior' => $analysis->group_behavior,
       'remarks' => $analysis->remarks,
       'mark_overrides' => $analysis->mark_overrides ?? [],
+      'value_overrides' => $analysis->value_overrides ?? [],
     ];
   }
 
